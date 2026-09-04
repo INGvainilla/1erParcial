@@ -1,0 +1,86 @@
+
+
+
+Índice Metodológico: PUDS - UML (Flujos de Trabajo)
+
+1) Perfil
+1.1 Introducción
+1.2 Objetivo General
+1.3 Objetivos Específicos
+1.4 Descripción del problema
+1.4 Alcance
+
+Parte I - Fundamentación Teórica (revisar en libros o sitios en internet especializados en la temática)
+a) E-commerce: además de profundizar los conceptos generales y características de los e-commerce, experimentar de acuerdo a lo siguiente:
+   a. Como usuario: Conocer detalladamente como funciona: i. Amazon, ii. Alibaba, iii. Shopify
+   b. Como desarrollador: Conocer para que sirve, que beneficios y como se usar para crear sitios web que implemente tiendas online (e-commerce): i. Magento, ii. PrestaShop, iii. WooCommerce
+b) Pasarelas de pago
+   a. Describir cómo funcionan las distintas formas de pago online (tarjetas de débito, tarjetas de crédito, QR, Transferencias)
+   b. Indagar sobre LIBÉLULA una pasarela que se usa con frecuencia en nuestro medio
+   c. Indagar sobre PayPal, STRIPE una opción de pasarela de pago internacional
+c) Deliverys
+   a. Describir cómo funcionan los deliverys (un ejemplo Yaigo- Yummy)
+   b. Como calculan los pagos para una entrega (distancia, peso, frecuencia, tamaño de la entrega etc.)
+d) PUDS
+e) UML
+
+Parte II - Proceso de desarrollo
+a) Seguir los pasos descritos por el PUDS para el desarrollo de la Aplicación: Captura de Requisitos, Análisis, Diseño, Implementación y Pruebas.
+b) Generar los modelos pertinentes utilizando UML en cada flujo de trabajo.
+
+
+
+1. F.t. Captura de Requisitos
+ * 1.1. Id. C.U. y actores (Identificación de Casos de Uso y actores)
+ * 1.2. Priorización C.U.
+ * 1.3. Detallar C.U.
+   * a) Elaborar la tabla Detalle
+   * b) Diseñar C.U. (<<include>>, <<extend>>, <<herencia>>)
+ * 1.4. Prototipar I.U. (Interfaz de Usuario)
+ * 1.5. Estructurar Modelo C.U.
+2. F.t. Análisis
+ * 2.1. Análisis de Arquitectura
+ * 2.2. Analizar Casos de Uso
+ * 2.3. Análisis de clases
+ * 2.4. Análisis de Paquetes (Criterios: Acoplamiento, Cohesión)
+3. F.t. Diseño
+ * 3.1. Diseño de Arquitectura
+    3.1.1 Arquitectura Física (Diagrama de Despliegue)
+    3.1.2 Arquitectura Lógica 
+ 
+ * 3.2. Diseño de Casos de Uso
+   * Diagrama de Secuencia
+   * Diagrama de tiempo \Big\} Procesos: Catálogo, Venta, Compra, Tipo pago
+   * Diagrama de estado \Big\}
+   * Diag. Navegación (Iteraciones: I_1, I_2, I_3)
+ * 3.3. Diseño de Datos
+    3.3.1 Diseño de datos lógico
+    3.3.2 Mapeo
+    3.3.3 Diseño de datos físico}
+    3.3.4 Población de Datos
+4. F.t. Implementación
+ * 4.1. Selec. Plataforma de Software
+ * 4.2. Imp. Arq. Sistema Principal
+ * 4.3. Imp. Arq. Sub Sistema (Paquete)
+5. F.t. Pruebas
+ * C.U. (Casos de Uso)
+ * [H.U.] Proyecto (Historias de Usuario)
+Notas Adicionales de la Pizarra
+Fundamentos UML 2.5+
+ * Propósito: Visualizar, especificar, documentar y construir los artefactos del sistema.
+ * Aspecto Estructural o estático.
+ * Aspecto Dinámico o Comportamiento:
+   * Diagrama de interacción:
+     * Diagrama de Comunicación
+     * Diagrama de Secuencia
+   * Diagrama de Tiempo
+   * Diagrama de Estado
+   * Diagrama de Navegación:
+     * Sistema Principal
+     * Sub Sistema (Paquete)
+Modalidad de Evaluación / Cronograma
+ * PUDS - UML: 1er & 2do Parcial
+ * SCRUM - UML: Proyecto
+ * Fechas / Sprints anotados:
+   * Sprint #1: 26/08, 31/08, 01/09, 06/09
+   * Sprint #2: [1]
