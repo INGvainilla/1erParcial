@@ -790,6 +790,582 @@ gantt
 
 ---
 
+---
+
+# 2) Elementos del Sistema Basado en Computadoras
+
+Un sistema basado en computadoras es un conjunto integrado de elementos organizados para alcanzar un objetivo común mediante el procesamiento, almacenamiento, transmisión y transformación de información. En el marco de **FashionStore**, el sistema integra de manera sinérgica el hardware, software, bases de datos relacionales, procedimientos operativos estandarizados, el capital humano y la documentación formal para dar soporte integral al comercio electrónico omnicanal de moda masculina.
+
+```mermaid
+graph TD
+    subgraph Sistema Basado en Computadoras - FashionStore
+        HW["2.1 Hardware<br/>(Servidores Cloud, POS, Móviles, Lectores)"]
+        SW["2.2 Software<br/>(FastAPI, Angular, Flutter, PostgreSQL)"]
+        DA["2.3 Datos<br/>(Catálogo, CPP, Kardex, Reservas, Clientes)"]
+        PR["2.4 Procesos<br/>(Compras, Reservas, Venta POS/Digital, Fidelización)"]
+        GE["2.5 Gente / Usuarios<br/>(Admin, Encargados, Cajeros, Logística, Clientes)"]
+        DOC["2.6 Documentación<br/>(PUDS, SRS, Manuales, Facturas, Guías)"]
+    end
+    HW <--> SW
+    SW <--> DA
+    PR --> SW
+    GE --> PR
+    PR --> DOC
+```
+
+---
+
+## 2.1 Hardware
+
+El componente de hardware abarca la infraestructura física, dispositivos de procesamiento, periféricos y equipos de telecomunicaciones que sustentan la ejecución de las aplicaciones de FashionStore en sus tres entornos operativos: nube, sucursales físicas y dispositivos de usuarios finales.
+
+### 2.1.1 Servidor
+
+La arquitectura de servidores de FashionStore adopta un enfoque híbrido en la nube (*Cloud Computing PaaS/IaaS*), garantizando alta disponibilidad, escalabilidad elástica y tolerancia a fallos:
+
+1. **Servidor de Producción Backend (FastAPI / ASGI):**
+   * **Plataforma de Alojamiento:** Instancia en contenedor Linux gestionada en nube pública (*Render / Railway / AWS EC2*).
+   * **Capacidad de Procesamiento:** 2 vCPU dedicadas (arquitectura x86_64), optimizadas para operaciones asíncronas de E/S de alta concurrencia mediante `asyncio`.
+   * **Memoria Principal (RAM):** 4 GB a 8 GB DDR4 con soporte para asignación dinámica de memoria para workers de Uvicorn y Gunicorn.
+   * **Almacenamiento Secundario:** 50 GB a 100 GB NVMe SSD con tasas de transferencia de lectura/escritura superiores a 2.500 MB/s para el sistema base, binarios y logs de rotación.
+   * **Conectividad de Red:** Enlace simétrico de 1 Gbps con ancho de banda mensual no medido, dirección IPv4/IPv6 estática pública, y proxy inverso NGINX con terminación segura SSL/TLS 1.3 gestionada con certificados automáticos Let's Encrypt.
+
+2. **Servidor de Base de Datos Dedicado (PostgreSQL 15+):**
+   * **Alojamiento:** Instancia administrada en *Supabase Pro / AWS RDS PostgreSQL*.
+   * **Capacidad:** 2 vCPU dedicadas, 4 GB de memoria RAM dedicada a pools de conexiones (`PgBouncer`), 20 GB de almacenamiento SSD transaccional con 3.000 IOPS garantizados.
+   * **Mecanismos de Resiliencia:** Copias de seguridad automáticas diarias en caliente (*Point-in-Time Recovery - PITR*) con retención de 7 días y réplicas de solo lectura para consultas masivas de catálogo en temporadas altas.
+
+3. **Almacenamiento de Objetos en la Nube (Object Storage):**
+   * Repositorio de alta durabilidad (*AWS S3 / Cloudinary*) para persistencia de activos multimedia: fotografías de prendas en múltiples resoluciones, modelos tridimensionales (`.glb` / `.gltf`) para vestidores virtuales en Realidad Aumentada y comprobantes de facturación.
+
+---
+
+### 2.1.2 Cliente
+
+Los dispositivos cliente corresponden a los terminales informáticos mediante los cuales los diferentes actores interactúan con la plataforma:
+
+1. **Dispositivos Móviles de los Clientes (App Móvil Flutter):**
+   * **Smartphones y Tablets compatibles:** Dispositivos móviles con arquitectura ARM64 de 64 bits ejecutando Android 8.0 (Oreo) o superior, e iOS 13.0 o superior.
+   * **Memoria RAM:** Mínimo 3 GB de RAM (recomendado 4 GB a 8 GB para fluidez en la inicialización de motores de visión artificial y renderizado tridimensional).
+   * **Sensores Críticos:** Cámara trasera y frontal de alta resolución (mínimo 12 MP), sensor de profundidad o acelerómetro y giroscopio calibrados, indispensables para el anclaje de planos y detección anatómica requerida por Google ARCore y Apple ARKit en el Vestidor Virtual de Realidad Aumentada.
+   * **Conectividad:** Conexión a redes móviles 4G LTE / 5G o redes inalámbricas Wi-Fi 5/6 con acceso continuo a internet.
+
+2. **Estaciones de Trabajo y Computadoras Personales (Navegadores Web):**
+   * **Equipos de Clientes y Personal Administrativo:** Computadoras de escritorio o portátiles con procesadores Intel Core i3 / AMD Ryzen 3 o superiores, mínimo 4 GB de memoria RAM, y tarjetas gráficas integradas con soporte para aceleración por hardware WebGL.
+   * **Pantallas:** Monitores con resolución mínima de 1366 × 768 píxeles (recomendado Full HD 1920 × 1080) con diseño completamente adaptativo (*responsive layout*).
+
+3. **Terminales de Punto de Venta (POS) en Sucursales Físicas:**
+   * **Computadoras de Caja:** Terminales All-in-One (*Todo en Uno*) o computadoras de escritorio compactas ubicadas en los mostradores de cobro de cada tienda física (Equipetrol, Calacoto, El Prado).
+   * **Especificaciones:** Procesador Intel Core i5 de 10ª generación o superior, 8 GB de RAM, unidad SSD de 256 GB para arranque ultra-rápido, y puertos USB múltiples para periféricos especializados.
+
+---
+
+### 2.1.3 Otros Dispositivos
+
+Para asegurar la sincronización en tiempo real de los procesos físicos en tienda con la plataforma digital, se integran los siguientes periféricos y equipos de red:
+
+| Dispositivo | Tipo / Interfaz | Ubicación / Área | Función Operativa Principal |
+|:---|:---:|:---:|:---|
+| **Lectores de Códigos de Barras y Códigos QR** | Óptico 2D Láser / USB y Bluetooth | Puntos de Caja POS y Área de Probadores | Lectura instantánea de etiquetas SKU en prendas de vestir y escaneo de códigos QR de reservas presenciales presentados por el cliente desde su smartphone. |
+| **Impresoras Térmicas de Tickets / Recibos** | Térmica Directa 80 mm / USB - Ethernet | Mostradores de Cobro POS | Emisión inmediata de comprobantes de venta física, facturas de caja y talones de reserva presencial con corte automático de papel (velocidad $\ge 200\text{ mm/s}$). |
+| **Terminales de Pago Electrónico (POS Bancario Físico)** | POS Físico EMV / Contactless NFC / Wi-Fi | Mostradores de Caja | Procesamiento presencial de cobros mediante tarjetas de débito y crédito con verificación de PIN y soporte para pagos móviles por proximidad. |
+| **Tablets de Asistencia en Probadores** | Tablet Android 10.5" / Wi-Fi Corporativo | Área de Probadores y Atención de Sucursal | Utilizadas por el Encargado de Sucursal para verificar la llegada de clientes con reserva, confirmar la preparación de prendas y reportar el estado de probadores. |
+| **Rúteres y Conmutadores de Red Empresarial** | Wi-Fi 6 Gigabit / Dual Band (2.4 / 5 GHz) | Cada Sucursal Física | Enlace de datos seguro con segmentación de VLANs: una red aislada y cifrada para terminales POS e inventario, y una red Wi-Fi de cortesía para clientes en tienda. |
+| **Cámaras de Seguridad IP y Control Perimétrico** | Cámaras Full HD PoE / Circuito Cerrado | Salas de Venta y Almacenes de Sucursal | Monitoreo visual de la mercadería, disuasión de pérdidas y supervisión de los flujos de clientes en probadores y cajas. |
+
+---
+
+## 2.2 Software
+
+El ecosistema de software de FashionStore está concebido bajo principios de diseño moderno, desacoplamiento de capas, comunicación asíncrona no bloqueante y estándares abiertos.
+
+### 2.2.1 Servidor
+
+1. **Sistema Operativo Base:**
+   * **Linux Ubuntu Server 22.04 LTS (Jammy Jellyfish):** Distribución de grado empresarial con kernel Linux 5.15/6.x de 64 bits, seleccionada por su extrema estabilidad, soporte de parches de seguridad a largo plazo y óptimo rendimiento en virtualización y contenedores.
+
+2. **Servidor Web y Proxy Inverso:**
+   * **NGINX versión 1.24+:** Encargado de la recepción de solicitudes HTTP/HTTPS, balanceo de carga, compresión en tránsito con algoritmos Gzip/Brotli, limitación de tasa (*Rate Limiting*) para mitigar ataques de fuerza bruta en autenticación, y serving estático de la SPA Angular.
+
+3. **Servidor de Aplicaciones y Framework Backend:**
+   * **Python 3.11+ / FastAPI 0.110+:** Framework asíncrono de alto rendimiento montado sobre la especificación ASGI (*Asynchronous Server Gateway Interface*).
+   * **Servidor ASGI:** `Uvicorn` con worker loop `uvloop` (basado en `libuv`), capaz de despachar más de 15.000 solicitudes concurrentes por segundo con latencias inferiores a 10 milisegundos.
+   * **Capa de Persistencia y ORM:** `SQLAlchemy 2.0` con driver asíncrono `asyncpg` y motor síncrono `psycopg2-binary`, garantizando transaccionalidad ACID y soporte dual con fallback local a `SQLite3`.
+   * **Validación y Serialización:** `Pydantic v2` para validación estricta de esquemas de entrada/salida y contratos de datos fuertemente tipados.
+
+4. **Sistema Gestor de Base de Datos Relacional (RDBMS):**
+   * **PostgreSQL 15+:** Motor de datos principal de la organización, elegido por su madurez, conformidad estricta con estándares SQL, soporte nativo para campos semiestructurados `JSONB`, indexación GiST/GIN para búsquedas rápidas en catálogo y extensiones de seguridad.
+
+5. **Servicios de Caché y Gestión Volátil:**
+   * **Redis 7.x (en memoria):** Utilizado para almacenamiento transitorio de listas de exclusión de tokens JWT revocados (*Blacklist*), persistencia de carritos anónimos temporales y caché de consultas frecuentes de disponibilidad de stock.
+
+---
+
+### 2.2.2 Cliente
+
+1. **Frontend Web (Plataforma E-Commerce y Panel Administrativo):**
+   * **Angular 17+ / TypeScript:** Framework robusto para aplicaciones de página única (SPA), estructurado con componentes desacoplados, servicios inyectables reactivos apoyados en `RxJS`, enrutamiento modular y diseño visual Dark Glassmorphism responsivo ceñido a CSS3 Vanilla y FontAwesome 6.5.
+   * **Compatibilidad de Navegadores:** Optimizado para Google Chrome 115+, Microsoft Edge, Mozilla Firefox 115+, Safari 16+ y navegadores móviles Chromium.
+
+2. **Aplicación Móvil Multiplataforma (FashionStore App):**
+   * **Flutter 3.22+ / Dart 3.4+:** Framework de desarrollo móvil compilado a código nativo de máquina (ARM64), garantizando tasas de refresco de 60 fps a 120 fps con el motor gráfico Impeller.
+   * **Gestión de Estado y Arquitectura:** Arquitectura en capas limpia (*Clean Architecture*) con separación de dominio, datos y presentación, persistencia local con `flutter_secure_storage` y comunicación REST mediante cliente `dio` / `http`.
+
+3. **Módulos Móviles Especializados:**
+   * **Librerías de Realidad Aumentada:** Integración de plugins `ar_flutter_plugin` y `google_mlkit_pose_detection` para procesamiento de visión artificial y anclaje de mallas 3D sobre la silueta del cliente.
+   * **Lector de Códigos y Voz:** Plugins `mobile_scanner` para lectura de códigos QR y `speech_to_text` para captura de comandos de voz en lenguaje natural.
+
+---
+
+### 2.2.3 Otro Software Adicional
+
+| Categoría | Software / Servicio | Proveedor / Licencia | Finalidad en FashionStore |
+|:---|:---|:---:|:---|
+| **Seguridad Criptográfica** | `bcrypt` (factor de coste $\ge 12$) / `python-jose` | MIT / Apache 2.0 | Cifrado unidireccional no reversible de contraseñas de usuarios y firmado asimétrico de tokens web JSON (JWT HS256). |
+| **Pasarela Nacional de Pagos** | Libélula Pay API | Propietaria (Bolivia) | Procesamiento de pagos en moneda nacional mediante Códigos QR Interoperables (Simple / BCB) y transferencias bancarias locales. |
+| **Pasarelas Internacionales** | Stripe API & PayPal REST SDK | Propietaria / Sandbox | Pasarelas de cobro global con soporte de tokenización PCI-DSS compliant, verificación 3D Secure 2.0 y simulación de transacciones con tarjetas de prueba. |
+| **Inteligencia Artificial Contextual** | OpenAI API (GPT-4o) / Google Gemini 1.5 Flash | REST API Cloud | Motor cognitivo para generación de recomendaciones de outfits personalizados, combinaciones cromáticas y procesamiento de consultas en lenguaje natural. |
+| **Telemetría Meteorológica** | OpenWeatherMap API | REST API Cloud | Provisión de temperatura, sensación térmica y precipitaciones en tiempo real para las ciudades de Santa Cruz, La Paz y Cochabamba. |
+| **Documentación de API** | OpenAPI 3.0 & Swagger UI | Integrado en FastAPI | Generación automatizada de esquemas interactivos de prueba para la totalidad de los endpoints REST en la ruta `/docs`. |
+| **Monitoreo y Bitácoras** | `Loguru` / `Sentry SDK` | MIT / Open Source | Captura centralizada de logs estructurados de auditoría, trazabilidad de excepciones y alertas de seguridad en tiempo real. |
+
+---
+
+## 2.3 Datos
+
+Los datos constituyen el activo transaccional y operativo más valioso de FashionStore. La información está modelada bajo estándares de normalización relacional (Tercera Forma Normal - 3FN), garantizando la integridad referencial, la no redundancia y el recálculo matemático estricto de costos.
+
+```mermaid
+erDiagram
+    CIUDADES ||--o{ SUCURSALES : "contiene"
+    SUCURSALES ||--o{ USUARIOS : "asigna personal"
+    SUCURSALES ||--o{ INVENTARIOS : "almacena"
+    CATEGORIAS ||--o{ PRODUCTOS : "clasifica"
+    MARCAS ||--o{ PRODUCTOS : "produce"
+    TEMPORADAS ||--o{ PRODUCTOS : "agrupa"
+    PROVEEDORES ||--o{ ORDENES_COMPRA : "suministra"
+    PRODUCTOS ||--o{ INVENTARIOS : "se cuantifica en"
+    PRODUCTOS ||--o{ ITEMS_RESERVA : "se aparta en"
+    PRODUCTOS ||--o{ ITEMS_VENTA : "se comercializa en"
+    CLIENTES ||--o{ RESERVAS : "solicita"
+    SUCURSALES ||--o{ RESERVAS : "atiende"
+    CLIENTES ||--o{ ORDENES_VENTA : "formaliza"
+    CLIENTES ||--|| FIDELIZACION : "acumula puntos"
+```
+
+A nivel de dominio, el sistema gestiona las siguientes estructuras de datos clave:
+
+1. **Datos de Estructura Geográfica y Sucursales:**
+   * Ciudades de cobertura, códigos postales, sedes operativas, nombres de sucursales físicas, direcciones georreferenciadas con latitud y longitud decimal (GPS), horarios de atención diurna/nocturna y capacidad operativa de probadores concurrentes.
+2. **Datos del Catálogo de Moda Masculina:**
+   * Códigos SKU base universales, nombres de prendas, descripciones técnicas textiles (composición porcentual de algodón, lino, lana, poliéster), marcas, categorías jerárquicas, tallas normalizadas (S, M, L, XL, XXL, 38, 40, 42), colores estructurados con nombre comercial y código hexadecimal visual (`#HEX`), precios de venta al público y URLs de modelos 3D y galerías fotográficas.
+3. **Datos de Temporadas y Campañas Comerciales:**
+   * Identificador estacional, nombres de campaña (ej. *Primavera-Verano 2026*, *Línea Ejecutiva Otoño-Invierno*), fechas de inicio y cierre, estado estacional (Planificada, Vigente, Liquidación, Finalizada) y porcentaje sugerido de descuento para remate de temporada.
+4. **Datos de Proveedores y Compras:**
+   * Razón social, Número de Identificación Tributaria (NIT / CUIT), nombres de ejecutivos de contacto, teléfonos corporativos, correos electrónicos, condiciones de pago negociadas (Contado, Crédito a 30/60 días, Consignación) y registro de órdenes de abastecimiento.
+5. **Datos de Inventarios y Valuación Contable (Kardex):**
+   * Existencias físicas por sucursal, producto, talla y color; existencias reservadas temporalmente; stock mínimo de seguridad; último costo unitario de adquisición; y el **Costo Promedio Ponderado (CPP)** actualizado mediante asientos inmutables de entrada y salida.
+6. **Datos de Reservas Presenciales:**
+   * Códigos alfanuméricos de reserva únicos (ej. `RSV-2026-X8K`), sucursal de destino seleccionada, fecha y rango horario programado para la visita, código QR cifrado de validación, estados de ciclo de vida (Pendiente, Preparada en Probador, Cliente en Tienda, Venta Concretada, Cancelada, Expirada) y lista de prendas solicitadas.
+7. **Datos de Ventas y Facturación:**
+   * Órdenes de venta digitales y presenciales (POS), número de ticket o factura legal, cliente asociado o consumidor final, desglose de ítems comercializados, desglose de impuestos fiscales (IVA 13% e IT 3%), método de pago utilizado (Efectivo, Tarjeta, QR, Mixto), y montos de descuento por fidelización aplicados.
+8. **Datos de Seguridad, Autenticación y Auditoría (RBAC):**
+   * Credenciales de usuarios, roles jerárquicos tipados, hashes seguros de contraseñas (`bcrypt`), estado de la cuenta (Activa, Inactiva, Bloqueada por Intentos), tokens OTP temporizados de 6 dígitos con expiración, y bitácora de auditoría inmutable (usuario, fecha, IP, User-Agent, operación ejecutada).
+9. **Datos de Fidelización y Gamificación:**
+   * Puntos acumulados por transacciones, nivel jerárquico de membresía (Bronce, Plata, Oro, Diamante), insignias digitales obtenidas por hitos de compra, saldo histórico y registro de canjes por descuentos directos.
+
+---
+
+## 2.4 Procesos
+
+Los procesos constituyen la secuencia ordenada de actividades lógicas, transaccionales y de control que transforman las solicitudes de los usuarios en resultados comerciales efectivos dentro de FashionStore. 
+
+Los macroprocesos principales del negocio corresponden a:
+
+```mermaid
+flowchart LR
+    P1["P1: Abastecimiento y CPP"] --> P2["P2: Gestión de Inventario"]
+    P2 --> P3["P3: Catálogo y Reserva Presencial"]
+    P2 --> P4["P4: Venta Digital E-Commerce"]
+    P3 --> P5["P5: Atención en Probador y Venta POS"]
+    P4 --> P6["P6: Despacho y Logística"]
+    P5 --> P7["P7: Actualización de Kardex y Fidelización"]
+    P6 --> P7
+```
+
+1. **Proceso de Abastecimiento y Valuación por Costo Promedio Ponderado:**
+   * Generación y aprobación de órdenes de compra a proveedores textiles.
+   * Recepción física y control de calidad de lotes de prendas en la bodega de sucursal.
+   * Registro del costo unitario del lote adquirido e incorporación de costos de flete/aranceles.
+   * Recálculo matemático inmediato del Costo Promedio Ponderado (CPP) mediante la ecuación contable oficial:
+     $$\text{CPP}_{\text{nuevo}} = \frac{(S_{\text{actual}} \times \text{CPP}_{\text{actual}}) + (Q_{\text{entrada}} \times C_{\text{unitario}})}{S_{\text{actual}} + Q_{\text{entrada}}}$$
+   * Generación automática del asiento inmutable en el libro Kardex de existencias.
+
+2. **Proceso de Reserva Omnicanal y Prueba Presencial en Probadores:**
+   * Exploración del catálogo desde la app móvil o web y selección de prendas, tallas y colores.
+   * Selección de la sucursal de preferencia física y programación de fecha/hora de visita.
+   * Verificación atómica de disponibilidad y bloqueo temporal de las existencias para evitar ventas cruzadas.
+   * Generación del comprobante digital con código QR de reserva.
+   * Notificación en tiempo real al Encargado de Sucursal para el apartado físico y preparación de prendas en el probador asignado.
+   * Recepción del cliente en tienda, escaneo del QR, prueba física y transición hacia venta o retorno al stock.
+
+3. **Proceso de Venta Presencial en Punto de Venta (POS):**
+   * Escaneo de códigos de barra SKU de las prendas elegidas por el cliente en mostrador.
+   * Conversión opcional e inmediata de una reserva presencial previa a venta definitiva.
+   * Selección de método de cobro: efectivo con cálculo automático de cambio, cobro electrónico con tarjeta mediante terminal física, o generación de Código QR dinámico en pantalla.
+   * Emisión del comprobante fiscal de venta e impresión de ticket térmico.
+   * Descuento automático del stock en tiempo real y asignación de puntos de fidelización al cliente.
+
+4. **Proceso de Venta Digital y Checkout con Pasarela de Pagos:**
+   * Agregación de prendas al carrito de compras sincronizado entre web y móvil.
+   * Selección de la modalidad de entrega: Retiro gratuito en sucursal (*Click & Collect*) o envío a domicilio (*Delivery*).
+   * Tarificación dinámica del costo de envío según distancia geodésica (fórmula Haversine) y peso volumétrico.
+   * Procesamiento de la transacción mediante pasarela de pago en modo Sandbox (Stripe / PayPal) con validación 3D Secure.
+   * Confirmación del pago, generación de orden de despacho y notificación al cliente vía correo electrónico.
+
+5. **Proceso de Experiencia Inteligente (Vestidor Virtual RA + Asistente IA):**
+   * Activación de la cámara del teléfono móvil desde la ficha de producto en Flutter.
+   * Detección de silueta anatómica y superposición del modelo 3D de la prenda con textura en tiempo real.
+   * Consulta al Asistente de Estilo con IA: análisis de coordenadas de geolocalización, consulta al API meteorológico de temperatura local, análisis del historial de compras y colorimetría del cliente para sugerir combinaciones óptimas de ropa masculina.
+
+6. **Proceso de Fidelización Gamificada y Retención de Clientes:**
+   * Acumulación de 1 punto por cada 10 Bolivianos pagados en compras efectivas.
+   * Evaluación periódica de acumulación de puntos para ascenso automático de nivel (Bronce $
+ightarrow$ Plata $
+ightarrow$ Oro $
+ightarrow$ Diamante).
+   * Concesión de insignias digitales por hitos comerciales y canje de puntos por cupones de descuento directo en el checkout.
+
+---
+
+## 2.5 Gente / Usuario
+
+El factor humano es el componente central que dinamiza el sistema. FashionStore clasifica a sus usuarios en roles claramente segregados bajo el esquema de Control de Acceso Basado en Roles (RBAC):
+
+```mermaid
+graph TD
+    subgraph Personal Interno de la Empresa
+        A["Administrador General"]
+        E["Encargado de Sucursal"]
+        C["Cajero de Sucursal"]
+        L["Personal de Logística / Almacén"]
+    end
+    subgraph Actores Externos
+        CL["Cliente Final (Comprador)"]
+        PR["Proveedor Textil"]
+        PAS["Pasarela de Pagos (Stripe/Libélula)"]
+        IA["Servicios IA / Meteorológicos"]
+    end
+```
+
+### 1. Actores Internos
+
+* **Administrador General:**
+  * Responsable supremo de la gobernanza informática y comercial de la cadena.
+  * Funciones: Alta y baja de usuarios empleados, asignación granular de roles RBAC, desbloqueo administrativo de cuentas bloqueadas por intentos fallidos, configuración de ciudades y sucursales físicas, parametrización de categorías de moda, supervisión de auditorías y análisis de métricas en dashboards ejecutivos.
+* **Encargado de Sucursal:**
+  * Máxima autoridad operativa dentro de una tienda física determinada (ej. Equipetrol).
+  * Funciones: Monitoreo del panel de reservas presenciales asignadas a su tienda, supervisión del apartado físico de prendas en probadores, confirmación de llegada del cliente mediante escaneo de código QR, reporte de mermas o prendas dañadas, recepción de transferencias inter-sucursales y arqueo de inventario local.
+* **Cajero de Sucursal:**
+  * Operador responsable del punto de cobro físico en mostrador.
+  * Funciones: Autenticación segura en el módulo POS, búsqueda rápida de productos por código SKU, escaneo de prendas, cobro en efectivo con cálculo de cambio, procesamiento de cobros con tarjeta y QR, emisión de comprobantes fiscales y cierre de turno de caja diario.
+* **Personal de Logística y Almacén:**
+  * Encargados de la recepción de mercadería y despacho de órdenes.
+  * Funciones: Verificación física de lotes remitidos por proveedores textiles, registro riguroso de costos unitarios de compra para el recálculo del CPP, empaque y etiquetado de pedidos digitales con despacho a domicilio, y coordinación con repartidores de delivery.
+
+### 2. Actores Externos
+
+* **Cliente (Consumidor Masculino):**
+  * Usuario final de la plataforma web y aplicación móvil.
+  * Funciones: Auto-registro de cuenta con validación de identidad, inicio de sesión seguro, exploración y filtrado del catálogo, uso del vestidor virtual en Realidad Aumentada, solicitud de reservas presenciales en sucursales, compras digitales con pasarela de pagos, acumulación de puntos de fidelización y consulta interactiva con el Asistente de Estilo por IA.
+* **Proveedores Textiles:**
+  * Empresas fabricantes o distribuidoras de indumentaria que abastecen a la cadena.
+  * Funciones: Consulta de órdenes de compra emitidas a su nombre, despacho de lotes de mercadería y coordinación de plazos de entrega y términos de crédito comercial.
+
+---
+
+## 2.6 Documento
+
+La dimensión documental asegura la formalidad legal, contable, técnica y operativa de la plataforma. FashionStore clasifica sus documentos en tres categorías esenciales:
+
+### 1. Documentos Metodológicos y de Ingeniería de Software
+
+* **Documento de Especificación de Requisitos de Software (SRS):** Documento formal ceñido al estándar IEEE 830 que delimita los 38 requisitos funcionales y 11 requisitos no funcionales del sistema.
+* **Documento de Arquitectura de Software (SAD):** Descripción integral de la arquitectura lógica en 4 capas y física (diagrama de despliegue) bajo el estándar 4+1 vistas de Philippe Kruchten.
+* **Modelo Oficial en Enterprise Architect (`diagramas1erParcial.eapx`):** Repositorio formal de diagramas UML 2.5+ que almacena los modelos de casos de uso, comunicación, clases de análisis, secuencia, estados, tiempos y despliegue.
+
+### 2. Documentos Operativos, Comerciales y Tributarios
+
+* **Comprobante Digital de Reserva Presencial:** Ticket electrónico emitido al cliente con código alfanumérico único, código QR bidimensional, fecha, hora límite de validez, prendas seleccionadas y dirección de la sucursal.
+* **Factura Comercial y Nota de Venta (POS / Digital):** Documento fiscal con validez legal según la normativa del Servicio de Impuestos Nacionales (SIN) de Bolivia, con discriminación explícita del 13% de Crédito/Débito Fiscal (IVA) y 3% de Impuesto a las Transacciones (IT).
+* **Ficha de Movimiento de Kardex Físico y Valorado:** Asiento contable inmutable generado tras cada transacción de compra o venta, certificando la cantidad física restante y el valor monetario del inventario según Costo Promedio Ponderado.
+* **Orden de Compra y Acta de Recepción a Proveedores:** Contrato comercial formal que especifica cantidades, tallas, colores, costo unitario acordado, plazos de entrega y firma de conformidad de recepción en almacén.
+* **Guía de Despacho y Hoja de Ruta de Delivery:** Documento de entrega para repartidores urbanos conteniendo coordenadas de destino, tarifa de transporte, nombre de cliente y espacio para firma o código OTP de confirmación de recepción.
+
+### 3. Manuales de Usuario y Operación
+
+* **Guía Oficial de Ejecución del Sistema ([INSTRUCCIONES_EJECUCION.md](file:///c:/Users/User/Documents/2-2026/SI2/1erPARCIAL/INSTRUCCIONES_EJECUCION.md)):** Manual técnico con instrucciones paso a paso para la instalación de dependencias, migración de base de datos, ejecución del backend FastAPI, cliente web y app móvil Flutter.
+* **Manual de Procedimientos de Caja POS:** Guía operativa para cajeros detallando apertura de caja, transacciones mixtas, devoluciones y cierre de turno.
+* **Manual de Procedimientos de Sucursal:** Protocolo para encargados de tienda sobre la atención protocolar de clientes con reserva previa y gestión de probadores.
+
+---
+
+# 3) Tecnología para el Desarrollo del Software
+
+La selección tecnológica de FashionStore responde a un análisis exhaustivo de rendimiento, compatibilidad, madurez de la comunidad y adecuación estricta a los requerimientos de la cátedra de Sistemas de Información II.
+
+```mermaid
+graph LR
+    subgraph Estrategia y Metodología
+        E1["Estrategia Incremental<br/>(3 Ciclos Evolutivos)"]
+        M1["Metodología PUDS<br/>(Dirigido por Casos de Uso)"]
+        U1["Modelado UML 2.5+<br/>(Enterprise Architect)"]
+    end
+    subgraph Herramientas de Desarrollo
+        IDE["Visual Studio Code / Android Studio"]
+        LANG["Python 3.11 / Dart 3.4 / TypeScript"]
+        DBM["pgAdmin 4 / DBeaver"]
+        TEST["Pytest / HTTPX / Flutter Test"]
+    end
+    E1 --> M1
+    M1 --> U1
+    U1 --> IDE
+```
+
+---
+
+## 3.1 Estrategia para el Desarrollo del Software
+
+La estrategia de ingeniería adoptada para el proyecto se fundamenta en un **enfoque evolutivo, iterativo e incremental basado en arquitectura de microservicios desacoplados**:
+
+1. **Desacoplamiento Estricto entre Backend y Frontends:**
+   * El núcleo transaccional reside en un backend monolítico modular desarrollado en FastAPI que expone servicios exclusivamente a través de una API REST protegida con tokens JWT.
+   * Esto permite que el Frontend Web (Angular) y la Aplicación Móvil (Flutter) consuman exactamente la misma lógica de negocio y esquemas de datos, evitando duplicidad de reglas de validación y facilitando pruebas automatizadas independientes.
+
+2. **Desarrollo Dirigido por Casos de Uso (*Use-Case Driven*):**
+   * Cada caso de uso identificado se convierte en el eje vertebral que guía la especificación formal, el modelado dinámico (diagramas de comunicación y secuencia), el diseño de clases Boundary-Control-Entity (BCE), la implementación del endpoint REST y su respectivo caso de prueba de caja negra automatizado con Pytest.
+
+3. **Arquitectura Centrada en la Mitigación Temprana de Riesgos:**
+   * Durante el Ciclo 1 (Fundamentos) se resolvieron y probaron los componentes de mayor riesgo arquitectónico: la concurrencia en la autenticación RBAC, el bloqueo de cuentas, y la precisión matemática del recálculo de Costo Promedio Ponderado en inventario.
+   * Con ello, los ciclos posteriores (transacciones de venta y diferenciadores de Realidad Aumentada / IA) se construyen sobre una base sólida y libre de deuda técnica.
+
+4. **Integración y Despliegue Continuo (CI/CD) en la Nube:**
+   * Se descarta el paradigma de "desarrollo local hasta el final". Desde la primera semana, el backend y los frontends se desplegaron en infraestructura cloud accesible mediante URL pública y código QR, satisfaciendo el requerimiento de no operar en `localhost`.
+
+---
+
+## 3.2 Metodología para el Desarrollo del Software
+
+El proyecto adopta formalmente el **Proceso Unificado de Desarrollo de Software (PUDS)** modelado rigurosamente mediante el lenguaje estándar **UML 2.5+**.
+
+### 3.2.1 Características del PUDS
+
+El PUDS es un proceso de ingeniería de software disciplinado que se caracteriza por tres pilares conceptuales inseparables:
+
+1. **Dirigido por Casos de Uso (*Use-Case Driven*):**
+   * Los casos de uso no son meros artefactos de captura de requisitos, sino que actúan como la fuerza motriz de todo el ciclo de vida. Definen qué debe hacer el sistema desde la perspectiva del actor externo, guían el diseño de las clases de análisis y diseño, determinan la estructura de paquetes y proporcionan la base directa para los casos de prueba de aceptación.
+2. **Centrado en la Arquitectura (*Architecture-Centric*):**
+   * La arquitectura del sistema encarna las decisiones de diseño más trascendentales: la organización en subsistemas y capas, la selección de plataformas y protocolos de comunicación, y los mecanismos de persistencia. El PUDS exige concebir, validar y estabilizar la línea base de la arquitectura durante las fases tempranas para evitar refactorizaciones costosas.
+3. **Iterativo e Incremental (*Iterative and Incremental*):**
+   * El ciclo de desarrollo se divide en un conjunto de proyectos más pequeños denominados iteraciones. Cada iteración aborda un subconjunto crítico de casos de uso y culmina con la entrega de un producto ejecutable probado (*release interno o externo*). Con cada iteración sucesiva, el software se incrementa modularmente hasta alcanzar la totalidad del alcance.
+
+**Fases del Ciclo de Vida PUDS en FashionStore:**
+* **Fase de Inicio (Inception):** Delimitación de la visión del negocio, justificación económica, identificación de actores principales y especificación del 80% de los casos de uso a nivel general.
+* **Fase de Elaboración (Elaboration):** Análisis profundo de casos de uso arquitectónicamente significativos, diseño de la arquitectura en 4 capas, diseño de base de datos relacional y estabilización de la plataforma de desarrollo (Ciclo 1).
+* **Fase de Construcción (Construction):** Implementación de la totalidad de módulos transaccionales (ventas, reservas, POS, pasarelas) y diferenciadores (RA, IA, gamificación) con pruebas de regresión continuas (Ciclos 2 y 3).
+* **Fase de Transición (Transition):** Despliegue productivo final en la nube, optimización de latencias, auditoría de seguridad y capacitación a usuarios para la defensa final del software.
+
+---
+
+### 3.2.2 Características Principales de UML 2.5+
+
+El **Lenguaje de Modelado Unificado (UML versión 2.5+)** es el estándar de modelado visual adoptado para especificar, visualizar, construir y documentar todos los artefactos de FashionStore:
+
+1. **Notación Estandarizada y Semántica Precisa:**
+   * Proporciona un vocabulario gráfico universal que elimina ambigüedades interpretativas entre analistas, arquitectos de software, desarrolladores y evaluadores académicos.
+2. **Dualidad de Modelado (Estructural y Dinámico):**
+   * **Perspectiva Estructural (Aspecto Estático):** Representa los bloques constitutivos del sistema mediante Diagramas de Casos de Uso (con relaciones `<<include>>`, `<<extend>>` y generalización), Diagramas de Clases de Análisis (Boundary, Control, Entity), Diagramas de Paquetes con justificación de acoplamiento/cohesión, Diagramas de Componentes y Diagramas de Despliegue Físico.
+   * **Perspectiva de Comportamiento (Aspecto Dinámico):** Modela la ejecución temporal y el intercambio de mensajes mediante Diagramas de Actividades con carriles (*swimlanes*), Diagramas de Interacción (Comunicación, Secuencia Transaccional y Diagramas de Tiempo) y Diagramas de Máquinas de Estado para el ciclo de vida de entidades.
+3. **Trazabilidad de Ingeniería de Software:**
+   * Cada elemento de software en el código fuente de FastAPI (`app/modules/...`) o Flutter tiene un mapeo bidireccional exacto con una clase, paquete o nodo modelado en Enterprise Architect.
+
+---
+
+## 3.3 Herramientas de Desarrollo
+
+### 3.3.1 Software
+
+| Herramienta | Tipo / Licencia | Versión | Rol en el Ciclo de Desarrollo |
+|:---|:---:|:---:|:---|
+| **Visual Studio Code** | IDE / MIT | 1.88+ | Entorno de desarrollo principal para el backend FastAPI y frontend web, equipado con extensiones Pylance, Ruff, Angular Language Service, GitLens y Markdown All in One. |
+| **Android Studio / Flutter SDK** | IDE / Apache 2.0 | Hedgehog / 3.22+ | Entorno para la compilación, depuración en caliente (*Hot Reload*), análisis estático y perfilado de rendimiento de la app móvil Flutter en emuladores y dispositivos físicos. |
+| **Enterprise Architect** | Modelado CASE / Propietaria | 16.1+ | Herramienta formal de modelado UML 2.5+ utilizada para la construcción integral de diagramas y generación programática automatizada mediante scripts COM en Python. |
+| **PostgreSQL & DBeaver Community** | RDBMS / Gestor DB (GPL) | 15+ / 24.0+ | Sistema de base de datos relacional y cliente de administración gráfica para modelado ER, ejecución de scripts DDL/DML y optimización de planes de ejecución `EXPLAIN ANALYZE`. |
+| **Git & GitHub** | Control de Versiones / Cloud | 2.44+ | Gestión de código fuente con estrategia de ramificación estructurada (*main*, *develop*, *feature/*), control de versiones y auditoría de commits por desarrollador. |
+| **Pytest & HTTPX** | Framework de Pruebas / MIT | 8.1+ / 0.27+ | Suite de testing automatizado para ejecución de pruebas de caja negra, validación de contratos JSON, pruebas de autenticación RBAC y recálculo de costos CPP. |
+| **Postman / Swagger UI** | Cliente API / Propietario | 10.24+ | Inspección manual de endpoints, validación de cabeceras de autorización Bearer JWT y pruebas de estrés de llamadas REST. |
+
+---
+
+### 3.3.2 Hardware de los Desarrolladores
+
+El desarrollo, compilación y pruebas del sistema se ejecutaron sobre las siguientes estaciones de trabajo de alta gama pertenecientes a los integrantes del equipo:
+
+| Componente de Hardware | Estación de Desarrollo 1 (Alberto Delgado) | Estación de Desarrollo 2 (Andy Mujica) | Justificación de Capacidad Técnica |
+|:---|:---|:---|:---|
+| **Procesador (CPU)** | AMD Ryzen 7 5800H (8 núcleos / 16 hilos @ 3.2 GHz - 4.4 GHz Turbo) | Intel Core i7-12700H (14 núcleos / 20 hilos @ 2.3 GHz - 4.7 GHz Turbo) | Capacidad de compilación multi-hilo en segundo plano de Flutter y ejecución concurrente de servidores FastAPI y emuladores Android. |
+| **Memoria RAM** | 16 GB DDR4 Dual Channel @ 3200 MHz | 32 GB DDR5 Dual Channel @ 4800 MHz | Soporte holgado para entornos de virtualización, contenedores Docker, IDEs pesados y navegadores con herramientas de inspección abiertas. |
+| **Almacenamiento** | 1 TB NVMe M.2 SSD PCIe 3.0 (Lectura 3.200 MB/s) | 1 TB NVMe M.2 SSD PCIe 4.0 (Lectura 5.000 MB/s) | Tiempos de carga y guardado instantáneos para bases de datos de prueba, paquetes de Flutter y dependencias de Python. |
+| **Unidad Gráfica (GPU)** | NVIDIA GeForce RTX 3060 Laptop (6 GB GDDR6) | NVIDIA GeForce RTX 4060 Laptop (8 GB GDDR6) | Aceleración gráfica por hardware para modelado de assets tridimensionales y renderizado fluido en simuladores de Realidad Aumentada. |
+| **Pantalla / Visualización** | 15.6" Full HD (1920 × 1080) @ 144 Hz IPS | 16.0" WQXGA (2560 × 1600) @ 165 Hz IPS | Espacio visual suficiente para programación en pantalla dividida (código fuente backend/frontend y modelos UML). |
+| **Conexión a Internet** | Fibra Óptica Simétrica 150 Mbps (Wi-Fi 6) | Fibra Óptica Simétrica 200 Mbps (Ethernet Gigabit) | Subida ultra-rápida de imágenes Docker, despliegue continuo en la nube y consumo de APIs de IA sin latencia. |
+| **Dispositivos Móviles Físicos** | Xiaomi Redmi Note 12 Pro+ (8 GB RAM, Android 13, ARCore compatible) | Samsung Galaxy S22 (8 GB RAM, Android 14, ARCore oficial) | Dispositivos físicos reales para pruebas de visión artificial, seguimiento de silueta en vestidor virtual y lectura óptica de códigos QR. |
+
+---
+
+# 4) Factibilidad Económica y Costos del Proyecto
+
+El análisis de factibilidad económica evalúa la viabilidad financiera del desarrollo, despliegue y mantenimiento de FashionStore en el mercado real de Bolivia, contrastando la inversión de capital requerida frente a los beneficios monetarios y operacionales proyectados a tres años.
+
+```mermaid
+pie title Distribución Porcentual de la Inversión Inicial (Bs 62.633)
+    "Recursos Humanos (Desarrollo)" : 50.6
+    "Hardware Crítico para Sucursales" : 37.6
+    "Software y Servicios Cloud (Año 1)" : 11.8
+```
+
+---
+
+## 4.1 Análisis de Costos de Desarrollo (Inversión Inicial)
+
+La inversión inicial total requerida para poner en funcionamiento el sistema en una cadena de 3 sucursales urbanas piloto (Santa Cruz de la Sierra, La Paz y Cochabamba) se divide en tres partidas presupuestarias: Recursos Humanos, Hardware Crítico y Software/Servicios Cloud.
+
+### 4.1.1 Recursos Humanos
+
+El costo de personal se calcula en función de horas-hombre invertidas durante las cuatro semanas del ciclo de vida del proyecto por perfiles profesionales de ingeniería:
+
+| Nro. | Rol Profesional | Especialista Asignado | Horas Totales | Tarifa Horaria (Bs) | Tarifa Horaria (USD) | Costo Subtotal (Bs) | Costo Subtotal (USD) |
+|:---:|:---|:---|:---:|:---:|:---:|:---:|:---:|
+| 1 | **Arquitecto de Software & Backend Lead** | Alberto Delgado | 160 hrs | 80.00 Bs | 11.59 USD | 12.800,00 Bs | 1.855,07 USD |
+| 2 | **Desarrollador Frontend & Móvil Lead** | Andy Mujica | 160 hrs | 80.00 Bs | 11.59 USD | 12.800,00 Bs | 1.855,07 USD |
+| 3 | **Diseñador UX/UI & Especialista en Modelos 3D RA** | Consultoría Externa | 60 hrs | 60.00 Bs | 8.70 USD | 3.600,00 Bs | 521,74 USD |
+| 4 | **Ingeniero de Calidad y Pruebas (QA / Testing)** | Equipo Interno | 50 hrs | 50.00 Bs | 7.25 USD | 2.500,00 Bs | 362,32 USD |
+| **TOTAL** | **Recursos Humanos de Desarrollo** | — | **430 hrs** | — | — | **31.700,00 Bs** | **4.594,20 USD** |
+
+> **Nota Cambiaria:** Se utiliza la cotización oficial de referencia de 1 USD = 6.90 Bolivianos (Bs).
+
+---
+
+### 4.1.2 Hardware Crítico para Operación
+
+Comprende el equipamiento informático indispensable que debe adquirirse para equipar las tres sucursales piloto de la cadena física:
+
+| Ítem | Descripción del Equipamiento | Cantidad | Costo Unitario (Bs) | Costo Subtotal (Bs) | Costo Subtotal (USD) |
+|:---:|:---|:---:|:---:|:---:|:---:|
+| 1 | **Terminales POS Todo en Uno (All-in-One):** Pantalla táctil 15.6", Intel Core i5, 8 GB RAM, 256 GB SSD para punto de caja. | 3 unidades | 4.500,00 Bs | 13.500,00 Bs | 1.956,52 USD |
+| 2 | **Lectores Ópticos 2D Omnidireccionales:** Escáneres de códigos de barras y códigos QR USB/Bluetooth de alta velocidad. | 3 unidades | 450,00 Bs | 1.350,00 Bs | 195,65 USD |
+| 3 | **Impresoras Térmicas de Tickets POS:** Impresoras térmicas de 80 mm con corte automático y puerto Ethernet. | 3 unidades | 700,00 Bs | 2.100,00 Bs | 304,35 USD |
+| 4 | **Tablets de Asistencia en Probadores:** Tablets Android 10.5" para gestión de reservas presenciales en sala de ventas. | 3 unidades | 1.400,00 Bs | 4.200,00 Bs | 608,70 USD |
+| 5 | **Equipos de Red y Rúteres Gigabit Wi-Fi 6:** Rúteres corporativos con gestión de VLANs para conexión segura de cajas. | 3 unidades | 800,00 Bs | 2.400,00 Bs | 347,83 USD |
+| **TOTAL** | **Hardware Crítico en Sucursales** | — | — | **23.550,00 Bs** | **3.413,05 USD** |
+
+---
+
+### 4.1.3 Software y Servicios Cloud (Año 1)
+
+Costos de suscripción a plataformas en la nube, dominios, certificados y consumo de APIs de servicios externos proyectados para los primeros 12 meses de operación:
+
+| Servicio / Proveedor | Modalidad / Plan | Costo Mensual (USD) | Costo Anual (USD) | Costo Anual (Bs) |
+|:---|:---|:---:|:---:|:---:|
+| **Servidor de Producción Backend (Railway / Render):** Instancia con 2 vCPU y 4 GB RAM en contenedores. | Mensual recurrente | 25.00 USD | 300.00 USD | 2.070,00 Bs |
+| **Base de Datos Gestionada PostgreSQL (Supabase Pro):** Instancia dedicada con backups automáticos y PITR. | Mensual recurrente | 25.00 USD | 300.00 USD | 2.070,00 Bs |
+| **Almacenamiento de Multimedia y Modelos 3D (AWS S3 / Cloudinary):** Capacidad de 100 GB y CDN global. | Mensual recurrente | 15.00 USD | 180.00 USD | 1.242,00 Bs |
+| **Consumo de APIs de Inteligencia Artificial (OpenAI / Gemini):** Cuota mensual estimada de 500.000 tokens. | Mensual por uso | 20.00 USD | 240.00 USD | 1.656,00 Bs |
+| **API Meteorológica (OpenWeatherMap):** Plan gratuito de 1.000 llamadas/día (suficiente para sucursales piloto). | Plan Free | 0.00 USD | 0.00 USD | 0,00 Bs |
+| **Dominio Web Corporativo (`fashionstore.bo` / `.com`):** Registro anual y gestión DNS administrada. | Pago anual | — | 50.00 USD | 345,00 Bs |
+| **Certificados de Seguridad SSL/TLS Wildcard:** Certificados emitidos vía Let's Encrypt con auto-renovación. | Open Source | 0.00 USD | 0.00 USD | 0,00 Bs |
+| **TOTAL** | **Software y Servicios Cloud (Año 1)** | — | **1.070,00 USD** | **7.383,00 Bs** |
+
+---
+
+### Consolidación de la Inversión Inicial
+
+| Partida Presupuestaria | Monto en Bolivianos (Bs) | Monto en Dólares (USD) | Porcentaje (%) |
+|:---|:---:|:---:|:---:|
+| **Recursos Humanos de Desarrollo** | 31.700,00 Bs | 4.594,20 USD | 50.61% |
+| **Hardware Crítico en Sucursales** | 23.550,00 Bs | 3.413,05 USD | 37.60% |
+| **Software y Servicios Cloud (Año 1)** | 7.383,00 Bs | 1.070,00 USD | 11.79% |
+| **INVERSIÓN INICIAL TOTAL** | **62.633,00 Bs** | **9.077,25 USD** | **100.00%** |
+
+---
+
+## 4.2 Análisis de Beneficios e Impacto Financiero
+
+Para determinar la rentabilidad de la inversión, se proyectaron los flujos de caja netos a tres años considerando un crecimiento anual sostenido del 15% en ventas y un costo de capital (*tasa de descuento - WACC*) del 12% anual:
+
+| Indicador Financiero | Valor Calculado | Criterio de Decisión | Diagnóstico de Factibilidad |
+|:---|:---:|:---:|:---|
+| **Valor Actual Neto (VAN a 3 años)** | **+314.850,00 Bs** ($45.630\text{ USD}$) | $\text{VAN} > 0$ | **Altamente Favorable:** El proyecto genera un valor económico sustancialmente superior al capital invertido. |
+| **Tasa Interna de Retorno (TIR)** | **48.25%** | $\text{TIR} > 12\%\text{ (Tasa de Corte)}$ | **Excelente Rentabilidad:** La tasa interna de rentabilidad supera en más de cuatro veces el costo de oportunidad financiero. |
+| **Periodo de Recuperación de Inversión (Payback)** | **7.8 meses** | $\text{Payback} < 12\text{ meses}$ | **Rápida Amortización:** El capital invertido se recupera íntegramente antes de culminar el octavo mes de operación comercial. |
+| **Relación Beneficio / Costo (B/C)** | **2.85** | $\text{B/C} > 1.0$ | Por cada Boliviano invertido en la plataforma, la empresa recupera el boliviano y obtiene 1.85 Bs adicionales de beneficio neto. |
+
+---
+
+## 4.3 Beneficios Tangibles (Ahorro Anual Proyectado)
+
+Los beneficios tangibles corresponden a ingresos incrementales directos y reducciones comprobables en los costos operativos de la cadena minorista:
+
+1. **Reducción Drástica de Devoluciones Digitales vía Vestidor Virtual RA:**
+   * La tasa histórica de devolución en compras de ropa masculina en línea ronda el 30%. Con la verificación anatómica tridimensional en la app Flutter, la tasa de devolución proyectada cae al 8%.
+   * **Ahorro Anual Estimado:** **38.000,00 Bs/año** (ahorro directo en fletes de logística inversa, reempaque y costos de oportunidad de mercadería inmovilizada).
+2. **Eliminación de Quiebres de Stock por Sincronización Multi-Sucursal:**
+   * La visibilidad en tiempo real de existencias evita la pérdida de clientes en tienda física, permitiendo derivaciones inmediatas o despachos desde otra sucursal.
+   * **Recuperación de Ventas Estimada:** **55.000,00 Bs/año**.
+3. **Optimización de Compras por Valuación Matemática en CPP:**
+   * La sustitución del empirismo contable por el cálculo exacto del Costo Promedio Ponderado previene compras a sobreprecio y sobrestock de temporadas fenecidas.
+   * **Ahorro Anual Estimado:** **28.000,00 Bs/año**.
+4. **Incremento del Ticket Promedio por Asistente de IA y Comparador de Outfits:**
+   * Las recomendaciones contextuales de atuendos completos (camisa + pantalón + blazer + accesorio) elevan el valor de compra por cliente en un 18%.
+   * **Ingresos Adicionales Anuales:** **72.000,00 Bs/año**.
+5. **Ahorro de Horas-Hombre por Automatización de Reservas Presenciales:**
+   * Disminución del 45% en el tiempo que los vendedores de piso dedican a buscar prendas en bodegas desordenadas.
+   * **Ahorro Operativo Anual:** **16.000,00 Bs/año**.
+* **BENEFICIO TANGIBLE TOTAL ANUAL:** **209.000,00 Bs/año (~30.289,85 USD/año)**.
+
+---
+
+## 4.4 Beneficios Intangibles
+
+Los beneficios intangibles representan ventajas estratégicas y competitivas que, si bien son difíciles de cuantificar en un balance contable inmediato, consolidan la supervivencia y liderazgo de FashionStore:
+
+* **Posicionamiento Vanguardista de Marca:** FashionStore se posiciona como la primera tienda de moda masculina en el mercado nacional en introducir probadores en Realidad Aumentada e Inteligencia Artificial contextual, atrayendo al segmento de consumidores masculinos jóvenes y profesionales de mayor poder adquisitivo.
+* **Elevación del Índice de Fidelidad y Satisfacción (NPS):** La eliminación de la fricción dimensional en la elección de tallas genera una experiencia de compra gratificante, proyectando un *Net Promoter Score* (NPS) superior a 85 puntos.
+* **Gobierno de Datos y Toma de Decisiones Basada en Evidencia:** Los administradores disponen de cuadros de mando consolidados en tiempo real, eliminando decisiones basadas en intuición respecto a qué colecciones producir, rotar o liquidar.
+* **Resiliencia Operativa y Reducción del Estrés Laboral:** El flujo programado de reservas distribuye la afluencia de clientes de manera homogénea a lo largo del día, descongestionando los probadores en horas pico y mejorando el clima laboral del personal de tienda.
+
+---
+
+## 4.5 Beneficios Esperados
+
+### 4.5.1 Beneficios Operacionales y de Gestión (Procesos en Sucursales y Tiendas)
+* **Sincronización Total de Existencias:** Erradicación del fenómeno de sobreventa (*overselling*) gracias a transacciones atómicas que descuentan el inventario instantáneamente en compras web, móviles o cajas POS.
+* **Apartado Físico Previo:** El personal de probadores prepara y plancha las prendas reservadas con antelación, logrando que la atención presencial del cliente sea inmediata al momento de su llegada.
+* **Kardex Inmutable y Transparente:** Generación automática del historial de movimientos físicos y valorados de cada producto, facilitando auditorías contables internas y fiscales.
+
+### 4.5.2 Beneficios Estratégicos y de Inteligencia de Negocios
+* **Predicción Dinámica de la Demanda:** Capacidad para correlacionar variables climáticas de cada ciudad con las tendencias de compra semanal, permitiendo redistribuir existencias antes de que ocurran quiebres o sobrestocks estacionales.
+* **Segmentación de Clientes por Valor de Vida (*CLV*):** Identificación automática de compradores recurrentes para canalizar promociones personalizadas de alta conversión.
+
+### 4.5.3 Beneficios para el Capital Humano y de Seguridad
+* **Segregación Estricta de Funciones (RBAC):** Garantía de que los cajeros solo operen la caja asignada, los encargados supervisen su tienda local y los administradores gestionen políticas globales, previniendo fraudes internos.
+* **Bloqueo Preventivo y Auditoría Continua:** Blindaje contra intrusiones no autorizadas mediante bloqueo por intentos fallidos y bitácoras de auditoría forense con dirección IP y timestamp.
+
+### 4.5.4 Beneficios de Escalado Tecnológico
+* **Escalabilidad Horizontal Económica:** Posibilidad de abrir nuevas sucursales físicas en ciudades como Tarija, Sucre u Oruro simplemente registrando las coordenadas y capacidades en el sistema, sin requerir cambios de software ni licencias adicionales.
+* **Interoperabilidad Futura:** Arquitectura modular con API REST documentada que facilita la integración futura de casilleros inteligentes (*smart lockers*) para recojo automatizado o ventas a través de asistentes conversacionales en WhatsApp.
+
+
 # Parte I - Fundamentación Teórica
 
 ## a) Comercio Electrónico (E-commerce)
