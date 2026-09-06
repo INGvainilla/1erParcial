@@ -4,7 +4,10 @@ Clase Control: Lógica de Autenticación, Registro y Recuperación OTP (CU01, CU
 Conforme a B4.txt (línea 40), las clases de control contienen exclusivamente métodos de negocio
 y NO poseen atributos propios. Cada método documenta sus pasos correlativos de ejecución.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.config import settings
@@ -15,6 +18,7 @@ from app.modules.auth.models import Usuario, TokenRecuperacion, BitacoraAcceso
 from app.modules.auth.schemas import (
     LoginRequest, TokenResponse, RegistroRequest, SolicitarOtpRequest, ResetPasswordOtpRequest
 )
+from app.core.email import enviar_correo_otp
 
 class AuthService:
     """
@@ -53,7 +57,7 @@ class AuthService:
         # Paso 1.4: Verificar si la cuenta se encuentra bloqueada preventivamente
         if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
             # Verificar si expiró el tiempo de castigo preventivo (30 min)
-            if usuario.bloqueado_hasta and datetime.utcnow() > usuario.bloqueado_hasta:
+            if usuario.bloqueado_hasta and utc_now() > usuario.bloqueado_hasta:
                 usuario.estado_cuenta = "ACTIVO"
                 usuario.intentos_fallidos = 0
                 usuario.bloqueado_hasta = None
@@ -61,7 +65,7 @@ class AuthService:
             else:
                 tiempo_restante = "30 minutos"
                 if usuario.bloqueado_hasta:
-                    minutos = max(1, int((usuario.bloqueado_hasta - datetime.utcnow()).total_seconds() / 60))
+                    minutos = max(1, int((usuario.bloqueado_hasta - utc_now()).total_seconds() / 60))
                     tiempo_restante = f"{minutos} minutos"
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -85,7 +89,7 @@ class AuthService:
             # Si supera 5 intentos consecutivos, bloquear la cuenta por 30 min
             if usuario.intentos_fallidos >= settings.MAX_LOGIN_ATTEMPTS:
                 usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
-                usuario.bloqueado_hasta = datetime.utcnow() + timedelta(minutes=settings.ACCOUNT_LOCK_MINUTES)
+                usuario.bloqueado_hasta = utc_now() + timedelta(minutes=settings.ACCOUNT_LOCK_MINUTES)
                 motivo = "Bloqueo automático por 5to intento fallido"
             else:
                 motivo = f"Contraseña errónea (Intento {usuario.intentos_fallidos})"
@@ -110,7 +114,7 @@ class AuthService:
         # Paso 1.6: Autenticación exitosa -> resetear intentos fallidos y actualizar último acceso
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
-        usuario.ultimo_acceso = datetime.utcnow()
+        usuario.ultimo_acceso = utc_now()
 
         # Paso 1.7: Generar Token JWT con claims de rol y expiración configurable
         delta_exp = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS) if request.recordar_sesion else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -176,10 +180,11 @@ class RegistroService:
             apellidos=request.apellidos.strip(),
             email=email,
             password_hash=password_cifrada,
+            telefono=request.telefono,
             rol="CLIENTE",
             estado_cuenta="ACTIVO",
             intentos_fallidos=0,
-            ultimo_acceso=datetime.utcnow()
+            ultimo_acceso=utc_now()
         )
         db.add(nuevo_usuario)
         db.commit()
@@ -246,15 +251,21 @@ class RecuperacionService:
         nuevo_token = TokenRecuperacion(
             id_usuario=usuario.id_usuario,
             codigo_otp_hash=codigo_otp_hash,
-            expiracion=datetime.utcnow() + timedelta(minutes=settings.OTP_EXPIRE_MINUTES),
+            expiracion=utc_now() + timedelta(minutes=settings.OTP_EXPIRE_MINUTES),
             utilizado=False,
             intentos_verificacion=0
         )
         db.add(nuevo_token)
         db.commit()
 
-        # Paso 1.5: Enviar código OTP por correo electrónico (o exponer en log local para pruebas)
-        print(f" [EMAIL SIMULADOR] Para: {email} | Código OTP generado: {codigo_otp} | Válido por 15 min")
+        # Paso 1.5: Enviar código OTP por correo electrónico real vía SMTP Gmail
+        enviar_correo_otp(
+            destinatario=email,
+            codigo_otp=codigo_otp,
+            nombre_usuario=usuario.nombre_completo or "Cliente",
+            async_send=True
+        )
+        print(f" [EMAIL SMTP] Enviado a: {email} | Código OTP generado: {codigo_otp} | Válido por {settings.OTP_EXPIRE_MINUTES} min")
 
         # Paso 1.6: Retornar confirmación sin revelar existencia directa
         return {
@@ -286,7 +297,7 @@ class RecuperacionService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No existe una solicitud de recuperación activa para este correo.")
 
         # Paso 2.2: Validar si el token ya expiró (> 15 minutos)
-        if datetime.utcnow() > token_record.expiracion:
+        if utc_now() > token_record.expiracion:
             token_record.utilizado = True
             db.commit()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código OTP ha expirado (límite de 15 minutos). Solicite uno nuevo.")

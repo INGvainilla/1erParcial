@@ -125,6 +125,9 @@ def test_tc03_autoregistro_cliente_nuevo():
     assert u is not None
     assert u.password_hash != "Fashion2026*"
     assert u.password_hash.startswith("$2b$")
+    # Limpieza del usuario de prueba para no acumular registros
+    db.delete(u)
+    db.commit()
     db.close()
 
 # =============================================================================
@@ -192,9 +195,10 @@ def test_tc05_desbloqueo_administrativo_cajero():
     db = SessionLocal()
     cajero = db.query(Usuario).filter(Usuario.email == "javier.roca@store.bo").first()
     id_cajero = cajero.id_usuario
-    # Asegurar que esté bloqueado antes de la prueba
+    # Asegurar que esté bloqueado antes de la prueba y su rol sea CAJERO
     cajero.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
     cajero.intentos_fallidos = 5
+    cajero.rol = "CAJERO"
     db.commit()
     db.close()
 
@@ -211,6 +215,28 @@ def test_tc05_desbloqueo_administrativo_cajero():
     })
     assert resp_login.status_code == 200
     assert resp_login.json()["rol"] == "CAJERO"
+
+    # Verificar listado de usuarios (CU04) y RBAC
+    resp_list_noauth = client.get("/api/v1/usuarios")
+    assert resp_list_noauth.status_code == 401
+
+    resp_list = client.get("/api/v1/usuarios", headers=headers)
+    assert resp_list.status_code == 200
+    usuarios_data = resp_list.json()
+    assert isinstance(usuarios_data, list)
+    assert len(usuarios_data) > 0
+    assert "email" in usuarios_data[0]
+    assert "rol" in usuarios_data[0]
+    assert "telefono" in usuarios_data[0]
+
+    # Re-bloquear al cajero para preservar el estado inicial de la semilla para demostraciones
+    db = SessionLocal()
+    cajero = db.query(Usuario).filter(Usuario.email == "javier.roca@store.bo").first()
+    if cajero:
+        cajero.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
+        cajero.intentos_fallidos = 5
+        db.commit()
+    db.close()
 
 # =============================================================================
 # TC06: CU05 - Alta de Sucursal con Coordenadas GPS y Probadores
@@ -250,6 +276,13 @@ def test_tc06_alta_sucursal_gps_probadores():
     assert data["capacidad_probadores"] == 8
     assert float(data["latitud"]) == pytest.approx(-17.75512000, abs=1e-5)
 
+    # Limpieza de la sucursal de prueba para no duplicar en el catálogo
+    db = SessionLocal()
+    from app.modules.sucursales.models import Sucursal
+    db.query(Sucursal).filter(Sucursal.nombre_sucursal == "Sucursal Ventura Mall Test").delete()
+    db.commit()
+    db.close()
+
 # =============================================================================
 # TC07: CU06 - Alta de Prenda con Tallas y Colores HEX Multivaluados
 # =============================================================================
@@ -275,7 +308,7 @@ def test_tc07_alta_producto_con_colores_hex_y_tallas():
         "precio_base": 195.50,
         "id_categoria": cat.id_categoria,
         "id_marca": mrc.id_marca,
-        "imagen_principal": "https://assets.fashionstore.bo/images/polo_pima.jpg",
+        "imagen_principal": "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80",
         "modelo_3d_glb": "https://assets.fashionstore.bo/models/polo_pima.glb",
         "colores": [
             {"color_nombre": "Negro Azabache", "codigo_hex": "#000000"},
@@ -291,6 +324,17 @@ def test_tc07_alta_producto_con_colores_hex_y_tallas():
     assert len(data["colores"]) == 2
     assert len(data["tallas"]) == 4
     assert data["colores"][0]["codigo_hex"] in ["#000000", "#FFFFFF"]
+
+    # Limpieza de prenda de prueba
+    db = SessionLocal()
+    from app.modules.productos.models import Producto, ProductoColor, ProductoTalla
+    p_test = db.query(Producto).filter(Producto.codigo_sku_base == sku_test).first()
+    if p_test:
+        db.query(ProductoColor).filter(ProductoColor.id_producto == p_test.id_producto).delete()
+        db.query(ProductoTalla).filter(ProductoTalla.id_producto == p_test.id_producto).delete()
+        db.delete(p_test)
+        db.commit()
+    db.close()
 
 # =============================================================================
 # TC08: CU07 - Temporadas Comerciales y Campañas Estacionales
@@ -318,6 +362,13 @@ def test_tc08_temporada_campana_estacional():
     data = resp.json()
     assert data["codigo_campana"] == cod_temp
     assert data["estado"] == "VIGENTE"
+
+    # Limpieza de temporada de prueba
+    db = SessionLocal()
+    from app.modules.temporadas.models import Temporada
+    db.query(Temporada).filter(Temporada.codigo_campana == cod_temp).delete()
+    db.commit()
+    db.close()
 
 # =============================================================================
 # TC09: CU08 - Proveedores: Validación de Unicidad de NIT
@@ -414,6 +465,21 @@ def test_tc10_recalculo_matematico_cpp():
     # Validación formal del algoritmo CPP
     assert kardex2["saldo_cantidad_resultante"] == 35
     assert float(kardex2["saldo_cpp_resultante"]) == 107.14
+
+    # Limpieza de inventario y kardex de prueba
+    db = SessionLocal()
+    from app.modules.inventario.models import KardexMovimiento
+    inv_t = db.query(Inventario).filter(
+        Inventario.id_sucursal == id_sucursal,
+        Inventario.id_producto == id_producto,
+        Inventario.talla == test_talla,
+        Inventario.color == test_color
+    ).first()
+    if inv_t:
+        db.query(KardexMovimiento).filter(KardexMovimiento.id_inventario == inv_t.id_inventario).delete()
+        db.delete(inv_t)
+        db.commit()
+    db.close()
 
 # =============================================================================
 # TC11: CU10 - Catálogo Omnicanal y Disponibilidad Física por Sucursal

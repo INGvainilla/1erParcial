@@ -1814,7 +1814,140 @@ Para este **Ciclo 1 (Iteración 1)**, el equipo de desarrollo (integrado por **A
 
 ### 1.1 Identificación de Casos de Uso y Actores
 
-A partir del análisis exhaustivo del modelo de negocio y las necesidades operativas de FashionStore, se identifican formalmente los Casos de Uso que componen el sistema, vinculados con los actores que interactúan con cada servicio:
+En el marco metodológico del **Proceso Unificado de Desarrollo de Software (PUDS)** y la especificación estándar **UML 2.5+**, un **Actor** representa un rol coherente que un usuario humano, un dispositivo de hardware o un sistema computacional externo desempeña al interactuar directamente con el software bajo desarrollo. Los actores residen conceptualmente fuera de la frontera (*boundary*) del sistema y desencadenan o participan en los flujos de eventos descritos por los casos de uso.
+
+A continuación, se define la taxonomía completa de los **actores internos y externos** que interactúan en el ecosistema omnicanal de **FashionStore**, acompañada de su caracterización y responsabilidades:
+
+```mermaid
+graph TD
+    subgraph Actores del Ecosistema FashionStore
+        subgraph Actores Internos de la Organización
+            A1["👔 Administrador General<br/>(Gestión Global, RBAC, Dashboards)"]
+            A2["🏪 Encargado de Sucursal<br/>(Probadores, Reservas, Stock Local)"]
+            A3["💵 Cajero de Sucursal<br/>(POS, Cobros, Emisión Facturas)"]
+            A4["📦 Personal de Logística / Almacén<br/>(Recepción, Valuación CPP, Delivery)"]
+        end
+        subgraph Actores Externos y Sistemas Cooperantes
+            E1["🧑‍💼 Cliente Final<br/>(Catálogo, RA, Reservas, Checkout, Puntos)"]
+            E2["🏭 Proveedor Textil<br/>(Órdenes de Compra, Lotes, Temporadas)"]
+            E3["💳 Pasarela de Pagos (Stripe / Libélula)<br/>(Tokenización, 3DS, Webhooks)"]
+            E4["🧠 Servicio de Inteligencia Artificial<br/>(Outfits Contextuales, Voz NLP)"]
+            E5["🌦️ Servicio Meteorológico (OpenWeatherMap)<br/>(Telemetría de Clima y Temperatura)"]
+            E6["🛵 Empresa de Delivery / Repartidor<br/>(Última Milla, Rastreo, Confirmación OTP)"]
+        end
+    end
+```
+
+#### 1.1.1 Actores Internos (Personal de la Organización)
+
+Corresponden a los usuarios humanos pertenecientes a la nómina operativa y ejecutiva de la cadena de tiendas de indumentaria masculina. Acceden al sistema a través de la plataforma web administrativa (Angular) o la terminal de caja POS, sujetos a rigurosas políticas de Control de Acceso Basado en Roles (RBAC):
+
+1. **Administrador General:**
+   * **Descripción y Rol:** Máxima autoridad directiva e informática de la empresa. Cuenta con privilegios irrestrictos sobre la configuración y gobernanza de la plataforma.
+   * **Responsabilidades Clave:**
+     - Creación, modificación, asignación de roles y revocación de cuentas de personal interno.
+     - Desbloqueo administrativo de cuentas inhabilitadas preventivamente tras 5 intentos fallidos de autenticación.
+     - Alta y parametrización de ciudades, sucursales físicas, georreferenciación GPS y capacidades de probadores.
+     - Gestión del catálogo maestro: categorías, marcas, temporadas estacionales y atributos de moda (tallas y colores Hexadecimales).
+     - Supervisión de métricas financieras, auditorías de seguridad e indicadores gerenciales en los tableros de control (dashboards).
+
+2. **Encargado de Sucursal:**
+   * **Descripción y Rol:** Responsable del funcionamiento diario, la sala de ventas y el almacén de una tienda física específica (ej. *Sucursal Equipetrol*, *Sucursal Calacoto* o *Sucursal El Prado*).
+   * **Responsabilidades Clave:**
+     - Monitoreo en tiempo real del panel de reservas presenciales asignadas a su sucursal.
+     - Coordinación y supervisión del apartado físico anticipado de prendas en perchas y probadores previo a la visita del cliente.
+     - Validación de la llegada del cliente a la tienda mediante el escaneo óptico del código QR de la reserva.
+     - Control y auditoría del stock físico local, reporte de mermas o prendas deterioradas y recepción de transferencias inter-sucursales.
+
+3. **Cajero de Sucursal:**
+   * **Descripción y Rol:** Operador de mostrador responsable de la atención directa y formalización de cobros en los puntos de venta físicos (POS).
+   * **Responsabilidades Clave:**
+     - Autenticación en la terminal de caja e inicio de turno de cobro.
+     - Búsqueda ágil de prendas mediante escaneo de códigos de barras SKU o códigos alfanuméricos.
+     - Conversión directa de solicitudes de reserva presencial en ventas definitivas de mostrador.
+     - Procesamiento de cobros físicos (efectivo con cálculo automático de cambio) y cobros electrónicos (tarjetas con terminal POS física o Código QR Interoperable).
+     - Emisión e impresión de comprobantes de venta válidos (tickets térmicos y facturas) con descuento automático de inventario.
+
+4. **Personal de Logística y Almacén:**
+   * **Descripción y Rol:** Operadores de bodega y centros de distribución responsables de la recepción de mercadería y el despacho de pedidos.
+   * **Responsabilidades Clave:**
+     - Recepción física y control de calidad de lotes textiles enviados por proveedores.
+     - Registro minucioso del costo unitario neto de adquisición del lote para alimentar el recálculo automático del Costo Promedio Ponderado (CPP).
+     - Embalaje, etiquetado y preparación de órdenes de venta digital destinadas a entrega a domicilio (*Delivery*).
+     - Asignación de paquetes a transportistas y registro de hojas de ruta para última milla.
+
+---
+
+#### 1.1.2 Actores Externos (Usuarios y Sistemas Cooperantes)
+
+Representan a las personas ajenas a la nómina de la empresa y a los servicios informáticos de terceros que interactúan mediante interfaces de usuario o protocolos de comunicación en red (APIs REST, Webhooks y pasarelas):
+
+1. **Cliente Final (Consumidor Masculino):**
+   * **Descripción y Rol:** Usuario final y comprador de la plataforma, que interactúa a través de la aplicación móvil (Flutter) o el portal web público (Angular).
+   * **Responsabilidades Clave:**
+     - Auto-registro de cuenta de usuario, inicio de sesión seguro y gestión de perfil personal.
+     - Consulta y filtrado multidimensional del catálogo de prendas masculinas por categoría, talla, color, precio y sucursal.
+     - Proyección virtual de prendas sobre su silueta mediante el Vestidor Virtual con Realidad Aumentada (RA).
+     - Solicitud de reservas anticipadas de prendas para acudir presencialmente a probarlas en la sucursal de su elección.
+     - Formalización de compras digitales mediante carrito de compras omnicanal y pago electrónico seguro.
+     - Acumulación y canje de puntos de fidelización dentro del programa gamificado y recepción de recomendaciones por IA.
+
+2. **Proveedor Textil:**
+   * **Descripción y Rol:** Empresa fabricante o comercializadora que suministra indumentaria masculina a la cadena FashionStore.
+   * **Responsabilidades Clave:**
+     - Recepción y confirmación de órdenes de compra emitidas por la administración.
+     - Suministro de lotes de prendas asociados a colecciones y temporadas comerciales específicas.
+     - Envío de notas de entrega y fichas técnicas de composición textil y cuidado de prendas.
+
+3. **Pasarela de Pagos Electrónicos (Stripe / PayPal / Libélula):**
+   * **Descripción y Rol:** Sistema bancario y tecnológico externo que procesa transacciones monetarias digitales bajo estrictos estándares de seguridad financiera (PCI-DSS).
+   * **Responsabilidades Clave:**
+     - Captura segura y tokenización de números de tarjetas de débito/crédito, impidiendo que datos sensibles toquen los servidores de FashionStore.
+     - Validación de fondos, autenticación del titular mediante protocolo 3D Secure 2.0 y prevención de fraudes.
+     - Confirmación o rechazo síncrono de transacciones y emisión de notificaciones asíncronas vía Webhooks hacia el backend FastAPI.
+
+4. **Servicio de Inteligencia Artificial (OpenAI API / Gemini API):**
+   * **Descripción y Rol:** Motor cognitivo en la nube que actúa como asistente de estilo personalizado y procesador de lenguaje natural.
+   * **Responsabilidades Clave:**
+     - Análisis de preferencias de estilo, paletas de colorimetría y compras previas del usuario.
+     - Síntesis de condiciones de contexto (temperatura y clima local) para sugerir combinaciones coherentes de ropa masculina.
+     - Procesamiento semántico de consultas del catálogo y comandos verbales de búsqueda por voz.
+
+5. **Servicio Meteorológico Externo (OpenWeatherMap API):**
+   * **Descripción y Rol:** Proveedor telemático en la nube de información climática en tiempo real.
+   * **Responsabilidades Clave:**
+     - Provisión continua de variables meteorológicas (temperatura en grados Celsius, estado del cielo, nivel de precipitaciones y humedad) de la ciudad donde se ubica el cliente.
+     - Entrega de datos para que el motor de IA adapte dinámicamente las recomendaciones de vestimenta (ej. sugiriendo gabardinas o suéteres ante frentes fríos).
+
+6. **Empresa de Delivery / Repartidor de Última Milla:**
+   * **Descripción y Rol:** Agente logístico urbano (como Yaigo, Yummy, PedidosYa o flota interna de repartidores) encargado del traslado físico del producto.
+   * **Responsabilidades Clave:**
+     - Recolección física del paquete empaquetado en la sucursal de despacho asignada.
+     - Transporte seguro hacia el domicilio georreferenciado del cliente.
+     - Confirmación de la entrega efectiva mediante captura de firma digital o validación del código OTP proporcionado por el comprador.
+
+---
+
+#### 1.1.3 Matriz Resumen de Actores del Sistema
+
+| Tipo de Actor | Nombre del Actor | Plataforma / Canal de Interacción | Categoría de Permisos (RBAC) | Propósito Principal en FashionStore |
+|:---:|:---|:---:|:---:|:---|
+| **Interno** | **Administrador General** | Web Administrativa (Angular) | `ADMINISTRADOR` (Acceso Total) | Gobernanza global de usuarios, roles, tiendas, catálogo, temporadas, proveedores y analítica. |
+| **Interno** | **Encargado de Sucursal** | Web / Tablet (Angular) | `ENCARGADO_SUCURSAL` | Gestión y preparación de reservas presenciales en probadores y control de stock local. |
+| **Interno** | **Cajero de Sucursal** | Terminal POS Web (Angular) | `CAJERO` | Facturación en mostrador, cobros multimedio, conversión de reservas y cuadre de caja. |
+| **Interno** | **Personal de Logística** | Web de Almacén (Angular) | `LOGISTICA` | Recepción de compras con CPP, empaque de órdenes digitales y despacho de delivery. |
+| **Externo** | **Cliente Final** | Móvil (Flutter) + Web (Angular) | `CLIENTE` | Navegación de catálogo, vestidor RA, reservas físicas, compras digitales y fidelización. |
+| **Externo** | **Proveedor Textil** | Portal Proveedor / Correo | `PROVEEDOR` (Extranet) | Confirmación de órdenes de compra, despacho de lotes y suministro de fichas técnicas. |
+| **Externo** | **Pasarela de Pagos** | Servicio API REST Cloud / Webhook | Sistema Externo Automatizado | Autorización, tokenización y procesamiento seguro de transacciones de compra digital. |
+| **Externo** | **Servicio de IA** | API Cloud (OpenAI / Gemini) | Servicio Cognitivo Externo | Generación de sugerencias de outfits contextuales y procesamiento de comandos de voz. |
+| **Externo** | **Servicio Meteorológico** | API Cloud (OpenWeatherMap) | Servicio Telemático Externo | Suministro de datos meteorológicos locales para la personalización climática de prendas. |
+| **Externo** | **Empresa de Delivery** | App de Repartidor / Webhook | Agente Logístico de Transporte | Recojo en tienda física y transporte seguro de última milla hacia el domicilio del cliente. |
+
+---
+
+#### 1.1.4 Identificación y Catálogo General de Casos de Uso
+
+A partir del mapeo de responsabilidades de los actores descritos con los procesos de negocio de FashionStore, se identifican formalmente los **24 Casos de Uso** que estructuran la solución a lo largo de sus tres ciclos de desarrollo:
 
 | Código CU | Nombre del Caso de Uso | Módulo Asociado | Actor(es) Principal(es) | Descripción Resumida |
 |:---:|:---|:---:|:---|:---|
@@ -2825,28 +2958,351 @@ Pkg_Catalogo ..> Pkg_Inventario : <<consulta stock>>
 
 ---
 
-## 2. Flujo de Trabajo: Análisis
+## CAPÍTULO 3: FLUJO DE TRABAJO: ANÁLISIS
 
-### 2.1 Análisis de Arquitectura
+### 3.1 Análisis de Arquitectura
 
-El análisis arquitectónico del Ciclo 1 descompone el sistema en subsistemas y paquetes de análisis de alto nivel (`B4.txt`, líneas 22-28), formalizando la relación estricta entre paquetes y los 10 Casos de Uso desarrollados, aplicando los estereotipos de robustez de Ivar Jacobson:
+El análisis arquitectónico del Ciclo 1 descompone el sistema en subsistemas y paquetes de análisis de alto nivel, formalizando la arquitectura modular, las dependencias estructurales y la trazabilidad directa con los 10 Casos de Uso del ciclo inicial, fundamentándose en los estereotipos de robustez de Ivar Jacobson:
 - **Clases de Interfaz (`<<boundary>>`)**: Encargadas de la interacción y comunicación directa con los actores humanos y externos (formularios de entrada, pantallas interactivas y endpoints API REST). Poseen atributos de captura visual y métodos de interacción (eventos de usuario).
 - **Clases de Control (`<<control>>`)**: Encargadas de orquestar la lógica de negocio, reglas algorítmicas, validaciones y transformaciones de dominio. Como subraya estrictamente la cátedra (`B4.txt`, línea 40), **las clases de control contienen exclusivamente métodos de negocio y NO poseen atributos propios**, operando directamente sobre las entidades de datos.
 - **Clases de Entidad (`<<entity>>`)**: Representan la información persistente y los conceptos transaccionales del dominio (tablas, campos y registros de PostgreSQL).
 
-A continuación se sintetiza la distribución de los 10 Casos de Uso en los 5 Paquetes de Análisis identificados para el Ciclo 1:
+---
 
-| Paquete de Análisis | Casos de Uso Contenidos | Actores Asociados | Responsabilidad Principal de Arquitectura |
-|:---|:---|:---|:---|
-| **Paquete 1: Seguridad y Acceso (RBAC)** | CU01, CU02, CU03, CU04 | Usuario, Cliente, Administrador | Autenticación criptográfica con Bcrypt, emisión de tokens JWT, alta autoservicio, recuperación con OTP de 6 dígitos y administración centralizada de cuentas. |
-| **Paquete 2: Estructura Operativa (Sucursales)** | CU05 | Administrador General | Gestión geográfica multiciudad, georreferenciación GPS, control de probadores físicos y parametrización de horarios. |
-| **Paquete 3: Catálogo y Moda Masculina** | CU06, CU07, CU10 | Administrador, Cliente, Encargado | Ficha técnica de prendas, atributos multivaluados (colores HEX y tallas), calendarización de temporadas (SS/FW) y catálogo público omnicanal. |
-| **Paquete 4: Aprovisionamiento y Proveedores** | CU08 | Administrador, Personal Logística | Directorio comercial de proveedores textiles, validación de NIT tributario único y condiciones comerciales de suministro. |
-| **Paquete 5: Inventario y Costos Ponderados** | CU09 | Personal Logística, Encargado | Recepción de lotes, existencias multi-sucursal, valuación matemática por Costo Promedio Ponderado ($CPP$) y Kardex inmutable. |
+#### 3.1.1 Identificar Paquetes
+
+En esta etapa se identifican los **5 paquetes de análisis** que componen el núcleo arquitectónico del Ciclo 1, especificando para cada uno el nombre del paquete y una descripción concisa de su propósito, responsabilidades y alcance funcional:
+
+1. **Paquete 1: Seguridad y Acceso (RBAC)**  
+   *Descripción:* Gestiona el control de acceso, la autenticación criptográfica de credenciales mediante hashing Bcrypt, la emisión y validación de tokens de sesión JWT, el auto-registro de nuevos clientes, la recuperación autoservicio de contraseñas mediante códigos OTP de un solo uso y la administración integral de usuarios, roles y permisos del sistema.
+
+2. **Paquete 2: Estructura Operativa (Sucursales)**  
+   *Descripción:* Administra la infraestructura física y geográfica de la cadena minorista, incluyendo ciudades operativas, sucursales físicas habilitadas, georreferenciación satelital GPS (latitud y longitud), horarios de atención y la parametrización de capacidad física de probadores para reservas presenciales.
+
+3. **Paquete 3: Catálogo y Moda Masculina**  
+   *Descripción:* Centraliza la definición de prendas de vestir masculinas con atributos multivaluados normalizados (tallas estándar, códigos cromáticos hexadecimales HEX y nombres de color), la calendarización y gestión de temporadas comerciales (Spring-Summer / Fall-Winter) y la publicación omnicanal del catálogo de productos.
+
+4. **Paquete 4: Aprovisionamiento y Proveedores**  
+   *Descripción:* Gestiona el directorio comercial de empresas proveedoras de textiles y confección masculina, la validación estricta de identificación tributaria (NIT único normalizado), los canales de contacto y los términos comerciales de suministro y condiciones de pago.
+
+5. **Paquete 5: Inventario y Costos Ponderados (CPP)**  
+   *Descripción:* Controla las existencias físicas multi-sucursal en tiempo real, el registro de ingresos de lotes por compra, el recálculo matemático algorítmico del Costo Promedio Ponderado ($CPP$) ante cada entrada de mercadería y la generación inmutable de asientos de auditoría en el Kardex valorizado.
+
+A continuación, se presenta el diagrama de paquetes de análisis que ilustra su identificación y las relaciones de dependencia funcional y arquitectónica entre los módulos del sistema:
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam roundCorner 8
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 12
+skinparam shadowing true
+skinparam package {
+    BackgroundColor #F8FAFC
+    BorderColor #1E293B
+    BorderThickness 1.5
+    FontStyle bold
+}
+
+package "Paquete 1: Seguridad y Acceso (RBAC)\n---\nAutenticación Bcrypt, tokens JWT,\nauto-registro de clientes y OTP" as Pkg_Seguridad #EFF6FF {
+}
+
+package "Paquete 2: Estructura Operativa (Sucursales)\n---\nCiudades, sucursales físicas,\ncoordenadas GPS y probadores" as Pkg_Sucursales #F0FDF4 {
+}
+
+package "Paquete 3: Catálogo y Moda Masculina\n---\nPrendas, atributos multivaluados,\ntemporadas comerciales y catálogo" as Pkg_Catalogo #FEFCE8 {
+}
+
+package "Paquete 4: Aprovisionamiento y Proveedores\n---\nProveedores textiles, NIT único\ny términos comerciales de pago" as Pkg_Proveedores #FFF7ED {
+}
+
+package "Paquete 5: Inventario y Costos Ponderados (CPP)\n---\nStock multi-sucursal, Kardex\ny cálculo matemático de CPP" as Pkg_Inventario #FAF5FF {
+}
+
+' Dependencias entre paquetes
+Pkg_Sucursales ..> Pkg_Seguridad : <<use>>
+Pkg_Catalogo ..> Pkg_Seguridad : <<use>>
+Pkg_Proveedores ..> Pkg_Seguridad : <<use>>
+Pkg_Inventario ..> Pkg_Seguridad : <<use>>
+
+Pkg_Inventario ..> Pkg_Sucursales : <<use>>
+Pkg_Inventario ..> Pkg_Catalogo : <<use>>
+Pkg_Inventario ..> Pkg_Proveedores : <<use>>
+Pkg_Catalogo ..> Pkg_Inventario : <<consulta stock>>
+
+@enduml
+```
 
 ---
 
-### 2.2 Analizar Casos de Uso (Diagramas de Comunicación UML)
+#### 3.1.2 Relacionar paquetes y casos de uso
+
+En esta sección se formaliza la relación estricta entre los **5 paquetes de análisis del Ciclo 1** y los **10 Casos de Uso** implementados en esta primera iteración (`CU01` al `CU10`), estableciendo la cohesión modular y el límite de responsabilidad funcional de cada subsistema:
+
+| Paquete de Análisis del Ciclo | Casos de Uso Contenidos | Actores Asociados | Justificación y Responsabilidad de Arquitectura |
+|:---|:---|:---|:---|
+| **Paquete 1: Seguridad y Acceso (RBAC)** | • **CU01**: Autenticar Usuario (Login RBAC)<br>• **CU02**: Registrar Cliente (Sign Up)<br>• **CU03**: Recuperar Contraseña (OTP)<br>• **CU04**: Gestionar Usuarios y Roles | Usuario, Cliente, Administrador | Centraliza el control perimetral de acceso, autenticación criptográfica con Bcrypt, emisión de tokens JWT, alta autoservicio de clientes, recuperación con OTP de 6 dígitos y administración centralizada de cuentas de usuario y roles. |
+| **Paquete 2: Estructura Operativa (Sucursales)** | • **CU05**: Gestionar Ciudades y Sucursales | Administrador General | Provee la estructura territorial multiciudad, parametrización de coordenadas GPS (latitud/longitud) para mapas digitales, control de horarios y aforo físico de probadores de ropa. |
+| **Paquete 3: Catálogo y Moda Masculina** | • **CU06**: Gestionar Productos y Atributos<br>• **CU07**: Gestionar Temporadas y Campañas<br>• **CU10**: Consultar Catálogo y Disponibilidad | Administrador, Cliente, Encargado Sucursal | Gestiona las fichas técnicas de prendas para varón, atributos multivaluados normalizados (colores HEX y tallas), calendarización de temporadas comerciales (SS/FW) y catálogo público omnicanal con stock por sucursal. |
+| **Paquete 4: Aprovisionamiento y Proveedores** | • **CU08**: Gestionar Proveedores Textiles | Administrador, Personal Logística | Administra el padrón de proveedores de confección textil, validación de NIT tributario único, información de contacto corporativo y términos comerciales de crédito y pago. |
+| **Paquete 5: Inventario y Costos Ponderados (CPP)** | • **CU09**: Gestionar Inventario Multi-Sucursal | Personal Logística, Encargado Sucursal | Controla el stock físico de prendas distribuido en cada tienda, registro de ingresos por compra, recálculo algorítmico del Costo Promedio Ponderado ($CPP$) y registro inmutable en el Kardex valorizado. |
+
+A continuación se presenta el diagrama UML de **Relación entre Paquetes y Casos de Uso** del Ciclo 1:
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 12
+skinparam shadowing true
+skinparam usecase {
+    BackgroundColor #FFFFFF
+    BorderColor #2563EB
+    BorderThickness 1.5
+}
+skinparam package {
+    BackgroundColor #F8FAFC
+    BorderColor #334155
+    BorderThickness 1.5
+    FontStyle bold
+}
+
+package "Paquete 1: Seguridad y Acceso (RBAC)" as P1 #EFF6FF
+package "Paquete 2: Estructura Operativa (Sucursales)" as P2 #F0FDF4
+package "Paquete 3: Catálogo y Moda Masculina" as P3 #FEFCE8
+package "Paquete 4: Aprovisionamiento y Proveedores" as P4 #FFF7ED
+package "Paquete 5: Inventario y Costos Ponderados (CPP)" as P5 #FAF5FF
+
+usecase "CU01: Autenticar Usuario (RBAC)" as CU01
+usecase "CU02: Registrar Cliente (SignUp)" as CU02
+usecase "CU03: Recuperar Contraseña (OTP)" as CU03
+usecase "CU04: Gestionar Usuarios y Roles" as CU04
+
+usecase "CU05: Gestionar Ciudades y Sucursales" as CU05
+
+usecase "CU06: Gestionar Productos y Atributos" as CU06
+usecase "CU07: Gestionar Temporadas y Campañas" as CU07
+usecase "CU10: Consultar Catálogo y Disponibilidad" as CU10
+
+usecase "CU08: Gestionar Proveedores Textiles" as CU08
+
+usecase "CU09: Gestionar Inventario y Costo Ponderado (CPP)" as CU09
+
+' Relaciones de contención lógica Paquete -> Casos de Uso
+P1 ..> CU01 : <<contiene>>
+P1 ..> CU02 : <<contiene>>
+P1 ..> CU03 : <<contiene>>
+P1 ..> CU04 : <<contiene>>
+
+P2 ..> CU05 : <<contiene>>
+
+P3 ..> CU06 : <<contiene>>
+P3 ..> CU07 : <<contiene>>
+P3 ..> CU10 : <<contiene>>
+
+P4 ..> CU08 : <<contiene>>
+
+P5 ..> CU09 : <<contiene>>
+
+@enduml
+```
+
+---
+
+#### 3.1.3 Vista de casos de uso
+
+En la metodología PUDS y el modelado arquitectónico UML, la **Vista de Casos de Uso** representa a los paquetes vistos desde su interior: **el entorno/frontera exterior es el propio paquete contenedor y dentro de él residen los diagramas de casos de uso que dicho paquete contiene**, junto con sus relaciones funcionales internas (`<<include>>`, `<<extend>>`) y la conexión con los **Actores** que interactúan con ellos desde fuera del paquete.
+
+A continuación, se presenta el diagrama consolidado de la **Vista de Casos de Uso por Paquete**:
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 11
+skinparam shadowing true
+
+actor "Usuario" as ActUser
+actor "Cliente" as ActCli
+actor "Administrador" as ActAdm
+actor "Personal Logística" as ActLog
+actor "Encargado Sucursal" as ActEnc
+
+package "Paquete 1: Seguridad y Acceso (RBAC)" as Pkg_Seguridad #EFF6FF {
+    usecase "CU01: Autenticar Usuario (Login RBAC)" as UC1
+    usecase "CU02: Registrar Cliente (Sign Up)" as UC2
+    usecase "CU03: Recuperar Contraseña (OTP)" as UC3
+    usecase "CU04: Gestionar Usuarios y Roles" as UC4
+    
+    UC3 .> UC1 : <<extend>>
+}
+
+package "Paquete 2: Estructura Operativa (Sucursales)" as Pkg_Sucursales #F0FDF4 {
+    usecase "CU05: Gestionar Ciudades y Sucursales\n(GPS y Probadores)" as UC5
+}
+
+package "Paquete 3: Catálogo y Moda Masculina" as Pkg_Catalogo #FEFCE8 {
+    usecase "CU06: Gestionar Productos y Atributos\n(Tallas y Colores Hex)" as UC6
+    usecase "CU07: Gestionar Temporadas y Campañas" as UC7
+    usecase "CU10: Consultar Catálogo y Disponibilidad" as UC10
+}
+
+package "Paquete 4: Aprovisionamiento y Proveedores" as Pkg_Proveedores #FFF7ED {
+    usecase "CU08: Gestionar Proveedores Textiles\n(NIT y Términos de Pago)" as UC8
+}
+
+package "Paquete 5: Inventario y Costos Ponderados (CPP)" as Pkg_Inventario #FAF5FF {
+    usecase "CU09: Gestionar Inventario Multi-Sucursal\n(Recálculo CPP y Kardex)" as UC9
+    usecase "Calcular Costo Promedio Ponderado" as UC9_1
+    usecase "Registrar Asiento en Kardex" as UC9_2
+    
+    UC9 .> UC9_1 : <<include>>
+    UC9 .> UC9_2 : <<include>>
+}
+
+' Asociaciones de Actores hacia los casos de uso dentro de los paquetes
+ActUser --> UC1
+ActUser --> UC3
+ActCli --> UC2
+ActCli --> UC10
+
+ActAdm --> UC4
+ActAdm --> UC5
+ActAdm --> UC6
+ActAdm --> UC7
+ActAdm --> UC8
+
+ActLog --> UC8
+ActLog --> UC9
+
+ActEnc --> UC10
+ActEnc --> UC9
+
+@enduml
+```
+
+Asimismo, se detallan las vistas internas individuales de cada uno de los 5 paquetes del ciclo para una inspección precisa de su entorno y dependencias:
+
+##### 3.1.3.1 Vista Interna - Paquete 1: Seguridad y Acceso (RBAC)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Usuario" as ActUser
+actor "Cliente" as ActCli
+actor "Administrador" as ActAdm
+
+package "Paquete 1: Seguridad y Acceso (RBAC)" #EFF6FF {
+    usecase "CU01: Autenticar Usuario (Login RBAC)" as UC1
+    usecase "CU02: Registrar Cliente (SignUp)" as UC2
+    usecase "CU03: Recuperar Contraseña (Token OTP)" as UC3
+    usecase "CU04: Gestionar Usuarios y Roles" as UC4
+
+    UC3 .> UC1 : <<extend>>
+}
+
+ActUser --> UC1
+ActUser --> UC3
+ActCli --> UC2
+ActAdm --> UC4
+@enduml
+```
+
+##### 3.1.3.2 Vista Interna - Paquete 2: Estructura Operativa (Sucursales)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Administrador General" as ActAdm
+
+package "Paquete 2: Estructura Operativa (Sucursales)" #F0FDF4 {
+    usecase "CU05: Gestionar Ciudades y Sucursales\n(Georreferenciación GPS y Probadores)" as UC5
+}
+
+ActAdm --> UC5
+@enduml
+```
+
+##### 3.1.3.3 Vista Interna - Paquete 3: Catálogo y Moda Masculina
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Administrador" as ActAdm
+actor "Cliente" as ActCli
+actor "Encargado de Sucursal" as ActEnc
+
+package "Paquete 3: Catálogo y Moda Masculina" #FEFCE8 {
+    usecase "CU06: Gestionar Productos y Atributos\n(Tallas y Colores Hex)" as UC6
+    usecase "CU07: Gestionar Temporadas y Campañas" as UC7
+    usecase "CU10: Consultar Catálogo y Disponibilidad" as UC10
+}
+
+ActAdm --> UC6
+ActAdm --> UC7
+ActCli --> UC10
+ActEnc --> UC10
+@enduml
+```
+
+##### 3.1.3.4 Vista Interna - Paquete 4: Aprovisionamiento y Proveedores
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Administrador" as ActAdm
+actor "Personal de Logística" as ActLog
+
+package "Paquete 4: Aprovisionamiento y Proveedores" #FFF7ED {
+    usecase "CU08: Gestionar Proveedores Textiles\n(NIT Único y Términos Comerciales)" as UC8
+}
+
+ActAdm --> UC8
+ActLog --> UC8
+@enduml
+```
+
+##### 3.1.3.5 Vista Interna - Paquete 5: Inventario y Costos Ponderados (CPP)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Personal de Logística / Almacén" as ActLog
+actor "Encargado de Sucursal" as ActEnc
+
+package "Paquete 5: Inventario y Costos Ponderados (CPP)" #FAF5FF {
+    usecase "CU09: Gestionar Inventario Multi-Sucursal\n(Recálculo CPP y Kardex)" as UC9
+    usecase "Calcular Costo Promedio Ponderado" as UC9_1
+    usecase "Registrar Asiento en Kardex" as UC9_2
+
+    UC9 .> UC9_1 : <<include>>
+    UC9 .> UC9_2 : <<include>>
+}
+
+ActLog --> UC9
+ActEnc --> UC9
+@enduml
+```
+
+---
+
+### 3.2 Analizar Casos de Uso (Diagramas de Comunicación UML)
 
 A continuación se presentan los **Diagramas de Comunicación UML** para cada uno de los 10 Casos de Uso del Ciclo 1. Conforme a las directrices de la cátedra expresadas en clase (`B4.txt`), cada caso de uso se analiza de forma rigurosa modelando la colaboración entre la clase de interfaz (`<<boundary>>`), la clase de lógica (`<<control>>` sin atributos) y la clase de datos (`<<entity>>`), con mensajes numerados cronológicamente (`1`, `1.1`, `1.2`, etc.):
 
@@ -3110,353 +3566,691 @@ UI --> User : 1.7: renderizar cuadrícula con tarjetas de producto y stock
 
 ---
 
-### 2.3 Análisis de Clases
+### 3.3 Análisis de Clases (por Caso de Uso)
 
-Conforme a la instrucción metodológica de la cátedra (`B4.txt`, líneas 38-40), el análisis de clases formaliza exhaustivamente las tres categorías de clases de robustez (BCE) con sus responsabilidades exactas para los **10 Casos de Uso del Ciclo 1**:
-- **Clases de Interfaz (`<<boundary>>`)**: Poseen atributos de captura de datos visuales y métodos interactivos que reflejan las acciones y eventos del usuario (botones, selectores, clics).
-- **Clases de Control (`<<control>>`)**: Contienen exclusivamente métodos de orquestación lógica del backend y **NO tienen atributos propios** (directriz taxativa de `B4.txt`).
-- **Clases de Entidad (`<<entity>>`)**: Poseen tanto atributos de datos persistentes como métodos de encapsulamiento y consulta sobre la base de datos.
+Conforme a la instrucción metodológica taxativa de la cátedra (`B4.txt`, líneas 38-40) y los estándares de **UML 2.5+**, el análisis de clases formaliza las responsabilidades del patrón de robustez **BCE** (Boundary - Control - Entity) de Ivar Jacobson para cada uno de los **10 Casos de Uso del Ciclo 1**.
+
+#### Directrices Estructurales y Sintácticas:
+1. **Representación Visual (UML 2.5+)**:
+   - Cada clase se modela como una caja rectangular con compartimentos claramente diferenciados para **Atributos** y **Operaciones/Métodos** (eliminando iconos circulares simplificados).
+   - Se explicitan los estereotipos estándar: `«Boundary»`, `«Control»` y `«Entity»`.
+2. **Clases de Interfaz (`«Boundary» IU_<Nombre>`)**:
+   - Poseen atributos que representan los datos ingresados en pantalla por el usuario y métodos orientados a la interacción visual y validación superficial de formularios (`tomarDatos()`, `validarFormulario()`, `mostrarError()`, etc.).
+3. **Clases de Control (`«Control» CTR_<Nombre>`)**:
+   - **NO TIENEN ATRIBUTOS** (directriz estricta de `B4.txt`: *"el control no tiene atributos, solo métodos de lógica/negocio"*). Su compartimento de atributos permanece vacío (`--` en PlantUML).
+   - Contienen exclusivamente métodos de orquestación transaccional, cálculos de negocio, validaciones criptográficas y emisión de eventos.
+4. **Clases de Entidad (`«Entity» CE_<Nombre>`)**:
+   - Encapsulan los atributos del dominio persistente (PostgreSQL) y métodos de persistencia, consulta y mutación de estado.
+5. **Relaciones entre Clases y Actores**:
+   - El **Actor** se asocia directamente a la clase `«Boundary»` (`IU_...`).
+   - La clase `«Boundary»` se asocia a la clase `«Control»` (`CTR_...`).
+   - La clase `«Control»` interactúa y orquesta una o más clases `«Entity»` (`CE_...`).
+   - Todos los diagramas se encuentran sincronizados e implementados en el repositorio de Enterprise Architect ([`diagramas1erParcial.eapx`](file:///c:/Users/User/Documents/2-2026/SI2/1erPARCIAL/diagramas/diagramas1erParcial.eapx)) dentro del paquete `diagramas de clases y paquetes`.
+
+---
+
+#### 3.3.1 Diagrama de Análisis de Clases - CU01: Autenticar Usuario (Login RBAC)
+
+Este diagrama formaliza la interacción entre el usuario que introduce sus credenciales en la interfaz de login, el controlador que valida y orquesta la autenticación con hash Bcrypt y JWT, y las entidades de datos del usuario y la bitácora de auditoría.
 
 ```plantuml
 @startuml
 skinparam classAttributeIconSize 0
-skinparam packageStyle rectangle
+skinparam style strictuml
+hide empty members
 
-package "Clases de Interfaz (Boundary)" {
-    class ILoginBoundary <<boundary>> {
-        - txtEmail: String
-        - txtPassword: String
-        - chkRecordar: Boolean
-        + onClickIniciarSesion(): void
-        + onClickRecuperarClave(): void
-        + mostrarError(mensaje: String): void
-    }
+actor "USUARIO" as Actor
 
-    class IRegistroBoundary <<boundary>> {
-        - txtNombres: String
-        - txtApellidos: String
-        - txtEmail: String
-        - txtTelefono: String
-        - txtPassword: String
-        + onClickRegistrar(): void
-        + mostrarAlertaClaveDebil(): void
-    }
-
-    class IRecuperarClaveBoundary <<boundary>> {
-        - txtEmail: String
-        - txtCodigoOtp: String
-        - txtNuevaPassword: String
-        + onClickSolicitarOtp(): void
-        + onClickRestablecerClave(): void
-        + renderizarTiempoRestante(seg: Integer): void
-    }
-
-    class IGestionUsuariosBoundary <<boundary>> {
-        - cmbRol: String
-        - cmbSucursal: Integer
-        - txtBuscar: String
-        + onClickCrearEmpleado(): void
-        + onClickDesbloquearCuenta(id: Integer): void
-    }
-
-    class ISucursalBoundary <<boundary>> {
-        - txtNombreSucursal: String
-        - cmbCiudad: Integer
-        - txtDireccion: String
-        - txtLatitud: Decimal
-        - txtLongitud: Decimal
-        - txtCapacidadProbadores: Integer
-        + onClickGuardarSucursal(): void
-        + onConsultarMapa(): void
-    }
-
-    class IProductoBoundary <<boundary>> {
-        - txtSkuBase: String
-        - txtNombrePrenda: String
-        - cmbCategoria: Integer
-        - cmbMarca: Integer
-        - txtPrecioBase: Decimal
-        - listColoresHex: List<String>
-        - listTallas: List<String>
-        + onClickGuardarPrenda(): void
-        + onSubirFotos(): void
-    }
-
-    class ITemporadaBoundary <<boundary>> {
-        - txtCodigoCampana: String
-        - txtNombreTemporada: String
-        - dtpFechaInicio: Date
-        - dtpFechaFin: Date
-        - txtDescuentoLiquidacion: Decimal
-        + onClickGuardarTemporada(): void
-        + onAsociarPrendas(): void
-    }
-
-    class IProveedorBoundary <<boundary>> {
-        - txtNit: String
-        - txtRazonSocial: String
-        - txtContacto: String
-        - txtTelefono: String
-        - txtEmail: String
-        - cmbTerminosPago: String
-        + onClickGuardarProveedor(): void
-        + onValidarNit(): void
-    }
-
-    class IInventarioBoundary <<boundary>> {
-        - cmbSucursal: Integer
-        - cmbProducto: Integer
-        - txtTalla: String
-        - txtColor: String
-        - txtCantidadRecibida: Integer
-        - txtCostoUnitario: Decimal
-        + onClickGuardarEntrada(): void
-        + onConsultarKardex(): void
-        + renderizarNuevoCpp(cpp: Decimal): void
-    }
-
-    class ICatalogoBoundary <<boundary>> {
-        - filtroCategoria: Integer
-        - filtroTalla: String
-        - filtroColor: String
-        - filtroSucursal: Integer
-        + onAplicarFiltros(): void
-        + onSeleccionarPrenda(id: Integer): void
-        + onVerificarDisponibilidadTienda(): void
-    }
+class "IU_Login" as UI <<Boundary>> {
+    +email: String
+    +password: String
+    --
+    +tomarDatos(): void
+    +validarFormulario(): Boolean
+    +enviarSolicitudLogin(): void
+    +mostrarError(mensaje: String): void
+    +mostrarHome(): void
 }
 
-package "Clases de Control (Sin atributos - Directriz B4.txt)" {
-    class AutenticacionControl <<control>> {
-        + autenticarUsuario(email: String, clave: String): TokenDTO
-        + validarHashBcrypt(clave: String, hash: String): Boolean
-        + registrarBitacora(userId: Integer, ip: String, exito: Boolean): void
-    }
-
-    class RegistroClienteControl <<control>> {
-        + procesarRegistro(dto: RegistroDTO): TokenDTO
-        + validarComplejidadClave(clave: String): Boolean
-        + enviarCorreoBienvenida(email: String, nombre: String): void
-    }
-
-    class RecuperacionControl <<control>> {
-        + solicitarOtp(email: String): Boolean
-        + generarCodigoOtpCripto(): String
-        + validarOtpYRestablecer(email: String, otp: String, nuevaClave: String): Boolean
-    }
-
-    class UsuarioAdminControl <<control>> {
-        + registrarEmpleado(dto: EmpleadoDTO): UsuarioDTO
-        + asignarRolYSucursal(userId: Integer, rolId: String, sucId: Integer): void
-        + desbloquearCuenta(usuarioId: Integer): void
-    }
-
-    class SucursalControl <<control>> {
-        + registrarSucursal(dto: SucursalDTO): SucursalDTO
-        + validarCoordenadasGps(lat: Decimal, lon: Decimal): Boolean
-        + listarSucursalesPorCiudad(ciudadId: Integer): List<SucursalDTO>
-    }
-
-    class ProductoControl <<control>> {
-        + registrarPrendaConAtributos(dto: ProductoDTO, colores: List, tallas: List): ProductoDTO
-        + validarSkuUnico(sku: String): Boolean
-        + asociarRecurso3D(productoId: Integer, glbUrl: String): void
-    }
-
-    class TemporadaControl <<control>> {
-        + crearTemporada(dto: TemporadaDTO): TemporadaDTO
-        + vincularPrendasCampana(temporadaId: Integer, productosIds: List): void
-        + activarLiquidacion(temporadaId: Integer, pctDescuento: Decimal): void
-    }
-
-    class ProveedorControl <<control>> {
-        + registrarProveedor(dto: ProveedorDTO): ProveedorDTO
-        + validarNitUnico(nit: String): Boolean
-        + actualizarTerminosComerciales(provId: Integer, terminos: String): void
-    }
-
-    class InventarioControl <<control>> {
-        + procesarEntradaLote(sucursalId: Integer, sku: String, cant: Integer, costo: Decimal): ResumenKardexDTO
-        + calcularCostoPromedioPonderado(stkAnt: Integer, cppAnt: Decimal, cant: Integer, costo: Decimal): Decimal
-        + verificarStockMinimo(sucursalId: Integer, sku: String): Boolean
-    }
-
-    class CatalogoControl <<control>> {
-        + consultarPrendasDisponibles(filtros: FiltroDTO): List<PrendaCatalogoDTO>
-        + obtenerDetallePrendaConStock(productoId: Integer): PrendaDetalleDTO
-        + obtenerDisponibilidadMultiSucursal(productoId: Integer, talla: String, color: String): List<StockSucursalDTO>
-    }
+class "CTR_Auth" as Ctrl <<Control>> {
+    --
+    +login(email, password): TokenDTO
+    +validarCredenciales(): Boolean
+    +generarTokenJWT(): String
+    +registrarIngresoBitacora(): void
 }
 
-package "Clases de Entidad (Entity)" {
-    class UsuarioEntity <<entity>> {
-        - id_usuario: Integer
-        - id_sucursal: Integer
-        - email: String
-        - password_hash: String
-        - rol: RolEnum
-        - estado_cuenta: EstadoEnum
-        - intentos_fallidos: Integer
-        - bloqueado_hasta: Timestamp
-        + buscarPorEmail(email: String): UsuarioEntity
-        + actualizarIntentos(intentos: Integer): void
-        + desbloquear(): void
-    }
-
-    class TokenOtpEntity <<entity>> {
-        - id_token: Integer
-        - id_usuario: Integer
-        - codigo_otp_hash: String
-        - expiracion: Timestamp
-        - utilizado: Boolean
-        - intentos_fallidos: Integer
-        + registrarOtp(userId: Integer, otp: String): TokenOtpEntity
-        + validarOtp(otp: String): Boolean
-        + marcarUtilizado(): void
-    }
-
-    class CiudadEntity <<entity>> {
-        - id_ciudad: Integer
-        - nombre_ciudad: String
-        - departamento: String
-        + listarActivas(): List<CiudadEntity>
-    }
-
-    class SucursalEntity <<entity>> {
-        - id_sucursal: Integer
-        - id_ciudad: Integer
-        - nombre_sucursal: String
-        - direccion: String
-        - latitud: Decimal
-        - longitud: Decimal
-        - capacidad_probadores: Integer
-        + guardar(): void
-        + buscarPorId(id: Integer): SucursalEntity
-    }
-
-    class ProductoEntity <<entity>> {
-        - id_producto: Integer
-        - id_categoria: Integer
-        - id_marca: Integer
-        - id_temporada: Integer
-        - id_proveedor: Integer
-        - codigo_sku_base: String
-        - nombre: String
-        - precio_base: Decimal
-        + buscarPorCriterios(filtros: FiltroDTO): List<ProductoEntity>
-        + guardar(): void
-    }
-
-    class CategoriaEntity <<entity>> {
-        - id_categoria: Integer
-        - nombre_categoria: String
-    }
-
-    class ColorEntity <<entity>> {
-        - id_color: Integer
-        - id_producto: Integer
-        - color_nombre: String
-        - codigo_hex: String
-    }
-
-    class TallaEntity <<entity>> {
-        - id_talla: Integer
-        - id_producto: Integer
-        - talla: String
-    }
-
-    class TemporadaEntity <<entity>> {
-        - id_temporada: Integer
-        - codigo_campana: String
-        - nombre_temporada: String
-        - fecha_inicio: Date
-        - fecha_fin: Date
-        - descuento_liquidacion: Decimal
-        + guardar(): void
-    }
-
-    class ProveedorEntity <<entity>> {
-        - id_proveedor: Integer
-        - nit_identificacion: String
-        - razon_social: String
-        - contacto_nombre: String
-        - telefono: String
-        - email: String
-        + existeNit(nit: String): Boolean
-        + guardar(): void
-    }
-
-    class InventarioEntity <<entity>> {
-        - id_inventario: Integer
-        - id_sucursal: Integer
-        - id_producto: Integer
-        - talla: String
-        - color: String
-        - stock_fisico: Integer
-        - stock_reservado: Integer
-        - ultimo_costo: Decimal
-        - costo_promedio: Decimal
-        + obtenerStock(sucId: Integer, prodId: Integer, talla: String, col: String): InventarioEntity
-        + actualizarExistenciasYCostos(cant: Integer, uCosto: Decimal, nCpp: Decimal): void
-    }
-
-    class KardexEntity <<entity>> {
-        - id_kardex: Integer
-        - id_inventario: Integer
-        - tipo_movimiento: String
-        - cantidad: Integer
-        - costo_unitario_mov: Decimal
-        - saldo_cantidad: Integer
-        - saldo_cpp: Decimal
-        + asentarMovimiento(): void
-    }
+class "CE_Usuario" as EntUser <<Entity>> {
+    +id_Usuario: Integer
+    +email: String
+    +password: String
+    +full_name: String
+    +is_active: Boolean
+    +id_rol: Integer
+    --
+    +buscarPorEmail(email: String): Usuario
+    +verificarPassword(password: String): Boolean
 }
 
-' Relaciones de colaboración entre capas BCE
-ILoginBoundary ..> AutenticacionControl : invoca
-AutenticacionControl ..> UsuarioEntity : manipula
+class "CE_Bitacora" as EntBit <<Entity>> {
+    +id_Bitacora: Integer
+    +usuario_id: Integer
+    +ip_address: String
+    +accion: String
+    +fecha_hora: DateTime
+    +exitoso: Boolean
+    --
+    +registrarAcceso(): void
+}
 
-IRegistroBoundary ..> RegistroClienteControl : invoca
-RegistroClienteControl ..> UsuarioEntity : crea
-
-IRecuperarClaveBoundary ..> RecuperacionControl : invoca
-RecuperacionControl ..> TokenOtpEntity : consulta/valida
-RecuperacionControl ..> UsuarioEntity : actualiza clave
-
-IGestionUsuariosBoundary ..> UsuarioAdminControl : invoca
-UsuarioAdminControl ..> UsuarioEntity : administra
-UsuarioAdminControl ..> SucursalEntity : verifica
-
-ISucursalBoundary ..> SucursalControl : invoca
-SucursalControl ..> SucursalEntity : crea/edita
-SucursalControl ..> CiudadEntity : valida
-
-IProductoBoundary ..> ProductoControl : invoca
-ProductoControl ..> ProductoEntity : crea/edita
-ProductoControl ..> ColorEntity : asocia
-ProductoControl ..> TallaEntity : asocia
-
-ITemporadaBoundary ..> TemporadaControl : invoca
-TemporadaControl ..> TemporadaEntity : crea
-TemporadaControl ..> ProductoEntity : vincula
-
-IProveedorBoundary ..> ProveedorControl : invoca
-ProveedorControl ..> ProveedorEntity : valida/crea
-
-IInventarioBoundary ..> InventarioControl : invoca
-InventarioControl ..> InventarioEntity : actualiza stock/CPP
-InventarioControl ..> KardexEntity : asienta movimiento
-InventarioControl ..> ProductoEntity : consulta
-
-ICatalogoBoundary ..> CatalogoControl : invoca
-CatalogoControl ..> ProductoEntity : consulta
-CatalogoControl ..> InventarioEntity : consulta stock en tiempo real
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntUser
+Ctrl -- EntBit
 @enduml
 ```
 
 ---
 
-### 2.4 Análisis de Paquetes
+#### 3.3.2 Diagrama de Análisis de Clases - CU02: Registrar Cliente (Sign Up)
+
+Modela el proceso de registro público de un nuevo cliente, la validación de unicidad de correo electrónico, la creación de la entidad de usuario y el despacho automático de notificación por correo.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as Actor
+
+class "IU_RegistroCliente" as UI <<Boundary>> {
+    +nombres: String
+    +apellidos: String
+    +email: String
+    +telefono: String
+    +password: String
+    --
+    +tomarDatosRegistro(): void
+    +validarCampos(): Boolean
+    +enviarSolicitudRegistro(): void
+    +mostrarMensajeBienvenida(): void
+    +mostrarAlertaClaveDebil(): void
+}
+
+class "CTR_RegistroCliente" as Ctrl <<Control>> {
+    --
+    +registrarCliente(datos): TokenDTO
+    +verificarEmailUnico(email: String): Boolean
+    +encriptarPasswordBcrypt(password: String): String
+    +crearCuentaUsuario(): Integer
+    +despacharCorreoBienvenida(): void
+}
+
+class "CE_Usuario" as EntUser <<Entity>> {
+    +id_Usuario: Integer
+    +email: String
+    +password_hash: String
+    +nombres: String
+    +apellidos: String
+    +telefono: String
+    +rol: String
+    --
+    +guardarNuevoUsuario(): Integer
+    +existeEmail(email: String): Boolean
+}
+
+class "CE_EmailService" as EntEmail <<Entity>> {
+    +destinatario: String
+    +asunto: String
+    +plantilla: String
+    +estado_envio: String
+    --
+    +enviarCorreoConfirmacion(): Boolean
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntUser
+Ctrl -- EntEmail
+@enduml
+```
+
+---
+
+#### 3.3.3 Diagrama de Análisis de Clases - CU03: Recuperar Contraseña (Token OTP)
+
+Modela el flujo de autoservicio para el restablecimiento de contraseñas olvidadas mediante la generación y validación temporal de un código OTP de 6 dígitos.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "USUARIO" as Actor
+
+class "IU_RecuperarClave" as UI <<Boundary>> {
+    +email: String
+    +codigoOtp: String
+    +nuevaPassword: String
+    --
+    +solicitarCodigoOtp(): void
+    +ingresarNuevaClave(): void
+    +validarFormatoOtp(): Boolean
+    +mostrarMensajeExito(): void
+    +mostrarErrorOtpInvalido(): void
+}
+
+class "CTR_RecuperacionClave" as Ctrl <<Control>> {
+    --
+    +generarOtpRecuperacion(email: String): Boolean
+    +validarCodigoOtp(email: String, otp: String): Boolean
+    +actualizarPasswordHash(nuevaClave: String): Boolean
+    +desbloquearCuentaUsuario(): void
+    +invalidarOtpUsado(): void
+}
+
+class "CE_Usuario" as EntUser <<Entity>> {
+    +id_Usuario: Integer
+    +email: String
+    +password_hash: String
+    +intentos_fallidos: Integer
+    +estado_bloqueo: Boolean
+    --
+    +actualizarPassword(nuevoHash: String): void
+    +resetearIntentos(): void
+}
+
+class "CE_TokenOtp" as EntOtp <<Entity>> {
+    +id_Token: Integer
+    +usuario_id: Integer
+    +codigo_otp: String
+    +fecha_expiracion: DateTime
+    +utilizado: Boolean
+    --
+    +crearOtp(userId: Integer): String
+    +verificarOtpValido(otp: String): Boolean
+    +marcarExpirado(): void
+}
+
+class "CE_EmailService" as EntEmail <<Entity>> {
+    +destinatario: String
+    +codigo_otp: String
+    +tiempo_validez: Integer
+    --
+    +enviarOtpCorreo(): Boolean
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntUser
+Ctrl -- EntOtp
+Ctrl -- EntEmail
+@enduml
+```
+
+---
+
+#### 3.3.4 Diagrama de Análisis de Clases - CU04: Gestionar Usuarios y Roles (RBAC)
+
+Modela la administración interna de cuentas de personal por parte del administrador, asignación de roles de seguridad (RBAC), asignación a sucursal y desbloqueo de credenciales bloqueadas por intentos fallidos.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ADMINISTRADOR" as Actor
+
+class "IU_GestionUsuarios" as UI <<Boundary>> {
+    +buscarUsuario: String
+    +rolSeleccionado: String
+    +sucursalAsignada: Integer
+    +datosEmpleadoForm: FormDTO
+    --
+    +capturarDatosEmpleado(): void
+    +seleccionarRolSucursal(): void
+    +clickDesbloquearCuenta(): void
+    +renderizarGrillaUsuarios(): void
+    +mostrarNotificacionAccion(): void
+}
+
+class "CTR_GestionUsuarios" as Ctrl <<Control>> {
+    --
+    +crearEmpleado(datos: FormDTO): UsuarioDTO
+    +asignarRolYSucursal(userId: Integer, rolId: String, sucId: Integer): void
+    +desbloquearCuenta(usuarioId: Integer): void
+    +auditarCambioUsuario(accion: String): void
+}
+
+class "CE_Usuario" as EntUser <<Entity>> {
+    +id_Usuario: Integer
+    +email: String
+    +full_name: String
+    +rol_id: Integer
+    +sucursal_id: Integer
+    +estado: String
+    --
+    +actualizarRol(nuevoRol: Integer): void
+    +cambiarEstado(nuevoEstado: String): void
+}
+
+class "CE_Sucursal" as EntSuc <<Entity>> {
+    +id_Sucursal: Integer
+    +nombre: String
+    +ciudad_id: Integer
+    +activo: Boolean
+    --
+    +validarSucursalActiva(id: Integer): Boolean
+}
+
+class "CE_Bitacora" as EntBit <<Entity>> {
+    +id_Bitacora: Integer
+    +admin_id: Integer
+    +tipo_evento: String
+    +fecha_hora: DateTime
+    --
+    +registrarEventoAuditoria(): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntUser
+Ctrl -- EntSuc
+Ctrl -- EntBit
+@enduml
+```
+
+---
+
+#### 3.3.5 Diagrama de Análisis de Clases - CU05: Gestionar Sucursales y Ciudades
+
+Representa la configuración operativa de la infraestructura de la empresa, asociando sucursales a ciudades, definiendo coordenadas GPS y la capacidad de aforo para probadores.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ADMINISTRADOR" as Actor
+
+class "IU_GestionSucursales" as UI <<Boundary>> {
+    +nombreSucursal: String
+    +ciudadId: Integer
+    +direccion: String
+    +latitudGps: Decimal
+    +longitudGps: Decimal
+    +capacidadProbadores: Integer
+    --
+    +capturarDatosSucursal(): void
+    +georreferenciarMapa(): void
+    +enviarGuardarSucursal(): void
+    +mostrarConfirmacionExito(): void
+}
+
+class "CTR_GestionSucursales" as Ctrl <<Control>> {
+    --
+    +registrarSucursal(dto: SucursalDTO): SucursalDTO
+    +validarCiudadExistente(ciudadId: Integer): Boolean
+    +validarCoordenadasGps(lat: Decimal, lon: Decimal): Boolean
+    +configurarAforoProbadores(sucId: Integer, aforo: Integer): void
+}
+
+class "CE_Ciudad" as EntCiu <<Entity>> {
+    +id_Ciudad: Integer
+    +nombre: String
+    +departamento: String
+    +activo: Boolean
+    --
+    +verificarCiudadHabilitada(id: Integer): Boolean
+    +listarCiudades(): List
+}
+
+class "CE_Sucursal" as EntSuc <<Entity>> {
+    +id_Sucursal: Integer
+    +ciudad_id: Integer
+    +nombre: String
+    +direccion: String
+    +latitud: Decimal
+    +longitud: Decimal
+    +probadores_activos: Integer
+    +estado: String
+    --
+    +guardarSucursal(): Integer
+    +actualizarGeorreferencia(): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntCiu
+Ctrl -- EntSuc
+@enduml
+```
+
+---
+
+#### 3.3.6 Diagrama de Análisis de Clases - CU06: Gestionar Productos y Atributos
+
+Modela el alta y parametrización de prendas masculinas, gestionando variantes de color (HEX) y tallas normalizadas asociadas al producto.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ADMINISTRADOR" as Actor
+
+class "IU_GestionProductos" as UI <<Boundary>> {
+    +skuBase: String
+    +nombrePrenda: String
+    +categoriaId: Integer
+    +precioVenta: Decimal
+    +coloresHex: List<String>
+    +tallas: List<String>
+    --
+    +capturarFichaTecnica(): void
+    +adjuntarImagenes(): void
+    +seleccionarVariantesColorTalla(): void
+    +enviarGuardarProducto(): void
+}
+
+class "CTR_GestionProductos" as Ctrl <<Control>> {
+    --
+    +crearProducto(dto: ProductoDTO): ProductoDTO
+    +validarSkuUnico(sku: String): Boolean
+    +asociarColoresHex(productoId: Integer, colores: List): void
+    +asociarTallasNormalizadas(productoId: Integer, tallas: List): void
+}
+
+class "CE_Producto" as EntProd <<Entity>> {
+    +id_Producto: Integer
+    +sku: String
+    +nombre: String
+    +descripcion: String
+    +precio_base: Decimal
+    +categoria_id: Integer
+    --
+    +guardarPrenda(): Integer
+    +existeSku(sku: String): Boolean
+}
+
+class "CE_Color" as EntCol <<Entity>> {
+    +id_Color: Integer
+    +nombre_color: String
+    +codigo_hex: String
+    --
+    +asociarColorAProducto(prodId: Integer): void
+}
+
+class "CE_Talla" as EntTal <<Entity>> {
+    +id_Talla: Integer
+    +codigo_talla: String
+    +descripcion_medida: String
+    --
+    +asociarTallaAProducto(prodId: Integer): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntProd
+Ctrl -- EntCol
+Ctrl -- EntTal
+@enduml
+```
+
+---
+
+#### 3.3.7 Diagrama de Análisis de Clases - CU07: Gestionar Temporadas y Campañas
+
+Modela la calendarización de temporadas comerciales (Otoño-Invierno, Primavera-Verano), la vinculación de prendas y la activación de liquidaciones.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ADMINISTRADOR" as Actor
+
+class "IU_GestionTemporadas" as UI <<Boundary>> {
+    +codigoTemporada: String
+    +nombreCampana: String
+    +fechaInicio: Date
+    +fechaFin: Date
+    +descuentoLiquidacion: Decimal
+    --
+    +capturarDatosTemporada(): void
+    +seleccionarProductosCampana(): void
+    +toggleLiquidacion(): void
+    +guardarTemporada(): void
+}
+
+class "CTR_GestionTemporadas" as Ctrl <<Control>> {
+    --
+    +crearTemporada(dto: TemporadaDTO): TemporadaDTO
+    +validarRangoFechas(inicio: Date, fin: Date): Boolean
+    +asociarProductosATemporada(tempId: Integer, prodIds: List): void
+    +activarCampanaEstacional(tempId: Integer): void
+}
+
+class "CE_Temporada" as EntTemp <<Entity>> {
+    +id_Temporada: Integer
+    +codigo: String
+    +nombre: String
+    +fecha_inicio: Date
+    +fecha_fin: Date
+    +activo: Boolean
+    --
+    +guardarTemporada(): Integer
+    +actualizarDescuento(pct: Decimal): void
+}
+
+class "CE_Producto" as EntProd <<Entity>> {
+    +id_Producto: Integer
+    +sku: String
+    +nombre: String
+    +temporada_id: Integer
+    --
+    +vincularTemporada(tempId: Integer): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntTemp
+Ctrl -- EntProd
+@enduml
+```
+
+---
+
+#### 3.3.8 Diagrama de Análisis de Clases - CU08: Gestionar Proveedores Textiles
+
+Modela la administración del catálogo de proveedores de confección y telas, validando NIT tributario único y condiciones comerciales de pago.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "PERSONAL_LOGISTICA" as Actor
+
+class "IU_GestionProveedores" as UI <<Boundary>> {
+    +nitTributario: String
+    +razonSocial: String
+    +contactoPrincipal: String
+    +telefono: String
+    +terminosPago: String
+    --
+    +capturarFormularioProveedor(): void
+    +validarFormatoNit(): Boolean
+    +enviarGuardarProveedor(): void
+    +mostrarConfirmacionAlta(): void
+}
+
+class "CTR_GestionProveedores" as Ctrl <<Control>> {
+    --
+    +registrarProveedor(dto: ProveedorDTO): ProveedorDTO
+    +verificarNitUnico(nit: String): Boolean
+    +establecerTerminosComerciales(provId: Integer, terminos: String): void
+}
+
+class "CE_Proveedor" as EntProv <<Entity>> {
+    +id_Proveedor: Integer
+    +nit: String
+    +razon_social: String
+    +contacto: String
+    +telefono: String
+    +email: String
+    +terminos_pago: String
+    +estado: String
+    --
+    +guardarProveedor(): Integer
+    +existeNit(nit: String): Boolean
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntProv
+@enduml
+```
+
+---
+
+#### 3.3.9 Diagrama de Análisis de Clases - CU09: Gestionar Inventario Multi-Sucursal (CPP)
+
+Modela el ingreso de lotes de compra a inventario físico por sucursal, el recálculo algorítmico del Costo Promedio Ponderado ($CPP$) y la emisión inmutable del asiento en Kardex.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "PERSONAL_LOGISTICA" as Actor
+
+class "IU_GestionInventario" as UI <<Boundary>> {
+    +sucursalId: Integer
+    +productoSku: String
+    +cantidadLote: Integer
+    +costoUnitarioCompra: Decimal
+    +nroFacturaCompra: String
+    --
+    +capturarEntradaLote(): void
+    +calcularPrevisualizacionCpp(): void
+    +enviarAsientoInventario(): void
+    +imprimirComprobanteKardex(): void
+}
+
+class "CTR_GestionInventario" as Ctrl <<Control>> {
+    --
+    +procesarEntradaLote(dto: InventarioDTO): InventarioDTO
+    +obtenerStockYCppActual(sucId: Integer, prodId: Integer): Tuple
+    +calcularCostoPromedioPonderado(qAnt: Integer, cAnt: Decimal, qEnt: Integer, cEnt: Decimal): Decimal
+    +actualizarStockYValoracion(sucId: Integer, nuevoStock: Integer, nuevoCpp: Decimal): void
+    +registrarMovimientoKardex(kardexDTO: KardexDTO): void
+}
+
+class "CE_Inventario" as EntInv <<Entity>> {
+    +id_Inventario: Integer
+    +sucursal_id: Integer
+    +producto_id: Integer
+    +stock_actual: Integer
+    +costo_unitario_cpp: Decimal
+    +fecha_ultima_entrada: DateTime
+    --
+    +actualizarStockYCpp(nuevoStock: Integer, nuevoCpp: Decimal): void
+    +consultarDisponibilidad(): Integer
+}
+
+class "CE_Kardex" as EntKar <<Entity>> {
+    +id_Kardex: Integer
+    +inventario_id: Integer
+    +tipo_movimiento: String
+    +cantidad_entrada: Integer
+    +costo_unitario_entrada: Decimal
+    +nuevo_stock_saldo: Integer
+    +nuevo_cpp_saldo: Decimal
+    +fecha_movimiento: DateTime
+    --
+    +asentarMovimientoCompra(): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntInv
+Ctrl -- EntKar
+@enduml
+```
+
+---
+
+#### 3.3.10 Diagrama de Análisis de Clases - CU10: Consultar Catálogo y Disponibilidad
+
+Modela la consulta pública del catálogo de prendas con filtros de búsqueda interactivos y consulta en tiempo real del stock disponible por sucursal física.
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as Actor
+
+class "IU_Catalogo" as UI <<Boundary>> {
+    +filtroCategoria: Integer
+    +filtroTalla: String
+    +filtroColor: String
+    +sucursalConsulta: Integer
+    --
+    +seleccionarFiltrosBusqueda(): void
+    +verificarDisponibilidadPorTienda(): void
+    +abrirFichaDetalladaPrenda(): void
+    +mostrarStockPorSucursal(): void
+}
+
+class "CTR_Catalogo" as Ctrl <<Control>> {
+    --
+    +consultarPrendasFiltradas(filtros: FiltrosDTO): List<PrendaDTO>
+    +consultarStockMultiSucursal(productoId: Integer): List<StockSucursalDTO>
+    +serializarCatalogoPublico(prendas: List): JSON
+}
+
+class "CE_Producto" as EntProd <<Entity>> {
+    +id_Producto: Integer
+    +sku: String
+    +nombre: String
+    +precio_base: Decimal
+    +activo: Boolean
+    --
+    +buscarPrendasPorFiltro(filtros: FiltrosDTO): List
+    +obtenerDetallePrenda(id: Integer): Producto
+}
+
+class "CE_Inventario" as EntInv <<Entity>> {
+    +id_Inventario: Integer
+    +sucursal_id: Integer
+    +producto_id: Integer
+    +stock_actual: Integer
+    +estado_disponible: Boolean
+    --
+    +consultarStockPorSucursales(prodId: Integer): List
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntProd
+Ctrl -- EntInv
+@enduml
+```
+
+---
+
+### 3.4 Análisis de Paquetes
 
 En el análisis de paquetes (`B4.txt`, líneas 42-44) se evalúa la arquitectura bajo dos métricas cardinales de la ingeniería de software:
 1. **Acoplamiento**: Medida de interdependencia entre los módulos. Se busca un **bajo acoplamiento** para evitar que modificaciones en un subsistema provoquen fallos en cascada.
@@ -3531,46 +4325,81 @@ PkgProd ..> PkgInv : consulta stock en catálogo
 
 #### 3.1.1 Diseño Lógico de la Arquitectura (4 Capas UML)
 
-Conforme a las explicaciones de cátedra (`B4.txt`, líneas 46-48), la arquitectura lógica del sistema FashionStore se estructura formalmente en **cuatro capas horizontales desacopladas**:
+Conforme a las instrucciones metodológicas de la cátedra (`B4.txt`, líneas 46-48) y las especificaciones del estándar **UML 2.5** (`UML 2.5.txt`, líneas 455-520), el **Diseño Lógico de la Arquitectura** se formaliza mediante un **Diagrama de Paquetes** estructurado jerárquicamente en **cuatro capas horizontales**.
+
+En concordancia con los principios de diseño orientado a objetos y patrones arquitectónicos de capas desacopladas:
+1. **Notación Canónica de Paquetes (UML 2.5)**:
+   - Cada capa principal se representa como un paquete contenedor (`package`) con forma de carpeta.
+   - Cada capa contiene exclusivamente **subpaquetes modulares** que agrupan componentes con alta cohesión funcional.
+2. **Relaciones de Dependencia (`..>`)**:
+   - Se modelan mediante flechas discontinuas con punta abierta, estableciendo que las capas superiores dependen de los servicios ofrecidos por las capas inmediatamente inferiores (`<<use>>`), minimizando el acoplamiento eferente.
+3. **Mapeo de las 4 Capas del Sistema FashionStore**:
+   - **Capa 1: Capa Específica de la Aplicación (Presentación e Interfaces)**: Aloja los paquetes de interfaz de usuario desacoplados por canal de atención (Web SPA, App Móvil y Panel de Administración).
+   - **Capa 2: Capa Intermedia (Servicios y API REST / Orquestación)**: Centraliza el enrutamiento de peticiones HTTP, middleware de autenticación/autorización JWT y validación formal de esquemas DTO.
+   - **Capa 3: Capa General (Lógica de Negocio y Dominio)**: Contiene los 5 subsistemas de análisis del Ciclo 1 formalizados en la arquitectura (Seguridad RBAC, Sucursales, Catálogo, Proveedores e Inventario con recálculo CPP).
+   - **Capa 4: Capa Software de Sistema (Acceso a Datos, Persistencia e Infraestructura)**: Provee el soporte fundacional del sistema (ORM SQLAlchemy, motor relacional PostgreSQL, servidor SMTP y CDN de almacenamiento multimedia).
 
 ```plantuml
 @startuml
-skinparam packageStyle rectangle
+skinparam packageStyle folder
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 11
+skinparam roundCorner 6
+skinparam shadowing true
 
-package "1. Capa Específica de la Aplicación (Presentación)" as CapaPresentacion {
-    component "Frontend Web (Angular 17+)
-[SPA / TypeScript / Material]" as CompWeb
-    component "Aplicación Móvil (Flutter 3.x)
-[Dart / Android & iOS]" as CompMovil
+skinparam package {
+    BackgroundColor #F8FAFC
+    BorderColor #1E293B
+    BorderThickness 1.5
+    FontStyle bold
 }
 
-package "2. Capa Intermedia (Servicios y API REST)" as CapaIntermedia {
-    component "API Gateway / Routers FastAPI
-[/auth, /sucursales, /productos, /inventario]" as CompRouters
-    component "Middleware de Seguridad
-[JWT Bearer / CORS / RateLimiter]" as CompMiddleware
+package "1. Capa Específica de la Aplicación (Presentación e Interfaces)" as CapaPresentacion #EFF6FF {
+    package "Interfaz Web Cliente\n(Angular 17+ SPA)" as PkgWeb #DBEAFE
+    package "Interfaz Móvil\n(Flutter 3.x)" as PkgMovil #DBEAFE
+    package "Interfaz Administrativa / POS\n(Backoffice)" as PkgAdmin #DBEAFE
 }
 
-package "3. Capa General (Lógica de Negocio y Dominio)" as CapaDominio {
-    component "Servicios de Negocio (Python)
-[InventarioService (CPP), AuthService,
-CatalogoService, TemporadaService]" as CompServicios
-    component "Modelos Pydantic (Validación DTO)
-[ProductoSchema, EntradaLoteSchema, UserSchema]" as CompDTO
+package "2. Capa Intermedia (Servicios y API REST / Orquestación)" as CapaIntermedia #F0FDF4 {
+    package "API Routers y Controladores REST\n(FastAPI)" as PkgRouters #DCFCE7
+    package "Middleware de Seguridad y JWT\n(RBAC / CORS / RateLimiter)" as PkgMiddleware #DCFCE7
+    package "Validación de Esquemas y DTOs\n(Modelos Pydantic)" as PkgDTO #DCFCE7
 }
 
-package "4. Capa Software de Sistema (Acceso a Datos y Persistencia)" as CapaDatos {
-    component "ORM / Repositorios SQL
-[SQLAlchemy 2.0 / Asyncpg / Pool Conexiones]" as CompORM
-    database "PostgreSQL 15+
-[Base de Datos Relacional ACID]" as CompBD
+package "3. Capa General (Lógica de Negocio y Dominio)" as CapaDominio #FEFCE8 {
+    package "Subsistema Seguridad y Acceso\n(RBAC y Cuentas)" as PkgSeg #FEF08A
+    package "Subsistema Estructura Operativa\n(Sucursales y Ciudades)" as PkgSuc #FEF08A
+    package "Subsistema Catálogo y Moda Masculina\n(Prendas, Tallas y Temporadas)" as PkgCat #FEF08A
+    package "Subsistema Aprovisionamiento\n(Proveedores Textiles)" as PkgProv #FEF08A
+    package "Subsistema Inventario y Costos\n(Kardex y Valoración CPP)" as PkgInv #FEF08A
 }
 
-CapaPresentacion ..> CapaIntermedia : Peticiones HTTPS / JSON
-CapaIntermedia ..> CapaDominio : Invocación de Controladores
-CapaDominio ..> CapaDatos : Consultas y Transacciones ACID
+package "4. Capa Software de Sistema (Persistencia, Datos e Infraestructura)" as CapaDatos #FAF5FF {
+    package "Mapeo Objeto-Relacional ORM\n(SQLAlchemy 2.0 / Asyncpg)" as PkgORM #F3E8FF
+    package "Servidor de Base de Datos Relacional\n(PostgreSQL 15+ ACID)" as PkgBD #F3E8FF
+    package "Servicio de Correo y Notificaciones\n(Servidor SMTP Transaccional)" as PkgSMTP #F3E8FF
+    package "Almacenamiento Multimedia y CDN\n(Assets 3D / Catálogo Digital)" as PkgStorage #F3E8FF
+}
+
+' Relaciones de dependencia arquitectónica entre capas (UML 2.5)
+CapaPresentacion ..> CapaIntermedia : <<use>>\nPeticiones HTTPS / JSON
+CapaIntermedia ..> CapaDominio : <<use>>\nInvocación de Servicios y Controladores
+CapaDominio ..> CapaDatos : <<use>>\nTransacciones ACID y Persistencia
 @enduml
 ```
+
+#### Descripción Detallada de Capas y Paquetes de la Arquitectura Lógica
+
+| Capa Arquitectónica | Subpaquetes Incluidos | Responsabilidades Funcionales | Tecnologías Asignadas |
+| :--- | :--- | :--- | :--- |
+| **1. Capa Específica de la Aplicación** | • `Interfaz Web Cliente`<br>• `Interfaz Móvil`<br>• `Interfaz Administrativa` | Captura de eventos de usuario, renderizado de catálogo reactivo, interfaz de venta asistida POS y formularios de gestión operativa. | Angular 17+ (TypeScript), Flutter 3.x (Dart), TailwindCSS / Material. |
+| **2. Capa Intermedia** | • `API Routers REST`<br>• `Middleware JWT/CORS`<br>• `Validación DTO Pydantic` | Despacho de endpoints RESTful, validación tipada estricta de payloads entrantes, protección anti-CSRF/CORS y control de acceso por token portador. | FastAPI (Python 3.11), Pydantic v2, PyJWT, Uvicorn ASGI Server. |
+| **3. Capa General** | • `Seguridad y Acceso (RBAC)`<br>• `Estructura (Sucursales)`<br>• `Catálogo y Moda`<br>• `Proveedores Textiles`<br>• `Inventario y Costos (CPP)` | Ejecución de reglas algorítmicas de negocio, cálculo matemático de Costo Promedio Ponderado ($CPP$), control de stock multi-sucursal y emisión de asientos en Kardex. | Servicios Python puros (`services/`), algoritmos de valoración de inventario, bcrypt. |
+| **4. Capa Software de Sistema** | • `Persistencia ORM`<br>• `Base de Datos Relacional`<br>• `Servicio SMTP`<br>• `Almacenamiento Multimedia` | Abstracción relacional, pool de conexiones asíncronas, almacenamiento persistente ACID de tablas y transacciones, despacho de correos OTP y entrega de imágenes/assets 3D. | PostgreSQL 15+, SQLAlchemy 2.0 (Asyncpg), aiosmtplib (SMTP), Cloud Storage / CDN. |
+
+> [!NOTE]
+> El diagrama oficial de arquitectura lógica se encuentra modelado y sincronizado en el archivo de Enterprise Architect ([`diagramas1erParcial.eapx`](file:///c:/Users/User/Documents/2-2026/SI2/1erPARCIAL/diagramas/diagramas1erParcial.eapx)) bajo el paquete `diagramas de arquitectura y diseno` con el nombre `Diseno_Arquitectura_Logica_4Capas`. Su renderizado de exportación está disponible en [`diagramas/Diseno_Arquitectura_Logica_4Capas.png`](file:///c:/Users/User/Documents/2-2026/SI2/1erPARCIAL/diagramas/Diseno_Arquitectura_Logica_4Capas.png).
+
 
 ---
 
@@ -3629,88 +4458,240 @@ NodeAppServer -- NodeIA : HTTPS REST (JSON)
 
 ---
 
-### 3.2 Diseño de Casos de Uso
+### 3.2 Diseño de Casos de Uso (Diagramas de Interacción: Secuencia)
 
-#### 3.2.1 Diagrama de Secuencia - Recuperación de Contraseña mediante Token OTP (CU03)
+Conforme a las especificaciones metodológicas de **UML 2.5** (`UML 2.5.txt`, líneas 530-610) y las directrices de cátedra (`B4.txt`, líneas 50-54), el diseño dinámico de los casos de uso se formaliza mediante **Diagramas de Secuencia**. Estos diagramas ilustran cronológicamente el intercambio de mensajes entre las líneas de vida de los objetos (`Lifelines`), delimitando la activación del foco de control en cada participante a lo largo del tiempo vertical.
 
-Modela la interacción asíncrona y segura para la solicitud, emisión y validación del código temporal OTP de 6 dígitos:
+#### Estructura Estándar de los Diagramas de Secuencia (UML 2.5):
+1. **Participantes / Líneas de Vida**:
+   - **Actor**: El usuario humano o agente externo que inicia el flujo de trabajo.
+   - **Interfaz (`Boundary`)**: La pantalla o componente visual (`IU_<Nombre>`) que recibe los eventos del usuario y valida los formularios.
+   - **Gestor / Controlador (`Control`)**: El componente lógico backend (`CTR_<Nombre>`) que orquesta las reglas de negocio y transacciones sin almacenar estado propio.
+   - **Entidades de Dominio (`Entity`)**: Los objetos transaccionales que encapsulan la lógica de dominio y datos.
+   - **Base de Datos (`Database / PostgreSQL`)**: El motor relacional persistente que ejecuta sentencias SQL y transacciones ACID.
+2. **Mensajería y Foco de Control**:
+   - Cada mensaje se numera de forma correlativa continua (`1 : mensaje()`, `2 : mensaje()`, etc.).
+   - Los mensajes síncronos de invocación se representan mediante flechas continuas con punta llena (`->`), activando el foco de control del receptor (`activate`).
+   - Las respuestas y confirmaciones se representan mediante flechas discontinuas con punta abierta (`-->`), desactivando el foco de control (`deactivate`).
+
+---
+
+#### 3.2.1 Diagrama de Secuencia - CU01: Autenticar Usuario (Login RBAC)
+
+Modela el intercambio de credenciales, consulta de usuario, validación de hash Bcrypt, generación del token JWT y registro de auditoría en bitácora.
 
 ```plantuml
 @startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
 actor "Usuario" as User
-boundary "IRecuperarClaveBoundary" as UI
-control "RecuperacionControl" as Ctrl
-entity "UsuarioEntity" as UserEnt
-entity "TokenOtpEntity" as TokenEnt
-participant "MailService (SMTP/TLS)" as Mail
-database "PostgreSQL" as DB
+participant "Interfaz\n: IU_Login" as UI
+participant "Gestor Autenticación\n: CTR_Auth" as Ctrl
+participant "Entidad Usuario\n: CE_Usuario" as UserEnt
+participant "Entidad Bitácora\n: CE_Bitacora" as BitEnt
+database "Base de Datos\n(PostgreSQL)" as DB
 
-User -> UI : ingresarEmailParaRecuperar("alberto.delgado@store.bo")
+User -> UI : ingresarCredenciales(email, password)
 activate UI
-
-UI -> Ctrl : solicitarOtp(email)
+UI -> Ctrl : login(email, password)
 activate Ctrl
-
-Ctrl -> UserEnt : findByEmail(email)
+Ctrl -> UserEnt : buscarPorEmail(email)
 activate UserEnt
 UserEnt -> DB : SELECT * FROM usuarios WHERE email = ?
-DB --> UserEnt : registroUsuario
+activate DB
+DB --> UserEnt : datosUsuario
+deactivate DB
 UserEnt --> Ctrl : usuario
 deactivate UserEnt
 
-alt #LightCyan Usuario Encontrado y Activo
+alt #LightCyan Credenciales Válidas
+    Ctrl -> Ctrl : validarHashBcrypt(password, hash)
+    Ctrl -> Ctrl : generarTokenJWT(usuario_id, rol)
+    Ctrl -> BitEnt : registrarIngresoBitacora(usuario_id, ip, "LOGIN_OK")
+    activate BitEnt
+    BitEnt -> DB : INSERT INTO bitacora (...)
+    activate DB
+    DB --> BitEnt : ok
+    deactivate DB
+    BitEnt --> Ctrl : confirmacion_ok
+    deactivate BitEnt
+    Ctrl --> UI : autenticacionExitosa(tokenJWT)
+    UI --> User : mostrarDashboardPrincipal()
+else #Pink Credenciales Inválidas
+    Ctrl -> BitEnt : registrarFalloLogin(email, ip, "LOGIN_FAIL")
+    activate BitEnt
+    BitEnt -> DB : INSERT INTO bitacora (...)
+    activate DB
+    DB --> BitEnt : ok
+    deactivate DB
+    BitEnt --> Ctrl : registro_ok
+    deactivate BitEnt
+    Ctrl --> UI : errorAutenticacion("Credenciales incorrectas")
+    UI --> User : mostrarMensajeError("Usuario o contraseña incorrectos")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.2 Diagrama de Secuencia - CU02: Registrar Cliente (Sign Up)
+
+Modela el autoregistro público de nuevos clientes, validación de correo electrónico único, hashing seguro de contraseña, despacho de correo de bienvenida y bifurcación condicional (`alt`) en caso de conflicto de correo duplicado o acceso rechazado.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Cliente" as Client
+participant "Interfaz\n: IU_RegistroCliente" as UI
+participant "Gestor Clientes\n: CTR_RegistroCliente" as Ctrl
+participant "Entidad Usuario\n: CE_Usuario" as UserEnt
+participant "Servicio Correo\n: CE_EmailService" as Mail
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Client -> UI : ingresarDatosRegistro(nombres, email, tel, password)
+activate UI
+UI -> Ctrl : registrarCliente(datosForm)
+activate Ctrl
+Ctrl -> UserEnt : verificarEmailUnico(email)
+activate UserEnt
+UserEnt -> DB : SELECT count(*) FROM usuarios WHERE email = ?
+activate DB
+DB --> UserEnt : totalCoincidencias
+deactivate DB
+UserEnt --> Ctrl : emailDisponible
+deactivate UserEnt
+
+alt #LightCyan Email Disponible y Válido (Flujo Principal)
+    Ctrl -> Ctrl : encriptarPasswordBcrypt(password, factor=12)
+    Ctrl -> UserEnt : crearCuentaUsuario(datos, hash, rol='CLIENTE')
+    activate UserEnt
+    UserEnt -> DB : INSERT INTO usuarios (...) RETURNING id_usuario
+    activate DB
+    DB --> UserEnt : nuevo_id_usuario
+    deactivate DB
+    UserEnt --> Ctrl : usuario_id
+    deactivate UserEnt
+
+    Ctrl -> Mail : despacharCorreoBienvenida(email, nombres)
+    activate Mail
+    Mail --> Ctrl : despacho_ok
+    deactivate Mail
+
+    Ctrl -> Ctrl : generarTokenJWT(usuario_id, rol='CLIENTE')
+    Ctrl --> UI : registroExitoso(tokenDTO)
+    UI --> Client : mostrarBienvenidaYRedirigirCatalogo()
+else #Pink Email Ya Registrado / Conflicto (Si no accede / Error)
+    Ctrl --> UI : errorRegistroDuplicado("El email ya se encuentra registrado")
+    UI --> Client : mostrarMensajeError("La cuenta ya existe. Inicie sesión o recupere su clave")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.3 Diagrama de Secuencia - CU03: Recuperar Contraseña (Token OTP)
+
+Modela la solicitud autoservicio de código temporal OTP criptográfico de 6 dígitos, bifurcación para mitigar enumeración de cuentas (OWASP), verificación de código activo (`alt`) y actualización de contraseña.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Usuario" as User
+participant "Interfaz\n: IU_RecuperarClave" as UI
+participant "Gestor Recuperación\n: CTR_RecuperacionClave" as Ctrl
+participant "Entidad Usuario\n: CE_Usuario" as UserEnt
+participant "Entidad Token\n: CE_TokenOtp" as TokenEnt
+participant "Servicio Correo\n: CE_EmailService" as Mail
+database "Base de Datos\n(PostgreSQL)" as DB
+
+User -> UI : ingresarEmailParaRecuperar(email)
+activate UI
+UI -> Ctrl : generarOtpRecuperacion(email)
+activate Ctrl
+Ctrl -> UserEnt : buscarPorEmail(email)
+activate UserEnt
+UserEnt -> DB : SELECT id_usuario, estado_cuenta FROM usuarios WHERE email = ?
+activate DB
+DB --> UserEnt : datosUsuario
+deactivate DB
+UserEnt --> Ctrl : usuario
+deactivate UserEnt
+
+alt #LightCyan Usuario Existe y Cuenta Activa
     Ctrl -> Ctrl : generarCodigoOtpCripto() [6 dígitos: '841920']
-    Ctrl -> TokenEnt : createToken(usuario_id, otpHash, exp=NOW()+15m)
+    Ctrl -> TokenEnt : registrarOtp(usuario_id, otpHash, exp=15m)
     activate TokenEnt
-    TokenEnt -> DB : INSERT INTO tokens_recuperacion (...)
+    TokenEnt -> DB : INSERT INTO tokens_otp (...)
+    activate DB
     DB --> TokenEnt : ok
+    deactivate DB
     TokenEnt --> Ctrl : token_id
     deactivate TokenEnt
-    
-    Ctrl -> Mail : sendOtpEmail(email, "841920", exp=15)
+
+    Ctrl -> Mail : despacharOtpCorreo(email, "841920", exp=15)
     activate Mail
-    Mail --> Ctrl : dispatch_ok
+    Mail --> Ctrl : envio_ok
     deactivate Mail
-    
-    Ctrl --> UI : otpEnviadoExitosamente()
-    UI --> User : mostrarPantallaIngresoOtp("Código enviado a tu correo")
-else #LightYellow Usuario No Encontrado (Mitigación OWASP)
+
+    Ctrl --> UI : otpGeneradoExitosamente()
+    UI --> User : mostrarPantallaIngresoOtp("Código enviado a su correo")
+else #Pink Usuario Inexistente o Cuenta Inactiva (Mitigación OWASP)
     Ctrl --> UI : respuestaGenericaSegura()
-    UI --> User : mostrarPantallaIngresoOtp("Si el correo existe, el código fue enviado")
+    UI --> User : mostrarPantallaIngresoOtp("Si el correo existe, se ha enviado el código")
 end
 deactivate Ctrl
 
 User -> UI : ingresarOtpYNuevaClave("841920", "NuevaClave2026*")
+activate UI
 UI -> Ctrl : validarOtpYRestablecer(email, "841920", nuevaClave)
 activate Ctrl
 
-Ctrl -> TokenEnt : verifyOtp(usuario_id, "841920")
+Ctrl -> TokenEnt : validarCodigoOtp(usuario_id, "841920")
 activate TokenEnt
-TokenEnt -> DB : SELECT * FROM tokens_recuperacion WHERE ...
-DB --> TokenEnt : tokenData
-TokenEnt --> Ctrl : isValid = true, isExpired = false
+TokenEnt -> DB : SELECT * FROM tokens_otp WHERE codigo = ? AND exp > NOW() AND utilizado = false
+activate DB
+DB --> TokenEnt : tokenValido
+deactivate DB
+TokenEnt --> Ctrl : otpValido
 deactivate TokenEnt
 
-alt #LightCyan Código OTP Válido
-    Ctrl -> Ctrl : hashBcrypt(nuevaClave, cost=12)
-    Ctrl -> UserEnt : updatePassword(usuario_id, nuevoHash, estado='ACTIVO', intentos=0)
+alt #LightCyan Token OTP Válido y Vigente
+    Ctrl -> Ctrl : encriptarPasswordBcrypt(nuevaClave)
+    Ctrl -> UserEnt : actualizarPasswordHash(usuario_id, nuevoHash)
     activate UserEnt
-    UserEnt -> DB : UPDATE usuarios SET password_hash=..., intentos_fallidos=0, estado_cuenta='ACTIVO'
+    UserEnt -> DB : UPDATE usuarios SET password_hash = ..., intentos_fallidos=0 WHERE id = ?
+    activate DB
     DB --> UserEnt : ok
-    UserEnt --> Ctrl : ok
+    deactivate DB
+    UserEnt --> Ctrl : passwordActualizado
     deactivate UserEnt
-    
-    Ctrl -> TokenEnt : markAsUsed(token_id)
+
+    Ctrl -> TokenEnt : invalidarOtpUsado(token_id)
     activate TokenEnt
-    TokenEnt -> DB : UPDATE tokens_recuperacion SET utilizado = true WHERE id = token_id
+    TokenEnt -> DB : UPDATE tokens_otp SET utilizado = true WHERE id = ?
+    activate DB
     DB --> TokenEnt : ok
+    deactivate DB
+    TokenEnt --> Ctrl : ok
     deactivate TokenEnt
-    
-    Ctrl --> UI : claveActualizadaExitosamente()
+
+    Ctrl --> UI : claveRestablecidaOK()
     UI --> User : notificarExitoYRedirigirLogin("¡Contraseña restablecida con éxito!")
-else #Pink Código OTP Inválido o Expirado
-    Ctrl --> UI : errorOtpInvalido("Código incorrecto o vencido")
-    UI --> User : mostrarMensajeError("El código ingresado es incorrecto o ya expiró")
+else #Pink Token OTP Incorrecto o Expirado (Si no accede / Error)
+    Ctrl --> UI : errorOtpInvalido("El código OTP es incorrecto o ha vencido")
+    UI --> User : mostrarMensajeError("Código inválido. Solicite un nuevo token de recuperación")
 end
 deactivate Ctrl
 deactivate UI
@@ -3719,69 +4700,541 @@ deactivate UI
 
 ---
 
-#### 3.2.2 Diagrama de Secuencia Transaccional - Entrada de Inventario con CPP (CU09)
+#### 3.2.4 Diagrama de Secuencia - CU04: Gestionar Usuarios y Roles (RBAC)
 
-Modelado con fragmentos combinados (`alt` para bifurcación de condición de existencia y `loop` para procesamiento de variantes):
+Modela la administración de cuentas por el administrador, control estricto de autorización RBAC (`alt`), validación de estado de sucursal asignada y desbloqueo condicional de cuentas bloqueadas.
 
 ```plantuml
 @startuml
-actor "Personal Logística" as User
-boundary "IInventarioBoundary" as UI
-control "InventarioControl" as Ctrl
-entity "InventarioEntity" as Inv
-entity "KardexEntity" as Kardex
-database "PostgreSQL" as DB
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
 
-User -> UI : ingresarDatosEntrada(sucursal_id, producto_id, talla, color, cant, costo_unit)
+actor "Administrador" as Admin
+participant "Interfaz\n: IU_GestionUsuarios" as UI
+participant "Gestor Usuarios\n: CTR_GestionUsuarios" as Ctrl
+participant "Entidad Usuario\n: CE_Usuario" as UserEnt
+participant "Entidad Sucursal\n: CE_Sucursal" as SucEnt
+participant "Entidad Bitácora\n: CE_Bitacora" as BitEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Admin -> UI : capturarDatosEmpleado(nombres, email, rolId, sucId)
 activate UI
-
-UI -> Ctrl : registrarEntradaMercaderia(datosEntrada)
+UI -> Ctrl : crearEmpleado(datosForm)
 activate Ctrl
 
-Ctrl -> Inv : findVariante(sucursal_id, producto_id, talla, color)
-activate Inv
-Inv -> DB : SELECT * FROM inventario WHERE ...
-DB --> Inv : registro_actual
-Inv --> Ctrl : inventarioActual (stock_ant, cpp_ant)
-deactivate Inv
+Ctrl -> Ctrl : validarPermisoRBAC(adminToken, "GESTION_USUARIOS_CREATE")
 
-alt #LightCyan Registro Existente en Sucursal
-    Ctrl -> Ctrl : calcularCPP(stock_ant, cpp_ant, cant, costo_unit)
-    Ctrl -> Inv : updateStockYCostos(nuevo_stock, costo_unit, nuevo_cpp)
-    activate Inv
-    Inv -> DB : UPDATE inventario SET stock_fisico=..., costo_unitario=..., cpp=...
-    DB --> Inv : ok
-    Inv --> Ctrl : ok
-    deactivate Inv
-else #LightYellow Primera Entrada de Variante en Sucursal
-    Ctrl -> Inv : createRegistroInventario(cant, costo_unit, cpp=costo_unit)
-    activate Inv
-    Inv -> DB : INSERT INTO inventario (...)
-    DB --> Inv : ok
-    Inv --> Ctrl : ok
-    deactivate Inv
+alt #LightCyan Permiso RBAC Válido y Autorizado
+    Ctrl -> SucEnt : validarSucursalActiva(sucId)
+    activate SucEnt
+    SucEnt -> DB : SELECT activo FROM sucursales WHERE id = ?
+    activate DB
+    DB --> SucEnt : sucursalActiva = true
+    deactivate DB
+    SucEnt --> Ctrl : sucursalValida
+    deactivate SucEnt
+
+    alt #LightCyan Sucursal Operativa
+        Ctrl -> UserEnt : persistirEmpleado(datos, rolId, sucId)
+        activate UserEnt
+        UserEnt -> DB : INSERT INTO usuarios (...) RETURNING id_usuario
+        activate DB
+        DB --> UserEnt : empleado_id
+        deactivate DB
+        UserEnt --> Ctrl : empleado_id
+        deactivate UserEnt
+
+        Ctrl -> BitEnt : auditarCambioUsuario(adminId, "ALTA_EMPLEADO", empleado_id)
+        activate BitEnt
+        BitEnt -> DB : INSERT INTO bitacora (...)
+        activate DB
+        DB --> BitEnt : ok
+        deactivate DB
+        BitEnt --> Ctrl : audit_ok
+        deactivate BitEnt
+
+        Ctrl --> UI : empleadoRegistradoOK(empleadoDTO)
+        UI --> Admin : renderizarNuevoEmpleadoEnGrilla()
+    else #Pink Sucursal Inactiva / Inexistente (Error de Datos)
+        Ctrl --> UI : errorSucursalInvalida("La sucursal seleccionada no está operativa")
+        UI --> Admin : mostrarMensajeError("No se puede asignar personal a una sucursal inactiva")
+    end
+else #Pink Acceso Denegado (Operador sin Privilegios)
+    Ctrl --> UI : excepcionAccesoDenegado("Privilegios insuficientes (403 Forbidden)")
+    UI --> Admin : mostrarAlertaSeguridad("Acceso denegado. Requiere permisos de Super Administrador")
 end
-
-Ctrl -> Kardex : registrarAsientoKardex("COMPRA", cant, costo_unit, nuevo_cpp)
-activate Kardex
-Kardex -> DB : INSERT INTO kardex_movimientos (...)
-DB --> Kardex : ok
-Kardex --> Ctrl : asiento_id
-deactivate Kardex
-
-Ctrl --> UI : confirmacionExito(nuevo_stock, nuevo_cpp)
 deactivate Ctrl
 
-UI --> User : mostrarMensaje("Lote ingresado exitosamente. Nuevo CPP calculado.")
+Admin -> UI : clickDesbloquearCuenta(usuarioId)
+activate UI
+UI -> Ctrl : desbloquearCuenta(usuarioId)
+activate Ctrl
+
+Ctrl -> UserEnt : verificarEstadoCuenta(usuarioId)
+activate UserEnt
+UserEnt -> DB : SELECT estado_cuenta FROM usuarios WHERE id = ?
+activate DB
+DB --> UserEnt : estadoActual
+deactivate DB
+UserEnt --> Ctrl : estadoActual
+deactivate UserEnt
+
+alt #LightCyan Cuenta Bloqueada por Intentos Fallidos
+    Ctrl -> UserEnt : cambiarEstado(usuarioId, 'ACTIVO', intentos=0)
+    activate UserEnt
+    UserEnt -> DB : UPDATE usuarios SET estado='ACTIVO', intentos_fallidos=0 WHERE id = ?
+    activate DB
+    DB --> UserEnt : ok
+    deactivate DB
+    UserEnt --> Ctrl : ok
+    deactivate UserEnt
+
+    Ctrl --> UI : cuentaDesbloqueadaOK()
+    UI --> Admin : actualizarBadgeEstado("ACTIVO")
+else #Pink Cuenta Ya Activa o No Encontrada (Si no accede)
+    Ctrl --> UI : avisoCuentaNoBloqueada("La cuenta no se encuentra en estado bloqueado")
+    UI --> Admin : notificarEstadoSinCambios("La cuenta ya se encontraba activa")
+end
+deactivate Ctrl
 deactivate UI
 @enduml
 ```
 
 ---
 
-#### 3.2.3 Diagrama de Tiempo - Ciclo de Vida del Stock y Valuación
+#### 3.2.5 Diagrama de Secuencia - CU05: Gestionar Sucursales y Ciudades
 
-Modela la evolución temporal de los estados del inventario físico y la variación de su costo promedio ponderado ($CPP$) frente a eventos sucesivos de compra y venta en el tiempo:
+Modela la parametrización de infraestructura geográfica, validación de permisos de configuración, verificación de coordenadas GPS satelitales en territorio boliviano y control de excepciones (`alt`).
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Administrador" as Admin
+participant "Interfaz\n: IU_GestionSucursales" as UI
+participant "Gestor Sucursales\n: CTR_GestionSucursales" as Ctrl
+participant "Entidad Ciudad\n: CE_Ciudad" as CiuEnt
+participant "Entidad Sucursal\n: CE_Sucursal" as SucEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Admin -> UI : capturarDatosSucursal(nombre, ciudadId, dir, lat, lon, probadores)
+activate UI
+UI -> Ctrl : registrarSucursal(sucursalDTO)
+activate Ctrl
+
+Ctrl -> Ctrl : verificarPermisoRBAC(adminToken, "SUCURSALES_CONFIG")
+
+alt #LightCyan Permiso Concedido
+    Ctrl -> CiuEnt : verificarCiudadHabilitada(ciudadId)
+    activate CiuEnt
+    CiuEnt -> DB : SELECT id_ciudad, activo FROM ciudades WHERE id = ?
+    activate DB
+    DB --> CiuEnt : ciudadActiva
+    deactivate DB
+    CiuEnt --> Ctrl : ciudadValida
+    deactivate CiuEnt
+
+    Ctrl -> Ctrl : validarCoordenadasGps(lat, lon)
+
+    alt #LightCyan Ciudad Válida y Coordenadas GPS en Territorio Nacional
+        Ctrl -> Ctrl : configurarAforoProbadores(probadores)
+        Ctrl -> SucEnt : guardarSucursal(datosDTO)
+        activate SucEnt
+        SucEnt -> DB : INSERT INTO sucursales (...) RETURNING id_sucursal
+        activate DB
+        DB --> SucEnt : nueva_sucursal_id
+        deactivate DB
+        SucEnt --> Ctrl : sucursal_id
+        deactivate SucEnt
+
+        Ctrl --> UI : sucursalCreadaOK(sucursalDTO)
+        UI --> Admin : mostrarConfirmacionExitoYPinEnMapa()
+    else #Pink Coordenadas Fuera de Rango o Ciudad Inactiva (Error)
+        Ctrl --> UI : errorValidacionGeografica("Coordenadas GPS fuera de Bolivia o ciudad no habilitada")
+        UI --> Admin : mostrarMensajeError("Verifique los datos geográficos de la sucursal")
+    end
+else #Pink Acceso Denegado (Si no accede)
+    Ctrl --> UI : errorAccesoDenegado("No cuenta con rol de Administración Territorial")
+    UI --> Admin : bloquearFormularioYMostrarAlerta("Acceso denegado (403 Forbidden)")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.6 Diagrama de Secuencia - CU06: Gestionar Productos y Atributos de Moda
+
+Modela el alta de prendas de vestir masculinas, validación de unicidad de SKU base (`alt`), bucles iterativos (`loop`) para vincular matrices de colores (HEX) y tallas normalizadas, y rechazo en caso de conflicto.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Administrador" as Admin
+participant "Interfaz\n: IU_GestionProductos" as UI
+participant "Gestor Productos\n: CTR_GestionProductos" as Ctrl
+participant "Entidad Producto\n: CE_Producto" as ProdEnt
+participant "Entidad Color\n: CE_Color" as ColEnt
+participant "Entidad Talla\n: CE_Talla" as TalEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Admin -> UI : capturarFichaTecnica(sku, nombre, precio, catId, colores, tallas)
+activate UI
+UI -> Ctrl : crearProducto(productoDTO)
+activate Ctrl
+
+Ctrl -> Ctrl : validarPermisoRBAC(adminToken, "CATALOGO_MANAGE")
+
+alt #LightCyan Permiso Concedido
+    Ctrl -> ProdEnt : validarSkuUnico(sku)
+    activate ProdEnt
+    ProdEnt -> DB : SELECT count(*) FROM productos WHERE sku = ?
+    activate DB
+    DB --> ProdEnt : countSku
+    deactivate DB
+    ProdEnt --> Ctrl : skuDisponible
+    deactivate ProdEnt
+
+    alt #LightCyan SKU Base Único y Disponible
+        Ctrl -> ProdEnt : guardarPrendaBase(productoDTO)
+        activate ProdEnt
+        ProdEnt -> DB : INSERT INTO productos (...) RETURNING id_producto
+        activate DB
+        DB --> ProdEnt : nuevo_producto_id
+        deactivate DB
+        ProdEnt --> Ctrl : producto_id
+        deactivate ProdEnt
+
+        loop #LightYellow Para cada Variante de Color en listaColores
+            Ctrl -> ColEnt : asociarColorHex(producto_id, colorNombre, codigoHex)
+            activate ColEnt
+            ColEnt -> DB : INSERT INTO producto_colores (...)
+            activate DB
+            DB --> ColEnt : ok
+            deactivate DB
+            ColEnt --> Ctrl : colorAsociado_ok
+            deactivate ColEnt
+        end
+
+        loop #LightYellow Para cada Talla en listaTallas
+            Ctrl -> TalEnt : asociarTalla(producto_id, talla)
+            activate TalEnt
+            TalEnt -> DB : INSERT INTO producto_tallas (...)
+            activate DB
+            DB --> TalEnt : ok
+            deactivate DB
+            TalEnt --> Ctrl : tallaAsociada_ok
+            deactivate TalEnt
+        end
+
+        Ctrl --> UI : productoRegistradoOK(productoDTO)
+        UI --> Admin : renderizarTarjetaPrendaEnCatalogo()
+    else #Pink SKU Duplicado / Ya Existente (Error Conflicto)
+        Ctrl --> UI : errorSkuDuplicado("El SKU base ingresado ya se encuentra registrado")
+        UI --> Admin : resaltaCampoError("El código SKU ya existe. Ingrese un identificador único")
+    end
+else #Pink Acceso Denegado (Si no accede)
+    Ctrl --> UI : excepcionAccesoDenegado("No tiene autorización para modificar el catálogo")
+    UI --> Admin : mostrarAlertaSeguridad("Acceso denegado (403 Forbidden)")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.7 Diagrama de Secuencia - CU07: Gestionar Temporadas y Campañas
+
+Modela la calendarización de temporadas comerciales, validación de ventanas temporales de vigencia (`alt`), bucle (`loop`) de asignación masiva de prendas del catálogo y manejo de inconsistencias de fechas.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Administrador" as Admin
+participant "Interfaz\n: IU_GestionTemporadas" as UI
+participant "Gestor Temporadas\n: CTR_GestionTemporadas" as Ctrl
+participant "Entidad Temporada\n: CE_Temporada" as TempEnt
+participant "Entidad Producto\n: CE_Producto" as ProdEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Admin -> UI : capturarDatosTemporada(codigo, nombre, fechaIni, fechaFin, dcto, productosIds)
+activate UI
+UI -> Ctrl : crearTemporada(temporadaDTO)
+activate Ctrl
+
+Ctrl -> Ctrl : verificarPermisoRBAC(adminToken, "TEMPORADAS_MANAGE")
+
+alt #LightCyan Permiso Concedido
+    Ctrl -> Ctrl : validarRangoFechas(fechaIni, fechaFin)
+
+    alt #LightCyan Rango de Fechas Coherente (fechaFin >= fechaIni)
+        Ctrl -> TempEnt : guardarTemporada(temporadaDTO)
+        activate TempEnt
+        TempEnt -> DB : INSERT INTO temporadas (...) RETURNING id_temporada
+        activate DB
+        DB --> TempEnt : temporada_id
+        deactivate DB
+        TempEnt --> Ctrl : temporada_id
+        deactivate TempEnt
+
+        loop #LightYellow Para cada Prenda seleccionada en productosIds
+            Ctrl -> ProdEnt : vincularPrendaATemporada(temporada_id, prod_id)
+            activate ProdEnt
+            ProdEnt -> DB : UPDATE productos SET temporada_id = ? WHERE id = ?
+            activate DB
+            DB --> ProdEnt : ok
+            deactivate DB
+            ProdEnt --> Ctrl : prendaVinculada
+            deactivate ProdEnt
+        end
+
+        Ctrl -> Ctrl : activarCampanaEstacional(temporada_id)
+        Ctrl --> UI : campanaActivadaOK(temporadaDTO)
+        UI --> Admin : mostrarConfirmacionTemporadaVigente()
+    else #Pink Inconsistencia de Fechas (Error de Validación)
+        Ctrl --> UI : errorRangoFechas("La fecha de fin debe ser igual o posterior a la fecha de inicio")
+        UI --> Admin : resaltarErrorCronologico("Rango temporal inválido")
+    end
+else #Pink Acceso Denegado (Si no accede)
+    Ctrl --> UI : excepcionAccesoDenegado("Permisos insuficientes para administrar temporadas")
+    UI --> Admin : mostrarAlertaSeguridad("Acceso denegado (403 Forbidden)")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.8 Diagrama de Secuencia - CU08: Gestionar Proveedores Textiles
+
+Modela el registro de proveedores textiles, control de autorización RBAC, validación de NIT ante el Servicio de Impuestos Nacionales (`alt`), establecimiento de plazos de pago y alerta ante intentos duplicados.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Personal Logística" as User
+participant "Interfaz\n: IU_GestionProveedores" as UI
+participant "Gestor Proveedores\n: CTR_GestionProveedores" as Ctrl
+participant "Entidad Proveedor\n: CE_Proveedor" as ProvEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+User -> UI : capturarFormularioProveedor(nit, razonSocial, contacto, tel, terminos)
+activate UI
+UI -> Ctrl : registrarProveedor(proveedorDTO)
+activate Ctrl
+
+Ctrl -> Ctrl : verificarPermisoRBAC(userToken, "PROVEEDORES_MANAGE")
+
+alt #LightCyan Permiso Concedido
+    Ctrl -> ProvEnt : verificarNitUnico(nit)
+    activate ProvEnt
+    ProvEnt -> DB : SELECT count(*) FROM proveedores WHERE nit = ?
+    activate DB
+    DB --> ProvEnt : countNit
+    deactivate DB
+    ProvEnt --> Ctrl : nitLibre
+    deactivate ProvEnt
+
+    alt #LightCyan NIT Válido y no Registrado Previamente
+        Ctrl -> ProvEnt : guardarProveedor(proveedorDTO)
+        activate ProvEnt
+        ProvEnt -> DB : INSERT INTO proveedores (...) RETURNING id_proveedor
+        activate DB
+        DB --> ProvEnt : proveedor_id
+        deactivate DB
+        ProvEnt --> Ctrl : proveedor_id
+        deactivate ProvEnt
+
+        Ctrl -> Ctrl : establecerTerminosComerciales(proveedor_id, terminos)
+        Ctrl --> UI : altaProveedorExitosa(proveedorDTO)
+        UI --> User : mostrarConfirmacionAltaEnDirectorio()
+    else #Pink NIT Tributario Duplicado (Error Conflicto)
+        Ctrl --> UI : errorNitDuplicado("El NIT ingresado ya se encuentra asignado a otro proveedor")
+        UI --> User : mostrarMensajeError("Proveedor existente en el registro impositivo")
+    end
+else #Pink Acceso Denegado (Si no accede)
+    Ctrl --> UI : excepcionAccesoDenegado("No tiene autorización para el módulo de compras/proveedores")
+    UI --> User : mostrarAlertaSeguridad("Acceso denegado (403 Forbidden)")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.9 Diagrama de Secuencia - CU09: Gestionar Inventario Multi-Sucursal (CPP)
+
+Modela la recepción física de lotes de mercadería, verificación de permisos y parámetros (`alt`), recálculo matemático de Costo Promedio Ponderado ($CPP$) para variantes existentes frente a altas iniciales, emisión inmutable de asiento en Kardex y rechazo de lotes erróneos.
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Personal Logística" as User
+participant "Interfaz\n: IU_GestionInventario" as UI
+participant "Gestor Inventario\n: CTR_GestionInventario" as Ctrl
+participant "Entidad Inventario\n: CE_Inventario" as InvEnt
+participant "Entidad Kardex\n: CE_Kardex" as KarEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+User -> UI : ingresarEntradaLote(sucursalId, productoSku, talla, color, cantLote, costoUnit)
+activate UI
+UI -> Ctrl : procesarEntradaLote(inventarioDTO)
+activate Ctrl
+
+Ctrl -> Ctrl : verificarPermisoRBAC(userToken, "INVENTARIO_RECEPCION")
+
+alt #LightCyan Permiso Concedido
+    alt #LightCyan Parámetros Válidos (cantLote > 0 && costoUnit > 0)
+        Ctrl -> InvEnt : obtenerStockYCppActual(sucursalId, productoSku, talla, color)
+        activate InvEnt
+        InvEnt -> DB : SELECT id_inventario, stock_fisico, costo_promedio_ponderado FROM inventario WHERE ...
+        activate DB
+        DB --> InvEnt : registroActual
+        deactivate DB
+        InvEnt --> Ctrl : existenciasActuales(stock_ant, cpp_ant)
+        deactivate InvEnt
+
+        alt #LightYellow Registro Existente de Variante (Recálculo CPP)
+            Ctrl -> Ctrl : calcularCPP((stock_ant * cpp_ant + cantLote * costoUnit) / (stock_ant + cantLote))
+            Ctrl -> InvEnt : actualizarStockYCPP(id_inv, nuevoStock, nuevoCpp)
+            activate InvEnt
+            InvEnt -> DB : UPDATE inventario SET stock_fisico = ?, costo_promedio_ponderado = ? WHERE id = ?
+            activate DB
+            DB --> InvEnt : ok
+            deactivate DB
+            InvEnt --> Ctrl : inventarioActualizado
+            deactivate InvEnt
+        else #LightBlue Primera Entrada de Variante en Sucursal
+            Ctrl -> InvEnt : crearRegistroInventario(sucursalId, productoSku, talla, color, cantLote, costoUnit)
+            activate InvEnt
+            InvEnt -> DB : INSERT INTO inventario (...) RETURNING id_inventario
+            activate DB
+            DB --> InvEnt : nuevo_id_inv
+            deactivate DB
+            InvEnt --> Ctrl : inventarioCreado
+            deactivate InvEnt
+        end
+
+        Ctrl -> KarEnt : registrarMovimientoKardex("COMPRA", cantLote, costoUnit, nuevoStock, nuevoCpp)
+        activate KarEnt
+        KarEnt -> DB : INSERT INTO kardex_movimientos (...) RETURNING id_kardex
+        activate DB
+        DB --> KarEnt : asiento_id
+        deactivate DB
+        KarEnt --> Ctrl : asientoAsentado
+        deactivate KarEnt
+
+        Ctrl --> UI : confirmacionEntradaExitosa(nuevoStock, nuevoCpp)
+        UI --> User : imprimirComprobanteKardexConNuevoCPP()
+    else #Pink Cantidad o Costo Inválidos (Valores <= 0)
+        Ctrl --> UI : errorDatosEntrada("La cantidad y costo unitario deben ser estrictamente positivos")
+        UI --> User : mostrarMensajeError("Datos de lote erróneos. Operación rechazada")
+    end
+else #Pink Acceso Denegado (Si no accede)
+    Ctrl --> UI : excepcionAccesoDenegado("Usuario sin rol de Encargado de Depósito/Logística")
+    UI --> User : mostrarAlertaSeguridad("Acceso denegado (403 Forbidden)")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+#### 3.2.10 Diagrama de Secuencia - CU10: Consultar Catálogo y Disponibilidad
+
+Modela la navegación reactiva del catálogo omnicanal, bucle de verificación federada de stock físico en tiempo real por sucursal (`loop`), opción de visualización detallada (`opt`) y notificación de catálogo vacío (`alt`).
+
+```plantuml
+@startuml
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Cliente" as Client
+participant "Interfaz\n: IU_Catalogo" as UI
+participant "Gestor Catálogo\n: CTR_Catalogo" as Ctrl
+participant "Entidad Producto\n: CE_Producto" as ProdEnt
+participant "Entidad Inventario\n: CE_Inventario" as InvEnt
+database "Base de Datos\n(PostgreSQL)" as DB
+
+Client -> UI : seleccionarFiltrosBusqueda(categoriaId, talla, color, sucursalId)
+activate UI
+UI -> Ctrl : consultarPrendasFiltradas(filtrosDTO)
+activate Ctrl
+
+Ctrl -> ProdEnt : buscarPrendasPorFiltro(filtrosDTO)
+activate ProdEnt
+ProdEnt -> DB : SELECT * FROM productos WHERE categoria_id = ? AND estado = 'PUBLICADO'
+activate DB
+DB --> ProdEnt : listaPrendasBase
+deactivate DB
+ProdEnt --> Ctrl : prendasBase
+deactivate ProdEnt
+
+alt #LightCyan Prendas Encontradas (listaPrendas.count > 0)
+    loop #LightYellow Para cada Prenda en listaPrendasBase
+        Ctrl -> InvEnt : consultarStockDisponible(producto_id, sucursalId)
+        activate InvEnt
+        InvEnt -> DB : SELECT sum(stock_fisico - stock_reservado) FROM inventario WHERE ...
+        activate DB
+        DB --> InvEnt : stockDisponible
+        deactivate DB
+        InvEnt --> Ctrl : stockPorSucursal
+        deactivate InvEnt
+    end
+
+    Ctrl -> Ctrl : serializarCatalogoPublico(prendasConStock)
+    Ctrl --> UI : renderizarCatalogo(catalogoJSON)
+    UI --> Client : mostrarCuadriculaPrendasConStock()
+
+    opt #AliceBlue Cliente Selecciona Ficha Detallada de Prenda
+        Client -> UI : abrirFichaDetalladaPrenda(productoId)
+        UI -> Ctrl : consultarDetallePrendaConStock(productoId)
+        activate Ctrl
+        Ctrl --> UI : fichaDetalladaPrenda(tallas, colores, stockPorTienda)
+        deactivate Ctrl
+        UI --> Client : mostrarModalFichaPrenda()
+    end
+else #Pink Sin Coincidencias de Búsqueda (0 resultados)
+    Ctrl --> UI : catalogoVacio("No se encontraron prendas con los filtros especificados")
+    UI --> Client : mostrarMensajeSinResultados("Sin coincidencias. Intente cambiar de talla o sucursal")
+end
+deactivate Ctrl
+deactivate UI
+@enduml
+```
+
+---
+
+---
+
+#### 3.2.11 Diagrama de Tiempo - Ciclo de Vida del Stock y Valuación
+
+Modela la evolución temporal de los estados del inventario físico, el volumen cuantitativo de existencias y la variación del costo promedio ponderado ($CPP$) frente a eventos sucesivos de compra y venta a lo largo del tiempo, conforme al estándar UML 2.5 y modelado formal en Enterprise Architect:
+
+![Diagrama de Tiempo UML 2.5 en Enterprise Architect](../diagramas/Diagrama_Tiempo_Ciclo_Vida_Stock_CPP.png)
+
+##### a) Especificación PlantUML (Ciclo Completo Corregido)
 
 ```plantuml
 @startuml
@@ -3798,26 +5251,78 @@ ValCPP is "0.00 Bs"
 EstadoStock is Disponible
 NivelStock is "10 uds"
 ValCPP is "100.00 Bs"
-note bottom of ValCPP : Compra Lote 1: 10 uds @ 100 Bs
+note bottom of EstadoStock : Entrada Lote 1 (+10 uds @ 100 Bs)
 
 @30
+EstadoStock is Disponible
 NivelStock is "5 uds"
 ValCPP is "100.00 Bs"
-note bottom of NivelStock : Salida por Venta: -5 uds
+note bottom of NivelStock : Salida Venta POS (-5 uds)
 
 @50
+EstadoStock is Disponible
 NivelStock is "25 uds"
 ValCPP is "116.00 Bs"
-note bottom of ValCPP : Compra Lote 2: 20 uds @ 120 Bs
-CPP = (5*100 + 20*120)/25 = 116 Bs
+note bottom of ValCPP
+  Entrada Lote 2 (+20 uds @ 120 Bs)
+  CPP = (5*100 + 20*120)/25 = 116.00 Bs
+end note
 
 @70
 EstadoStock is BajoStockMinimo
 NivelStock is "3 uds"
 ValCPP is "116.00 Bs"
-note bottom of EstadoStock : Alerta automática al encargado
+note bottom of EstadoStock : Salida Venta (-22 uds) | Alerta Automática <= 5 uds mín.
+
+@90
+EstadoStock is SinStock
+NivelStock is "0 uds"
+ValCPP is "116.00 Bs"
+note bottom of EstadoStock : Venta Final (-3 uds) | Inventario Agotado
+
+@100
+EstadoStock is SinStock
+NivelStock is "0 uds"
+ValCPP is "116.00 Bs"
 @enduml
 ```
+
+##### b) Descripción Técnica y Dinámica de Transición en el Tiempo
+
+El diagrama modela 3 líneas de vida sincronizadas que comparten la misma escala de tiempo horizontal ($t \in [0, 100]$):
+
+1. **Línea de Vida de Estado Robusta (`Estado_Existencias`)**:
+   - **`Disponible`**: Existencias operativas por encima del umbral de seguridad.
+   - **`BajoStockMinimo`**: Existencias $\le 5\text{ unidades}$ (stock de seguridad configurado por variante/sucursal). Dispara alertas automáticas en el módulo de compras y aprovisionamiento.
+   - **`SinStock`**: Existencias iguales a $0\text{ unidades}$. Inhabilita la venta física y bloquea la adición al carrito web/móvil.
+
+2. **Línea de Vida de Valor Concisa (`Nivel_Stock_Fisico`)**:
+   - Refleja el saldo cuantitativo de unidades en almacén: $0\text{ uds} \to 10\text{ uds} \to 5\text{ uds} \to 25\text{ uds} \to 3\text{ uds} \to 0\text{ uds}$.
+
+3. **Línea de Vida de Valor Concisa (`Valuacion_CPP_Bs`)**:
+   - Refleja el costo unitario valorizado bajo la fórmula legal/tributaria de Costo Promedio Ponderado ($CPP$):
+     $$CPP_{nuevo} = \frac{(S_{actual} \times CPP_{actual}) + (Q_{entrada} \times P_{compra})}{S_{actual} + Q_{entrada}}$$
+   - Las salidas por venta disminuyen las unidades físicas pero **no alteran** el costo unitario de valuación del inventario remanente.
+
+| Tiempo ($t$) | Evento / Estímulo | Estado Existencias | Stock Físico | Valuación CPP (Bs) | Restricción / Observación |
+| :---: | :--- | :---: | :---: | :---: | :--- |
+| **0** | `Inicio` | `SinStock` | 0 uds | 0.00 Bs | Apertura de catálogo sin existencias iniciales. |
+| **10** | `EntradaLote1` | `Disponible` | 10 uds | 100.00 Bs | Recepción Lote 1: 10 prendas a 100.00 Bs/ud. |
+| **30** | `VentaPOS` | `Disponible` | 5 uds | 100.00 Bs | Venta presencial: -5 uds. Duración $\{20\}$. CPP no cambia. |
+| **50** | `EntradaLote2` | `Disponible` | 25 uds | 116.00 Bs | Recepción Lote 2: 20 prendas a 120.00 Bs. Recálculo CPP: $\frac{5\times100 + 20\times120}{25} = 116.00$ Bs. |
+| **70** | `AlertaMin` | `BajoStockMinimo` | 3 uds | 116.00 Bs | Venta: -22 uds. Stock $\le 5$ uds mínimas. Dispara alerta automática. |
+| **90** | `Agotado` | `SinStock` | 0 uds | 116.00 Bs | Venta de las últimas 3 prendas. Stock agotado. |
+
+##### c) Organización en el Repositorio de Enterprise Architect
+
+- **Paquete Dedicado (Carpeta)**: `Model` $\to$ `diagramas de tiempo` (ID: 13)
+- **Diagrama UML 2.5**: `Diagrama_Tiempo_Ciclo_Vida_Stock_CPP` (ID: 193, Tipo: `Timing`)
+- **Elementos Modelados**:
+  - `Estado_Existencias` (`TimeLine`, Subtipo: `State Lifeline`, Particiones: `SinStock`, `BajoStockMinimo`, `Disponible`)
+  - `Nivel_Stock_Fisico` (`TimeLine`, Subtipo: `Value Lifeline`, Particiones: `0 uds`, `3 uds`, `5 uds`, `10 uds`, `25 uds`)
+  - `Valuacion_CPP_Bs` (`TimeLine`, Subtipo: `Value Lifeline`, Particiones: `0.00 Bs`, `100.00 Bs`, `116.00 Bs`)
+  - Conectores de estímulo/secuencia temporizados entre líneas de vida en $t=10, 30, 50, 70, 90$ con restricciones de duración estándar UML ($\{20\}$).
+
 
 ---
 
@@ -3891,7 +5396,7 @@ Descatalogado --> [*]
 
 ---
 
-#### 3.2.5 Diagrama de Navegación del Sistema (Ciclo 1)
+#### 3.2.13 Diagrama de Navegación del Sistema (Ciclo 1)
 
 Modela el flujo de navegación entre vistas y pantallas para la plataforma web y móvil:
 
@@ -3954,165 +5459,301 @@ VistaDetalle --> VistaCatalogo : Volver a Catálogo
 
 ### 3.3 Diseño de Datos
 
-#### 3.3.1 Diseño de Datos Lógico (Diagrama ER / Clases Persistentes)
+#### 3.3.1 Diagrama de Clases de la Base de Datos (Modelo Lógico de Clases Persistentes / Objetos de Negocio)
+
+Conforme al estándar **UML 2.5** (`UML 2.5.txt`, líneas 328-338) y el marco de diseño metodológico **Métrica v3** (estereotipo `<<Objeto de negocio>>`), el modelo de datos no se limita a un diagrama relacional plano de tablas, sino que se formaliza como un **Diagrama de Clases Persistentes de Base de Datos**. Cada clase representa un objeto de dominio con sus atributos fuertemente tipados, visibilidad encapsulada (`-`), métodos de persistencia y reglas de negocio (`+`), cardinalidades en los extremos, verbos semánticos directos, composiciones de ciclo de vida (`*--`) y agregaciones lógicas (`o--`).
 
 ```plantuml
 @startuml
+skinparam style strictuml
+skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam nodesep 55
+skinparam ranksep 65
 
-entity "ciudades" as Ciudades {
-    * id_ciudad : SERIAL <<PK>>
-    --
-    * nombre_ciudad : VARCHAR(80) <<UNIQUE>>
-    * departamento : VARCHAR(80)
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    HeaderBackgroundColor #EAEDED
+    BorderThickness 1.2
+    ArrowColor #2C3E50
+    ArrowThickness 1.2
 }
 
-entity "sucursales" as Sucursales {
-    * id_sucursal : SERIAL <<PK>>
-    --
-    * id_ciudad : INTEGER <<FK>>
-    * nombre_sucursal : VARCHAR(100)
-    * direccion : TEXT
-    * latitud : DECIMAL(10,8)
-    * longitud : DECIMAL(11,8)
-    * telefono : VARCHAR(20)
-    * capacidad_probadores : INTEGER
-    * estado : VARCHAR(20)
+' ==============================================================================
+' DEFINICIÓN DE CLASES PERSISTENTES (OBJETOS DE NEGOCIO / ENTIDADES DE BD)
+' ==============================================================================
+
+class "Ciudad" as Ciudad <<Objeto de negocio>> {
+    - id_ciudad : Integer
+    - nombre_ciudad : String
+    - departamento : String
+    - creado_en : Timestamp
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + eliminar() : Boolean
+    + encontrarPorId(id : Integer) : Ciudad
+    + listarTodas() : List<Ciudad>
 }
 
-entity "usuarios" as Usuarios {
-    * id_usuario : SERIAL <<PK>>
-    --
-    * id_sucursal : INTEGER <<FK, NULL>>
-    * nombres : VARCHAR(100)
-    * apellidos : VARCHAR(100)
-    * email : VARCHAR(120) <<UNIQUE>>
-    * password_hash : VARCHAR(100)
-    * rol : VARCHAR(30)
-    * estado_cuenta : VARCHAR(30)
-    * intentos_fallidos : INTEGER
-    * bloqueado_hasta : TIMESTAMP
-    * ultimo_acceso : TIMESTAMP
+class "Sucursal" as Sucursal <<Objeto de negocio>> {
+    - id_sucursal : Integer
+    - id_ciudad : Integer
+    - nombre_sucursal : String
+    - direccion : String
+    - latitud : Decimal
+    - longitud : Decimal
+    - telefono : String
+    - capacidad_probadores : Integer
+    - estado : String
+    - creado_en : Timestamp
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + cambiarEstado(nuevoEstado : String) : Boolean
+    + encontrarPorId(id : Integer) : Sucursal
+    + listarPorCiudad(id_ciudad : Integer) : List<Sucursal>
 }
 
-entity "tokens_recuperacion" as TokensRecup {
-    * id_token : SERIAL <<PK>>
-    --
-    * id_usuario : INTEGER <<FK>>
-    * codigo_otp_hash : VARCHAR(100)
-    * expiracion : TIMESTAMP
-    * utilizado : BOOLEAN
-    * intentos_verificacion : INTEGER
-    * fecha_creacion : TIMESTAMP
+class "Usuario" as Usuario <<Objeto de negocio>> {
+    - id_usuario : Integer
+    - id_sucursal : Integer
+    - nombres : String
+    - apellidos : String
+    - email : String
+    - password_hash : String
+    - rol : String
+    - estado_cuenta : String
+    - intentos_fallidos : Integer
+    - bloqueado_hasta : Timestamp
+    - ultimo_acceso : Timestamp
+    - creado_en : Timestamp
+    __ Operaciones __
+    + autenticar(email : String, pass : String) : Boolean
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + cambiarClave(nuevoHash : String) : Boolean
+    + incrementarIntentosFallidos() : Integer
+    + bloquearCuenta() : Boolean
+    + registrarAccesoExitoso() : Boolean
+    + encontrarPorEmail(email : String) : Usuario
 }
 
-entity "proveedores" as Proveedores {
-    * id_proveedor : SERIAL <<PK>>
-    --
-    * nit_identificacion : VARCHAR(30) <<UNIQUE>>
-    * razon_social : VARCHAR(150)
-    * contacto_nombre : VARCHAR(100)
-    * telefono : VARCHAR(30)
-    * email : VARCHAR(100)
-    * terminos_pago : VARCHAR(50)
+class "TokenRecuperacion" as TokenRecup <<Objeto de negocio>> {
+    - id_token : Integer
+    - id_usuario : Integer
+    - codigo_otp_hash : String
+    - expiracion : Timestamp
+    - utilizado : Boolean
+    - intentos_verificacion : Integer
+    - fecha_creacion : Timestamp
+    __ Operaciones __
+    + generarTokenOTP(id_user : Integer, otpHash : String) : Boolean
+    + verificarOTP(codigoOtp : String) : Boolean
+    + marcarComoUtilizado() : Boolean
+    + estaExpirado() : Boolean
 }
 
-entity "temporadas" as Temporadas {
-    * id_temporada : SERIAL <<PK>>
-    --
-    * codigo_campana : VARCHAR(30) <<UNIQUE>>
-    * nombre_temporada : VARCHAR(100)
-    * fecha_inicio : DATE
-    * fecha_fin : DATE
-    * estado : VARCHAR(30)
+class "BitacoraAcceso" as Bitacora <<Objeto de negocio>> {
+    - id_bitacora : Integer
+    - id_usuario : Integer
+    - ip_origen : String
+    - user_agent : String
+    - exitoso : Boolean
+    - fecha_hora : Timestamp
+    __ Operaciones __
+    + registrarIngreso(id_user : Integer, ip : String, ok : Boolean) : Boolean
+    + listarPorUsuario(id_user : Integer) : List<BitacoraAcceso>
 }
 
-entity "categorias" as Categorias {
-    * id_categoria : SERIAL <<PK>>
-    --
-    * nombre_categoria : VARCHAR(80) <<UNIQUE>>
-    * descripcion : TEXT
+class "Proveedor" as Proveedor <<Objeto de negocio>> {
+    - id_proveedor : Integer
+    - nit_identificacion : String
+    - razon_social : String
+    - contacto_nombre : String
+    - telefono : String
+    - email : String
+    - terminos_pago : String
+    - estado : String
+    - creado_en : Timestamp
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + cambiarEstado(nuevoEstado : String) : Boolean
+    + encontrarPorNit(nit : String) : Proveedor
+    + listarActivos() : List<Proveedor>
 }
 
-entity "marcas" as Marcas {
-    * id_marca : SERIAL <<PK>>
-    --
-    * nombre_marca : VARCHAR(80) <<UNIQUE>>
+class "Temporada" as Temporada <<Objeto de negocio>> {
+    - id_temporada : Integer
+    - codigo_campana : String
+    - nombre_temporada : String
+    - fecha_inicio : Date
+    - fecha_fin : Date
+    - descuento_liquidacion : Decimal
+    - estado : String
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + verificarVigencia(fechaActual : Date) : Boolean
+    + aplicarDescuento(descuento : Decimal) : Boolean
 }
 
-entity "productos" as Productos {
-    * id_producto : SERIAL <<PK>>
-    --
-    * id_categoria : INTEGER <<FK>>
-    * id_marca : INTEGER <<FK>>
-    * id_temporada : INTEGER <<FK>>
-    * id_proveedor : INTEGER <<FK>>
-    * codigo_sku_base : VARCHAR(50) <<UNIQUE>>
-    * nombre : VARCHAR(150)
-    * descripcion : TEXT
-    * precio_venta_base : DECIMAL(10,2)
-    * genero : VARCHAR(20)
-    * estado_publicacion : VARCHAR(30)
+class "Categoria" as Categoria <<Objeto de negocio>> {
+    - id_categoria : Integer
+    - nombre_categoria : String
+    - descripcion : String
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + encontrarPorId(id : Integer) : Categoria
+    + listarTodas() : List<Categoria>
 }
 
-entity "producto_colores" as ProdColores {
-    * id_prod_color : SERIAL <<PK>>
-    --
-    * id_producto : INTEGER <<FK>>
-    * color_nombre : VARCHAR(50)
-    * codigo_hex : VARCHAR(10)
+class "Marca" as Marca <<Objeto de negocio>> {
+    - id_marca : Integer
+    - nombre_marca : String
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + encontrarPorId(id : Integer) : Marca
+    + listarTodas() : List<Marca>
 }
 
-entity "producto_tallas" as ProdTallas {
-    * id_prod_talla : SERIAL <<PK>>
-    --
-    * id_producto : INTEGER <<FK>>
-    * talla : VARCHAR(20)
+class "Producto" as Producto <<Objeto de negocio>> {
+    - id_producto : Integer
+    - id_categoria : Integer
+    - id_marca : Integer
+    - id_temporada : Integer
+    - id_proveedor : Integer
+    - codigo_sku_base : String
+    - nombre : String
+    - descripcion : String
+    - precio_venta_base : Decimal
+    - genero : String
+    - estado_publicacion : String
+    - creado_en : Timestamp
+    __ Operaciones __
+    + crear() : Boolean
+    + actualizar() : Boolean
+    + cambiarEstadoPublicacion(estado : String) : Boolean
+    + encontrarPorSku(sku : String) : Producto
+    + calcularPrecioVenta() : Decimal
+    + listarPorCategoria(id_cat : Integer) : List<Producto>
 }
 
-entity "inventario" as Inventario {
-    * id_inventario : SERIAL <<PK>>
-    --
-    * id_sucursal : INTEGER <<FK>>
-    * id_producto : INTEGER <<FK>>
-    * talla : VARCHAR(20)
-    * color : VARCHAR(50)
-    * stock_fisico : INTEGER
-    * stock_reservado : INTEGER
-    * stock_minimo : INTEGER
-    * ultimo_costo_unitario : DECIMAL(10,2)
-    * costo_promedio_ponderado : DECIMAL(10,2)
+class "ProductoColor" as ProdColor <<Objeto de negocio>> {
+    - id_prod_color : Integer
+    - id_producto : Integer
+    - color_nombre : String
+    - codigo_hex : String
+    __ Operaciones __
+    + registrarColor(id_prod : Integer, color : String, hex : String) : Boolean
+    + eliminarColor(id : Integer) : Boolean
+    + listarPorProducto(id_prod : Integer) : List<ProductoColor>
 }
 
-entity "kardex_movimientos" as Kardex {
-    * id_kardex : SERIAL <<PK>>
-    --
-    * id_inventario : INTEGER <<FK>>
-    * tipo_movimiento : VARCHAR(30)
-    * cantidad : INTEGER
-    * costo_unitario_mov : DECIMAL(10,2)
-    * saldo_cantidad : INTEGER
-    * saldo_cpp : DECIMAL(10,2)
-    * fecha_movimiento : TIMESTAMP
+class "ProductoTalla" as ProdTalla <<Objeto de negocio>> {
+    - id_prod_talla : Integer
+    - id_producto : Integer
+    - talla : String
+    __ Operaciones __
+    + registrarTalla(id_prod : Integer, talla : String) : Boolean
+    + eliminarTalla(id : Integer) : Boolean
+    + listarPorProducto(id_prod : Integer) : List<ProductoTalla>
 }
 
-' Relaciones
-Ciudades ||--o{ Sucursales : posee
-Sucursales ||--o{ Usuarios : emplea
-Usuarios ||--o{ TokensRecup : genera_otps
-Categorias ||--o{ Productos : clasifica
-Marcas ||--o{ Productos : fabrica
-Temporadas ||--o{ Productos : calendariza
-Proveedores ||--o{ Productos : suministra
+class "Inventario" as Inventario <<Objeto de negocio>> {
+    - id_inventario : Integer
+    - id_sucursal : Integer
+    - id_producto : Integer
+    - talla : String
+    - color : String
+    - stock_fisico : Integer
+    - stock_reservado : Integer
+    - stock_minimo : Integer
+    - stock_maximo : Integer
+    - ultimo_costo_unitario : Decimal
+    - costo_promedio_ponderado : Decimal
+    __ Operaciones __
+    + registrarEntrada(cant : Integer, costo : Decimal) : Boolean
+    + registrarSalida(cant : Integer) : Boolean
+    + reservarStock(cant : Integer) : Boolean
+    + liberarReserva(cant : Integer) : Boolean
+    + calcularCPP(cant : Integer, costo : Decimal) : Decimal
+    + consultarStockDisponible() : Integer
+}
 
-Productos ||--o{ ProdColores : variantes_color
-Productos ||--o{ ProdTallas : variantes_talla
+class "KardexMovimiento" as Kardex <<Objeto de negocio>> {
+    - id_kardex : Integer
+    - id_inventario : Integer
+    - tipo_movimiento : String
+    - cantidad : Integer
+    - costo_unitario_mov : Decimal
+    - saldo_cantidad : Integer
+    - saldo_cpp : Decimal
+    - descripcion_motivo : String
+    - fecha_movimiento : Timestamp
+    __ Operaciones __
+    + asentarMovimiento() : Boolean
+    + obtenerSaldoActual(id_inv : Integer) : Decimal
+    + listarMovimientosPorInventario(id_inv : Integer) : List<KardexMovimiento>
+}
 
-Sucursales ||--o{ Inventario : almacena
-Productos ||--o{ Inventario : controla_stock
-Inventario ||--o{ Kardex : registra_movimiento
+' ==============================================================================
+' ASOCIACIONES, VERBOS, CARDINALIDADES, COMPOSICIÓN Y AGREGACIÓN
+' ==============================================================================
+
+' Asociación simple territorial
+Ciudad "1" -- "1..*" Sucursal : alberga / radica en >
+
+' Asociación laboral y administrativa
+Sucursal "0..1" -- "0..*" Usuario : emplea / labora en >
+
+' Composición fuerte: ciclo de vida dependiente de Usuario (ON DELETE CASCADE)
+Usuario "1" *-- "0..*" TokenRecup : emite / pertenece a >
+Usuario "1" *-- "0..*" Bitacora : audita accesos en >
+
+' Asociaciones de catalogación y aprovisionamiento (FK RESTRICT o SET NULL)
+Categoria "1" -- "0..*" Producto : clasifica / es clasificado en >
+Marca "1" -- "0..*" Producto : produce / pertenece a marca >
+Temporada "0..1" -- "0..*" Producto : calendariza / se exhibe en >
+Proveedor "0..1" -- "0..*" Producto : suministra / provisto por >
+
+' Composición fuerte: variantes de color y talla son partes inseparables del Producto
+Producto "1" *-- "1..*" ProdColor : compone variante color >
+Producto "1" *-- "1..*" ProdTalla : compone variante talla >
+
+' Agregación compartida: Sucursal y Producto agregan existencias de inventario
+Sucursal "1" o-- "0..*" Inventario : custodia existencias en >
+Producto "1" o-- "0..*" Inventario : cuantifica stock en >
+
+' Composición fuerte: Los asientos contables de Kardex son inseparables del inventario
+Inventario "1" *-- "1..*" Kardex : audita movimientos en >
+
 @enduml
 ```
+
+##### Matriz de Semántica de Relaciones, Cardinalidad e Integridad de Dominio
+
+| Clase Origen | Clase Destino | Tipo de Relación | Cardinalidad | Verbo Semántico / Rol | Regla de Negocio e Integridad DDL |
+| :--- | :--- | :--- | :---: | :--- | :--- |
+| **Ciudad** | **Sucursal** | **Asociación** | `1` a `1..*` | *alberga / radica en* | Una ciudad puede albergar múltiples sucursales comerciales; una sucursal pertenece obligatoriamente a una ciudad (`ON DELETE RESTRICT`). |
+| **Sucursal** | **Usuario** | **Asociación** | `0..1` a `0..*` | *emplea / labora en* | El personal operativo (cajeros, encargados) está asignado a una sucursal; los clientes o admins globales no tienen sucursal fija (`id_sucursal NULL`, `ON DELETE SET NULL`). |
+| **Usuario** | **TokenRecuperacion** | **Composición (`*--`)** | `1` a `0..*` | *emite / pertenece a* | Los tokens OTP de recuperación tienen ciclo de vida dependiente del usuario emisor; si el usuario se destruye, los tokens se eliminan en cascada (`ON DELETE CASCADE`). |
+| **Usuario** | **BitacoraAcceso** | **Composición (`*--`)** | `1` a `0..*` | *audita accesos en* | Las trazas de auditoría de inicio de sesión pertenecen exclusivamente a la identidad del usuario (`ON DELETE CASCADE`). |
+| **Categoria** | **Producto** | **Asociación** | `1` a `0..*` | *clasifica / es clasificado en* | Una categoría taxonómica agrupa múltiples productos; un producto pertenece obligatoriamente a una categoría (`ON DELETE RESTRICT`). |
+| **Marca** | **Producto** | **Asociación** | `1` a `0..*` | *produce / pertenece a marca* | Una marca manufactura múltiples prendas del catálogo; el producto requiere marca registrada (`ON DELETE RESTRICT`). |
+| **Temporada** | **Producto** | **Asociación** | `0..1` a `0..*` | *calendariza / se exhibe en* | Las campañas estacionales calendarizan productos para promociones de liquidación; la asignación es opcional (`ON DELETE SET NULL`). |
+| **Proveedor** | **Producto** | **Asociación** | `0..1` a `0..*` | *suministra / provisto por* | Un proveedor textil suministra lotes de confección de un producto base (`ON DELETE SET NULL`). |
+| **Producto** | **ProductoColor** | **Composición (`*--`)** | `1` a `1..*` | *compone variante color* | Las especificaciones cromáticas (nombre y código HEX) son partes intrínsecas del producto; no tienen existencia independiente (`ON DELETE CASCADE`). |
+| **Producto** | **ProductoTalla** | **Composición (`*--`)** | `1` a `1..*` | *compone variante talla* | Las especificaciones de tallaje textil (S, M, L, XL, etc.) son componentes inseparables del producto (`ON DELETE CASCADE`). |
+| **Sucursal** | **Inventario** | **Agregación (`o--`)** | `1` a `0..*` | *custodia existencias en* | La sucursal mantiene y custodia existencias físicas en sus bodegas, pero las variantes de producto existen conceptualmente fuera de ella. |
+| **Producto** | **Inventario** | **Agregación (`o--`)** | `1` a `0..*` | *cuantifica stock en* | El producto cuantifica sus existencias distribuidas a lo largo de la red de sucursales. |
+| **Inventario** | **KardexMovimiento** | **Composición (`*--`)** | `1` a `1..*` | *audita movimientos en* | Cada asiento contable de Kardex (compras, ventas, traslados, mermas) pertenece de manera indivisible al registro de inventario valorado (`ON DELETE CASCADE`). |
+
+---
 
 ---
 
@@ -4411,7 +6052,9 @@ Conforme al requerimiento del enunciado y las notas de clase, se selecciona el s
 
 ### 4.2 Implementación de la Arquitectura del Sistema Principal
 
-La arquitectura del sistema backend sigue el patrón de **Arquitectura Limpia / Modular por Paquetes**:
+La arquitectura del sistema backend sigue el patrón de **Arquitectura de 3 Capas (Three-Tier Architecture)** desacoplada y orientada a componentes modulares, tal como se especifica en el marco metodológico del proyecto. Esta organización garantiza alta cohesión, bajo acoplamiento, escalabilidad horizontal e independencia de persistencia y servicios externos.
+
+A continuación se exhibe la estructura de carpetas física del backend:
 
 ```
 fashionstore-backend/
@@ -4420,28 +6063,156 @@ fashionstore-backend/
 │   │   ├── config.py          # Variables de entorno (Pydantic Settings)
 │   │   ├── security.py        # Hashing bcrypt y generación/validación JWT
 │   │   └── database.py        # Sesión async SQLAlchemy y pool de conexiones
-│   ├── modules/               # Módulos desacoplados del sistema
-│   │   ├── auth/              # M01: Autenticación, Registro y Recuperación OTP (CU01, CU02, CU03)
-│   │   ├── usuarios/          # M01: Gestión de Usuarios y Roles RBAC (CU04)
-│   │   ├── sucursales/        # M02: Sucursales y Ciudades (CU05)
-│   │   ├── productos/         # M03: Productos, Tallas y Colores (CU06)
-│   │   ├── temporadas/        # M04: Temporadas y Colecciones (CU07)
-│   │   ├── proveedores/       # M05: Proveedores Textiles (CU08)
-│   │   ├── inventario/        # M06: Control Multi-Sucursal y Algoritmo CPP (CU09)
-│   │   └── catalogo/          # M07: Catálogo y Disponibilidad por Tienda (CU10)
+│   ├── modules/               # Módulos desacoplados del sistema (Subsistemas)
+│   │   ├── auth/              # S01: Autenticación, Registro y Recuperación OTP (CU01, CU02, CU03)
+│   │   ├── usuarios/          # S01: Gestión de Usuarios y Roles RBAC (CU04)
+│   │   ├── sucursales/        # S02: Sucursales, Ciudades y GPS Probadores (CU05)
+│   │   ├── productos/         # S03: Prendas, Tallas y Colores (CU06)
+│   │   ├── temporadas/        # S03: Temporadas y Colecciones (CU07)
+│   │   ├── proveedores/       # S04: Proveedores Textiles y Control NIT (CU08)
+│   │   ├── inventario/        # S05: Control Multi-Sucursal y Algoritmo CPP (CU09)
+│   │   └── catalogo/          # S03: Catálogo y Disponibilidad por Tienda (CU10)
 │   └── main.py                # Punto de entrada ASGI, middlewares CORS y montaje de routers
 ├── migrations/                # Control de versiones de base de datos con Alembic
 ├── docker-compose.yml         # Orquestación de contenedores locales
 └── Dockerfile                 # Imagen de despliegue productivo para nube
 ```
 
+#### 4.2.1 Diagrama de Componentes: Sistema Principal (Arquitectura de 3 Capas)
+
+El sistema global se estructura en 3 niveles de abstracción:
+1. **Capa de Presentación**: Contiene los clientes frontend autónomos (`Interfaz Web Cliente - Angular 17+ SPA`, `Interfaz Móvil - Flutter 3.x` e `Interfaz Administrativa POS / Backoffice`). Se comunican de forma asíncrona mediante HTTPS / REST con payloads JSON.
+2. **Capa de Lógica de Negocio**: Orquestada por el gateway ASGI FastAPI, alberga los 5 subsistemas funcionales desacoplados que resuelven los casos de uso empresariales.
+3. **Capa de Persistencia y Servicios**: Subdividida en **BBDD** (Servidor PostgreSQL 15+ con motor transaccional ACID y ORM SQLAlchemy 2.0 Async) y **Servicios** externos (Servicio SMTP transaccional para despacho de códigos OTP y Almacenamiento Cloud / CDN para catálogo de imágenes).
+
+![Diagrama de Implementación - Sistema Principal 3 Capas](../diagramas/4.2_Implementacion_Sistema_Principal_3Capas.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Sistema_Principal_3Capas
+title Diagrama de Implementación: Sistema Principal (Arquitectura de 3 Capas)
+skinparam componentStyle uml2
+
+package "Presentación" {
+  component [Interfaz Web Cliente\n(Angular 17+ SPA)] as WebUI
+  component [Interfaz Móvil\n(Flutter 3.x)] as MobileUI
+  component [Interfaz Administrativa\nPOS (Backoffice)] as AdminUI
+}
+
+package "Lógica de negocio" {
+  component [API Routers y Controladores\n(FastAPI ASGI)] as APIRouters
+  component [Subsistema Seguridad y Acceso\n(Auth, RBAC, OTP)] as SubSeguridad
+  component [Subsistema Estructura Operativa\n(Sucursales, GPS)] as SubSucursales
+  component [Subsistema Catálogo y Moda\n(Prendas, Temporadas)] as SubCatalogo
+  component [Subsistema Aprovisionamiento\n(Proveedores Textiles, NIT)] as SubProveedores
+  component [Subsistema Inventario y Costos\n(Kardex, Algoritmo CPP)] as SubInventario
+}
+
+package "BBDD" {
+  component [Servidor PostgreSQL 15+\n(ACID, Transacciones)] as DBServer
+  component [ORM SQLAlchemy 2.0\n(Mapeo Async)] as ORM
+}
+
+package "Servicios" {
+  component [Servicio Notificaciones\nSMTP (Envío OTP)] as SMTPService
+  component [Almacenamiento Cloud\n(CDN / Imágenes Prendas)] as CDNService
+}
+
+WebUI ..> APIRouters : HTTPS / REST JSON
+MobileUI ..> APIRouters : HTTPS / REST JSON
+AdminUI ..> APIRouters : HTTPS / REST JSON
+
+APIRouters ..> SubSeguridad
+APIRouters ..> SubSucursales
+APIRouters ..> SubCatalogo
+APIRouters ..> SubProveedores
+APIRouters ..> SubInventario
+
+"Lógica de negocio" ..> "BBDD" : Pool ACID / Async
+"Lógica de negocio" ..> "Servicios" : APIs SMTP / S3
+@enduml
+```
+
 ---
 
 ### 4.3 Implementación de la Arquitectura del Sub Sistema
 
-A continuación se exhibe la implementación del núcleo de lógica de negocio para los dos subsistemas críticos del Ciclo 1:
+El sistema empresarial se compone de **5 subsistemas altamente cohesionados**, comunicados mediante interfaces de componentes estandarizadas según el patrón *ball-and-socket* (interfaces provistas / lollipop e interfaces requeridas / socket).
 
-#### 4.3.1 Sub Sistema de Seguridad: Recuperación de Contraseña con OTP y Bloqueo Preventivo (M01 - CU01 y CU03)
+#### 4.3.0 Integración de los 5 Subsistemas con Interfaces Provistas y Requeridas
+
+El **Subsistema de Inventario y Costos** actúa como núcleo operativo central de la cadena de valor, integrando:
+- **`IDisponibilidadStock`**: Proporcionada por Inventario para que el Catálogo consulte existencias en tiempo real por sucursal y variante.
+- **`ILoteCompraProveedor`**: Proporcionada por Aprovisionamiento para liquidar compras textiles con NIT e ingresar lotes al almacén.
+- **`ISucursalAlmacen`**: Proporcionada por Estructura Operativa para asignar existencias a bodegas de sucursal física.
+- **`ISeguridadRBAC`**: Proporcionada por Seguridad y Acceso para autorizar y autenticar cada transacción con tokens JWT y roles.
+
+![Diagrama de Implementación - Integración de los 5 Subsistemas](../diagramas/4.3_Implementacion_Integracion_5_Subsistemas.png)
+
+```plantuml
+@startuml Diagrama_Integracion_5_Subsistemas
+title Integración de los 5 Subsistemas (Interfaces Ball-and-Socket)
+skinparam componentStyle uml2
+
+component [Subsistema Catálogo y Moda\n(Prendas, Tallas, Colores)] as SubCat
+component [Subsistema Inventario y Costos\n(Stock Físico, Kardex, CPP)] as SubInv
+component [Subsistema Aprovisionamiento\n(Proveedores Textiles, NIT)] as SubProv
+component [Subsistema Estructura Operativa\n(Sucursales, Probadores, GPS)] as SubSuc
+component [Subsistema Seguridad y Acceso\n(Auth JWT, Roles, OTP)] as SubSeg
+
+interface "IDisponibilidadStock" as ifStock
+interface "ILoteCompraProveedor" as ifLote
+interface "ISucursalAlmacen" as ifSuc
+interface "ISeguridadRBAC" as ifAuth
+
+' Provistas (Lollipop)
+SubInv -up- ifStock
+SubProv -down- ifLote
+SubSuc -left- ifSuc
+SubSeg -up- ifAuth
+
+' Requeridas (Socket)
+SubCat -( ifStock : Consulta Stock
+SubInv -( ifLote : Recepción Lote
+SubInv -( ifSuc : Ubicación Almacén
+SubCat -( ifAuth : Validación Sesión
+SubInv -( ifAuth : Validación Sesión
+SubSuc -( ifAuth : Validación Sesión
+SubProv -( ifAuth : Validación Sesión
+@enduml
+```
+
+---
+
+#### 4.3.1 Sub Sistema 1: Seguridad y Control de Acceso RBAC (M01 - CU01, CU02, CU03, CU04)
+
+Este subsistema encapsula la autenticación criptográfica con JWT, el control de acceso basado en roles (RBAC) con mitigación OWASP (bloqueo por 5 intentos erróneos durante 30 min) y la emisión de tokens OTP criptográficos de 6 dígitos con validez de 15 minutos.
+
+![Diagrama de Componentes - Subsistema Seguridad](../diagramas/4.3.1_Implementacion_Sub_Seguridad_RBAC.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Seguridad_RBAC
+title Implementación: Subsistema Seguridad y Control de Acceso RBAC
+skinparam componentStyle uml2
+
+component [RouterAuth\n(FastAPI /auth)] as RouterAuth
+interface "IServicioAuth" as IServAuth
+component [ServicioAuthOTP\n(Bcrypt & OTP 6 Dígitos)] as ServAuth
+interface "IRepositorioUsuarios" as IRepoUser
+component [RepositorioUsuarios\n(SQLAlchemy Async)] as RepoUser
+component [GestorRolesRBAC\n(Middleware JWT)] as RBACMiddleware
+component [Tabla PostgreSQL\n(usuarios, tokens_otp)] as DBTable
+
+RouterAuth -( IServAuth
+ServAuth -up- IServAuth
+ServAuth -( IRepoUser
+RepoUser -up- IRepoUser
+
+RouterAuth ..> RBACMiddleware : Inyección Dependencia
+RepoUser ..> DBTable : SQLAlchemy ORM
+@enduml
+```
+
+##### Implementación en Código Backend (FastAPI + SQLAlchemy):
 
 ```python
 # app/modules/auth/service.py
@@ -4472,9 +6243,8 @@ class AuthService:
     async def solicitar_otp_recuperacion(self, request: SolicitarOtpRequest) -> dict:
         """Genera un código criptográfico de 6 dígitos con ventana de validez de 15 minutos"""
         user = await self.repo.obtener_por_email(request.email)
-        # Mitigación OWASP: Siempre devolver respuesta exitosa sin filtrar existencia
+        # Mitigación OWASP: Respuesta neutra sin filtrar existencia de usuario
         if user and user.estado_cuenta != "INACTIVO":
-            # Generación criptográficamente segura de 6 dígitos numéricos
             codigo_otp = f"{secrets.randbelow(900000) + 100000}"
             otp_hash = pwd_context.hash(codigo_otp)
             expiracion = datetime.now(timezone.utc) + timedelta(minutes=15)
@@ -4520,7 +6290,222 @@ class AuthService:
         return {"mensaje": "Contraseña restablecida exitosamente. Ya puede iniciar sesión."}
 ```
 
-#### 4.3.2 Sub Sistema de Inventario y Valuación: Cálculo Matemático de CPP (M06 - CU09)
+---
+
+#### 4.3.2 Sub Sistema 2: Estructura Operativa y Sucursales (M02 - CU05)
+
+Administra las ciudades, direcciones, horarios, coordenadas GPS y disponibilidad física de probadores para reservas omnicanal en cada tienda.
+
+![Diagrama de Componentes - Subsistema Estructura Operativa](../diagramas/4.3.2_Implementacion_Sub_Estructura_Sucursales.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Estructura_Sucursales
+title Implementación: Subsistema Estructura Operativa y Sucursales
+skinparam componentStyle uml2
+
+component [RouterSucursales\n(FastAPI /sucursales)] as RouterSuc
+interface "IServicioSucursal" as IServSuc
+component [ServicioSucursales\n(Lógica de Negocio)] as ServSuc
+interface "IRepositorioSucursales" as IRepoSuc
+component [RepositorioSucursales\n(AsyncSession)] as RepoSuc
+component [GestorGPSProbadores\n(Geolocalización)] as GPSManager
+component [Tabla PostgreSQL\n(ciudades, sucursales)] as DBTable
+
+RouterSuc -( IServSuc
+ServSuc -up- IServSuc
+ServSuc -( IRepoSuc
+RepoSuc -up- IRepoSuc
+
+ServSuc ..> GPSManager : Cálculo Distancia
+RepoSuc ..> DBTable : SQLAlchemy ORM
+@enduml
+```
+
+##### Implementación en Código Backend:
+
+```python
+# app/modules/sucursales/service.py
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
+from app.modules.sucursales.repository import SucursalesRepository
+from app.modules.sucursales.schemas import SucursalCreate, SucursalResponse
+
+class SucursalesService:
+    def __init__(self, db: AsyncSession):
+        self.repo = SucursalesRepository(db)
+
+    async def registrar_sucursal(self, dto: SucursalCreate) -> SucursalResponse:
+        """Crea una nueva sucursal con validación de coordenadas geográficas y cupo de probadores"""
+        ciudad = await self.repo.obtener_ciudad_por_id(dto.id_ciudad)
+        if not ciudad or not ciudad.activo:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ciudad no habilitada.")
+
+        if dto.probadores_disponibles < 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Debe asignar al menos 1 probador físico.")
+
+        sucursal = await self.repo.crear_sucursal(dto)
+        await self.repo.commit()
+        return SucursalResponse.from_orm(sucursal)
+
+    async def listar_sucursales_cercanas(self, lat: float, lon: float, radio_km: float = 15.0):
+        """Filtra sucursales geolocalizadas dentro del radio del cliente mediante fórmula de Haversine"""
+        return await self.repo.buscar_por_radio_haversine(lat, lon, radio_km)
+```
+
+---
+
+#### 4.3.3 Sub Sistema 3: Catálogo y Moda Masculina (M03 y M04 - CU06, CU07, CU10)
+
+Gestiona la matriz de prendas masculinas, colecciones por temporada, categorización multinivel y las variantes ortogonales de **Talla** (S, M, L, XL) y **Color** (nombre + código HEX).
+
+![Diagrama de Componentes - Subsistema Catálogo](../diagramas/4.3.3_Implementacion_Sub_Catalogo_Moda.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Catalogo_Moda
+title Implementación: Subsistema Catálogo y Moda Masculina
+skinparam componentStyle uml2
+
+component [RouterCatalogo\n(FastAPI /catalogo)] as RouterCat
+interface "IServicioCatalogo" as IServCat
+component [ServicioCatalogo\n(Gestor Moda Masculina)] as ServCat
+interface "IRepositorioCatalogo" as IRepoCat
+component [RepositorioCatalogo\n(Consultas Complejas)] as RepoCat
+component [GestorVariantes\n(Tallas y HEX Colores)] as VarManager
+component [Tabla PostgreSQL\n(productos, tallas, colores)] as DBTable
+
+RouterCat -( IServCat
+ServCat -up- IServCat
+ServCat -( IRepoCat
+RepoCat -up- IRepoCat
+
+ServCat ..> VarManager : Mapeo Variantes
+RepoCat ..> DBTable : SQLAlchemy ORM
+@enduml
+```
+
+##### Implementación en Código Backend:
+
+```python
+# app/modules/catalogo/service.py
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
+from app.modules.productos.repository import ProductosRepository
+from app.modules.catalogo.schemas import CatalogoFiltroRequest, PrendaDetalleResponse
+
+class CatalogoService:
+    def __init__(self, db: AsyncSession):
+        self.repo = ProductosRepository(db)
+
+    async def consultar_prendas_catalogo(self, filtros: CatalogoFiltroRequest):
+        """Retorna prendas activas con sus variantes y stock físico disponible por sucursal"""
+        prendas = await self.repo.obtener_con_variantes_y_stock(
+            categoria_id=filtros.id_categoria,
+            temporada_id=filtros.id_temporada,
+            sucursal_id=filtros.id_sucursal,
+            solo_con_stock=filtros.solo_disponibles
+        )
+        return [PrendaDetalleResponse.from_orm(p) for p in prendas]
+
+    async def obtener_detalle_variante(self, id_producto: int, talla: str, color_hex: str):
+        variante = await self.repo.obtener_variante_especifica(id_producto, talla, color_hex)
+        if not variante:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Variante no encontrada.")
+        return variante
+```
+
+---
+
+#### 4.3.4 Sub Sistema 4: Aprovisionamiento y Proveedores Textiles (M05 - CU08)
+
+Encargado del registro, calificación comercial y validación tributaria (NIT) de las empresas proveedoras de telas y confección para la reposición de stock.
+
+![Diagrama de Componentes - Subsistema Aprovisionamiento](../diagramas/4.3.4_Implementacion_Sub_Aprovisionamiento_Proveedores.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Aprovisionamiento_Proveedores
+title Implementación: Subsistema Aprovisionamiento y Proveedores Textiles
+skinparam componentStyle uml2
+
+component [RouterProveedores\n(FastAPI /proveedores)] as RouterProv
+interface "IServicioProveedor" as IServProv
+component [ServicioProveedores\n(Gestión Comercial)] as ServProv
+interface "IRepositorioProveedores" as IRepoProv
+component [RepositorioProveedores\n(Validación Unicidad)] as RepoProv
+component [ValidadorNIT\n(Reglas Tributarias)] as NITValidator
+component [Tabla PostgreSQL\n(proveedores)] as DBTable
+
+RouterProv -( IServProv
+ServProv -up- IServProv
+ServProv -( IRepoProv
+RepoProv -up- IRepoProv
+
+ServProv ..> NITValidator : Verificación Fiscal
+RepoProv ..> DBTable : SQLAlchemy ORM
+@enduml
+```
+
+##### Implementación en Código Backend:
+
+```python
+# app/modules/proveedores/service.py
+import re
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
+from app.modules.proveedores.repository import ProveedoresRepository
+from app.modules.proveedores.schemas import ProveedorCreate, ProveedorResponse
+
+class ProveedoresService:
+    def __init__(self, db: AsyncSession):
+        self.repo = ProveedoresRepository(db)
+
+    def _validar_formato_nit(self, nit: str) -> None:
+        """Valida que el NIT cumpla con el estándar tributario nacional (numérico de 7 a 12 dígitos)"""
+        if not re.match(r"^[0-9]{7,12}$", nit.strip()):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El NIT proporcionado es inválido.")
+
+    async def registrar_proveedor(self, dto: ProveedorCreate) -> ProveedorResponse:
+        self._validar_formato_nit(dto.nit)
+        existente = await self.repo.obtener_por_nit(dto.nit.strip())
+        if existente:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"El NIT {dto.nit} ya se encuentra registrado.")
+
+        proveedor = await self.repo.crear(dto)
+        await self.repo.commit()
+        return ProveedorResponse.from_orm(proveedor)
+```
+
+---
+
+#### 4.3.5 Sub Sistema 5: Inventario Multitienda y Costo Promedio Ponderado CPP (M06 - CU09)
+
+Controla el Kardex valorado inmutable, los movimientos físicos (compras, ventas, traslados entre sucursales) y aplica de forma rigurosa el recálculo matemático de valuación bajo el método del **Costo Promedio Ponderado (CPP)**.
+
+![Diagrama de Componentes - Subsistema Inventario y CPP](../diagramas/4.3.5_Implementacion_Sub_Inventario_CPP.png)
+
+```plantuml
+@startuml Diagrama_Componentes_Inventario_CPP
+title Implementación: Subsistema Inventario Multitienda y Costo Promedio Ponderado
+skinparam componentStyle uml2
+
+component [RouterInventario\n(FastAPI /inventario)] as RouterInv
+interface "IServicioInventario" as IServInv
+component [ServicioInventario\n(Control de Existencias)] as ServInv
+interface "IRepositorioInventario" as IRepoInv
+component [RepositorioInventario\n(Transacciones ACID)] as RepoInv
+component [MotorCalculoCPP\n(Algoritmo Ponderado)] as CPPEngine
+component [Tabla PostgreSQL\n(inventario, kardex_mov)] as DBTable
+
+RouterInv -( IServInv
+ServInv -up- IServInv
+ServInv -( IRepoInv
+RepoInv -up- IRepoInv
+
+ServInv ..> CPPEngine : Recálculo CPP
+RepoInv ..> DBTable : SQLAlchemy ORM
+@enduml
+```
+
+##### Implementación en Código Backend (Algoritmo Matemático CPP):
 
 ```python
 # app/modules/inventario/service.py
@@ -4537,7 +6522,7 @@ class InventarioService:
         """
         Registra la recepción de un lote de prendas por compra a proveedor,
         almacena el último costo unitario y recalcula matemáticamente
-        el Costo Promedio Ponderado (CPP) según la directriz de clase (B4.txt).
+        el Costo Promedio Ponderado (CPP) según la directriz de valuación financiera.
         """
         # 1. Recuperar registro actual de existencias de la variante en la sucursal
         item_inv = await self.repo.obtener_por_variante(
@@ -4598,27 +6583,266 @@ class InventarioService:
 
 ---
 
+
 ## 5. Flujo de Trabajo: Pruebas
 
-### 5.1 Pruebas de Casos de Uso (Pruebas de Caja Negra)
+### 5.1 Pruebas de Casos de Uso (Pruebas de Aceptación)
 
-Se documentan las pruebas formales de caja negra realizadas sobre los 10 Casos de Uso del Ciclo 1 para validar exhaustivamente las condiciones de aceptación funcionales y de seguridad:
+Se documentan las pruebas formales de aceptación y caja negra realizadas sobre los 10 Casos de Uso del Ciclo 1. Cada caso de prueba sigue el formato metodológico estructurado compuesto por la caracterización del caso, la secuencia de pasos con sus resultados esperados y obtenidos, y la evidencia adjunta con el **prompt optimizado para generar la interfaz con Inteligencia Artificial**.
+
+#### Matriz Resumen de Casos de Prueba (Ciclo 1)
 
 | ID Prueba | Caso de Uso | Escenario Evaluado | Datos de Entrada | Resultado Esperado | Resultado Obtenido | Estado |
 |:---:|:---|:---|:---|:---|:---|:---:|
-| **TC01** | CU01: Login RBAC | Autenticación válida de Administrador | Email: `alberto.delgado@store.bo`<br>Clave: `Admin123*` | Token JWT emitido con claims de rol `ADMINISTRADOR`, HTTP 200, redirección a `/dashboard`. | Token generado correctamente, perfil cargado con permisos completos. | **PASÓ** |
-| **TC02** | CU01: Login RBAC | Bloqueo preventivo tras 5 intentos fallidos | Email: `rodrigo.cliente@gmail.com`<br>Clave errónea x5 | HTTP 401 en intentos 1-4; en 5to intento cuenta pasa a `BLOQUEADO_POR_INTENTOS` por 30 min. | Cuenta bloqueada preventivamente, registro en auditoría de seguridad. | **PASÓ** |
-| **TC03** | CU02: Auto-registro | Alta autoservicio de cliente con clave segura | Email: `nuevo.cliente@gmail.com`<br>Clave: `Fashion2026*`<br>Nombre: Carlos | Usuario persistido con rol `CLIENTE`, hash Bcrypt almacenado, auto-login con token JWT. | Cuenta creada, password cifrado en BD (cost factor 12), sesión iniciada. | **PASÓ** |
-| **TC04** | CU03: Recuperación OTP | Restablecimiento de clave con código OTP de 6 dígitos | Email registrado + OTP correcto dentro de 15 min | Contraseña actualizada con nuevo hash bcrypt, token OTP invalidado, cuenta desbloqueada. | Token validado, clave cambiada exitosamente, login posterior verificado. | **PASÓ** |
-| **TC05** | CU04: Usuarios y Roles | Desbloqueo administrativo de cuenta bloqueada | Admin presiona *"Desbloquear"* sobre usuario con 5 fallos | `estado_cuenta = 'ACTIVO'`, `intentos_fallidos = 0`, `bloqueado_hasta = NULL`. | Cuenta habilitada inmediatamente, cajero logra iniciar sesión sin trabas. | **PASÓ** |
-| **TC06** | CU05: Sucursales | Alta de sucursal con coordenadas GPS válidas | Ciudad: Santa Cruz<br>Nombre: `Sucursal Equipetrol`<br>Lat: `-17.76823`, Lon: `-63.18342` | Sucursal creada, HTTP 201, visualizada en mapa georreferenciado con 6 probadores. | Registro persistido en BD con capacidad operativa confirmada. | **PASÓ** |
-| **TC07** | CU06: Productos | Alta de prenda con tallas y colores multivaluados | SKU: `SHIRT-SLIM-001`<br>Tallas: `[S, M, L]`<br>Colores: `[#000080, #FFFFFF]` | Prenda registrada, tablas normalizadas `producto_colores` y `producto_tallas` pobladas. | Registro normalizado en 3FN verificado en PostgreSQL. | **PASÓ** |
-| **TC08** | CU07: Temporadas | Calendarización y activación de campaña estacional | Código: `SS-2026`<br>Fechas: `2026-08-01` a `2027-01-31`<br>Estado: `VIGENTE` | Temporada creada, prendas asociadas a la campaña Primavera-Verano 2026. | Campaña vigente visible en catálogo y promociones. | **PASÓ** |
-| **TC09** | CU08: Proveedores | Validación de unicidad de NIT tributario de proveedor | NIT: `1028392019` (existente) | HTTP 400 Bad Request: *"El NIT ingresado ya se encuentra registrado"*. | Restricción de unicidad capturada, formulario previene duplicados. | **PASÓ** |
-| **TC10** | CU09: Inventario CPP | Recálculo matemático de Costo Promedio Ponderado | Stock prev: 15 uds @ 90 Bs<br>Entrada: 20 uds @ 120 Bs | Nuevo Stock = 35 uds<br>Último Costo = 120.00 Bs<br>Nuevo CPP = 107.14 Bs | Cálculo exacto verificado: `(1350 + 2400)/35 = 107.1428 -> 107.14 Bs`. | **PASÓ** |
-| **TC11** | CU10: Catálogo | Consulta de disponibilidad por sucursal física | Prenda: Camisa Oxford M Azul<br>Sucursal: Equipetrol | Muestra: *"35 unidades físicas, 5 reservadas, 30 disponibles para prueba o venta"*. | Stock en tiempo real concordante entre tienda digital y almacén físico. | **PASÓ** |
+| **TC01** | CU01: Login RBAC | Autenticación válida de Administrador | Email: `alberto.delgado@store.bo`<br>Clave: `Admin123*` | Token JWT emitido con claims de rol `ADMINISTRADOR`, HTTP 200, redirección a `/dashboard`. | Token generado correctamente, perfil cargado con permisos completos. | **Satisfactorio** |
+| **TC02** | CU01: Login RBAC | Bloqueo preventivo tras 5 intentos fallidos | Email: `rodrigo.cliente@gmail.com`<br>Clave errónea x5 | HTTP 401 en intentos 1-4; en 5to intento cuenta pasa a `BLOQUEADO_POR_INTENTOS` por 30 min. | Cuenta bloqueada preventivamente, registro en auditoría de seguridad. | **Satisfactorio** |
+| **TC03** | CU02: Auto-registro | Alta autoservicio de cliente con clave segura | Email: `nuevo.cliente@gmail.com`<br>Clave: `Fashion2026*`<br>Nombre: Carlos | Usuario persistido con rol `CLIENTE`, hash Bcrypt almacenado, auto-login con token JWT. | Cuenta creada, password cifrado en BD (cost factor 12), sesión iniciada. | **Satisfactorio** |
+| **TC04** | CU03: Recuperación OTP | Restablecimiento de clave con código OTP de 6 dígitos | Email registrado + OTP correcto dentro de 15 min | Contraseña actualizada con nuevo hash bcrypt, token OTP invalidado, cuenta desbloqueada. | Token validado, clave cambiada exitosamente, login posterior verificado. | **Satisfactorio** |
+| **TC05** | CU04: Usuarios y Roles | Desbloqueo administrativo de cuenta bloqueada | Admin presiona *"Desbloquear"* sobre usuario con 5 fallos | `estado_cuenta = 'ACTIVO'`, `intentos_fallidos = 0`, `bloqueado_hasta = NULL`. | Cuenta habilitada inmediatamente, cajero logra iniciar sesión sin trabas. | **Satisfactorio** |
+| **TC06** | CU05: Sucursales | Alta de sucursal con coordenadas GPS válidas | Ciudad: Santa Cruz<br>Nombre: `Sucursal Equipetrol`<br>Lat: `-17.76823`, Lon: `-63.18342` | Sucursal creada, HTTP 201, visualizada en mapa georreferenciado con 6 probadores. | Registro persistido en BD con capacidad operativa confirmada. | **Satisfactorio** |
+| **TC07** | CU06: Productos | Alta de prenda con tallas y colores multivaluados | SKU: `SHIRT-SLIM-001`<br>Tallas: `[S, M, L]`<br>Colores: `[#000080, #FFFFFF]` | Prenda registrada, tablas normalizadas `producto_colores` y `producto_tallas` pobladas. | Registro normalizado en 3FN verificado en PostgreSQL. | **Satisfactorio** |
+| **TC08** | CU07: Temporadas | Calendarización y activación de campaña estacional | Código: `SS-2026`<br>Fechas: `2026-08-01` a `2027-01-31`<br>Estado: `VIGENTE` | Temporada creada, prendas asociadas a la campaña Primavera-Verano 2026. | Campaña vigente visible en catálogo y promociones. | **Satisfactorio** |
+| **TC09** | CU08: Proveedores | Validación de unicidad de NIT tributario de proveedor | NIT: `1028392019` (existente) | HTTP 400 Bad Request: *"El NIT ingresado ya se encuentra registrado"*. | Restricción de unicidad capturada, formulario previene duplicados. | **Satisfactorio** |
+| **TC10** | CU09: Inventario CPP | Recálculo matemático de Costo Promedio Ponderado | Stock prev: 15 uds @ 90 Bs<br>Entrada: 20 uds @ 120 Bs | Nuevo Stock = 35 uds<br>Último Costo = 120.00 Bs<br>Nuevo CPP = 107.14 Bs | Cálculo exacto verificado: `(1350 + 2400)/35 = 107.1428 -> 107.14 Bs`. | **Satisfactorio** |
+| **TC11** | CU10: Catálogo | Consulta de disponibilidad por sucursal física | Prenda: Camisa Oxford M Azul<br>Sucursal: Equipetrol | Muestra: *"35 unidades físicas, 5 reservadas, 30 disponibles para prueba o venta"*. | Stock en tiempo real concordante entre tienda digital y almacén físico. | **Satisfactorio** |
 
 ---
+
+### EJEMPLO DE CASO DE PRUEBA
+**(Pruebas de aceptación)**
+
+---
+
+#### Prueba de caso de uso CU1: Iniciar Sesión y Autenticación RBAC
+
+| Caso de uso 1 | Iniciar Sesión y Autenticación RBAC |
+|:---|:---|
+| **Descripción** | Permite a los usuarios autenticarse en la plataforma mediante correo electrónico y contraseña cifrada. Valida los roles del sistema (ADMINISTRADOR, CAJERO, CLIENTE) emitiendo un token JWT firmado y aplica el mecanismo de defensa OWASP bloqueando preventivamente la cuenta por 30 minutos al registrarse 5 intentos fallidos consecutivos. |
+| **Precondiciones** | a) El usuario debe encontrarse registrado en la base de datos.<br>b) El servicio de backend FastAPI y la base de datos PostgreSQL deben estar en ejecución.<br>c) La cuenta no debe encontrarse en estado INACTIVO ni con bloqueo administrativo. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder a la pantalla de Login desde el portal web o aplicación móvil. | Se despliega el formulario de autenticación con campos para email, contraseña y botón de acceso. | Satisfactorio |
+| 2 | Ingresar credenciales válidas de usuario y presionar "Iniciar Sesión". | Se genera el token JWT con los claims de rol, se almacena en el cliente y se redirige a la vista correspondiente. | Satisfactorio |
+| 3 | Ingresar contraseña errónea de forma intencional en 4 oportunidades. | El sistema rechaza la autenticación con código HTTP 401 e informa los intentos restantes antes del bloqueo. | Satisfactorio |
+| 4 | Realizar el quinto intento fallido con contraseña incorrecta. | La cuenta pasa automáticamente a estado `BLOQUEADO_POR_INTENTOS` con una ventana de 30 minutos. | Satisfactorio |
+| 5 | Intentar iniciar sesión inmediatamente durante la ventana de bloqueo. | Se bloquea el acceso en el gateway notificando el tiempo restante de penalización sin consultar la clave. | Satisfactorio |
+| 6 | Iniciar sesión tras expirar la ventana de 30 minutos con la clave correcta. | Se restablece el contador de intentos fallidos a 0 y se inicia sesión normalmente. | Satisfactorio |
+
+| Responsable | Administrador / Tester de Seguridad |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura de pantalla de la interfaz de autenticación y notificación de bloqueo preventivo)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Modern desktop web application UI mockup of the login screen for 'FashionStore' menswear boutique platform. Sleek dark-navy minimalist interface, centered glassmorphism authentication card with input fields 'Correo Electrónico' (filled with alberto.delgado@store.bo) and 'Contraseña' (masked dots), a prominent blue accent button 'Iniciar Sesión', badge showing 'Protegido por RBAC & Bloqueo OWASP (5 intentos máx)', error banner demo showing 'Intento 5 fallido: Cuenta bloqueada temporalmente por 30 minutos', clean modern typography, professional SaaS dashboard design, Figma UI kit style, 8k resolution."` |
+
+---
+
+#### Prueba de caso de uso CU2: Auto-registro de Clientes
+
+| Caso de uso 2 | Auto-registro de Clientes |
+|:---|:---|
+| **Descripción** | Permite que visitantes no registrados puedan crear de manera autónoma una cuenta de cliente en FashionStore, registrando sus datos personales y credenciales de acceso, asignándoles automáticamente el rol CLIENTE e iniciando su sesión con token JWT. |
+| **Precondiciones** | a) El visitante debe tener acceso a internet y al portal web o app móvil.<br>b) El módulo de autenticación y registro debe estar habilitado.<br>c) Debe existir conexión activa con el servidor de base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder a la opción "Crear Cuenta" desde el menú principal de navegación. | Se despliega el formulario modal de registro de nuevo cliente con campos estructurados. | Satisfactorio |
+| 2 | Completar datos personales (Nombre, Apellido, Celular, Género y Fecha de Nacimiento). | Los campos se validan sintácticamente en tiempo real mediante expresiones regulares. | Satisfactorio |
+| 3 | Ingresar correo electrónico no registrado y contraseña segura (mínimo 8 caracteres). | Se evalúa y muestra el indicador de fortaleza de contraseña como "Segura". | Satisfactorio |
+| 4 | Intentar registrar un correo que ya existe en el sistema. | El sistema rechaza la solicitud indicando que el correo ya se encuentra registrado. | Satisfactorio |
+| 5 | Presionar el botón "Registrarme e Iniciar Sesión" con datos válidos. | Se almacena el usuario con hash Bcrypt (factor 12), rol `CLIENTE` y estado `ACTIVO`. | Satisfactorio |
+| 6 | Verificar inicio de sesión automático y redirección al catálogo. | Se genera el token JWT, se cierra el modal y se visualiza el saludo de bienvenida con sesión activa. | Satisfactorio |
+
+| Responsable | Cliente / Tester QA |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del modal de registro de clientes con validaciones y bienvenida)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Modern clean web interface showing customer registration modal for 'FashionStore' online fashion store. Clean white and slate gray card with title 'Crear Cuenta de Cliente', form fields: 'Nombre Completo', 'Correo Electrónico', 'Teléfono Celular', 'Contraseña' with password strength meter showing 'Segura (Bcrypt)', checkbox 'Acepto términos y condiciones de probadores virtuales', bright blue primary button 'Registrarme e Iniciar Sesión', subtle toast notification at top-right '¡Cuenta creada exitosamente! Bienvenido Carlos', Dribbble trending UI, photorealistic UI screenshot, 4k."` |
+
+---
+
+#### Prueba de caso de uso CU3: Recuperación de Contraseña con OTP
+
+| Caso de uso 3 | Recuperación de Contraseña con OTP |
+|:---|:---|
+| **Descripción** | Permite a los usuarios que olvidaron su contraseña solicitar un código criptográfico de un solo uso (OTP) de 6 dígitos enviado a su correo registrado, con una validez temporal estricta de 15 minutos y un límite de 3 intentos de verificación, para restablecer de forma segura su clave. |
+| **Precondiciones** | a) El correo del usuario debe estar registrado y activo en el sistema.<br>b) El servicio transaccional de correo SMTP debe estar operativo.<br>c) Debe existir conexión activa con la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Presionar el enlace "¿Olvidaste tu contraseña?" en el formulario de login. | Se despliega la vista de recuperación solicitando el correo electrónico de la cuenta. | Satisfactorio |
+| 2 | Ingresar el correo registrado y presionar "Enviar Código de Verificación". | El sistema genera el OTP de 6 dígitos, guarda su hash con expiración a 15 min y despacha el correo. | Satisfactorio |
+| 3 | Verificar recepción del código en la bandeja de entrada del correo. | Se recibe correo formal de FashionStore con el código numérico de 6 dígitos. | Satisfactorio |
+| 4 | Ingresar código OTP incorrecto en el formulario de verificación. | El sistema rechaza el intento, incrementa el contador y alerta sobre los intentos restantes (máx 3). | Satisfactorio |
+| 5 | Ingresar el código OTP válido y definir la nueva contraseña. | Se valida exitosamente el código, se actualiza el hash Bcrypt en BD y se invalida el token OTP. | Satisfactorio |
+| 6 | Iniciar sesión inmediatamente con la nueva contraseña configurada. | Se valida la nueva clave con éxito y se ingresa a la plataforma sin trabas. | Satisfactorio |
+
+| Responsable | Cliente / Administrador |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del flujo de validación del código OTP y cambio de contraseña)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Clean mobile app screen and desktop split view showing OTP password recovery flow for 'FashionStore'. Card titled 'Recuperación de Contraseña con Código OTP', instructions 'Ingresa el código de 6 dígitos enviado a tu correo', 6 individual digit input boxes containing [ 8 | 4 | 2 | 1 | 9 | 5 ], countdown timer badge showing 'Válido por: 13:45 min', field 'Nueva Contraseña' and 'Confirmar Contraseña', green checkmark icon 'Código Verificado con Éxito', primary action button 'Restablecer Contraseña', sleek fintech/e-commerce design aesthetic, high fidelity UI mockup."` |
+
+---
+
+#### Prueba de caso de uso CU4: Gestión de Usuarios, Roles RBAC y Desbloqueo
+
+| Caso de uso 4 | Gestión de Usuarios, Roles RBAC y Desbloqueo |
+|:---|:---|
+| **Descripción** | Permite al Administrador dar de alta colaboradores internos (cajeros, encargados de tienda), asignar roles y sucursales operativas, y desbloquear cuentas de usuarios que hayan quedado bloqueadas por superar los intentos de login. |
+| **Precondiciones** | a) El usuario autenticado debe tener el rol ADMINISTRADOR.<br>b) El módulo de administración de usuarios debe encontrarse activo.<br>c) Debe existir conexión activa con la base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder al módulo "Usuarios y Roles" desde el menú lateral administrativo. | Se despliega la tabla de colaboradores y clientes con columnas de rol, sucursal y estado de cuenta. | Satisfactorio |
+| 2 | Presionar el botón "+ Crear nuevo colaborador". | Se abre el formulario modal solicitando datos personales, rol (CAJERO / ADMIN) y sucursal. | Satisfactorio |
+| 3 | Guardar el nuevo colaborador con rol `CAJERO` en la sucursal `Equipetrol`. | Se persiste el registro en BD y la lista se actualiza inmediatamente reflejando el nuevo usuario. | Satisfactorio |
+| 4 | Identificar un usuario con estado `BLOQUEADO_POR_INTENTOS` en la tabla. | La fila muestra badge rojo de alerta y habilita la acción "Desbloquear". | Satisfactorio |
+| 5 | Presionar la acción "Desbloquear Cuenta" sobre el usuario bloqueado. | El sistema restablece `intentos_fallidos = 0`, `bloqueado_hasta = NULL` y `estado = ACTIVO`. | Satisfactorio |
+| 6 | Verificar que el usuario desbloqueado pueda autenticarse inmediatamente. | El usuario inicia sesión de forma fluida sin requerir esperar los 30 minutos. | Satisfactorio |
+
+| Responsable | Administrador General |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del módulo administrativo de usuarios con modal de creación y botón de desbloqueo)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"SaaS backoffice administration dashboard for 'FashionStore - Gestión de Usuarios y Roles'. Background table listing system staff with columns: 'Usuario / Empleado', 'Email', 'Rol (ADMINISTRADOR, CAJERO)', 'Sucursal Asignada', 'Estado (ACTIVO, BLOQUEADO)', 'Acciones'. Foreground modal dialog titled 'Crear Nuevo Empleado / Asignar Rol', fields: 'Nombre', 'Email corporativo', dropdown 'Rol RBAC: Cajero POS', dropdown 'Sucursal: Sucursal Equipetrol', action buttons 'Guardar Empleado' (blue) and 'Cancelar' (red outline). Next to blocked user row, a green badge button 'Desbloquear Cuenta (Reset Intentos)', clean modern UI design, Figma presentation style."` |
+
+---
+
+#### Prueba de caso de uso CU5: Gestión de Sucursales y Ciudades
+
+| Caso de uso 5 | Gestión de Sucursales y Ciudades |
+|:---|:---|
+| **Descripción** | Permite registrar, editar y georreferenciar las tiendas físicas de FashionStore, configurando su ciudad, dirección física, coordenadas GPS (latitud y longitud), horarios de atención y la cantidad de probadores físicos disponibles para reservas omnicanal. |
+| **Precondiciones** | a) Sesión iniciada con rol ADMINISTRADOR.<br>b) Catálogo de ciudades previamente cargado en la base de datos.<br>c) Conexión activa con el backend y base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Ingresar al módulo "Sucursales" desde el panel de configuración. | Se despliega la lista de tiendas físicas activas con su ciudad y capacidad de probadores. | Satisfactorio |
+| 2 | Presionar "+ Registrar Nueva Sucursal". | Se despliega el formulario modal de registro de sucursal física. | Satisfactorio |
+| 3 | Seleccionar ciudad "Santa Cruz" e ingresar nombre "Sucursal Equipetrol". | Se validan los datos básicos de denominación de la tienda. | Satisfactorio |
+| 4 | Ingresar coordenadas GPS (`-17.76823`, `-63.18342`) y 6 probadores disponibles. | El mapa interactivo centra el pin en la dirección y valida capacidad física mayor a 0. | Satisfactorio |
+| 5 | Presionar "Guardar Sucursal". | Se crea el registro en PostgreSQL, HTTP 201 Created y se emite notificación de éxito. | Satisfactorio |
+| 6 | Verificar aparición de la sucursal en el mapa y en el selector del catálogo. | La tienda se encuentra disponible inmediatamente para selección y asignación de stock. | Satisfactorio |
+
+| Responsable | Administrador de Operaciones |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del panel de sucursales con mapa interactivo y modal de creación georreferenciada)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Web application backoffice dashboard for 'FashionStore - Administración de Sucursales y Probadores'. Background showing card grid of branch stores with interactive Leaflet map widget displaying branch pins in Santa Cruz, La Paz, Cochabamba. Foreground popup modal titled 'Registrar Nueva Sucursal', input fields: 'Ciudad (Santa Cruz)', 'Nombre de Sucursal (Sucursal Equipetrol)', 'Dirección Física (Av. San Martín #450)', 'Coordenadas GPS Latitud (-17.76823) y Longitud (-63.18342)', number spinner 'Probadores Físicos Disponibles (6)', buttons 'Guardar Sucursal' and 'Cancelar'. Modern enterprise dashboard, crisp typography, clean layout."` |
+
+---
+
+#### Prueba de caso de uso CU6: Gestión de Productos, Tallas y Colores
+
+| Caso de uso 6 | Gestión de Productos, Tallas y Colores |
+|:---|:---|
+| **Descripción** | Permite el mantenimiento del catálogo de prendas de vestir masculinas, gestionando información descriptiva, precio base, categoría y la configuración ortogonal de variantes por **Talla** (S, M, L, XL) y **Color** (nombre y código hexadecimal HEX). |
+| **Precondiciones** | a) Sesión iniciada con privilegios de gestión de catálogo.<br>b) Categorías de prendas creadas en el sistema.<br>c) Conexión operativa con la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder a "Catálogo de Prendas" en el menú administrativo. | Se despliega la grilla de productos con miniaturas, SKU, precio y variantes asociadas. | Satisfactorio |
+| 2 | Presionar el botón "+ Crear Nueva Prenda". | Se abre el modal de creación de producto con pestañas de Datos Generales y Variantes. | Satisfactorio |
+| 3 | Ingresar SKU `SHIRT-SLIM-001`, nombre "Camisa Oxford Slim Fit" y precio 180.00 Bs. | El formulario valida unicidad de SKU y formato positivo del precio base. | Satisfactorio |
+| 4 | Seleccionar tallas multivaluadas `[S, M, L, XL]` y colores `[#000080 Azul, #FFFFFF Blanco]`. | Se genera la matriz de combinaciones posibles en la tabla de variantes. | Satisfactorio |
+| 5 | Cargar imagen de la prenda y presionar "Guardar Prenda". | Se persisten registros normalizados en `productos`, `producto_tallas` y `producto_colores`. | Satisfactorio |
+| 6 | Consultar el producto en el catálogo administrativo. | La prenda aparece con sus variantes habilitadas y lista para recibir stock en almacén. | Satisfactorio |
+
+| Responsable | Administrador de Catálogo |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del modal de creación de prendas con matriz de tallas y selector HEX de colores)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"E-commerce admin panel for 'FashionStore - Catálogo de Moda Masculina'. Background shows data table of clothing items: SKU 'SHIRT-SLIM-001', Name 'Camisa Oxford Slim Fit', Category 'Camisas Formales', Base Price '180.00 Bs'. Foreground modal titled 'Crear Prenda y Variantes', fields: 'Código SKU', 'Nombre Prenda', 'Precio Base', interactive multi-select tag chips for 'Tallas Disponibles: [S] [M] [L] [XL]', and color picker chips with HEX codes: '[#000080 Azul Marino] [#FFFFFF Blanco] [#000000 Negro]', image upload dropzone with preview of dress shirt, save button 'Guardar Producto en Catálogo', stylish UI mockup."` |
+
+---
+
+#### Prueba de caso de uso CU7: Gestión de Temporadas y Colecciones
+
+| Caso de uso 7 | Gestión de Temporadas y Colecciones |
+|:---|:---|
+| **Descripción** | Permite calendarizar y administrar campañas estacionales de moda masculina (Primavera-Verano, Otoño-Invierno), controlando sus fechas de vigencia cronológica para activar colecciones y promociones temáticas. |
+| **Precondiciones** | a) Sesión activa con rol ADMINISTRADOR.<br>b) Módulo de temporadas habilitado.<br>c) Conexión a la base de datos activa. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Ingresar al módulo "Temporadas" desde el menú de comercialización. | Se muestran las temporadas registradas organizadas por estado (Vigente, Próxima, Cerrada). | Satisfactorio |
+| 2 | Presionar "+ Nueva Campaña Estacional". | Se abre el formulario modal de registro de temporada. | Satisfactorio |
+| 3 | Ingresar código `SS-2026` y denominación "Colección Primavera - Verano 2026". | Se valida unicidad del código alfanumérico de temporada. | Satisfactorio |
+| 4 | Definir rango de fechas del `2026-08-01` al `2027-01-31` y estado `VIGENTE`. | El sistema verifica que la fecha final sea estrictamente posterior a la fecha inicial. | Satisfactorio |
+| 5 | Presionar "Guardar y Activar Temporada". | La temporada se persiste en PostgreSQL y se establece como activa en el motor de catálogo. | Satisfactorio |
+| 6 | Verificar filtro de temporada en la tienda virtual. | La colección `SS-2026` aparece destacada en la página principal con sus prendas asociadas. | Satisfactorio |
+
+| Responsable | Administrador / Jefe de Marketing |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del tablero de gestión de temporadas con tarjetas de vigencia y modal de creación)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Web application dashboard view for 'FashionStore - Gestión de Temporadas y Campañas'. Main panel displaying timeline calendar and season cards. Active card highlighted in green badge 'VIGENTE: Campaña Primavera - Verano 2026 (SS-2026)', date range '01/08/2026 - 31/01/2027', counter showing '48 Prendas Vinculadas'. Right side modal 'Crear Nueva Temporada' with fields: 'Código Temporada', 'Nombre Comercial', 'Fecha Inicio', 'Fecha Fin', toggle switch 'Activar en Catálogo Web', buttons 'Confirmar Temporada' and 'Descartar', vibrant modern flat UI, Dribbble UI trend."` |
+
+---
+
+#### Prueba de caso de uso CU8: Gestión de Proveedores Textiles
+
+| Caso de uso 8 | Gestión de Proveedores Textiles |
+|:---|:---|
+| **Descripción** | Permite el registro y homologación de empresas fabricantes de textiles e insumos de confección, validando obligatoriamente el formato numérico y la unicidad del Número de Identificación Tributaria (NIT) nacional. |
+| **Precondiciones** | a) Sesión iniciada con rol ADMINISTRADOR.<br>b) Módulo de compras y aprovisionamiento activo.<br>c) Conexión a la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder al módulo "Proveedores" desde el menú de aprovisionamiento. | Se visualiza el directorio comercial de empresas proveedoras registradas. | Satisfactorio |
+| 2 | Presionar "+ Registrar Proveedor". | Se despliega el formulario modal de registro de nuevo proveedor textil. | Satisfactorio |
+| 3 | Ingresar Razón Social "Textiles Andinos S.A." y datos de contacto. | Se validan los campos de nombre, teléfono y dirección física. | Satisfactorio |
+| 4 | Ingresar NIT `1028392019` que ya se encuentra registrado en el sistema. | El sistema captura la restricción de unicidad y muestra alerta de conflicto HTTP 409. | Satisfactorio |
+| 5 | Corregir el NIT ingresando uno válido y único (`9482710015`). | El validador sintáctico verifica que sea numérico de 7 a 12 dígitos y habilita el guardado. | Satisfactorio |
+| 6 | Presionar "Guardar Proveedor" y verificar en el listado general. | Se crea el proveedor en base de datos y la tabla refleja el nuevo registro de forma inmediata. | Satisfactorio |
+
+| Responsable | Administrador / Encargado de Compras |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del formulario modal de proveedores con validación de unicidad de NIT en tiempo real)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Enterprise ERP screen for 'FashionStore - Directorio de Proveedores Textiles'. Data table in background with columns: 'Razón Social', 'NIT Tributario', 'Contacto Comercial', 'Teléfono', 'Términos de Crédito (30 días)', 'Estado', 'Acciones'. Foreground modal dialog titled 'Registrar Nuevo Proveedor Textil', input fields: 'Razón Social (Textiles Andinos S.A.)', 'NIT (1028392019)' with green validation checkmark 'NIT Válido y Único en BD', 'Teléfono (+591 71234567)', 'Email de Facturación', 'Dirección de Fábrica', action buttons 'Registrar Proveedor' and 'Cancelar', crisp professional software UI mockup."` |
+
+---
+
+#### Prueba de caso de uso CU9: Control de Inventario Multi-Sucursal y Costo Promedio Ponderado CPP
+
+| Caso de uso 9 | Control de Inventario Multi-Sucursal y Costo Promedio Ponderado CPP |
+|:---|:---|
+| **Descripción** | Permite registrar entradas por compras a proveedores, actualizando automáticamente el stock físico de la variante en la sucursal seleccionada, recalculando matemáticamente el Costo Promedio Ponderado (CPP) y asentando el movimiento en el Kardex inmutable. |
+| **Precondiciones** | a) Prenda, variante (talla/color), sucursal y proveedor deben encontrarse activos.<br>b) Sesión iniciada con permisos de inventario.<br>c) Conexión transaccional ACID activa con PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder al módulo "Inventario y Kardex" y seleccionar la sucursal `Equipetrol`. | Se despliega el saldo actual de la variante: `Stock = 15 uds`, `CPP = 90.00 Bs`. | Satisfactorio |
+| 2 | Presionar "+ Registrar Entrada por Compra (Lote Factura F-4892)". | Se despliega el formulario modal de ingreso de lote de prendas. | Satisfactorio |
+| 3 | Seleccionar la variante "Camisa Oxford Slim M Azul" e ingresar 20 unidades a 120.00 Bs/ud. | El formulario valida cantidades enteras positivas y costo unitario numérico. | Satisfactorio |
+| 4 | Confirmar la recepción del lote y procesar la transacción. | Se ejecuta la fórmula: `CPP = (15*90 + 20*120) / 35 = 3750 / 35 = 107.14 Bs`. | Satisfactorio |
+| 5 | Verificar actualización en la entidad de inventario. | `stock_fisico = 35`, `ultimo_costo = 120.00 Bs`, `costo_promedio_ponderado = 107.14 Bs`. | Satisfactorio |
+| 6 | Consultar el asiento generado en el Kardex inmutable. | Se visualiza el registro histórico con tipo `COMPRA`, cantidad entrada, nuevo saldo físico y saldo CPP. | Satisfactorio |
+
+| Responsable | Encargado de Almacén / Administrador |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura del Kardex valorado con métricas de stock físico, último costo y recálculo matemático de CPP)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Inventory management and Kardex valuation interface for 'FashionStore - Control de Inventario y CPP'. Top metric summary cards: 'Stock Físico Total: 35 uds', 'Último Costo Compra: 120.00 Bs', 'Costo Promedio Ponderado (CPP): 107.14 Bs'. Below, a detailed immutable Kardex transaction ledger table with columns: 'Fecha / Hora', 'Comprobante / Factura', 'Tipo Movimiento (COMPRA)', 'Entrada Cant.', 'Costo Unit.', 'Salida Cant.', 'Saldo Cantidad (35)', 'Saldo Valorizado CPP (107.14 Bs)'. Mathematical formula callout box: 'CPP = (15 * 90 + 20 * 120) / 35 = 107.14 Bs'. Modal open: 'Registrar Entrada de Lote por Factura F-4892', clean financial ERP aesthetic, highly detailed UI mockup."` |
+
+---
+
+#### Prueba de caso de uso CU10: Consulta de Catálogo y Disponibilidad por Sucursal
+
+| Caso de uso 10 | Consulta de Catálogo y Disponibilidad por Sucursal |
+|:---|:---|
+| **Descripción** | Permite a clientes y personal consultar prendas masculinas aplicando filtros por categoría, temporada, talla y color, desplegando en tiempo real la disponibilidad física real versus prendas reservadas en probadores para la sucursal seleccionada. |
+| **Precondiciones** | a) El catálogo de prendas debe encontrarse publicado.<br>b) Existencias físicas cargadas en el subsistema de inventario.<br>c) Conexión activa con el backend. |
+
+| Paso | Acción | Resultado esperado | Estado (Satisfactorio/Fallido) |
+|:---:|:---|:---|:---:|
+| 1 | Acceder al Catálogo Público en la web o app móvil. | Se muestra la galería de prendas masculinas con selector de filtros en la barra lateral. | Satisfactorio |
+| 2 | Filtrar por talla "M" y color "Azul Marino". | La galería se actualiza dinámicamente mostrando las prendas que disponen de dicha variante. | Satisfactorio |
+| 3 | Seleccionar la prenda "Camisa Oxford Slim Fit" para ver su ficha de detalle. | Se visualiza precio (180 Bs), selector de tallas/colores y bloque de disponibilidad en tienda. | Satisfactorio |
+| 4 | Seleccionar la tienda "Sucursal Equipetrol (Santa Cruz)" en el desplegable de sucursales. | Se consulta la API `/inventario/disponibilidad` en tiempo real para la variante elegida. | Satisfactorio |
+| 5 | Verificar desglose de existencias en pantalla. | Muestra: *"35 unidades físicas en tienda, 5 reservadas en probadores, 30 disponibles para compra inmediata"*. | Satisfactorio |
+| 6 | Comprobar concordancia con el stock físico del almacén. | El stock coincide con exactitud con el saldo reportado por el Kardex de la sucursal. | Satisfactorio |
+
+| Responsable | Cliente / Vendedor de Tienda |
+|:---|:---|
+| **Resultado de la prueba** | **Satisfactorio** |
+| **Adjunto** | **Evidencia de Interfaz:**<br><br>*(Captura de la ficha de detalle de prenda con disponibilidad en tiempo real por sucursal física)*<br><br>> 🎨 **Prompt para IA generadora de imágenes (UI Mockup):**<br>> `"Customer-facing web & mobile omni-channel e-commerce product detail page for 'FashionStore - Camisa Oxford Slim Fit'. Left side shows high quality model photo of men's blue dress shirt. Right side shows: Price '180.00 Bs', Size selector buttons '[S] [M (Selected)] [L] [XL]', Color swatches '[Navy Blue] [Pure White]'. Critical feature: 'Disponibilidad en Tiendas Físicas' dropdown set to 'Sucursal Equipetrol, Santa Cruz', displaying live status card: '✓ 35 Unidades Físicas en Bodega | 5 Reservadas para Probador | 30 Disponibles para Compra Inmediata', action buttons 'Reservar Probador Virtual con AR' (purple gradient) and 'Comprar Ahora' (dark blue), ultra-sleek modern luxury fashion UI mockup."` |
+
+---
+
 
 ### 5.2 Historias de Usuario (H.U.) del Ciclo 1
 

@@ -77,10 +77,50 @@ app.include_router(proveedores_router, prefix=API_PREFIX)
 app.include_router(inventario_router, prefix=API_PREFIX)
 app.include_router(catalogo_router, prefix=API_PREFIX)
 
-# Montar frontend web estático si existe
+# Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))
-if os.path.exists(web_dir):
-    app.mount("/app", StaticFiles(directory=web_dir, html=True), name="web_app")
+candidates = [
+    os.path.join(web_dir, "dist", "web_app", "browser"),
+    os.path.join(web_dir, "dist", "web-app", "browser"),
+    os.path.join(web_dir, "dist", "web", "browser"),
+    os.path.join(web_dir, "dist", "browser"),
+    os.path.join(web_dir, "dist"),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web", "dist", "web_app", "browser")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web_dist")),
+    "/app/web/dist/web_app/browser",
+    "/app/prototipo/web/dist/web_app/browser",
+    "/prototipo/web/dist/web_app/browser",
+    web_dir
+]
+
+target_dir = None
+for candidate in candidates:
+    if os.path.exists(candidate) and os.path.isfile(os.path.join(candidate, "index.html")):
+        target_dir = candidate
+        break
+
+if not target_dir and os.path.exists(web_dir):
+    target_dir = web_dir
+
+if target_dir:
+    print(f" [FRONTEND] Servidor web montado desde: {target_dir}")
+    app.mount("/app", StaticFiles(directory=target_dir, html=True), name="web_app")
+
+
+@app.on_event("startup")
+def startup_event():
+    try:
+        from app.core.database import SessionLocal
+        from app.modules.auth.models import Usuario
+        from app.scripts.seed_data import seed_database
+        db = SessionLocal()
+        if not db.query(Usuario).first():
+            print(" [STARTUP] Base de datos vacia detectada. Ejecutando siembra inicial de datos semilla...")
+            seed_database()
+        db.close()
+    except Exception as e:
+        print(f" [STARTUP] Advertencia en inicializacion automatica: {e}")
+
 
 @app.get("/health", tags=["Estado del Sistema"])
 def health_check():

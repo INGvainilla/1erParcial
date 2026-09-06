@@ -1,0 +1,23 @@
+# Docker ignore
+.git/
+.gitignore
+.env
+.env.*
+node_modules/
+prototipo/web/node_modules/
+prototipo/web/.angular/
+prototipo/web/cache/
+prototipo/backend/.pytest_cache/
+prototipo/backend/__pycache__/
+prototipo/backend/fashionstore_local.db
+*.db
+*.sqlite3
+venv/
+.venv/
+scratch/
+documentacion/
+diagramas/
+Datos/
+*.docx
+*.pdf
+*.bat

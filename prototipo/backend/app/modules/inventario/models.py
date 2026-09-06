@@ -3,10 +3,13 @@
 Modelos de Dominio y Persistencia: Inventario Multi-Sucursal y Costos Ponderados (M06 - CU09)
 Coherencia estricta con Sección 2.3 (InventarioEntity, KardexEntity), B4.txt y Sección 3.3.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class Inventario(Base):
     """
@@ -26,7 +29,8 @@ class Inventario(Base):
     stock_minimo = Column(Integer, nullable=False, default=5)
     ultimo_costo_compra = Column(Numeric(10, 2), nullable=False, default=0.00)
     costo_promedio_ponderado = Column(Numeric(10, 2), nullable=False, default=0.00)
-    actualizado_en = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    actualizado_en = Column(DateTime, default=utc_now, onupdate=utc_now)
+
 
     sucursal = relationship("Sucursal", back_populates="inventarios")
     producto = relationship("Producto", back_populates="inventarios")
@@ -48,6 +52,7 @@ class KardexMovimiento(Base):
     saldo_cantidad_resultante = Column(Integer, nullable=False)
     saldo_cpp_resultante = Column(Numeric(10, 2), nullable=False)
     referencia_documento = Column(String(100), nullable=True)  # Ej. "Factura F-9021"
-    fecha_hora = Column(DateTime, default=datetime.utcnow)
+    fecha_hora = Column(DateTime, default=utc_now)
 
     inventario = relationship("Inventario", back_populates="movimientos_kardex")
+

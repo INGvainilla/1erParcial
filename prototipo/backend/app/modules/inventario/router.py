@@ -20,7 +20,7 @@ router = APIRouter(prefix="/inventario", tags=["Gestión de Inventario y Costos 
 @router.post("/entradas", response_model=KardexResponse, status_code=status.HTTP_201_CREATED)
 def registrar_entrada_lote_endpoint(
     request: EntradaLoteCreate,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
+    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
     # CASO DE USO: CU09 - Registrar Entrada de Lote y Recalcular CPP
@@ -43,7 +43,7 @@ def consultar_kardex_endpoint(
     id_inventario: Optional[int] = Query(None, description="Filtrar por registro de inventario"),
     id_sucursal: Optional[int] = Query(None, description="Filtrar por sucursal"),
     id_producto: Optional[int] = Query(None, description="Filtrar por producto"),
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
+    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
     # CASO DE USO: CU09 - Consulta de Asientos de Kardex Inmutable

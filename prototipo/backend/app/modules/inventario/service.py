@@ -7,7 +7,7 @@ y NO poseen atributos propios. Cada método documenta sus pasos correlativos de 
 from typing import List, Optional
 from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.modules.inventario.models import Inventario, KardexMovimiento
 from app.modules.sucursales.models import Sucursal
@@ -149,7 +149,10 @@ class InventarioControl:
         id_sucursal: Optional[int] = None,
         id_producto: Optional[int] = None
     ) -> List[InventarioResponse]:
-        query = db.query(Inventario)
+        query = db.query(Inventario).options(
+            joinedload(Inventario.sucursal),
+            joinedload(Inventario.producto)
+        )
         if id_sucursal:
             query = query.filter(Inventario.id_sucursal == id_sucursal)
         if id_producto:

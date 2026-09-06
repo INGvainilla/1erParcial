@@ -7,7 +7,7 @@ y NO poseen atributos propios. Cada método documenta sus pasos correlativos de 
 from datetime import datetime
 from typing import List, Optional
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import get_password_hash
 from app.modules.auth.models import Usuario, BitacoraAcceso
@@ -34,7 +34,7 @@ class UsuarioAdminControl:
         # =========================================================================
         # Paso 1: El Administrador accede al panel de usuarios y define criterios de filtro
         # Paso 1.1: IGestionUsuariosBoundary invoca listar_usuarios() en UsuarioAdminControl
-        query = db.query(Usuario)
+        query = db.query(Usuario).options(joinedload(Usuario.sucursal))
         
         # Paso 1.2: UsuarioAdminControl aplica los filtros sobre UsuarioEntity
         if rol:
@@ -55,7 +55,7 @@ class UsuarioAdminControl:
                 id_usuario=u.id_usuario,
                 email=u.email,
                 nombre_completo=u.nombre_completo,
-                telefono=u.telefono,
+                telefono=getattr(u, 'telefono', None),
                 rol=u.rol,
                 estado_cuenta=u.estado_cuenta,
                 intentos_fallidos=u.intentos_fallidos,
@@ -91,18 +91,21 @@ class UsuarioAdminControl:
         # Paso 1.1: IGestionUsuariosBoundary envía registrarOModificarUsuario(datosUsuario) a UsuarioAdminControl
 
         # Paso 1.2: UsuarioAdminControl verifica si la sucursal física asignada existe y está activa
-        if request.id_sucursal:
-            sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == request.id_sucursal).first()
+        if request.id_sucursal and int(request.id_sucursal) > 0:
+            sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == int(request.id_sucursal)).first()
             if not sucursal:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"La sucursal ID {request.id_sucursal} no existe en el sistema."
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"La sucursal física seleccionada (ID {request.id_sucursal}) no existe en el sistema. Por favor seleccione una sucursal activa."
                 )
             if sucursal.estado == "CERRADA":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="No se puede asignar personal a una sucursal con estado CERRADA."
                 )
+            request.id_sucursal = sucursal.id_sucursal
+        else:
+            request.id_sucursal = None
 
         # Paso 1.3: UsuarioAdminControl verifica unicidad del correo electrónico en UsuarioEntity
         usuario_existente = db.query(Usuario).filter(Usuario.email == email).first()
@@ -123,6 +126,7 @@ class UsuarioAdminControl:
             password_hash=hashed_pw,
             nombres=nombres,
             apellidos=apellidos,
+            telefono=request.telefono,
             rol=rol_solicitado,
             id_sucursal=request.id_sucursal,
             estado_cuenta="ACTIVO",
@@ -151,7 +155,7 @@ class UsuarioAdminControl:
             id_usuario=nuevo_usuario.id_usuario,
             email=nuevo_usuario.email,
             nombre_completo=nuevo_usuario.nombre_completo,
-            telefono=nuevo_usuario.telefono,
+            telefono=getattr(nuevo_usuario, 'telefono', None),
             rol=nuevo_usuario.rol,
             estado_cuenta=nuevo_usuario.estado_cuenta,
             intentos_fallidos=nuevo_usuario.intentos_fallidos,
@@ -203,6 +207,8 @@ class UsuarioAdminControl:
             partes = request.nombre_completo.strip().split(" ", 1)
             usuario.nombres = partes[0]
             usuario.apellidos = partes[1] if len(partes) > 1 else "."
+        if request.telefono is not None:
+            usuario.telefono = request.telefono
         if request.estado_cuenta:
             usuario.estado_cuenta = request.estado_cuenta.upper()
 
@@ -226,7 +232,7 @@ class UsuarioAdminControl:
             id_usuario=usuario.id_usuario,
             email=usuario.email,
             nombre_completo=usuario.nombre_completo,
-            telefono=usuario.telefono,
+            telefono=getattr(usuario, 'telefono', None),
             rol=usuario.rol,
             estado_cuenta=usuario.estado_cuenta,
             intentos_fallidos=usuario.intentos_fallidos,

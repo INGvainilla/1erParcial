@@ -4,10 +4,11 @@ Clase Control: Lógica de Catálogo Omnicanal y Disponibilidad por Sucursal (CU1
 Conforme a B4.txt (línea 40), las clases de control contienen exclusivamente métodos de negocio
 y NO poseen atributos propios. Cada método documenta sus pasos correlativos de ejecución.
 """
+from collections import defaultdict
 from typing import List, Optional
 from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import distinct
 
 from app.modules.productos.models import Producto, ProductoColor, ProductoTalla
@@ -47,8 +48,14 @@ class CatalogoControl:
 
         # Paso 1.1: ICatalogoBoundary invoca consultarPrendas(criteriosFiltro) en CatalogoControl
 
-        # Paso 1.2: CatalogoControl formula la consulta estructurada sobre ProductoEntity
-        query = db.query(Producto).filter(Producto.estado == "PUBLICADO")
+        # Paso 1.2: CatalogoControl formula la consulta estructurada sobre ProductoEntity con carga impaciente
+        query = db.query(Producto).options(
+            selectinload(Producto.colores),
+            selectinload(Producto.tallas),
+            joinedload(Producto.categoria),
+            joinedload(Producto.marca),
+            joinedload(Producto.temporada)
+        ).filter(Producto.estado == "PUBLICADO")
 
         if id_categoria:
             query = query.filter(Producto.id_categoria == id_categoria)
@@ -79,10 +86,24 @@ class CatalogoControl:
         # Paso 1.3: ProductoEntity ejecuta el filtro y retorna la colección de productos base
         productos = query.order_by(Producto.id_producto.desc()).all()
 
-        # Paso 1.4: CatalogoControl consulta en tiempo real las existencias disponibles en InventarioEntity
-        # cruzando con las sucursales operativas
-        sucursales_activas = db.query(Sucursal).filter(Sucursal.estado == "OPERATIVA").all()
+        if not productos:
+            return []
+
+        # Paso 1.4: CatalogoControl consulta existencias disponibles en InventarioEntity
+        # cruzando con sucursales operativas en una sola consulta por lote
+        sucursales_activas = db.query(Sucursal).options(joinedload(Sucursal.ciudad)).filter(Sucursal.estado == "OPERATIVA").all()
         sucursal_map = {s.id_sucursal: s for s in sucursales_activas}
+
+        # Consulta de inventario por lote para todos los productos encontrados (elimina N+1)
+        prod_ids = [p.id_producto for p in productos]
+        inv_query = db.query(Inventario).filter(Inventario.id_producto.in_(prod_ids))
+        if id_sucursal:
+            inv_query = inv_query.filter(Inventario.id_sucursal == id_sucursal)
+        all_inv = inv_query.all()
+
+        inv_by_prod = defaultdict(list)
+        for it in all_inv:
+            inv_by_prod[it.id_producto].append(it)
 
         catalogo_resultado = []
 
@@ -95,12 +116,8 @@ class CatalogoControl:
             precio_final = p.precio_base * (Decimal("1.00") - (descuento_pct / Decimal("100.00")))
             precio_final = precio_final.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-            # Consultar existencias de inventario para este producto
-            inv_query = db.query(Inventario).filter(Inventario.id_producto == p.id_producto)
-            if id_sucursal:
-                inv_query = inv_query.filter(Inventario.id_sucursal == id_sucursal)
-
-            items_inv = inv_query.all()
+            # Existencias de inventario precargadas en memoria
+            items_inv = inv_by_prod.get(p.id_producto, [])
 
             # Paso 1.5: InventarioEntity retorna existencias físicas por sucursal, talla y color
             stock_total = 0
@@ -184,14 +201,21 @@ class CatalogoControl:
         if not producto:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Producto no encontrado.")
 
-        sucursales = db.query(Sucursal).filter(Sucursal.estado == "OPERATIVA").all()
+        sucursales = db.query(Sucursal).options(joinedload(Sucursal.ciudad)).filter(Sucursal.estado == "OPERATIVA").all()
+        
+        # Una sola consulta de inventario por lote para eliminar el problema N+1
+        items_inv_todos = db.query(Inventario).filter(
+            Inventario.id_producto == id_producto
+        ).all()
+        
+        inv_por_sucursal = defaultdict(list)
+        for it in items_inv_todos:
+            inv_por_sucursal[it.id_sucursal].append(it)
+
         resultado_sucursales = []
 
         for s in sucursales:
-            items_inv = db.query(Inventario).filter(
-                Inventario.id_producto == id_producto,
-                Inventario.id_sucursal == s.id_sucursal
-            ).all()
+            items_inv = inv_por_sucursal.get(s.id_sucursal, [])
 
             stock_suc = sum(it.stock_disponible for it in items_inv)
             tallas_suc = set(it.talla for it in items_inv if it.stock_disponible > 0)

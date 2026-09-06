@@ -7,8 +7,12 @@ e inventario multi-sucursal valuado por Costo Promedio Ponderado (CPP) y Kardex.
 """
 import sys
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 # Asegurar path de importación
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -22,15 +26,28 @@ from app.modules.temporadas.models import Temporada
 from app.modules.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
 from app.modules.inventario.models import Inventario, KardexMovimiento
 
-def seed_database():
+def reset_database(db):
+    print("Limpiando datos y tablas para siembra limpia...")
+    for model in [
+        KardexMovimiento, Inventario, ProductoColor, ProductoTalla, Producto,
+        Marca, Categoria, Temporada, Proveedor, TokenRecuperacion,
+        BitacoraAcceso, Usuario, Sucursal, Ciudad
+    ]:
+        db.query(model).delete()
+    db.commit()
+    print("Tablas limpiadas exitosamente.")
+
+def seed_database(force_reset: bool = False):
     print("Iniciando creación de tablas y siembra de datos semilla...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
-        # Verificar si ya existen datos
-        if db.query(Usuario).first():
-            print("La base de datos ya contiene datos. Omitiendo duplicación de semillas.")
+        # Si se solicita reset o se pasa el argumento --reset
+        if force_reset or "--reset" in sys.argv or "-r" in sys.argv:
+            reset_database(db)
+        elif db.query(Usuario).first():
+            print("La base de datos ya contiene datos. Usa '--reset' si deseas forzar la siembra limpia.")
             return
 
         # 1. Ciudades
@@ -135,7 +152,7 @@ def seed_database():
             rol="CAJERO",
             estado_cuenta="BLOQUEADO_POR_INTENTOS",
             intentos_fallidos=5,
-            bloqueado_hasta=datetime.utcnow() + timedelta(minutes=30)
+            bloqueado_hasta=utc_now() + timedelta(minutes=30)
         )
         u_mateo = Usuario(
             email="mateo.logistica@store.bo",
@@ -163,7 +180,7 @@ def seed_database():
         token_otp = TokenRecuperacion(
             id_usuario=u_rodrigo.id_usuario,
             codigo_otp_hash=otp_hash,
-            expiracion=datetime.utcnow() + timedelta(minutes=15),
+            expiracion=utc_now() + timedelta(minutes=15),
             utilizado=False,
             intentos_verificacion=0
         )

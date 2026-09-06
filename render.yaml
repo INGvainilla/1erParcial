@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fashionstore-ciclo1
+    runtime: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: SECRET_KEY
+        generateValue: true
+      - key: EMAIL_HOST_USER
+        value: mrgrueso2005@gmail.com
+      - key: EMAIL_HOST_PASSWORD
+        value: plwx ztda stmt qxeu
+      - key: DEFAULT_FROM_EMAIL
+        value: SIGEPSI <mrgrueso2005@gmail.com>

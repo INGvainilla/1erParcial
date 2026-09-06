@@ -1,98 +1,64 @@
-# FashionStore — Plataforma Inteligente de Comercio Electrónico Omnicanal
+# FashionStore - Plataforma E-Commerce Omnicanal
+## Ciclo 1: Fundamentos y Módulos Base (Sistemas de Información II - 2-2026)
 
-> **Sistemas de Información II (SI2) — Semestre 2-2026**  
-> **Docente:** MSc. Ing. Angélica Garzón Cuéllar  
-> **Metodología:** Proceso Unificado de Desarrollo de Software (PUDS) — UML 2.5+  
-> **Integrantes del Equipo:**  
-> * Alberto Delgado (Desarrollador Full Stack)  
-> * Andy Mujica (Desarrollador Full Stack)  
-
----
-
-## ⚡ Guía Rápida de Ejecución
-
-Para consultar el manual completo con capturas de pantalla, explicaciones de arquitectura y casos de prueba, revise:
-👉 **[INSTRUCCIONES_EJECUCION.md](file:///c:/Users/User/Documents/2-2026/SI2/1erPARCIAL/INSTRUCCIONES_EJECUCION.md)**
-
-A continuación se resumen los comandos esenciales para levantar los tres componentes (Backend, Web y Móvil):
+**Autores:** Alberto Delgado & Andy Mujica  
+**Docente:** MSc. Ing. Angélica Garzón Cuéllar  
+**Metodología:** Proceso Unificado de Desarrollo de Software (PUDS)  
+**Estándar de Modelado:** UML 2.5+  
 
 ---
 
-### 1. Backend (FastAPI + PostgreSQL / SQLite)
+## 🚀 Descripción del Proyecto
 
-```powershell
-# 1. Navegar a la carpeta backend
-cd prototipo\backend
+FashionStore es una plataforma inteligente de comercio electrónico omnicanal orientada a la moda masculina, integrando vestidores virtuales, catálogos en 3D/RA y gestión empresarial centralizada.
 
-# 2. Instalar dependencias
-pip install -r requirements.txt
-
-# 3. Poblar datos semilla (usuarios, tiendas GPS, catálogo e inventario CPP)
-python app\scripts\seed_data.py
-
-# 4. Iniciar servidor FastAPI
-python run.py
-```
-* **API Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **API ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
-* **Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
+### Casos de Uso Implementados (Ciclo 1)
+- **CU01**: Autenticar Usuario y Control de Acceso (RBAC con roles Administrador, Supervisor, Encargado, Vendedor, Cliente).
+- **CU02**: Registrar Cliente (Auto-registro con asignación automática de rol Cliente).
+- **CU03**: Recuperar Contraseña (Token OTP de 6 dígitos con expiración de 15 min y envío real vía SMTP Gmail).
+- **CU04**: Gestionar Usuarios y Roles (Alta/Edición/Bloqueo/Desbloqueo de cuentas y reasignación de sucursales).
+- **CU05**: Gestionar Ciudades y Sucursales Físicas (Geolocalización GPS y capacidad de probadores).
+- **CU06**: Gestionar Catálogo de Productos y Atributos de Moda (SKU único, colores HEX, tallas S/M/L/XL, imágenes de alta resolución).
+- **CU07**: Gestionar Temporadas y Colecciones (Primavera-Verano / Otoño-Invierno y porcentajes de descuento).
+- **CU08**: Gestionar Proveedores Textiles (NIT único, plazos comerciales y contacto).
+- **CU09**: Gestionar Inventario Multi-Sucursal y Costos Ponderados (Recálculo matemático de Costo Promedio Ponderado - CPP y trazabilidad en Kardex).
+- **CU10**: Consultar Catálogo y Disponibilidad por Sucursal (Búsqueda omnicanal en tiempo real).
 
 ---
 
-### 2. Frontend Web (SPA Glassmorphism)
+## 🛠️ Stack Tecnológico
 
-El backend de FastAPI ya sirve el frontend web automáticamente:
-👉 Ingrese directamente en su navegador a: **[http://localhost:8000/](http://localhost:8000/)**
-
-*(Opcional: Si desea ejecutarlo en un servidor HTTP independiente en el puerto 3000):*
-```powershell
-cd prototipo\web
-python -m http.server 3000
-# Abrir http://localhost:3000 en el navegador
-```
+- **Frontend:** Angular 19 (Standalone Components, TypeScript, CSS3 moderno, FontAwesome, HashLocationStrategy).
+- **Backend:** FastAPI (Python 3.11), Pydantic v2, SQLAlchemy ORM, Uvicorn, Passlib (Bcrypt), PyJWT.
+- **Base de Datos:** PostgreSQL (en producción) / SQLite (entorno local).
+- **Contenedorización:** Docker Multi-stage (Node.js 20 + Python 3.11).
 
 ---
 
-### 3. Aplicación Móvil (Flutter 3.x / Dart)
+## 🌐 Despliegue en la Nube (Render / Railway)
 
-```powershell
-# 1. Navegar a la carpeta móvil
-cd prototipo\movil
+El repositorio está completamente configurado para despliegue continuo con un solo clic a través de Docker multi-stage.
 
-# 2. Obtener paquetes y dependencias
-flutter pub get
-
-# 3. Ejecutar según el dispositivo:
-# Para Windows Desktop:
-flutter run -d windows
-
-# Para Navegador Web (Chrome):
-flutter run -d chrome
-
-# Para Emulador Android o dispositivo conectado:
-flutter run
-```
-> **Nota de red:** Para emulador Android oficial se utiliza `http://10.0.2.2:8000/api/v1` (configurado por defecto en `lib/core/constants/api_constants.dart`). Para Windows desktop o web se usa `http://localhost:8000/api/v1`.
+### Variables de Entorno Requeridas en la Nube
+| Variable | Descripción | Valor por defecto / Ejemplo |
+| :--- | :--- | :--- |
+| `PORT` | Puerto HTTP expuesto por la plataforma | `8000` (o asignado automáticamente) |
+| `SECRET_KEY` | Clave criptográfica para firmas JWT | Cadena aleatoria segura |
+| `DATABASE_URL` | URL de conexión PostgreSQL (opcional) | Si no se define, usa SQLite integrado |
+| `EMAIL_HOST_USER` | Correo emisor SMTP para OTP | `mrgrueso2005@gmail.com` |
+| `EMAIL_HOST_PASSWORD`| Contraseña de aplicación Gmail | `plwx ztda stmt qxeu` |
+| `DEFAULT_FROM_EMAIL`| Remitente de correos | `SIGEPSI <mrgrueso2005@gmail.com>` |
 
 ---
 
-### 4. Pruebas Automatizadas (Pytest)
+## 🔑 Credenciales de Prueba (Datos Semilla Oficiales)
 
-Ejecución de los 11 escenarios formales de prueba de caja negra (TC01 - TC11):
-```powershell
-cd prototipo\backend
-python -m pytest tests\test_ciclo1_api.py -v
-```
+Al arrancar la aplicación por primera vez en cualquier entorno, la base de datos se siembra automáticamente:
 
----
-
-### 5. Credenciales de Demostración
-
-Contraseña para todas las cuentas: **`Admin123*`**
-
-* **Administrador:** `alberto.delgado@store.bo`
-* **Administrador:** `andy.mujica@store.bo`
-* **Encargado Sucursal:** `carlos.morales@store.bo`
-* **Cajero (Bloqueado preventivamente para prueba de desbloqueo):** `javier.roca@store.bo`
-* **Logística:** `mateo.logistica@store.bo`
-* **Cliente:** `rodrigo.cliente@gmail.com` (Código OTP de recuperación: `482915`)
+| Rol | Correo Electrónico | Contraseña | Sucursal Asignada |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@fashionstore.bo` | `Admin123*` | Sede Central Santa Cruz |
+| **Supervisor** | `supervisor@fashionstore.bo` | `Supervisor123*` | Mall Las Brisas SCZ |
+| **Encargado Inventario**| `inventario@fashionstore.bo` | `Inventario123*` | Sucursal San Miguel LPZ |
+| **Vendedor** | `vendedor@fashionstore.bo` | `Vendedor123*` | Sucursal Prado CBBA |
+| **Cliente Frecuente** | `cliente@fashionstore.bo` | `Cliente123*` | Cliente Web Omnicanal |

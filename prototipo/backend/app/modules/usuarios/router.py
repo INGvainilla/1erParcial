@@ -19,6 +19,7 @@ from app.modules.usuarios.service import UsuarioAdminControl
 router = APIRouter(prefix="/usuarios", tags=["Gestión de Usuarios (CU04)"])
 
 @router.get("", response_model=List[UsuarioResponse])
+@router.get("/", response_model=List[UsuarioResponse], include_in_schema=False)
 def listar_usuarios_endpoint(
     rol: Optional[str] = Query(None, description="Filtrar por rol"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
@@ -32,6 +33,7 @@ def listar_usuarios_endpoint(
     return UsuarioAdminControl.listar_usuarios(db, rol=rol, estado=estado, id_sucursal=id_sucursal)
 
 @router.post("", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def crear_usuario_endpoint(
     request_data: UsuarioCreate,
     request: Request,

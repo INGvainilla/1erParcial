@@ -65,5 +65,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-*.bak
-*.tmp
+# Archivos temporales de Office y Scratch
+~$*
+scratch/
+prototipo/web/cache/
+* - copia.*
+*-copia.*
+
