@@ -1,36 +1,18 @@
 # ==============================================================================
-# Dockerfile Multi-Stage: FashionStore Omnicanal (Ciclo 1: SI2 - 2-2026)
-# Etapa 1: Compilación de Frontend Angular SPA
-# Etapa 2: Backend FastAPI + Uvicorn + Base de Datos + Static Files
+# Dockerfile: FashionStore Omnicanal (Ciclo 1: SI2 - 2-2026)
+# Backend: FastAPI + Uvicorn + SQLAlchemy + SQLite/PostgreSQL
+# Frontend: Angular 19 SPA (Embebido en web_dist para despliegue ultra-rápido y estable)
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
-# 1. ETAPA DE CONSTRUCCIÓN FRONTEND (Node.js 20)
-# ------------------------------------------------------------------------------
-FROM node:20-alpine AS build-frontend
-WORKDIR /app/frontend
-
-# Copiar manifiestos e instalar dependencias de Angular
-COPY prototipo/web/package*.json ./
-RUN npm install
-
-# Copiar código fuente de Angular y generar bundle de producción
-COPY prototipo/web/ ./
-RUN npm run build
-
-# ------------------------------------------------------------------------------
-# 2. ETAPA DE EJECUCIÓN BACKEND (Python 3.11 Slim)
-# ------------------------------------------------------------------------------
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Variables de entorno para Python
+# Variables de entorno para Python y Uvicorn
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8000
 
-# Instalar dependencias básicas del sistema
+# Instalar dependencias del sistema requeridas
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -39,12 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY prototipo/backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código del backend
+# Copiar el backend completo incluyendo los activos compilados de Angular en web_dist
 COPY prototipo/backend/ ./
-
-# Copiar frontend compilado desde la etapa 1 a las rutas esperadas
-COPY --from=build-frontend /app/frontend/dist /app/web/dist
-COPY --from=build-frontend /app/frontend/dist /prototipo/web/dist
 
 # Exponer el puerto por defecto
 EXPOSE 8000

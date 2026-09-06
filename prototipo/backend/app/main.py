@@ -80,13 +80,15 @@ app.include_router(catalogo_router, prefix=API_PREFIX)
 # Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))
 candidates = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web_dist")),
+    "/app/web_dist",
+    "/app/backend/web_dist",
     os.path.join(web_dir, "dist", "web_app", "browser"),
     os.path.join(web_dir, "dist", "web-app", "browser"),
     os.path.join(web_dir, "dist", "web", "browser"),
     os.path.join(web_dir, "dist", "browser"),
     os.path.join(web_dir, "dist"),
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web", "dist", "web_app", "browser")),
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web_dist")),
     "/app/web/dist/web_app/browser",
     "/app/prototipo/web/dist/web_app/browser",
     "/prototipo/web/dist/web_app/browser",
