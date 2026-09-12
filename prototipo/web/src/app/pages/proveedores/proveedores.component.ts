@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../core/services/fashion-api.service';
@@ -164,7 +164,8 @@ export class ProveedoresComponent implements OnInit {
   constructor(
     private api: FashionApiService,
     private toast: ToastService,
-    public auth: AuthService
+    public auth: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -173,7 +174,10 @@ export class ProveedoresComponent implements OnInit {
 
   loadProveedores(): void {
     this.api.getProveedores().subscribe({
-      next: (data) => this.proveedores = data,
+      next: (data) => {
+        this.proveedores = data;
+        this.cdr.detectChanges();
+      },
       error: () => this.toast.error('Error', 'No se pudieron cargar los proveedores.')
     });
   }

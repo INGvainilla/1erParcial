@@ -1,0 +1,59 @@
+<div class="ticket-container">
+  <div class="ticket" *ngIf="reserva">
+    
+    <!-- Top Notch -->
+    <div class="ticket-notch top"></div>
+    
+    <div class="ticket-header">
+      <div class="airline">FASHION STORE</div>
+      <div class="flight">TICKET DE RESERVA</div>
+    </div>
+
+    <div class="ticket-body">
+      <div class="qr-section">
+        <img [src]="reserva.codigo_qr" alt="Código QR de Reserva" class="qr-code">
+        <div class="status-badge">{{ reserva.estado }}</div>
+      </div>
+
+      <div class="ticket-details">
+        <div class="detail-row">
+          <div class="detail-box">
+            <span class="label">RESERVA ID</span>
+            <span class="value">#{{ reserva.id_reserva | number:'3.0-0' }}</span>
+          </div>
+          <div class="detail-box text-right">
+            <span class="label">SUCURSAL</span>
+            <span class="value">{{ reserva.id_sucursal | number:'2.0-0' }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-row">
+          <div class="detail-box">
+            <span class="label">FECHA</span>
+            <span class="value">{{ reserva.fecha_visita | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="detail-box text-right">
+            <span class="label">HORA</span>
+            <span class="value">{{ reserva.fecha_visita | date:'HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="items-section">
+          <span class="label">PRENDAS RESERVADAS ({{ reserva.detalles.length }})</span>
+          <div class="item-pill" *ngFor="let det of reserva.detalles">
+            Prod {{ det.id_producto }} - {{ det.talla }} ({{ det.color }}) x{{ det.cantidad }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Notch -->
+    <div class="ticket-notch bottom"></div>
+    
+    <div class="ticket-footer">
+      <button class="btn-download" (click)="descargarTicket()">
+        <span class="icon">📥</span> Descargar Ticket
+      </button>
+    </div>
+  </div>
+</div>

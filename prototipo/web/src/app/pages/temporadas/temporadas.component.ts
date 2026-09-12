@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../core/services/fashion-api.service';
@@ -160,7 +160,8 @@ export class TemporadasComponent implements OnInit {
   constructor(
     private api: FashionApiService,
     public auth: AuthService,
-    private toast: ToastService
+    private toast: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -169,7 +170,10 @@ export class TemporadasComponent implements OnInit {
 
   loadTemporadas(): void {
     this.api.getTemporadas().subscribe({
-      next: (data) => this.temporadas = data,
+      next: (data) => {
+        this.temporadas = data;
+        this.cdr.detectChanges();
+      },
       error: () => this.toast.error('Error', 'No se pudieron cargar las temporadas.')
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -738,7 +738,8 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private api: FashionApiService,
     public auth: AuthService,
-    private toast: ToastService
+    private toast: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -783,9 +784,11 @@ export class UsuariosComponent implements OnInit {
       next: (data) => {
         this.usuarios = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
+        this.cdr.detectChanges();
         if (err.status === 401) {
           this.toast.error('Sesión Expirada', 'Su sesión ha expirado. Inicie sesión nuevamente.');
           this.auth.logout();

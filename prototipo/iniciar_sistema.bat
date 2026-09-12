@@ -11,6 +11,12 @@ echo.
 
 cd /d "%~dp0\backend"
 
+if exist venv\Scripts\activate (
+    call venv\Scripts\activate
+) else (
+    echo [ADVERTENCIA] No se encontro entorno virtual 'venv'. Usando Python global...
+)
+
 echo [1/3] Verificando conexion a Base de Datos PostgreSQL...
 python -c "from app.core.config import settings; from app.core.database import engine; conn = engine.connect(); print(' [OK] Conectado exitosamente a PostgreSQL (fashionstore_db)'); conn.close()"
 
@@ -21,9 +27,7 @@ echo       - Swagger OpenAPI: http://localhost:8000/docs
 echo       - Health Check:    http://localhost:8000/health
 echo.
 
-start "" "http://localhost:8000"
-
-echo [3/3] Servidor en ejecucion. Presione CTRL+C para detener el sistema.
+echo [3/3] Iniciando Servidor. Abre tu navegador en la URL indicada. Presiona CTRL+C para detener.
 echo =========================================================================
 python run.py
 pause

@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     EMAIL_HOST_PASSWORD: str = "plwx ztda stmt qxeu"
     DEFAULT_FROM_EMAIL: str = "SIGEPSI <mrgrueso2005@gmail.com>"
     
+    # Pasarela de Pagos Stripe (CU16)
+    STRIPE_SECRET_KEY: str = "sk_test_51UEsz81HD8WYieY54Eoz9aGdj05qbsEnEbLOISaxEf5TF2E6RWswKA3lsGO0Au0YVodJ0JOqbRElxv5GUlgwcYHY00LRGUdXFK"
+    STRIPE_PUBLISHABLE_KEY: str = "pk_test_51UEsz81HD8WYieY5OVqcN7AqDcwmlIpf9ClUu7VzfdPDigt5FgbaTPuk8cErY6ySu3CXc8U0r7SY2UINr0e3AMyg00LCwwrfgN"
+    STRIPE_WEBHOOK_SECRET: str = "whsec_test"
+    STRIPE_CURRENCY: str = "bob"
+    
     # Conexión a Base de Datos (PostgreSQL principal con fallback automático a SQLite)
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = ""

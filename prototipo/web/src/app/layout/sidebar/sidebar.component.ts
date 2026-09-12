@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CarritoService } from '../../core/services/carrito.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -26,6 +27,19 @@ import { ToastService } from '../../core/services/toast.service';
         <a routerLink="/catalogo" routerLinkActive="active" class="nav-item">
           <i class="fas fa-store"></i>
           <span>Catálogo de Ropa (CU10)</span>
+        </a>
+
+        <a routerLink="/reservas/crear" routerLinkActive="active" class="nav-item">
+          <i class="fas fa-calendar-check"></i>
+          <span>Reservar Prendas (CU11)</span>
+        </a>
+
+        <a (click)="carritoService.openCart()" class="nav-item nav-cart-item" style="cursor: pointer;">
+          <i class="fas fa-shopping-bag"></i>
+          <span>Bolsa de Compras (CU13)</span>
+          <span class="nav-cart-badge" *ngIf="carritoService.totalItems() > 0">
+            {{ carritoService.totalItems() }}
+          </span>
         </a>
 
         <a *ngIf="!auth.isAuthenticated()" routerLink="/login" routerLinkActive="active" class="nav-item">
@@ -71,11 +85,51 @@ import { ToastService } from '../../core/services/toast.service';
             <i class="fas fa-boxes"></i>
             <span>Inventario Global y CPP (CU09)</span>
           </a>
+
+          <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Reservas del Día (CU12)</span>
+          </a>
+
+          <a routerLink="/encargado/escaner" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-qrcode"></i>
+            <span>Escanear QR (CU12)</span>
+          </a>
+
+          <a routerLink="/pos" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-cash-register"></i>
+            <span>Caja y Venta POS (CU15)</span>
+          </a>
+
+          <a routerLink="/admin/pagos-config" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-sliders-h"></i>
+            <span>Medios de Cobro (CU17)</span>
+          </a>
+
+          <a routerLink="/logistica/dashboard" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-shipping-fast"></i>
+            <span>Despacho y Delivery (CU18)</span>
+          </a>
         </ng-container>
 
         <!-- MÓDULOS DE ENCARGADO DE SUCURSAL (Solo si no es Admin) -->
         <ng-container *ngIf="auth.isManager()">
           <div class="nav-section-title">Operaciones de Tienda</div>
+
+          <a routerLink="/pos" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-cash-register"></i>
+            <span>Caja y Venta POS (CU15)</span>
+          </a>
+
+          <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Reservas del Día (CU12)</span>
+          </a>
+
+          <a routerLink="/encargado/escaner" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-qrcode"></i>
+            <span>Escanear QR (CU12)</span>
+          </a>
 
           <a routerLink="/inventario" routerLinkActive="active" class="nav-item">
             <i class="fas fa-boxes"></i>
@@ -111,14 +165,24 @@ import { ToastService } from '../../core/services/toast.service';
             <i class="fas fa-tshirt"></i>
             <span>Consulta de Productos (CU06)</span>
           </a>
+
+          <a routerLink="/logistica/dashboard" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-shipping-fast"></i>
+            <span>Despacho y Delivery (CU18)</span>
+          </a>
         </ng-container>
 
         <!-- MÓDULOS DE CAJERO (Solo si no es Admin) -->
         <ng-container *ngIf="auth.isCashier()">
           <div class="nav-section-title">Punto de Venta (POS)</div>
 
-          <a routerLink="/catalogo" routerLinkActive="active" class="nav-item">
+          <a routerLink="/pos" routerLinkActive="active" class="nav-item">
             <i class="fas fa-cash-register"></i>
+            <span>Terminal de Caja POS (CU15)</span>
+          </a>
+
+          <a routerLink="/catalogo" routerLinkActive="active" class="nav-item">
+            <i class="fas fa-search-dollar"></i>
             <span>Consulta de Precios y Stock</span>
           </a>
         </ng-container>
@@ -355,11 +419,21 @@ import { ToastService } from '../../core/services/toast.service';
       font-size: 1.2rem;
       color: #34d399;
     }
+    .nav-cart-badge {
+      margin-left: auto;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+    }
   `]
 })
 export class SidebarComponent {
   constructor(
     public auth: AuthService,
+    public carritoService: CarritoService,
     private toast: ToastService
   ) {}
 

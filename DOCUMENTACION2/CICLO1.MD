@@ -1,0 +1,1641 @@
+# Capitulo 1. Flujo de Trabajo: Captura de Requisitos
+
+## 1.1 Identificación de Casos de Uso y Actores
+
+### 1.1.1 Actores Internos (Personal de la Organización)
+
+Corresponden a los usuarios humanos pertenecientes a la nómina operativa y ejecutiva de la cadena de tiendas de indumentaria masculina. Acceden al sistema a través de la plataforma web administrativa (Angular) o la terminal de caja POS, sujetos a rigurosas políticas de Control de Acceso Basado en Roles (RBAC):
+
+1. **Administrador General:**
+   - Descripción y Rol: Máxima autoridad directiva e informática de la empresa. Cuenta con privilegios irrestrictos sobre la configuración y gobernanza de la plataforma.
+   - Responsabilidades Clave:
+     - Creación, modificación, asignación de roles y revocación de cuentas de personal interno.
+     - Desbloqueo administrativo de cuentas inhabilitadas preventivamente tras 5 intentos fallidos de autenticación.
+     - Alta y parametrización de ciudades, sucursales físicas, georreferenciación GPS y capacidades de probadores.
+     - Gestión del catálogo maestro: categorías, marcas, temporadas estacionales y atributos de moda (tallas y colores Hexadecimales).
+     - Supervisión de métricas financieras, auditorías de seguridad e indicadores gerenciales en los tableros de control (dashboards).
+
+2. **Encargado de Sucursal:**
+   - Descripción y Rol: Responsable del funcionamiento diario, la sala de ventas y el almacén de una tienda física específica (ej. Sucursal Equipetrol, Sucursal Calacoto o Sucursal El Prado).
+   - Responsabilidades Clave:
+     - Monitoreo en tiempo real del panel de reservas presenciales asignadas a su sucursal.
+     - Coordinación y supervisión del apartado físico anticipado de prendas en perchas y probadores previo a la visita del cliente.
+     - Validación de la llegada del cliente a la tienda mediante el escaneo óptico del código QR de la reserva.
+     - Control y auditoría del stock físico local, reporte de mermas o prendas deterioradas y recepción de transferencias inter-sucursales.
+
+3. **Cajero de Sucursal:**
+   - Descripción y Rol: Operador de mostrador responsable de la atención directa y formalización de cobros en los puntos de venta físicos (POS).
+   - Responsabilidades Clave:
+     - Autenticación en la terminal de caja e inicio de turno de cobro.
+     - Búsqueda ágil de prendas mediante escaneo de códigos de barras SKU o códigos alfanuméricos.
+     - Conversión directa de solicitudes de reserva presencial en ventas definitivas de mostrador.
+     - Procesamiento de cobros físicos (efectivo con cálculo automático de cambio) y cobros electrónicos (tarjetas con terminal POS física o Código QR Interoperable).
+     - Emisión e impresión de comprobantes de venta válidos (tickets térmicos y facturas) con descuento automático de inventario.
+
+4. **Personal de Logística y Almacén:**
+   - Descripción y Rol: Operadores de bodega y centros de distribución responsables de la recepción de mercadería y el despacho de pedidos.
+   - Responsabilidades Clave:
+     - Recepción física y control de calidad de lotes textiles enviados por proveedores.
+     - Registro minucioso del costo unitario neto de adquisición del lote para alimentar el recálculo automático del Costo Promedio Ponderado (CPP).
+     - Embalaje, etiquetado y preparación de órdenes de venta digital destinadas a entrega a domicilio (Delivery).
+     - Asignación de paquetes a transportistas y registro de hojas de ruta para última milla.
+
+### 1.1.2 Actores Externos (Usuarios y Sistemas Cooperantes)
+
+Representan a las personas ajenas a la nómina de la empresa y a los servicios informáticos de terceros que interactúan mediante interfaces de usuario o protocolos de comunicación en red (APIs REST, Webhooks y pasarelas):
+
+1. **Cliente Final (Consumidor Masculino):**
+   - Descripción y Rol: Usuario final y comprador de la plataforma, que interactúa a través de la aplicación móvil (Flutter) o el portal web público (Angular).
+   - Responsabilidades Clave:
+     - Auto-registro de cuenta de usuario, inicio de sesión seguro y gestión de perfil personal.
+     - Consulta y filtrado multidimensional del catálogo de prendas masculinas por categoría, talla, color, precio y sucursal.
+     - Proyección virtual de prendas sobre su silueta mediante el Vestidor Virtual con Realidad Aumentada (RA).
+     - Solicitud de reservas anticipadas de prendas para acudir presencialmente a probarlas en la sucursal de su elección.
+     - Formalización de compras digitales mediante carrito de compras omnicanal y pago electrónico seguro.
+     - Acumulación y canje de puntos de fidelización dentro del programa gamificado y recepción de recomendaciones por IA.
+
+2. **Proveedor Textil:**
+   - Descripción y Rol: Empresa fabricante o comercializadora que suministra indumentaria masculina a la cadena FashionStore.
+   - Responsabilidades Clave:
+     - Recepción y confirmación de órdenes de compra emitidas por la administración.
+     - Suministro de lotes de prendas asociados a colecciones y temporadas comerciales específicas.
+     - Envío de notas de entrega y fichas técnicas de composición textil y cuidado de prendas.
+
+3. **Pasarela de Pagos Electrónicos (Stripe / PayPal / Libélula):**
+   - Descripción y Rol: Sistema bancario y tecnológico externo que procesa transacciones monetarias digitales bajo estrictos estándares de seguridad financiera (PCI-DSS).
+   - Responsabilidades Clave:
+     - Captura segura y tokenización de números de tarjetas de débito/crédito, impidiendo que datos sensibles toquen los servidores de FashionStore.
+     - Validación de fondos, autenticación del titular mediante protocolo 3D Secure 2.0 y prevención de fraudes.
+     - Confirmación o rechazo síncrono de transacciones y emisión de notificaciones asíncronas vía Webhooks hacia el backend FastAPI.
+
+4. **Servicio de Inteligencia Artificial (OpenAI API / Gemini API):**
+   - Descripción y Rol: Motor cognitivo en la nube que actúa como asistente de estilo personalizado y procesador de lenguaje natural.
+   - Responsabilidades Clave:
+     - Análisis de preferencias de estilo, paletas de colorimetría y compras previas del usuario.
+     - Síntesis de condiciones de contexto (temperatura y clima local) para sugerir combinaciones coherentes de ropa masculina.
+     - Procesamiento semántico de consultas del catálogo y comandos verbales de búsqueda por voz.
+
+5. **Servicio Meteorológico Externo (OpenWeatherMap API):**
+   - Descripción y Rol: Proveedor telemático en la nube de información climática en tiempo real.
+   - Responsabilidades Clave:
+     - Provisión continua de variables meteorológicas (temperatura en grados Celsius, estado del cielo, nivel de precipitaciones y humedad) de la ciudad donde se ubica el cliente.
+     - Entrega de datos para que el motor de IA adapte dinámicamente las recomendaciones de vestimenta (ej. sugiriendo gabardinas o suéteres ante frentes fríos).
+
+6. **Empresa de Delivery / Repartidor de Última Milla:**
+   - Descripción y Rol: Agente logístico urbano (como Yaigo, Yummy, PedidosYa o flota interna de repartidores) encargado del traslado físico del producto.
+   - Responsabilidades Clave:
+     - Recolección física del paquete empaquetado en la sucursal de despacho asignada.
+     - Transporte seguro hacia el domicilio georreferenciado del cliente.
+     - Confirmación de la entrega efectiva mediante captura de firma digital o validación del código OTP proporcionado por el comprador.
+
+A partir del análisis exhaustivo del modelo de negocio y las necesidades operativas de FashionStore, se identifican formalmente los Casos de Uso que componen el sistema, vinculados con los actores que interactúan con cada servicio:
+
+### 1.1.3 Lista de casos de uso
+
+| Código CU | Nombre del Caso de Uso | Módulo Asociado | Actor(es) Principal(es) | Descripción Resumida |
+|-----------|------------------------|-----------------|------------------------|---------------------|
+| CU01 | Autenticar Usuario y Control de Acceso (RBAC) | M01 | Administrador, Encargado, Cajero, Logística, Cliente | Inicio de sesión seguro con credenciales hash bcrypt, emisión de tokens JWT, control granular de roles y auditoría de accesos. |
+| CU02 | Registrar Cliente (Auto-registro de Clientes) | M01 | Cliente no autenticado | Creación de cuenta de cliente por autoservicio en web/móvil con validación de contraseña segura, hash bcrypt y bienvenida. |
+| CU03 | Recuperar Contraseña (Token OTP de 6 Dígitos) | M01 | Usuario (Cualquier Rol) | Restablecimiento autoservicio de contraseña olvidada mediante envío y validación de código OTP temporal de 6 dígitos vía correo electrónico. |
+| CU04 | Gestionar Usuarios y Roles (RBAC y Desbloqueo) | M01 | Administrador General | Administración de personal interno, asignación de roles jerárquicos, asignación a sucursal y desbloqueo de cuentas bloqueadas por intentos. |
+| CU05 | Gestionar Ciudades y Sucursales | M02 | Administrador General | Administración geográfica y operativa de ciudades, sucursales físicas, georreferenciación GPS, horarios y capacidades de probadores. |
+| CU06 | Gestionar Productos y Atributos de Moda | M03 | Administrador General | CRUD de prendas de vestir masculinas, categorías, marcas, tallas normalizadas y colores multivaluados con código Hex. |
+| CU07 | Gestionar Temporadas y Colecciones | M04 | Administrador General | Calendarización y administración de campañas estacionales (Primavera-Verano, Otoño-Invierno, Escolar, Promociones). |
+| CU08 | Gestionar Proveedores Textiles | M05 | Administrador General, Logística | Registro y administración de empresas proveedoras, condiciones de pago, líneas de prendas y contratos de aprovisionamiento. |
+| CU09 | Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP) | M06 | Personal de Logística, Encargado Sucursal | Control de existencias por sucursal, registro de entradas con último costo unitario y recálculo matemático del Costo Promedio Ponderado (CPP). |
+| CU10 | Consultar Catálogo y Disponibilidad por Sucursal | M07 | Cliente, Encargado de Sucursal, Cajero | Exploración del catálogo omnicanal con filtros multidimensionales y consulta de existencias en tiempo real por tienda física. |
+| CU11 | Solicitar Reserva de Prendas en Sucursal | M10 | Cliente | Preselección de prendas, selección de sucursal física, programación de fecha/hora de visita y generación de ticket QR. (Ciclo 2) |
+| CU12 | Preparar y Atender Reserva Presencial | M10 | Encargado de Sucursal | Apartado físico de prendas reservadas en probadores asignados y confirmación de llegada del cliente mediante escaneo de QR. (Ciclo 2) |
+| CU13 | Administrar Carrito de Compras Omnicanal | M11 | Cliente | Incorporación, edición y cálculo automático de totales con validación atómica de existencias. (Ciclo 2) |
+| CU14 | Procesar Compra Digital y Checkout | M12 | Cliente | Formalización de compra en línea con selección de modalidad de entrega (retiro en tienda o delivery) y facturación. (Ciclo 2) |
+| CU15 | Registrar Venta Presencial en Caja (POS) | M13 | Cajero de Sucursal | Registro de venta en mostrador físico, lectura de códigos de barras, conversión de reservas en ventas y emisión de tickets. (Ciclo 2) |
+| CU16 | Procesar Pago con Pasarela Electrónica | M14 | Pasarela Externa (Stripe/PayPal), Cliente | Ejecución segura de cobro digital con verificación 3D Secure y confirmación asíncrona mediante Webhooks. (Ciclo 2) |
+| CU17 | Gestionar Tipos y Medios de Cobro | M15 | Administrador, Cajero | Parametrización de pagos en efectivo, tarjeta de débito/crédito y Códigos QR interoperables del BCB. (Ciclo 2) |
+| CU18 | Gestionar Despacho y Logística de Delivery | M19 | Personal de Logística, Empresa Delivery | Cálculo de tarifas por Haversine y peso volumétrico, asignación de repartidores y rastreo de envíos en tiempo real. (Ciclo 2) |
+| CU19 | Visualizar Prenda en Vestidor Virtual con RA | M08 | Cliente Móvil | Proyección tridimensional de prendas sobre la silueta del cliente mediante la cámara del smartphone usando ARCore. (Ciclo 3) |
+| CU20 | Comparar Outfits Lado a Lado | M09 | Cliente | Contrastación visual interactiva de hasta 3 combinaciones de ropa con desglose de precios individuales y totales. (Ciclo 3) |
+| CU21 | Gestionar Fidelización Gamificada | M16 | Cliente, Motor de Gamificación | Acumulación de puntos por compras, progresión en niveles jerárquicos (Bronce a Diamante), desbloqueo de insignias y canje. (Ciclo 3) |
+| CU22 | Solicitar Recomendación Contextual de IA | M17 | Cliente, Servicio de IA | Sugerencia inteligente de outfits completos considerando clima meteorológico local (API OpenWeatherMap), colorimetría e historial. (Ciclo 3) |
+| CU23 | Buscar Productos por Comandos de Voz | M17 | Cliente Móvil, Servicio de IA | Consulta de catálogo y solicitudes en lenguaje natural mediante transcripción de voz y procesamiento semántico NLP. (Ciclo 3) |
+| CU24 | Visualizar Cuadros de Mando y Dashboards | M18 | Administrador General | Consulta de indicadores clave de negocio (KPIs), ventas por tienda, rotación de stock y rentabilidad de colecciones. (Ciclo 3) |
+
+---
+
+## 1.2 Priorización de Casos de Uso
+
+En consonancia con los principios del PUDS (mitigación temprana de riesgos arquitectónicos y entrega incremental de valor funcional), se establece la matriz de priorización multidimensional que define la asignación de Casos de Uso por cada ciclo de desarrollo:
+
+| Código CU | Nombre del Caso de Uso | Prioridad | Dependencias Previas | Asignación Iterativa |
+|-----------|------------------------|-----------|---------------------|---------------------|
+| CU01 | Autenticar Usuario y Control de Acceso (RBAC) | Media | Ninguna | (Ciclo 1) |
+| CU02 | Registrar Cliente (Auto-registro de Clientes) | Media | Ninguna | (Ciclo 1) |
+| CU03 | Recuperar Contraseña (Token OTP de 6 Dígitos) | Media | CU01, CU02 | (Ciclo 1) |
+| CU04 | Gestionar Usuarios y Roles (RBAC y Desbloqueo) | Media | CU01 | (Ciclo 1) |
+| CU05 | Gestionar Ciudades y Sucursales | Baja | CU01 | (Ciclo 1) |
+| CU06 | Gestionar Productos y Atributos de Moda | Media | CU01 | (Ciclo 1) |
+| CU07 | Gestionar Temporadas y Colecciones | Baja | CU01 | (Ciclo 1) |
+| CU08 | Gestionar Proveedores Textiles | Baja | CU01 | (Ciclo 1) |
+| CU09 | Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP) | Alta | CU05, CU06, CU08 | (Ciclo 1) |
+| CU10 | Consultar Catálogo y Disponibilidad por Sucursal | Media | CU05, CU06, CU09 | (Ciclo 1) |
+| CU11 | Solicitar Reserva de Prendas en Sucursal | Media | CU09, CU10 | (Ciclo 2) |
+| CU12 | Preparar y Atender Reserva Presencial | Media | CU11 | (Ciclo 2) |
+| CU13 | Administrar Carrito de Compras Omnicanal | Media | CU09, CU10 | (Ciclo 2) |
+| CU14 | Procesar Compra Digital y Checkout | Alta | CU13, CU16 | (Ciclo 2) |
+| CU15 | Registrar Venta Presencial en Caja (POS) | Alta | CU09, CU10, CU17 | (Ciclo 2) |
+| CU16 | Procesar Pago con Pasarela Electrónica | Alta | CU14 | (Ciclo 2) |
+| CU17 | Gestionar Tipos y Medios de Cobro | Media | CU15 | (Ciclo 2) |
+| CU18 | Gestionar Despacho y Logística de Delivery | Media | CU14 | (Ciclo 2) |
+| CU19 | Visualizar Prenda en Vestidor Virtual con RA | Alta | CU06, CU10 | (Ciclo 3) |
+| CU20 | Comparar Outfits Lado a Lado | Media | CU10 | (Ciclo 3) |
+| CU21 | Gestionar Fidelización Gamificada | Media | CU14, CU15 | (Ciclo 3) |
+| CU22 | Solicitar Recomendación Contextual de IA | Alta | CU10 | (Ciclo 3) |
+| CU23 | Buscar Productos por Comandos de Voz | Media | CU10, CU22 | (Ciclo 3) |
+| CU24 | Visualizar Cuadros de Mando y Dashboards | Media | CU09, CU14, CU15 | (Ciclo 3) |
+
+## 1.3 Detalle de Casos de Uso y Prototipado de Interfaz de Usuario
+
+Conforme a la estricta directriz de la cátedra expresada en clase, la especificación de cada caso de uso se organiza de manera uniforme bajo la siguiente secuencia obligatoria:
+
+1. Diseño del Caso de Uso en PlantUML (PlantText) con sus estereotipos y relaciones (<<include>>, <<extend>>, herencia).
+2. Prototipo de Interfaz de Usuario (UI Wireframe) detallado con todos sus componentes de pantalla, campos y acciones.
+3. Tabla Detalle del Caso de Uso conteniendo la especificación formal del escenario principal, alternos, precondiciones y postcondiciones.
+
+---
+
+### 1.3.1 Caso de Uso CU01: Autenticar Usuario y Control de Acceso (RBAC)
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU01_Autenticar_Usuario
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Usuario del Sistema" as Usuario
+
+rectangle "CU01: Autenticación y Control de Acceso RBAC" {
+  usecase "CU01: Autenticar\nUsuario\n(Login RBAC)" as CU01
+  usecase "Validar Credenciales\nHash Bcrypt" as UC_Validar
+  usecase "Generar Token JWT\ncon Rol Asignado" as UC_JWT
+  usecase "Registrar Bitácora\nde Accesos" as UC_Bitacora
+  usecase "Bloquear Cuenta\n(5 Intentos Fallidos)" as UC_Bloquear
+}
+
+Usuario --> CU01
+CU01 ..> UC_Validar : <<include>>
+CU01 ..> UC_JWT : <<include>>
+CU01 ..> UC_Bitacora : <<include>>
+CU01 ..> UC_Bloquear : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Pantalla de Login: Formulario con campos de correo electrónico registrado, contraseña (input tipo password), botón "Iniciar Sesión", enlace "¿Olvidaste tu contraseña?" y enlace "Registrarse". Validación visual de campos en tiempo real. Indicador de intentos restantes en caso de error. Redirección automática según rol (Dashboard para Administrador, POS para Cajero, Reservas para Encargado, Catálogo para Cliente).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU01 |
+| Nombre | Autenticar Usuario y Control de Acceso (RBAC) |
+| Actores | Administrador, Encargado de Sucursal, Cajero, Personal de Logística, Cliente. |
+| Propósito | Garantizar el acceso seguro, segregado y controlado a las funciones del sistema mediante credenciales válidas y expedición de tokens JWT firmados. |
+| Tipo | Primario / Esencial. |
+| Precondiciones | 1. El usuario debe poseer una cuenta previamente creada y activa (estado_cuenta = 'ACTIVO'). 2. El canal de comunicación debe encontrarse protegido bajo protocolo HTTPS/TLS. |
+| Postcondiciones | 1. Se emite un token de sesión JWT con los claims de identidad y rol del usuario. 2. Se actualiza el timestamp de ultimo_acceso y se restablece a 0 el contador de intentos fallidos. 3. Se registra el evento en la tabla bitacora_accesos con IP, fecha/hora y User-Agent. |
+| Flujo Principal | 1. El actor ingresa a la vista de login en la plataforma web o móvil. 2. El actor introduce su correo electrónico registrado y contraseña en texto plano. 3. El sistema valida el formato del correo y recupera el registro del usuario. 4. El sistema comprueba mediante el algoritmo bcrypt.verify si la contraseña coincide con el password_hash almacenado. 5. El sistema verifica que la cuenta no esté bloqueada ni inactiva. 6. El sistema genera el token JWT firmado con el rol correspondiente y tiempo de expiración. 7. El sistema registra el acceso exitoso en la bitácora de auditoría. 8. El sistema redirige al usuario a la vista principal según su perfil (Dashboard para Administrador, POS para Cajero, Reservas para Encargado, Catálogo para Cliente). |
+| Flujos Alternativos | **4a. Contraseña incorrecta:** 1. El sistema incrementa en 1 el campo intentos_fallidos. 2. Si intentos_fallidos >= 5, el sistema cambia estado_cuenta = 'BLOQUEADO_POR_INTENTOS', establece bloqueado_hasta = NOW() + INTERVAL '30 MIN' y registra alerta de seguridad. 3. El sistema muestra mensaje: "Credenciales inválidas. Le quedan X intentos antes del bloqueo." **5a. Cuenta bloqueada:** 1. El sistema rechaza la autenticación informando: "Cuenta bloqueada preventivamente. Restablezca su contraseña o contacte a soporte." |
+
+---
+
+### 1.3.2 Caso de Uso CU02: Registrar Cliente (Auto-registro de Clientes)
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU02_Registrar_Cliente
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Cliente No Autenticado" as Cliente
+
+rectangle "CU02: Auto-registro de Clientes" {
+  usecase "CU02: Registrarse\nen FashionStore\n(Sign Up)" as CU02
+  usecase "Validar Formato\nCorreo y Teléfono\nÚnico" as UC_Validar
+  usecase "Validar Robustez\nClave y Cifrar\ncon Bcrypt" as UC_Bcrypt
+  usecase "Enviar Correo de\nBienvenida" as UC_Correo
+}
+
+Cliente --> CU02
+CU02 ..> UC_Validar : <<include>>
+CU02 ..> UC_Bcrypt : <<include>>
+CU02 ..> UC_Correo : <<include>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Formulario modal de registro con campos: Nombres, Apellidos, Correo Electrónico, Teléfono, Contraseña (con indicador de fortaleza visual en tiempo real), Confirmación de Contraseña. Botón "Crear Mi Cuenta FashionStore". Validación de unicidad de correo en tiempo real. Reglas visibles de contraseña segura (mínimo 8 caracteres, al menos una mayúscula y un número).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU02 |
+| Nombre | Registrar Cliente (Auto-registro de Clientes) |
+| Actores | Cliente no autenticado (Visitante Web / Móvil). |
+| Propósito | Permitir que los nuevos clientes se auto-registren en la plataforma FashionStore para acceder al carrito, guardar preferencias, reservar probadores físicos y acumular puntos de fidelización. |
+| Tipo | Primario / Autoservicio. |
+| Precondiciones | El usuario debe encontrarse en la plataforma web o móvil sin sesión activa. |
+| Postcondiciones | 1. Se crea un registro en usuarios con rol CLIENTE y estado_cuenta = 'ACTIVO'. 2. Se encripta la contraseña mediante bcrypt (factor de costo 12). 3. Se expide automáticamente un token JWT y se envía un correo transaccional de bienvenida. |
+| Flujo Principal | 1. El visitante selecciona la opción "Registrarse" en la plataforma. 2. El sistema despliega el formulario de captura de datos personales y credenciales. 3. El cliente introduce nombres, apellidos, correo, teléfono y contraseña. 4. El sistema valida en tiempo real la fortaleza de la clave (mínimo 8 caracteres, al menos una mayúscula y un número). 5. El cliente presiona el botón "Crear Mi Cuenta FashionStore". 6. El sistema verifica que el correo electrónico no exista previamente en la base de datos. 7. El sistema aplica el hash seguro bcrypt sobre la contraseña ingresada. 8. El sistema persiste el usuario en la base de datos con rol CLIENTE e inicializa sus puntos de fidelización en 0. 9. El sistema dispara el envío asíncrono del correo de bienvenida. 10. El sistema inicia la sesión automáticamente expidiendo el token JWT y redirige al catálogo. |
+| Flujos Alternativos | **6a. Correo ya registrado:** 1. El sistema detecta duplicidad de correo electrónico. 2. El sistema muestra mensaje de error: "El correo electrónico ya se encuentra registrado. ¿Desea iniciar sesión o recuperar su contraseña?" con enlaces directos. **4a. Contraseña insegura:** 1. El sistema deshabilita el envío e indica visualmente las reglas faltantes en la contraseña. **3a. Contraseñas no coincidentes:** 1. El sistema advierte que los campos de confirmación no concuerdan e impide el envío. |
+
+---
+
+### 1.3.3 Caso de Uso CU03: Recuperar Contraseña (Token OTP de 6 Dígitos)
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU03_Recuperar_Contrasena
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Usuario del Sistema" as Usuario
+
+rectangle "CU03: Recuperación de Contraseña" {
+  usecase "CU03: Recuperar\nContraseña\n(Token OTP)" as CU03
+  usecase "Generar Código OTP\n(6 Dígitos - 15 min)" as UC_OTP
+  usecase "Enviar Correo con\nCódigo OTP" as UC_Correo
+  usecase "Validar OTP y\nActualizar Hash\nContraseña" as UC_Validar
+  usecase "Invalidar Token\ntras 3 Intentos\nErrados" as UC_Invalidar
+}
+
+Usuario --> CU03
+CU03 ..> UC_OTP : <<include>>
+CU03 ..> UC_Correo : <<include>>
+CU03 ..> UC_Validar : <<include>>
+CU03 ..> UC_Invalidar : <<extend>>
+@enduml
+```
+
+#### b) Prototipos de Interfaz de Usuario (UI Wireframe - Flujo de 2 Pantallas)
+
+**Pantalla 1 - Solicitud de Correo:** Campo de correo electrónico registrado, botón "Enviar Código de Recuperación". Mensaje informativo: "Ingrese su correo electrónico y le enviaremos un código de verificación de 6 dígitos."
+
+**Pantalla 2 - Verificación OTP y Nueva Clave:** Campo de código OTP de 6 dígitos, campo de nueva contraseña con indicador de fortaleza, campo de confirmación de nueva contraseña, botón "Restablecer Contraseña". Temporizador visual de 15 minutos de vigencia del código. Enlace "Solicitar nuevo código" en caso de expiración.
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU03 |
+| Nombre | Recuperar Contraseña (Token OTP de 6 Dígitos) |
+| Actores | Usuario del Sistema (Cliente, Administrador, Empleado). |
+| Propósito | Permitir a cualquier usuario restablecer de manera autoservicio su contraseña olvidada mediante la generación y validación de un código criptográfico temporal (OTP) enviado a su correo electrónico. |
+| Tipo | Secundario / Soporte y Seguridad. |
+| Precondiciones | 1. El usuario debe haber registrado previamente su cuenta con un correo electrónico válido. 2. El servicio SMTP/transaccional debe encontrarse operativo. |
+| Postcondiciones | 1. Se genera un código OTP numérico aleatorio de 6 dígitos con expiración de 15 minutos en tokens_recuperacion. 2. Tras la validación, se actualiza el password_hash del usuario en usuarios y se inhabilita el token OTP. 3. Si la cuenta estaba bloqueada por intentos fallidos, se desbloquea automáticamente (estado_cuenta = 'ACTIVO', intentos_fallidos = 0). |
+| Flujo Principal | 1. El usuario presiona "¿Olvidaste tu contraseña?" en la pantalla de autenticación. 2. El sistema despliega la pantalla de solicitud de correo. 3. El usuario ingresa su correo electrónico y presiona "Enviar Código de Recuperación". 4. El sistema busca el correo en la base de datos. 5. El sistema genera un código numérico aleatorio criptoseguro de 6 dígitos con fecha de expiración fijada a NOW() + 15 MIN. 6. El sistema almacena el hash del OTP en tokens_recuperacion y despacha el correo electrónico con el código. 7. El sistema redirige a la pantalla de verificación de código OTP y nueva clave. 8. El usuario introduce el código OTP recibido y digita su nueva contraseña con confirmación. 9. El sistema valida que el OTP coincida, no haya expirado y no haya sido utilizado previamente. 10. El sistema cifra la nueva contraseña con bcrypt (factor 12) y actualiza el registro en usuarios. 11. El sistema marca el token OTP como utilizado (utilizado = true), limpia los contadores de intentos fallidos y desbloquea la cuenta. 12. El sistema muestra mensaje de confirmación: "Contraseña actualizada exitosamente" y redirige al login. |
+| Flujos Alternativos | **4a. Correo no registrado:** 1. Por directriz de seguridad contra enumeración de cuentas (OWASP), el sistema responde genéricamente: "Si el correo ingresado se encuentra registrado, le hemos enviado el código de verificación", sin revelar la inexistencia del usuario. **9a. Código OTP erróneo:** 1. El sistema incrementa el contador de fallos del token. 2. Si supera 3 intentos errados, el token se invalida permanentemente y se exige solicitar uno nuevo. **9b. Código OTP expirado (más de 15 minutos):** 1. El sistema informa: "El código OTP ha expirado. Por favor solicite un nuevo código." |
+
+---
+
+### 1.3.4 Caso de Uso CU04: Gestionar Usuarios y Roles (RBAC y Desbloqueo)
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU04_Gestionar_Usuarios
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Administrador General" as Admin
+
+rectangle "CU04: Gestión de Usuarios y Roles RBAC" {
+  usecase "CU04: Gestionar\nUsuarios y Roles\n(RBAC)" as CU04
+  usecase "Registrar Empleado\n(Encargado/Cajero/Logística)" as UC_Registrar
+  usecase "Asignar Rol y\nSucursal de Trabajo" as UC_Asignar
+  usecase "Desbloquear Cuenta\nBloqueada por Fallos" as UC_Desbloquear
+  usecase "Inactivar / Dar de\nBaja Cuenta de Usuario" as UC_Inactivar
+}
+
+Admin --> CU04
+CU04 ..> UC_Registrar : <<extend>>
+UC_Registrar ..> UC_Asignar : <<include>>
+CU04 ..> UC_Desbloquear : <<extend>>
+CU04 ..> UC_Inactivar : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Panel administrativo con tabla paginada de usuarios mostrando columnas: Nombre, Email, Rol, Sucursal Asignada, Estado de Cuenta (badge de color: verde ACTIVO, rojo BLOQUEADO, gris INACTIVO). Botón "+ Crear nuevo colaborador". Acciones por fila: Editar, Desbloquear (visible solo para cuentas bloqueadas), Inactivar. Formulario modal para creación/edición con: campos de datos personales, selector de rol jerárquico (ADMINISTRADOR, ENCARGADO_SUCURSAL, CAJERO, LOGISTICA), selector de sucursal física.
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU04 |
+| Nombre | Gestionar Usuarios y Roles (RBAC y Desbloqueo) |
+| Actores | Administrador General. |
+| Propósito | Gestionar los usuarios internos de la organización, asignar sus roles y sucursales físicas de desempeño, regular sus privilegios y realizar tareas de mantenimiento operativo (como el desbloqueo de cuentas bloqueadas por intentos fallidos). |
+| Tipo | Primario / Administrativo. |
+| Precondiciones | El usuario debe estar autenticado con rol ADMINISTRADOR. |
+| Postcondiciones | Se persisten las modificaciones en la tabla usuarios y se asienta el registro de auditoría en bitacora_accesos. |
+| Flujo Principal | 1. El Administrador accede a la opción "Usuarios y Roles" del menú administrativo. 2. El sistema recupera la lista paginada de usuarios con sus roles y sucursales. 3. El Administrador selecciona "Nuevo Empleado" o hace clic en "Editar" sobre un usuario existente. 4. El sistema presenta el formulario modal con los campos de perfil, selector de rol jerárquico y selector de sucursal física. 5. El Administrador asigna el rol correspondiente (ADMINISTRADOR, ENCARGADO_SUCURSAL, CAJERO, LOGISTICA) y vincula la sucursal. 6. El Administrador presiona "Guardar Cambios". 7. El sistema valida los datos y persiste las modificaciones en la base de datos. 8. El sistema notifica la confirmación de la operación. |
+| Flujos Alternativos | **3a. Desbloqueo de cuenta bloqueada por 5 intentos:** 1. El Administrador visualiza el badge de estado [BLOQ!] en el usuario. 2. El Administrador presiona el botón directo "Desbloquear". 3. El sistema resetea intentos_fallidos = 0, establece estado_cuenta = 'ACTIVO' y elimina la marca de tiempo bloqueado_hasta. 4. El sistema emite mensaje: "Cuenta desbloqueada exitosamente. El usuario ya puede iniciar sesión." **3b. Baja / Inactivación de empleado:** 1. El Administrador selecciona cambiar estado a INACTIVO. 2. El sistema revoca de inmediato todos los tokens JWT emitidos para dicho usuario. |
+
+---
+
+### 1.3.5 Caso de Uso CU05: Gestionar Ciudades y Sucursales
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU05_Gestionar_Sucursales
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Administrador General" as Admin
+
+rectangle "CU05: Gestión de Ciudades y Sucursales" {
+  usecase "CU05: Gestionar\nCiudades y\nSucursales" as CU05
+  usecase "Registrar Nueva Sucursal\ncon Coordenadas GPS" as UC_Registrar
+  usecase "Parametrizar Capacidad\nde Probadores Físicos" as UC_Probadores
+  usecase "Actualizar Estado\nOperativo de Sucursal" as UC_Estado
+}
+
+Admin --> CU05
+CU05 ..> UC_Registrar : <<extend>>
+UC_Registrar ..> UC_Probadores : <<include>>
+CU05 ..> UC_Estado : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Panel de gestión de sucursales con listado tabulado de tiendas físicas activas mostrando: Ciudad, Nombre Sucursal, Dirección, Coordenadas GPS, Probadores, Estado. Botón "+ Registrar Nueva Sucursal". Formulario modal de creación/edición con: selector de ciudad, nombre comercial, dirección física, latitud, longitud, mapa interactivo con pin arrastrable, horario de apertura/cierre, capacidad de probadores (input numérico), selector de Encargado de Sucursal responsable, estado operativo (OPERATIVA, EN_MANTENIMIENTO, CERRADA_TEMPORALMENTE).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU05 |
+| Nombre | Gestionar Ciudades y Sucursales |
+| Actores | Administrador General. |
+| Propósito | Crear, configurar, actualizar y georreferenciar las ciudades y sucursales físicas habilitadas para la venta presencial, almacenamiento de existencias y reservas de probadores. |
+| Tipo | Secundario / Gestión Operativa. |
+| Precondiciones | 1. El actor debe haberse autenticado exitosamente como Administrador General. 2. La ciudad de radicación debe encontrarse dada de alta en el sistema. |
+| Postcondiciones | 1. La sucursal queda registrada en la base de datos con coordenadas geodésicas válidas. 2. La sucursal queda habilitada como nodo geográfico para asignación de inventario y reservas. |
+| Flujo Principal | 1. El Administrador accede al panel de "Gestión de Sucursales". 2. El sistema lista las sucursales existentes con sus métricas clave. 3. El Administrador pulsa en "Registrar Nueva Sucursal". 4. El Administrador completa: ciudad, nombre comercial, dirección, coordenadas GPS, horarios de apertura/cierre y capacidad de probadores. 5. El Administrador asigna al Encargado de Sucursal responsable. 6. El sistema valida consistencia de datos y unicidad del nombre en la ciudad. 7. El sistema persiste la sucursal y notifica confirmación en pantalla. |
+| Flujos Alternativos | **6a. Coordenadas fuera de rango:** El sistema notifica error de latitud/longitud e invita a seleccionar el punto en el mapa interactivo. **6b. Encargado ya asignado:** El sistema advierte que el usuario ya es titular en otra tienda y solicita confirmación de reasignación. |
+
+---
+
+### 1.3.6 Caso de Uso CU06: Gestionar Productos y Atributos de Moda
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU06_Gestionar_Productos
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Administrador General" as Admin
+
+rectangle "CU06: Gestión de Productos y Atributos de Moda" {
+  usecase "CU06: Gestionar\nProductos de\nModa Masculina" as CU06
+  usecase "Registrar Prenda con\nSKU Base Único" as UC_Registrar
+  usecase "Asociar Paleta de\nColores Multivaluados\n(HEX)" as UC_Colores
+  usecase "Asignar Rango de\nTallas Disponibles" as UC_Tallas
+  usecase "Vincular Modelo 3D\n(GLB) para Vestidor RA" as UC_3D
+}
+
+Admin --> CU06
+CU06 ..> UC_Registrar : <<extend>>
+UC_Registrar ..> UC_Colores : <<include>>
+UC_Registrar ..> UC_Tallas : <<include>>
+CU06 ..> UC_3D : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Panel de productos con grilla de tarjetas mostrando: miniatura de imagen, SKU, nombre, precio, variantes de tallas y colores. Botón "+ Crear Nueva Prenda". Modal de creación con pestañas: Datos Generales (SKU base, nombre comercial, descripción, precio de venta base, categoría, marca, estado de publicación) y Variantes (selector múltiple de tallas [S, M, L, XL, XXL, 38, 40, 42], tabla de colores con input de nombre comercial + selector de código hexadecimal con previsualización). Zona de carga de imágenes en alta definición (frontal, dorsal, detalle) y archivo de modelo 3D (.glb/.gltf).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU06 |
+| Nombre | Gestionar Productos y Atributos de Moda |
+| Actores | Administrador General. |
+| Propósito | Registrar y actualizar prendas de vestir masculinas con sus especificaciones técnicas, variantes de tallas, colores multivaluados con código visual y recursos multimedia para el vestidor virtual. |
+| Tipo | Primario. |
+| Precondiciones | La categoría y marca deben encontrarse registradas previamente en el sistema. |
+| Postcondiciones | 1. El producto queda guardado con su código SKU base único. 2. Se generan las matrices relacionales de variantes (combinación producto-talla-color). 3. Las variantes quedan preparadas para recibir stock en el módulo de inventario. |
+| Flujo Principal | 1. El Administrador accede al panel de productos y presiona "Registrar Nueva Prenda". 2. El sistema despliega el formulario con los campos taxonómicos. 3. El Administrador introduce el código SKU base, nombre comercial, descripción y precio de venta base. 4. El Administrador selecciona la categoría textil y la marca. 5. El Administrador tilda las tallas disponibles para el modelo. 6. El Administrador agrega la paleta de colores multivaluados indicando nombre comercial y código hexadecimal. 7. El Administrador sube las imágenes en alta definición y el modelo 3D (.glb). 8. El sistema valida la integridad de los datos y no duplicidad de SKU. 9. El sistema persiste el producto y sus variantes relacionales. |
+| Flujos Alternativos | **8a. SKU duplicado:** El sistema rechaza la operación e indica que el código ya pertenece a otro artículo. **8b. Archivo 3D inválido:** El sistema valida la cabecera del archivo binario y rechaza formatos distintos a .glb / .gltf. |
+
+---
+
+### 1.3.7 Caso de Uso CU07: Gestionar Temporadas y Colecciones
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU07_Gestionar_Temporadas
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Administrador General" as Admin
+
+rectangle "CU07: Gestión de Temporadas y Colecciones" {
+  usecase "CU07: Gestionar\nTemporadas y\nColecciones" as CU07
+  usecase "Asociar Prendas a la\nTemporada Comercial" as UC_Asociar
+  usecase "Definir Campaña\nEstacional (Fechas\nInicio y Fin)" as UC_Campana
+  usecase "Activar Liquidación y\nDescuentos de Campaña" as UC_Liquidacion
+}
+
+Admin --> CU07
+CU07 ..> UC_Asociar : <<extend>>
+UC_Asociar ..> UC_Campana : <<include>>
+CU07 ..> UC_Liquidacion : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Panel de temporadas con listado organizado por estado (Vigente, Próxima, Cerrada). Botón "+ Nueva Campaña Estacional". Modal de registro con: código de campaña, denominación, fecha de inicio, fecha de fin, descripción de línea conceptual, descuento de liquidación sugerido (%), estado (PLANIFICADA, VIGENTE, EN_LIQUIDACION, FINALIZADA). Sección de asociación de productos con selector múltiple de categorías y prendas.
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU07 |
+| Nombre | Gestionar Temporadas y Colecciones |
+| Actores | Administrador General. |
+| Propósito | Crear y estructurar temporadas comerciales anuales, vinculando lotes de prendas para análisis estacional de rotación y reglas de IA contextual. |
+| Tipo | Secundario. |
+| Precondiciones | El usuario debe poseer privilegios de Administrador. |
+| Postcondiciones | Las prendas asociadas adquieren el identificador de temporada para alimentar los filtros del catálogo y el motor de IA. |
+| Flujo Principal | 1. El Administrador accede al panel de "Temporadas y Colecciones". 2. El sistema muestra la lista de temporadas vigentes y concluidas. 3. El Administrador ingresa código, nombre y rango de fechas de inicio y fin. 4. El Administrador selecciona las categorías y productos que pertenecerán a la colección. 5. El sistema valida que la fecha de fin sea posterior a la de inicio. 6. El sistema actualiza la vinculación y recalcula el catálogo público. |
+| Flujos Alternativos | **5a. Fechas inconsistentes:** El sistema emite alerta: "La fecha de cierre debe ser posterior a la fecha de inicio de la temporada." |
+
+---
+
+### 1.3.8 Caso de Uso CU08: Gestionar Proveedores Textiles
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU08_Gestionar_Proveedores
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Administrador / Logística" as Admin
+
+rectangle "CU08: Gestión de Proveedores Textiles" {
+  usecase "CU08: Gestionar\nProveedores" as CU08
+  usecase "Vincular Líneas\nTextiles y Términos\nComerciales" as UC_Vincular
+  usecase "Registrar Proveedor\ncon NIT Único" as UC_Registrar
+  usecase "Consultar Historial\nde Abastecimiento" as UC_Historial
+}
+
+Admin --> CU08
+CU08 ..> UC_Vincular : <<extend>>
+UC_Vincular ..> UC_Registrar : <<include>>
+CU08 ..> UC_Historial : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Directorio de proveedores en formato tabla con columnas: NIT, Razón Social, Contacto, Teléfono, Email, Términos de Pago, Estado. Botón "+ Registrar Proveedor". Modal de registro con: NIT (validación numérica obligatoria y unicidad), Razón Social, Nombre del contacto, teléfono, email, dirección sede, términos de pago (selector: CONTADO, CREDITO_30_DIAS, CREDITO_60_DIAS, CONSIGNACION), estado (ACTIVO, INACTIVO, OBSERVADO).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU08 |
+| Nombre | Gestionar Proveedores Textiles |
+| Actores | Administrador General, Personal de Logística. |
+| Propósito | Administrar el catálogo de proveedores que abastecen mercadería textil a FashionStore para sustentar las órdenes de compra y el ingreso a almacén. |
+| Tipo | Secundario / Soporte. |
+| Precondiciones | Usuario con rol Administrador o Logística autenticado. |
+| Postcondiciones | El proveedor queda disponible para ser seleccionado en los registros de compra y entrada de inventario. |
+| Flujo Principal | 1. El usuario accede al menú de "Proveedores". 2. El sistema lista los proveedores activos. 3. El usuario pulsa "Registrar Proveedor" e ingresa NIT, Razón Social, teléfono, email y términos de pago. 4. El sistema valida que el NIT no exista previamente. 5. El sistema registra el proveedor y muestra mensaje de éxito. |
+| Flujos Alternativos | **4a. NIT duplicado:** El sistema notifica: "El NIT ingresado ya se encuentra registrado con la razón social X." |
+
+---
+
+### 1.3.9 Caso de Uso CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP)
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU09_Gestionar_Inventario
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Personal de Logística\n/ Encargado" as Logistica
+
+rectangle "CU09: Gestión de Inventario Multi-Sucursal" {
+  usecase "CU09: Gestionar\nInventario\nMulti-Sucursal" as CU09
+  usecase "Registrar Entrada\nde Lote por Compra" as UC_Entrada
+  usecase "Calcular Costo\nPromedio Ponderado\n(CPP)" as UC_CPP
+  usecase "Guardar Último Costo\nUnitario de Compra" as UC_Ultimo
+  usecase "Consultar Existencias\ny Kardex de Sucursal" as UC_Consultar
+  usecase "Alertar Quiebre\nde Stock\n(Stock < Mínimo)" as UC_Alerta
+}
+
+Logistica --> CU09
+CU09 ..> UC_Entrada : <<extend>>
+UC_Entrada ..> UC_CPP : <<include>>
+UC_Entrada ..> UC_Ultimo : <<include>>
+CU09 ..> UC_Consultar : <<extend>>
+CU09 ..> UC_Alerta : <<extend>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Panel de inventario con selector de sucursal. Tabla de existencias mostrando: Producto, SKU, Talla, Color, Stock Físico, Stock Reservado, Stock Disponible, Último Costo, CPP. Botón "+ Registrar Entrada por Compra". Modal de ingreso de lote con: selector de sucursal receptora, selector de proveedor, selector de producto/talla/color, cantidad del lote, costo unitario de adquisición. Previsualización del recálculo del CPP antes de confirmar. Sección de Kardex con historial inmutable de movimientos.
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU09 |
+| Nombre | Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP) |
+| Actores | Personal de Logística, Encargado de Sucursal. |
+| Propósito | Registrar ingresos de mercadería, controlar existencias físicas y disponibles por tienda, almacenar el último costo unitario y recalcular matemáticamente el Costo Promedio Ponderado para fines de valuación patrimonial y márgenes reales. |
+| Tipo | Crítico / Núcleo Transaccional. |
+| Precondiciones | El producto, talla, color, sucursal y proveedor deben existir en la base de datos. |
+| Postcondiciones | 1. Se incrementa el stock físico y disponible de la variante en la sucursal. 2. Se asienta el último costo de compra. 3. Se actualiza el CPP. 4. Se registra el asiento inmutable en el Kardex de inventario. |
+| Flujo Principal | 1. El usuario de Logística selecciona "Registrar Entrada de Mercadería". 2. Elige la sucursal receptora, el proveedor y el producto específico con su talla y color. 3. Ingresa la cantidad física del lote recibido y el costo unitario de adquisición de la factura. 4. El sistema recupera el stock actual y el CPP anterior de la variante en esa sucursal. 5. El sistema aplica la fórmula estandarizada: CPP_nuevo = (Stock_ant × CPP_ant + Cantidad_lote × Costo_lote) / (Stock_ant + Cantidad_lote). 6. El sistema muestra el recálculo al usuario para verificación. 7. El usuario confirma el asiento. 8. El sistema ejecuta una transacción ACID: actualiza tabla inventario y añade fila en kardex_movimientos. |
+| Flujos Alternativos | **3a. Costo o cantidad cero/negativo:** El sistema bloquea el registro exigiendo valores estrictamente mayores a cero. |
+
+---
+
+### 1.3.10 Caso de Uso CU10: Consultar Catálogo y Disponibilidad por Sucursal
+
+#### a) Diseño del Caso de Uso (PlantUML)
+
+```plantuml
+@startuml CU10_Consultar_Catalogo
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Cliente (Web/Móvil)" as Cliente
+actor "Encargado de Tienda" as Encargado
+
+rectangle "CU10: Consulta de Catálogo y Disponibilidad" {
+  usecase "CU10: Consultar\nCatálogo y\nDisponibilidad" as CU10
+  usecase "Filtrar por Talla,\nColor, Temporada\ny Precio" as UC_Filtrar
+  usecase "Verificar Stock en\nTiempo Real por\nSucursal" as UC_Stock
+  usecase "Visualizar Ficha\nTécnica y Galería\nde Fotos" as UC_Ficha
+}
+
+Cliente --> CU10
+Encargado --> CU10
+CU10 ..> UC_Filtrar : <<include>>
+CU10 ..> UC_Stock : <<include>>
+CU10 ..> UC_Ficha : <<include>>
+@enduml
+```
+
+#### b) Prototipo de Interfaz de Usuario (UI Wireframe)
+
+Galería de prendas masculinas con tarjetas de producto (imagen, nombre, precio, badges de disponibilidad). Barra lateral de filtros: Categoría, Rango de Precios, Talla (checkboxes), Color (swatches hexadecimales), Temporada, Marca, Ciudad y Sucursal. Paginación optimizada e infinite scroll. Ficha detallada de prenda con: galería multimedia, selector de talla y color, guía de tallas anatómicas masculinas, bloque de disponibilidad por sucursal con desglose (stock físico, stock reservado, stock disponible), botones de acción (Probar en RA, Reservar para prueba presencial, Añadir al carrito).
+
+#### c) Tabla Detalle del Caso de Uso
+
+| Atributo | Detalle de la Especificación |
+|----------|------------------------------|
+| Identificador | CU10 |
+| Nombre | Consultar Catálogo y Disponibilidad por Sucursal |
+| Actores | Cliente (Web y Móvil), Encargado de Sucursal, Cajero. |
+| Propósito | Permitir a los usuarios explorar las prendas, aplicar filtros cruzados y conocer con absoluta precisión en qué sucursales físicas existe stock de su talla y color elegido. |
+| Tipo | Primario / Omnicanal. |
+| Precondiciones | La plataforma web o app móvil debe tener acceso a la API pública de catálogo. |
+| Postcondiciones | El cliente obtiene la lista de prendas con stock disponible en tiempo real para proceder a la reserva o compra digital. |
+| Flujo Principal | 1. El usuario accede al catálogo de FashionStore. 2. El sistema recupera y pagina las prendas publicadas con sus imágenes y variantes. 3. El usuario aplica filtros (ej. Talla M, Color Azul, Sucursal Equipetrol). 4. El sistema ejecuta una consulta indexada y devuelve las prendas coincidentes con su stock por tienda. 5. El usuario selecciona una prenda para ver su ficha técnica completa y guía de medidas. 6. El sistema presenta opciones de acción (Probar en RA, Reservar para prueba presencial, o Añadir al carrito). |
+| Flujos Alternativos | **4a. Sin stock en la sucursal seleccionada:** El sistema muestra la etiqueta "Agotado en esta sucursal" y resalta inmediatamente en cuáles otras tiendas de la ciudad sí existe stock disponible. |
+
+---
+
+## 1.4 Estructurar Modelo de Casos de Uso
+
+A fin de organizar modularmente los requerimientos del Ciclo 1 y evidenciar la cohesión funcional del software, se estructura el modelo de casos de uso organizado en Paquetes de Casos de Uso:
+
+```plantuml
+@startuml Estructurar_Caso_de_Uso
+left to right direction
+skinparam usecase {
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
+}
+
+actor "Usuario del Sistema" as Usuario
+actor "Cliente No Autenticado" as ClienteNA
+actor "Administrador General" as Admin
+actor "Administrador / Logística" as AdminLog
+actor "Personal de Logística\n/ Encargado" as Logistica
+actor "Cliente (Web/Móvil)" as Cliente
+actor "Encargado de Tienda" as Encargado
+
+usecase "CU01: Autenticar\nUsuario\n(Login RBAC)" as CU01
+usecase "CU02: Registrarse\nen FashionStore\n(Sign Up)" as CU02
+usecase "CU03: Recuperar\nContraseña\n(Token OTP)" as CU03
+usecase "CU04: Gestionar\nUsuarios y Roles\n(RBAC)" as CU04
+usecase "CU05: Gestionar\nCiudades y\nSucursales" as CU05
+usecase "CU06: Gestionar\nProductos de\nModa Masculina" as CU06
+usecase "CU07: Gestionar\nTemporadas\ny Colecciones" as CU07
+usecase "CU08: Gestionar\nProveedores" as CU08
+usecase "CU09: Gestionar\nInventario\nMulti-Sucursal" as CU09
+usecase "CU10: Consultar\nCatálogo y\nDisponibilidad" as CU10
+
+Usuario --> CU01
+Usuario --> CU03
+ClienteNA --> CU02
+Admin --> CU04
+Admin --> CU05
+Admin --> CU06
+Admin --> CU07
+AdminLog --> CU08
+Logistica --> CU09
+Cliente --> CU10
+Encargado --> CU10
+@enduml
+```
+
+---
+
+# 2. Flujo de Trabajo: Análisis
+
+## 2.1 Análisis de Arquitectura
+
+El análisis arquitectónico del Ciclo 1 descompone el sistema en subsistemas y paquetes de análisis de alto nivel, formalizando la relación estricta entre paquetes y los 10 Casos de Uso desarrollados, aplicando los estereotipos de robustez de Ivar Jacobson:
+
+- **Clases de Interfaz (`<<boundary>>`):** Encargadas de la interacción y comunicación directa con los actores humanos y externos (formularios de entrada, pantallas interactivas y endpoints API REST). Poseen atributos de captura visual y métodos de interacción (eventos de usuario).
+- **Clases de Control (`<<control>>`):** Encargadas de orquestar la lógica de negocio, reglas algorítmicas, validaciones y transformaciones de dominio. Como subraya estrictamente la cátedra, las clases de control contienen exclusivamente métodos de negocio y NO poseen atributos propios, operando directamente sobre las entidades de datos.
+- **Clases de Entidad (`<<entity>>`):** Representan la información persistente y los conceptos transaccionales del dominio (tablas, campos y registros de PostgreSQL).
+
+### 2.1.1 Identificar Paquetes
+
+En esta etapa se identifican los 5 paquetes de análisis que componen el núcleo arquitectónico del Ciclo 1, especificando para cada uno el nombre del paquete y una descripción concisa de su propósito, responsabilidades y alcance funcional:
+
+- **Paquete 1: Seguridad y Acceso (RBAC)**
+  - Descripción: Gestiona el control de acceso, la autenticación criptográfica de credenciales mediante hashing Bcrypt, la emisión y validación de tokens de sesión JWT, el auto-registro de nuevos clientes, la recuperación autoservicio de contraseñas mediante códigos OTP de un solo uso y la administración integral de usuarios, roles y permisos del sistema.
+
+- **Paquete 2: Estructura Operativa (Sucursales)**
+  - Descripción: Administra la infraestructura física y geográfica de la cadena minorista, incluyendo ciudades operativas, sucursales físicas habilitadas, georreferenciación satelital GPS (latitud y longitud), horarios de atención y la parametrización de capacidad física de probadores para reservas presenciales.
+
+- **Paquete 3: Catálogo y Moda Masculina**
+  - Descripción: Centraliza la definición de prendas de vestir masculinas con atributos multivaluados normalizados (tallas estándar, códigos cromáticos hexadecimales HEX y nombres de color), la calendarización y gestión de temporadas comerciales (Spring-Summer / Fall-Winter) y la publicación omnicanal del catálogo de productos.
+
+- **Paquete 4: Aprovisionamiento y Proveedores**
+  - Descripción: Gestiona el directorio comercial de empresas proveedoras de textiles y confección masculina, la validación estricta de identificación tributaria (NIT único normalizado), los canales de contacto y los términos comerciales de suministro y condiciones de pago.
+
+- **Paquete 5: Inventario y Costos Ponderados (CPP)**
+  - Descripción: Controla las existencias físicas multi-sucursal en tiempo real, el registro de ingresos de lotes por compra, el recálculo matemático algorítmico del Costo Promedio Ponderado (CPP) ante cada entrada de mercadería y la generación inmutable de asientos de auditoría en el Kardex valorizado.
+
+### 2.1.2 Relacionar paquetes y casos de uso
+
+En esta sección se formaliza la relación estricta entre los 5 paquetes de análisis del Ciclo 1 y los 10 Casos de Uso implementados en esta primera iteración (CU01 al CU10), estableciendo la cohesión modular y el límite de responsabilidad funcional de cada subsistema:
+
+| Paquete de Análisis del Ciclo | Casos de Uso Contenidos | Actores Asociados | Justificación y Responsabilidad de Arquitectura |
+|-------------------------------|------------------------|-------------------|------------------------------------------------|
+| Paquete 1: Seguridad y Acceso (RBAC) | CU01: Autenticar Usuario (Login RBAC), CU02: Registrar Cliente (Sign Up), CU03: Recuperar Contraseña (OTP), CU04: Gestionar Usuarios y Roles | Usuario, Cliente, Administrador | Centraliza el control perimetral de acceso, autenticación criptográfica con Bcrypt, emisión de tokens JWT, alta autoservicio de clientes, recuperación con OTP de 6 dígitos y administración centralizada de cuentas de usuario y roles. |
+| Paquete 2: Estructura Operativa (Sucursales) | CU05: Gestionar Ciudades y Sucursales | Administrador General | Provee la estructura territorial multiciudad, parametrización de coordenadas GPS (latitud/longitud) para mapas digitales, control de horarios y aforo físico de probadores de ropa. |
+| Paquete 3: Catálogo y Moda Masculina | CU06: Gestionar Productos y Atributos, CU07: Gestionar Temporadas y Campañas, CU10: Consultar Catálogo y Disponibilidad | Administrador, Cliente, Encargado Sucursal | Gestiona las fichas técnicas de prendas para varón, atributos multivaluados normalizados (colores HEX y tallas), calendarización de temporadas comerciales (SS/FW) y catálogo público omnicanal con stock por sucursal. |
+| Paquete 4: Aprovisionamiento y Proveedores | CU08: Gestionar Proveedores Textiles | Administrador, Personal Logística | Administra el padrón de proveedores de confección textil, validación de NIT tributario único, información de contacto corporativo y términos comerciales de crédito y pago. |
+| Paquete 5: Inventario y Costos Ponderados (CPP) | CU09: Gestionar Inventario Multi-Sucursal | Personal Logística, Encargado Sucursal | Controla el stock físico de prendas distribuido en cada tienda, registro de ingresos por compra, recálculo algorítmico del Costo Promedio Ponderado (CPP) y registro inmutable en el Kardex valorizado. |
+
+Diagrama de paquetes y relación con casos de uso: (Ver diagrama en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 2.1.3 Vista de casos de uso
+
+En la metodología PUDS y el modelado arquitectónico UML, la Vista de Casos de Uso representa a los paquetes vistos desde su interior: el entorno/frontera exterior es el propio paquete contenedor y dentro de él residen los diagramas de casos de uso que dicho paquete contiene, junto con sus relaciones funcionales internas (<<include>>, <<extend>>) y la conexión con los Actores que interactúan con ellos desde fuera del paquete.
+
+A continuación, se presenta el diagrama consolidado de la Vista de Casos de Uso por Paquete: (Ver diagrama en Enterprise Architect - diagramas1erParcial.eapx)
+
+---
+
+## 2.2 Analizar Casos de Uso (Diagramas de Comunicación UML)
+
+A continuación se presentan los Diagramas de Comunicación UML para cada uno de los 10 Casos de Uso del Ciclo 1. Conforme a las directrices de la cátedra expresadas en clase, cada caso de uso se analiza de forma rigurosa modelando la colaboración entre la clase de interfaz (<<boundary>>), la clase de lógica (<<control>> sin atributos) y la clase de datos (<<entity>>), con mensajes numerados cronológicamente (1, 1.1, 1.2, etc.):
+
+### 2.2.1 Diagrama de Comunicación - CU01: Autenticar Usuario (RBAC)
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Usuario del Sistema → <<boundary>> FormularioLogin → <<control>> ControladorAutenticacion → <<entity>> Usuario / <<entity>> BitacoraAccesos.
+
+### 2.2.2 Diagrama de Comunicación - CU02: Registrar Cliente (Auto-registro)
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Cliente No Autenticado → <<boundary>> FormularioRegistro → <<control>> ControladorRegistro → <<entity>> Usuario.
+
+### 2.2.3 Diagrama de Comunicación - CU03: Recuperar Contraseña (Token OTP)
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Usuario del Sistema → <<boundary>> FormularioRecuperacion → <<control>> ControladorRecuperacion → <<entity>> TokenRecuperacion / <<entity>> Usuario.
+
+### 2.2.4 Diagrama de Comunicación - CU04: Gestionar Usuarios y Roles (RBAC)
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Administrador General → <<boundary>> PanelUsuarios → <<control>> ControladorUsuarios → <<entity>> Usuario / <<entity>> Sucursal.
+
+### 2.2.5 Diagrama de Comunicación - CU05: Gestionar Sucursales y Ciudades
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Administrador General → <<boundary>> PanelSucursales → <<control>> ControladorSucursales → <<entity>> Ciudad / <<entity>> Sucursal.
+
+### 2.2.6 Diagrama de Comunicación - CU06: Gestionar Productos y Atributos
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Administrador General → <<boundary>> PanelProductos → <<control>> ControladorProductos → <<entity>> Producto / <<entity>> ProductoColor / <<entity>> ProductoTalla.
+
+### 2.2.7 Diagrama de Comunicación - CU07: Gestionar Temporadas y Colecciones
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Administrador General → <<boundary>> PanelTemporadas → <<control>> ControladorTemporadas → <<entity>> Temporada / <<entity>> Producto.
+
+### 2.2.8 Diagrama de Comunicación - CU08: Gestionar Proveedores Textiles
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Administrador/Logística → <<boundary>> PanelProveedores → <<control>> ControladorProveedores → <<entity>> Proveedor.
+
+### 2.2.9 Diagrama de Comunicación - CU09: Gestionar Inventario y Costos (CPP)
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Personal Logística/Encargado → <<boundary>> PanelInventario → <<control>> ControladorInventario → <<entity>> Inventario / <<entity>> KardexMovimiento.
+
+### 2.2.10 Diagrama de Comunicación - CU10: Consultar Catálogo y Disponibilidad
+
+(Ver diagrama de comunicación en Enterprise Architect - diagramas1erParcial.eapx)
+
+Participantes: Actor Cliente (Web/Móvil) / Encargado de Tienda → <<boundary>> CatalogoPublico → <<control>> ControladorCatalogo → <<entity>> Producto / <<entity>> Inventario.
+
+---
+
+## 2.3 Análisis de Clases
+
+Conforme a la instrucción metodológica de la cátedra, el análisis de clases formaliza exhaustivamente las tres categorías de clases de robustez (BCE) con sus responsabilidades exactas para los 10 Casos de Uso del Ciclo 1:
+
+- **Clases de Interfaz (`<<boundary>>`):** Poseen atributos de captura de datos visuales y métodos interactivos que reflejan las acciones y eventos del usuario (botones, selectores, clics).
+- **Clases de Control (`<<control>>`):** Contienen exclusivamente métodos de orquestación lógica del backend y NO tienen atributos propios.
+- **Clases de Entidad (`<<entity>>`):** Poseen tanto atributos de datos persistentes como métodos de encapsulamiento y consulta sobre la base de datos.
+
+(Ver diagramas de clases de análisis BCE completos en Enterprise Architect - diagramas1erParcial.eapx, páginas 108-112)
+
+---
+
+## 2.4 Análisis de Paquetes
+
+En el análisis de paquetes se evalúa la arquitectura bajo dos métricas cardinales de la ingeniería de software:
+
+1. **Acoplamiento:** Medida de interdependencia entre los módulos. Se busca un bajo acoplamiento para evitar que modificaciones en un subsistema provoquen fallos en cascada.
+2. **Cohesión:** Medida de afinidad y fortaleza asociativa interna de los elementos de un paquete. Se procura una alta cohesión funcional, agrupando en cada paquete clases estrictamente orientadas a un mismo objetivo de negocio.
+
+| Paquete de Análisis | Nivel de Cohesión | Nivel de Acoplamiento | Justificación Técnica de Diseño |
+|--------------------|-------------------|----------------------|--------------------------------|
+| Seguridad (RBAC) | Alta (Funcional) | Bajo (Eferente: 0, Aferente: 4) | Módulo núcleo completamente autónomo; provee tokens y validación de identidad a todos los demás paquetes sin depender de ellos. |
+| Sucursales | Alta (Datos/Operación) | Bajo (Eferente: 1, Aferente: 1) | Gestiona la infraestructura física; solo depende de la seguridad para autorizaciones de edición. |
+| Productos y Catálogo | Alta (Dominio) | Medio (Eferente: 2, Aferente: 1) | Agrupa la lógica de prendas, tallas, colores y temporadas; interactúa con inventario para disponibilizar existencias en el catálogo. |
+| Inventario y Costos | Muy Alta (Transaccional) | Controlado (Eferente: 4, Aferente: 1) | Núcleo integrador logístico y financiero; conecta sucursales, productos y proveedores para la actualización del Kardex y CPP. |
+| Proveedores | Alta (Dominio) | Bajo (Eferente: 1, Aferente: 1) | Maneja exclusivamente el padrón comercial y contratos de suministro. |
+
+---
+
+# 3. Flujo de Trabajo: Diseño
+
+## 3.1 Diseño de Arquitectura
+
+### 3.1.1 Diseño Lógico de la Arquitectura (4 Capas UML)
+
+Conforme a las explicaciones de cátedra, la arquitectura lógica del sistema FashionStore se estructura formalmente en cuatro capas horizontales desacopladas:
+
+(Ver diagrama de arquitectura lógica en 4 capas en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.1.2 Diseño Físico de la Arquitectura (Diagrama de Despliegue)
+
+El diagrama de despliegue modela los nodos físicos y de nube donde residen los artefactos de software compilados, los enlaces telemáticos y protocolos de comunicación:
+
+(Ver diagrama de despliegue en Enterprise Architect - diagramas1erParcial.eapx)
+
+---
+
+## 3.2 Diseño de Casos de Uso
+
+### 3.2.1 Diagrama de Secuencia - CU01: Autenticar Usuario (Login RBAC)
+
+Modela el intercambio de credenciales, consulta de usuario, validación de hash Bcrypt, generación del token JWT y registro de auditoría en bitácora.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.2 Diagrama de Secuencia - CU02: Registrar Cliente (Sign Up)
+
+Modela el autoregistro público de nuevos clientes, validación de correo electrónico único, hashing seguro de contraseña y despacho de correo de bienvenida.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.3 Diagrama de Secuencia - CU03: Recuperar Contraseña (Token OTP)
+
+Modela la solicitud autoservicio de código temporal OTP criptográfico de 6 dígitos, envío seguro por correo electrónico y restablecimiento de contraseña.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.4 Diagrama de Secuencia - CU04: Gestionar Usuarios y Roles (RBAC)
+
+Modela la administración de cuentas por el administrador, asignación de roles de seguridad RBAC, validación de sucursal asignada y desbloqueo de cuentas.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.5 Diagrama de Secuencia - CU05: Gestionar Sucursales y Ciudades
+
+Modela la parametrización de infraestructura geográfica, validación de coordenadas GPS satelitales y configuración del aforo físico para probadores de ropa.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.6 Diagrama de Secuencia - CU06: Gestionar Productos y Atributos de Moda
+
+Modela el alta de prendas de vestir masculinas, validación de unicidad de código SKU base y asociación multivaluada normalizada de variantes de color (HEX) y tallas.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.7 Diagrama de Secuencia - CU07: Gestionar Temporadas y Campañas
+
+Modela la calendarización de temporadas comerciales, validación de ventanas temporales de vigencia, vinculación de productos y activación de descuentos por liquidación.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.8 Diagrama de Secuencia - CU08: Gestionar Proveedores Textiles
+
+Modela el registro de proveedores mayoristas de confección y telas, validación de NIT tributario único y asignación de acuerdos comerciales de pago.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.9 Diagrama de Secuencia - CU09: Gestionar Inventario Multi-Sucursal (CPP)
+
+Modela la recepción física de lotes de mercadería, consulta de existencias y costos anteriores, recálculo matemático de Costo Promedio Ponderado (CPP) y emisión inmutable de asiento en Kardex.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.2.10 Diagrama de Secuencia - CU10: Consultar Catálogo y Disponibilidad
+
+Modela la navegación reactiva del catálogo omnicanal, aplicación de filtros facetados (talla, color, categoría) y consulta federada de stock físico en tiempo real por sucursal.
+
+(Ver diagrama de secuencia en Enterprise Architect - diagramas1erParcial.eapx)
+
+---
+
+### 3.2.2 Diagramas de Estado - Dominio del Sistema
+
+#### a) Ciclo de Vida de la Cuenta de Usuario y Token OTP (Seguridad)
+
+Modela los estados de seguridad de la cuenta frente a intentos de acceso y el ciclo de vida efímero del token de recuperación:
+
+(Ver diagrama de estado en Enterprise Architect - diagramas1erParcial.eapx)
+
+#### b) Ciclo de Vida del Producto e Inventario
+
+Modela las transiciones del ciclo de vida de una prenda de vestir en la tienda:
+
+(Ver diagrama de estado en Enterprise Architect - diagramas1erParcial.eapx)
+
+---
+
+### 3.2.3 Diagrama de Navegación del Sistema (Ciclo 1)
+
+Modela el flujo de navegación entre vistas y pantallas para la plataforma web y móvil:
+
+(Ver diagrama de navegación en Enterprise Architect - diagramas1erParcial.eapx)
+
+---
+
+### 3.2.4 Diagrama de Tiempo
+
+#### b) Descripción Técnica y Dinámica de Transición en el Tiempo
+
+El diagrama modela 3 líneas de vida sincronizadas que comparten la misma escala de tiempo horizontal (t∈[0,100]):
+
+1. **Línea de Vida de Estado Robusta (Estado_Existencias):**
+   - **Disponible:** Existencias operativas por encima del umbral de seguridad.
+   - **BajoStockMinimo:** Existencias ≤ 5 unidades (stock de seguridad configurado por variante/sucursal). Dispara alertas automáticas en el módulo de compras y aprovisionamiento.
+   - **SinStock:** Existencias iguales a 0 unidades. Inhabilita la venta física y bloquea la adición al carrito web/móvil.
+
+2. **Línea de Vida de Valor Concisa (Nivel_Stock_Fisico):**
+   - Refleja el saldo cuantitativo de unidades en almacén: 0 uds → 10 uds → 5 uds → 25 uds → 3 uds → 0 uds.
+
+3. **Línea de Vida de Valor Concisa (Valuacion_CPP_Bs):**
+   - Refleja el costo unitario valorizado bajo la fórmula legal/tributaria de Costo Promedio Ponderado (CPP):
+     CPP_nuevo = (S_actual × CPP_actual + Q_entrada × P_compra) / (S_actual + Q_entrada)
+   - Las salidas por venta disminuyen las unidades físicas pero no alteran el costo unitario de valuación del inventario remanente.
+
+| Tiempo (t) | Evento / Estímulo | Estado Existencias | Stock Físico | Valuación CPP (Bs) | Restricción / Observación |
+|-----------|-------------------|-------------------|-------------|-------------------|--------------------------|
+| 0 | Inicio | SinStock | 0 uds | 0.00 Bs | Apertura de catálogo sin existencias iniciales. |
+| 10 | EntradaLote1 | Disponible | 10 uds | 100.00 Bs | Recepción Lote 1: 10 prendas a 100.00 Bs/ud. |
+| 30 | VentaPOS | Disponible | 5 uds | 100.00 Bs | Venta presencial: -5 uds. Duración {20}. CPP no cambia. |
+| 50 | EntradaLote2 | Disponible | 25 uds | 116.00 Bs | Recepción Lote 2: 20 prendas a 120.00 Bs. Recálculo CPP: (5×100 + 20×120) / 25 = 116.00 Bs. |
+| 70 | AlertaMin | BajoStockMinimo | 3 uds | 116.00 Bs | Venta: -22 uds. Stock ≤ 5 uds mínimas. Dispara alerta automática. |
+| 90 | Agotado | SinStock | 0 uds | 116.00 Bs | Venta de las últimas 3 prendas. Stock agotado. |
+
+#### c) Organización en el Repositorio de Enterprise Architect
+
+- Paquete Dedicado (Carpeta): Model → diagramas de tiempo (ID: 13)
+- Diagrama UML 2.5: Diagrama_Tiempo_Ciclo_Vida_Stock_CPP (ID: 193, Tipo: Timing)
+- Elementos Modelados:
+  - Estado_Existencias (TimeLine, Subtipo: State Lifeline, Particiones: SinStock, BajoStockMinimo, Disponible)
+  - Nivel_Stock_Fisico (TimeLine, Subtipo: Value Lifeline, Particiones: 0 uds, 3 uds, 5 uds, 10 uds, 25 uds)
+  - Valuacion_CPP_Bs (TimeLine, Subtipo: Value Lifeline, Particiones: 0.00 Bs, 100.00 Bs, 116.00 Bs)
+  - Conectores de estímulo/secuencia temporizados entre líneas de vida en t=10,30,50,70,90 con restricciones de duración estándar UML ({20}).
+
+---
+
+## 3.3 Diseño de Datos
+
+### 3.3.1 Diseño de Datos Lógico (Diagrama ER / Clases Persistentes)
+
+(Ver diagrama ER en Enterprise Architect - diagramas1erParcial.eapx)
+
+### 3.3.2 Diseño de Datos Físico (Script DDL SQL en PostgreSQL)
+
+```sql
+-- ============================================================================
+-- SCRIPT DDL: BASE DE DATOS FASHIONSTORE (CICLO 1: FUNDAMENTOS Y MÓDULOS BASE)
+-- Motor: PostgreSQL 15+ | Esquema Normalizado 3FN
+-- ============================================================================
+
+CREATE TABLE ciudades (
+    id_ciudad SERIAL PRIMARY KEY,
+    nombre_ciudad VARCHAR(80) NOT NULL UNIQUE,
+    departamento VARCHAR(80) NOT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sucursales (
+    id_sucursal SERIAL PRIMARY KEY,
+    id_ciudad INTEGER NOT NULL REFERENCES ciudades(id_ciudad) ON DELETE RESTRICT,
+    nombre_sucursal VARCHAR(100) NOT NULL,
+    direccion TEXT NOT NULL,
+    latitud DECIMAL(10, 8) NOT NULL,
+    longitud DECIMAL(11, 8) NOT NULL,
+    telefono VARCHAR(20),
+    capacidad_probadores INTEGER NOT NULL DEFAULT 4 CHECK (capacidad_probadores > 0),
+    estado VARCHAR(20) NOT NULL DEFAULT 'OPERATIVA' CHECK (estado IN ('OPERATIVA', 'MANTENIMIENTO', 'CERRADA')),
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE usuarios (
+    id_usuario SERIAL PRIMARY KEY,
+    id_sucursal INTEGER REFERENCES sucursales(id_sucursal) ON DELETE SET NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    password_hash VARCHAR(100) NOT NULL,
+    rol VARCHAR(30) NOT NULL CHECK (rol IN ('ADMINISTRADOR', 'ENCARGADO_SUCURSAL', 'CAJERO', 'LOGISTICA', 'CLIENTE', 'PROVEEDOR')),
+    estado_cuenta VARCHAR(30) NOT NULL DEFAULT 'ACTIVO' CHECK (estado_cuenta IN ('ACTIVO', 'INACTIVO', 'BLOQUEADO_POR_INTENTOS')),
+    intentos_fallidos INTEGER NOT NULL DEFAULT 0,
+    bloqueado_hasta TIMESTAMP,
+    ultimo_acceso TIMESTAMP,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla para tokens de recuperación de contraseña con código OTP temporal (CU03)
+CREATE TABLE tokens_recuperacion (
+    id_token SERIAL PRIMARY KEY,
+    id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    codigo_otp_hash VARCHAR(100) NOT NULL,
+    expiracion TIMESTAMP NOT NULL,
+    utilizado BOOLEAN NOT NULL DEFAULT FALSE,
+    intentos_verificacion INTEGER NOT NULL DEFAULT 0,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE bitacora_accesos (
+    id_bitacora SERIAL PRIMARY KEY,
+    id_usuario INTEGER REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    ip_origen VARCHAR(45) NOT NULL,
+    user_agent TEXT,
+    exitoso BOOLEAN NOT NULL,
+    fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE proveedores (
+    id_proveedor SERIAL PRIMARY KEY,
+    nit_identificacion VARCHAR(30) NOT NULL UNIQUE,
+    razon_social VARCHAR(150) NOT NULL,
+    contacto_nombre VARCHAR(100),
+    telefono VARCHAR(30),
+    email VARCHAR(100),
+    terminos_pago VARCHAR(50) DEFAULT 'CONTADO',
+    estado VARCHAR(20) DEFAULT 'ACTIVO',
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE temporadas (
+    id_temporada SERIAL PRIMARY KEY,
+    codigo_campana VARCHAR(30) NOT NULL UNIQUE,
+    nombre_temporada VARCHAR(100) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    descuento_liquidacion DECIMAL(5,2) DEFAULT 0.00,
+    estado VARCHAR(30) DEFAULT 'VIGENTE' CHECK (estado IN ('PLANIFICADA', 'VIGENTE', 'LIQUIDACION', 'FINALIZADA')),
+    CONSTRAINT chk_fechas_temporada CHECK (fecha_fin >= fecha_inicio)
+);
+
+CREATE TABLE categorias (
+    id_categoria SERIAL PRIMARY KEY,
+    nombre_categoria VARCHAR(80) NOT NULL UNIQUE,
+    descripcion TEXT
+);
+
+CREATE TABLE marcas (
+    id_marca SERIAL PRIMARY KEY,
+    nombre_marca VARCHAR(80) NOT NULL UNIQUE
+);
+
+CREATE TABLE productos (
+    id_producto SERIAL PRIMARY KEY,
+    id_categoria INTEGER NOT NULL REFERENCES categorias(id_categoria) ON DELETE RESTRICT,
+    id_marca INTEGER NOT NULL REFERENCES marcas(id_marca) ON DELETE RESTRICT,
+    id_temporada INTEGER REFERENCES temporadas(id_temporada) ON DELETE SET NULL,
+    id_proveedor INTEGER REFERENCES proveedores(id_proveedor) ON DELETE SET NULL,
+    codigo_sku_base VARCHAR(50) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio_venta_base DECIMAL(10, 2) NOT NULL CHECK (precio_venta_base > 0),
+    genero VARCHAR(20) NOT NULL DEFAULT 'MASCULINO',
+    estado_publicacion VARCHAR(30) DEFAULT 'PUBLICADO' CHECK (estado_publicacion IN ('BORRADOR', 'PUBLICADO', 'DESCATALOGADO')),
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE producto_colores (
+    id_prod_color SERIAL PRIMARY KEY,
+    id_producto INTEGER NOT NULL REFERENCES productos(id_producto) ON DELETE CASCADE,
+    color_nombre VARCHAR(50) NOT NULL,
+    codigo_hex VARCHAR(10) NOT NULL,
+    CONSTRAINT uq_producto_color UNIQUE (id_producto, color_nombre)
+);
+
+CREATE TABLE producto_tallas (
+    id_prod_talla SERIAL PRIMARY KEY,
+    id_producto INTEGER NOT NULL REFERENCES productos(id_producto) ON DELETE CASCADE,
+    talla VARCHAR(20) NOT NULL,
+    CONSTRAINT uq_producto_talla UNIQUE (id_producto, talla)
+);
+
+CREATE TABLE inventario (
+    id_inventario SERIAL PRIMARY KEY,
+    id_sucursal INTEGER NOT NULL REFERENCES sucursales(id_sucursal) ON DELETE CASCADE,
+    id_producto INTEGER NOT NULL REFERENCES productos(id_producto) ON DELETE CASCADE,
+    talla VARCHAR(20) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    stock_fisico INTEGER NOT NULL DEFAULT 0 CHECK (stock_fisico >= 0),
+    stock_reservado INTEGER NOT NULL DEFAULT 0 CHECK (stock_reservado >= 0),
+    stock_minimo INTEGER NOT NULL DEFAULT 5 CHECK (stock_minimo >= 0),
+    stock_maximo INTEGER NOT NULL DEFAULT 100 CHECK (stock_maximo >= stock_minimo),
+    ultimo_costo_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    costo_promedio_ponderado DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    CONSTRAINT uq_inventario_variante UNIQUE (id_sucursal, id_producto, talla, color),
+    CONSTRAINT chk_stock_valido CHECK (stock_fisico >= stock_reservado)
+);
+
+CREATE TABLE kardex_movimientos (
+    id_kardex SERIAL PRIMARY KEY,
+    id_inventario INTEGER NOT NULL REFERENCES inventario(id_inventario) ON DELETE CASCADE,
+    tipo_movimiento VARCHAR(30) NOT NULL CHECK (tipo_movimiento IN ('COMPRA', 'VENTA', 'RESERVA', 'AJUSTE_MERMA', 'TRANSFERENCIA_ENTRADA', 'TRANSFERENCIA_SALIDA')),
+    cantidad INTEGER NOT NULL,
+    costo_unitario_mov DECIMAL(10, 2) NOT NULL,
+    saldo_cantidad INTEGER NOT NULL,
+    saldo_cpp DECIMAL(10, 2) NOT NULL,
+    descripcion_motivo VARCHAR(200),
+    fecha_movimiento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índices de alto rendimiento para búsquedas omnicanales
+CREATE INDEX idx_productos_sku ON productos(codigo_sku_base);
+CREATE INDEX idx_productos_categoria ON productos(id_categoria);
+CREATE INDEX idx_inventario_sucursal ON inventario(id_sucursal, id_producto);
+CREATE INDEX idx_inventario_stock_disp ON inventario((stock_fisico - stock_reservado));
+```
+
+---
+
+### 3.3.3 Población de Datos (Script DML SQL en PostgreSQL)
+
+```sql
+-- ============================================================================
+-- SCRIPT DML: POBLACIÓN DE DATOS SEMILLA PARA EL CICLO 1
+-- Incluye Ciudades de Bolivia, Sucursales, Usuarios con BCrypt, Ropa Masculina,
+-- Colores Multivaluados, Tallas e Inventario con Costo Promedio Ponderado
+-- ============================================================================
+
+-- 1. Ciudades
+INSERT INTO ciudades (nombre_ciudad, departamento) VALUES
+('Santa Cruz de la Sierra', 'Santa Cruz'),
+('La Paz', 'La Paz'),
+('Cochabamba', 'Cochabamba');
+
+-- 2. Sucursales
+INSERT INTO sucursales (id_ciudad, nombre_sucursal, direccion, latitud, longitud, telefono, capacidad_probadores) VALUES
+(1, 'Sucursal Equipetrol', 'Av. San Martín #450, entre 3er y 4to anillo', -17.76823000, -63.18342000, '3-3445566', 6),
+(1, 'Sucursal Centro', 'Calle 21 de Mayo esq. Ayacucho', -17.78312000, -63.18210000, '3-3332211', 4),
+(2, 'Sucursal Calacoto', 'Av. Ballivián #1200, Calle 18', -16.53982000, -68.08921000, '2-2778899', 5),
+(3, 'Sucursal El Prado', 'Av. Ballivián #600, El Prado', -17.38921000, -66.15672000, '4-4223344', 4);
+
+-- 3. Usuarios del Sistema (Contraseña hash: 'Admin123*' cifrada con bcrypt)
+-- Hash generado: $2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu
+INSERT INTO usuarios (id_sucursal, nombres, apellidos, email, password_hash, rol, estado_cuenta, intentos_fallidos) VALUES
+(NULL, 'Alberto', 'Delgado', 'alberto.delgado@store.bo', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'ADMINISTRADOR', 'ACTIVO', 0),
+(NULL, 'Andy', 'Mujica', 'andy.mujica@store.bo', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'ADMINISTRADOR', 'ACTIVO', 0),
+(1, 'Carlos', 'Morales', 'carlos.morales@store.bo', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'ENCARGADO_SUCURSAL', 'ACTIVO', 0),
+(1, 'Javier', 'Roca', 'javier.roca@store.bo', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'CAJERO', 'BLOQUEADO_POR_INTENTOS', 5),
+(NULL, 'Mateo', 'Suarez', 'mateo.logistica@store.bo', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'LOGISTICA', 'ACTIVO', 0),
+(NULL, 'Rodrigo', 'Paz', 'rodrigo.cliente@gmail.com', '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', 'CLIENTE', 'ACTIVO', 0);
+
+-- Semilla de tokens de recuperación OTP (CU03)
+INSERT INTO tokens_recuperacion (id_usuario, codigo_otp_hash, expiracion, utilizado, intentos_verificacion) VALUES
+(6, '$2b$12$e8Y4vFz7BvK8/9zD6x1Q4uS0.1234567890abcdefghijklmnopqrstu', CURRENT_TIMESTAMP + INTERVAL '15 MINUTE', FALSE, 0);
+
+-- 4. Proveedores Textiles
+INSERT INTO proveedores (nit_identificacion, razon_social, contacto_nombre, telefono, email, terminos_pago) VALUES
+('1028392019', 'Confecciones Andina SA', 'Juan Paredes', '+591 70012345', 'ventas@andina.com.bo', 'CREDITO_30_DIAS'),
+('9038472011', 'Hilanderías del Sur SRL', 'Marcos Vaca', '+591 71098765', 'contacto@hilasur.bo', 'CONTADO'),
+('3829104018', 'Importadora Textil Italiana', 'Gianluca Rossi', '+591 72055443', 'grossi@textilitaliana.com', 'CREDITO_60_DIAS');
+
+-- 5. Temporadas Comerciales
+INSERT INTO temporadas (codigo_campana, nombre_temporada, fecha_inicio, fecha_fin, descuento_liquidacion, estado) VALUES
+('SS-2026', 'Primavera - Verano 2026', '2026-08-01', '2027-01-31', 0.00, 'VIGENTE'),
+('FW-2026', 'Otoño - Invierno 2026', '2026-02-01', '2026-07-31', 25.00, 'LIQUIDACION');
+
+-- 6. Categorías y Marcas
+INSERT INTO categorias (nombre_categoria, descripcion) VALUES
+('Camisas Formales', 'Camisas ejecutivas y de vestir en algodón peinado y lino'),
+('Pantalones Casuales', 'Pantalones estilo chino, gabardina y corte clásico'),
+('Trajes y Blazers', 'Sacos, chaquetas y trajes de dos piezas en lana fría'),
+('Calzado Ejecutivo', 'Zapatos Oxford, Derby y mocasines de cuero legítimo');
+
+INSERT INTO marcas (nombre_marca) VALUES
+('Oxford Heritage'),
+('Urban Tailor'),
+('Sartorial Milano'),
+('Bocaccio Leather');
+
+-- 7. Productos (Prendas Masculinas)
+INSERT INTO productos (id_categoria, id_marca, id_temporada, id_proveedor, codigo_sku_base, nombre, descripcion, precio_venta_base, genero) VALUES
+(1, 1, 1, 1, 'SHIRT-SLIM-001', 'Camisa Oxford Slim Fit', 'Camisa de corte entallado en 100% algodón egipcio, cuello italiano', 280.00, 'MASCULINO'),
+(2, 2, 1, 2, 'PANT-CHINO-002', 'Pantalón Chino Gabardina', 'Pantalón casual de gabardina elastizada con bolsillos traseros ojales', 320.00, 'MASCULINO'),
+(3, 3, 1, 3, 'BLAZ-LINO-003', 'Blazer de Lino Casual', 'Chaqueta ligera desestructurada de lino ideal para clima templado y cálido', 650.00, 'MASCULINO');
+
+-- 8. Colores Multivaluados
+INSERT INTO producto_colores (id_producto, color_nombre, codigo_hex) VALUES
+(1, 'Azul Marino', '#000080'),
+(1, 'Blanco Óptico', '#FFFFFF'),
+(1, 'Celeste Cielo', '#87CEEB'),
+(2, 'Beige Arena', '#F5F5DC'),
+(2, 'Azul Noche', '#191970'),
+(2, 'Verde Oliva', '#556B2F'),
+(3, 'Azul Cobalto', '#0047AB'),
+(3, 'Gris Plomo', '#708090');
+
+-- 9. Tallas Normalizadas
+INSERT INTO producto_tallas (id_producto, talla) VALUES
+(1, 'S'), (1, 'M'), (1, 'L'), (1, 'XL'),
+(2, '30'), (2, '32'), (2, '34'), (2, '36'),
+(3, '38'), (3, '40'), (3, '42');
+
+-- 10. Inventario con Costo Unitario y Costo Promedio Ponderado (CPP)
+-- Ejemplo real demostrativo:
+-- Camisa Oxford Slim Fit (Talla M, Azul Marino) en Sucursal Equipetrol:
+-- Lote 1: 15 unidades a 90 Bs = 1350 Bs
+-- Lote 2: 20 unidades a 120 Bs = 2400 Bs
+-- Total unidades: 35 | Costo Total: 3750 Bs | CPP = 3750 / 35 = 107.14 Bs | Último Costo = 120.00 Bs
+INSERT INTO inventario (id_sucursal, id_producto, talla, color, stock_fisico, stock_reservado, stock_minimo, stock_maximo, ultimo_costo_unitario, costo_promedio_ponderado) VALUES
+(1, 1, 'M', 'Azul Marino', 35, 5, 10, 100, 120.00, 107.14),
+(1, 1, 'L', 'Blanco Óptico', 25, 0, 5, 80, 110.00, 110.00),
+(1, 2, '32', 'Beige Arena', 20, 2, 5, 60, 140.00, 135.00),
+(2, 1, 'M', 'Azul Marino', 15, 0, 5, 50, 115.00, 115.00),
+(3, 3, '40', 'Gris Plomo', 8, 1, 2, 30, 320.00, 310.00);
+
+-- 11. Asientos de Kardex Inicial
+INSERT INTO kardex_movimientos (id_inventario, tipo_movimiento, cantidad, costo_unitario_mov, saldo_cantidad, saldo_cpp, descripcion_motivo) VALUES
+(1, 'COMPRA', 15, 90.00, 15, 90.00, 'Ingreso Lote Inicial Fac-101'),
+(1, 'COMPRA', 20, 120.00, 35, 107.14, 'Ingreso Segundo Lote Fac-205 - Recálculo CPP');
+```
+
+---
+
+# 4. Flujo de Trabajo: Implementación
+
+## 4.1 Selección de la Plataforma de Software
+
+Conforme al requerimiento del enunciado y las notas de clase, se selecciona el siguiente stack tecnológico de alta eficiencia:
+
+- **Backend:** Python 3.11+ con FastAPI. Permite arquitectura asíncrona no bloqueante (ASGI), serialización tipada y validación con Pydantic, e inyección nativa de dependencias. Expone la documentación automática OpenAPI en /docs.
+- **Frontend Web:** Angular 17+. Basado en TypeScript, componentes reactivos, inyección de dependencias y modularidad estricta para la SPA administrativa y el catálogo web.
+- **Aplicación Móvil:** Flutter 3.x con Dart. Compilación nativa para Android e iOS desde un solo repositorio, con soporte para ARCore y sensores de cámara.
+- **Base de Datos:** PostgreSQL 15+. Motor relacional con integridad transaccional ACID, índices B-Tree y soporte geoespacial.
+- **Contenedores:** Docker & Docker Compose para aislamiento de entornos y despliegue continuo en la nube (Render / Railway).
+
+---
+
+## 4.2 Implementación de la Arquitectura del Sistema Principal
+
+La arquitectura del sistema backend sigue el patrón de Arquitectura Limpia / Modular por Paquetes:
+
+El sistema global se estructura en 3 niveles de abstracción:
+
+1. **Capa de Presentación:** Contiene los clientes frontend autónomos (Interfaz Web Cliente - Angular 17+ SPA, Interfaz Móvil - Flutter 3.x e Interfaz Administrativa POS / Backoffice). Se comunican de forma asíncrona mediante HTTPS / REST con payloads JSON.
+2. **Capa de Lógica de Negocio:** Orquestada por el gateway ASGI FastAPI, alberga los 5 subsistemas funcionales desacoplados que resuelven los casos de uso empresariales.
+3. **Capa de Persistencia y Servicios:** Subdividida en BBDD (Servidor PostgreSQL 15+ con motor transaccional ACID y ORM SQLAlchemy 2.0 Async) y Servicios externos (Servicio SMTP transaccional para despacho de códigos OTP y Almacenamiento Cloud / CDN para catálogo de imágenes).
+
+---
+
+## 4.3 Implementación de la Arquitectura del Sub Sistema
+
+El sistema empresarial se compone de 5 subsistemas altamente cohesionados, comunicados mediante interfaces de componentes estandarizadas según el patrón ball-and-socket (interfaces provistas / lollipop e interfaces requeridas / socket).
+
+### 4.3.0 Integración de los 5 Subsistemas con Interfaces Provistas y Requeridas
+
+El Subsistema de Inventario y Costos actúa como núcleo operativo central de la cadena de valor, integrando:
+
+- **IDisponibilidadStock:** Proporcionada por Inventario para que el Catálogo consulte existencias en tiempo real por sucursal y variante.
+- **ILoteCompraProveedor:** Proporcionada por Aprovisionamiento para liquidar compras textiles con NIT e ingresar lotes al almacén.
+- **ISucursalAlmacen:** Proporcionada por Estructura Operativa para asignar existencias a bodegas de sucursal física.
+- **ISeguridadRBAC:** Proporcionada por Seguridad y Acceso para autorizar y autenticar cada transacción con tokens JWT y roles.
+
+### 4.3.1 Sub Sistema 1: Seguridad y Control de Acceso RBAC (M01 - CU01, CU02, CU03, CU04)
+
+Este subsistema encapsula la autenticación criptográfica con JWT, el control de acceso basado en roles (RBAC) con mitigación OWASP (bloqueo por 5 intentos erróneos durante 30 min) y la emisión de tokens OTP criptográficos de 6 dígitos con validez de 15 minutos.
+
+### 4.3.2 Sub Sistema 2: Estructura Operativa y Sucursales (M02 - CU05)
+
+Administra las ciudades, direcciones, horarios, coordenadas GPS y disponibilidad física de probadores para reservas omnicanal en cada tienda.
+
+### 4.3.3 Sub Sistema 3: Catálogo y Moda Masculina (M03 y M04 - CU06, CU07, CU10)
+
+Gestiona la matriz de prendas masculinas, colecciones por temporada, categorización multinivel y las variantes ortogonales de Talla (S, M, L, XL) y Color (nombre + código HEX).
+
+### 4.3.4 Sub Sistema 4: Aprovisionamiento y Proveedores Textiles (M05 - CU08)
+
+Encargado del registro, calificación comercial y validación tributaria (NIT) de las empresas proveedoras de telas y confección para la reposición de stock.
+
+### 4.3.5 Sub Sistema 5: Inventario Multitienda y Costo Promedio Ponderado CPP (M06 - CU09)
+
+Controla el Kardex valorado inmutable, los movimientos físicos (compras, ventas, traslados entre sucursales) y aplica de forma rigurosa el recálculo matemático de valuación bajo el método del Costo Promedio Ponderado (CPP).
+
+---
+
+# 5. Flujo de Trabajo: Pruebas
+
+## 5.1 Pruebas de Casos de Uso (Pruebas de Caja Negra)
+
+Se documentan las pruebas formales de caja negra realizadas sobre los 10 Casos de Uso del Ciclo 1 para validar exhaustivamente las condiciones de aceptación funcionales y de seguridad:
+
+### Prueba de caso de uso CU1: Iniciar Sesión y Autenticación RBAC
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 1 | Iniciar Sesión y Autenticación RBAC |
+| Descripción | Permite a los usuarios autenticarse en la plataforma mediante correo electrónico y contraseña cifrada. Valida los roles del sistema (ADMINISTRADOR, CAJERO, CLIENTE) emitiendo un token JWT firmado y aplica el mecanismo de defensa OWASP bloqueando preventivamente la cuenta por 30 minutos al registrarse 5 intentos fallidos consecutivos. |
+| Precondiciones | a) El usuario debe encontrarse registrado en la base de datos. b) El servicio de backend FastAPI y la base de datos PostgreSQL deben estar en ejecución. c) La cuenta no debe encontrarse en estado INACTIVO ni con bloqueo administrativo. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder a la pantalla de Login desde el portal web o aplicación móvil. | Se despliega el formulario de autenticación con campos para email, contraseña y botón de acceso. | Satisfactorio |
+| 2 | Ingresar credenciales válidas de usuario y presionar "Iniciar Sesión". | Se genera el token JWT con los claims de rol, se almacena en el cliente y se redirige a la vista correspondiente. | Satisfactorio |
+| 3 | Ingresar contraseña errónea de forma intencional en 4 oportunidades. | El sistema rechaza la autenticación con código HTTP 401 e informa los intentos restantes antes del bloqueo. | Satisfactorio |
+| 4 | Realizar el quinto intento fallido con contraseña incorrecta. | La cuenta pasa automáticamente a estado BLOQUEADO_POR_INTENTOS con una ventana de 30 minutos. | Satisfactorio |
+| 5 | Intentar iniciar sesión inmediatamente durante la ventana de bloqueo. | Se bloquea el acceso en el gateway notificando el tiempo restante de penalización sin consultar la clave. | Satisfactorio |
+| 6 | Iniciar sesión tras expirar la ventana de 30 minutos con la clave correcta. | Se restablece el contador de intentos fallidos a 0 y se inicia sesión normalmente. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador / Tester de Seguridad |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU2: Auto-registro de Clientes
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 2 | Auto-registro de Clientes |
+| Descripción | Permite que visitantes no registrados puedan crear de manera autónoma una cuenta de cliente en FashionStore, registrando sus datos personales y credenciales de acceso, asignándoles automáticamente el rol CLIENTE e iniciando su sesión con token JWT. |
+| Precondiciones | a) El visitante debe tener acceso a internet y al portal web o app móvil. b) El módulo de autenticación y registro debe estar habilitado. c) Debe existir conexión activa con el servidor de base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder a la opción "Crear Cuenta" desde el menú principal de navegación. | Se despliega el formulario modal de registro de nuevo cliente con campos estructurados. | Satisfactorio |
+| 2 | Completar datos personales (Nombre, Apellido, Celular, Género y Fecha de Nacimiento). | Los campos se validan sintácticamente en tiempo real mediante expresiones regulares. | Satisfactorio |
+| 3 | Ingresar correo electrónico no registrado y contraseña segura (mínimo 8 caracteres). | Se evalúa y muestra el indicador de fortaleza de contraseña como "Segura". | Satisfactorio |
+| 4 | Intentar registrar un correo que ya existe en el sistema. | El sistema rechaza la solicitud indicando que el correo ya se encuentra registrado. | Satisfactorio |
+| 5 | Presionar el botón "Registrarme e Iniciar Sesión" con datos válidos. | Se almacena el usuario con hash Bcrypt (factor 12), rol CLIENTE y estado ACTIVO. | Satisfactorio |
+| 6 | Verificar inicio de sesión automático y redirección al catálogo. | Se genera el token JWT, se cierra el modal y se visualiza el saludo de bienvenida con sesión activa. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Cliente / Tester QA |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU3: Recuperación de Contraseña con OTP
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 3 | Recuperación de Contraseña con OTP |
+| Descripción | Permite a los usuarios que olvidaron su contraseña solicitar un código criptográfico de un solo uso (OTP) de 6 dígitos enviado a su correo registrado, con una validez temporal estricta de 15 minutos y un límite de 3 intentos de verificación, para restablecer de forma segura su clave. |
+| Precondiciones | a) El correo del usuario debe estar registrado y activo en el sistema. b) El servicio transaccional de correo SMTP debe estar operativo. c) Debe existir conexión activa con la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Presionar el enlace "¿Olvidaste tu contraseña?" en el formulario de login. | Se despliega la vista de recuperación solicitando el correo electrónico de la cuenta. | Satisfactorio |
+| 2 | Ingresar el correo registrado y presionar "Enviar Código de Verificación". | El sistema genera el OTP de 6 dígitos, guarda su hash con expiración a 15 min y despacha el correo. | Satisfactorio |
+| 3 | Verificar recepción del código en la bandeja de entrada del correo. | Se recibe correo formal de FashionStore con el código numérico de 6 dígitos. | Satisfactorio |
+| 4 | Ingresar código OTP incorrecto en el formulario de verificación. | El sistema rechaza el intento, incrementa el contador y alerta sobre los intentos restantes (máx 3). | Satisfactorio |
+| 5 | Ingresar el código OTP válido y definir la nueva contraseña. | Se valida exitosamente el código, se actualiza el hash Bcrypt en BD y se invalida el token OTP. | Satisfactorio |
+| 6 | Iniciar sesión inmediatamente con la nueva contraseña configurada. | Se valida la nueva clave con éxito y se ingresa a la plataforma sin trabas. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Cliente / Administrador |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU4: Gestión de Usuarios, Roles RBAC y Desbloqueo
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 4 | Gestión de Usuarios, Roles RBAC y Desbloqueo |
+| Descripción | Permite al Administrador dar de alta colaboradores internos (cajeros, encargados de tienda), asignar roles y sucursales operativas, y desbloquear cuentas de usuarios que hayan quedado bloqueadas por superar los intentos de login. |
+| Precondiciones | a) El usuario autenticado debe tener el rol ADMINISTRADOR. b) El módulo de administración de usuarios debe encontrarse activo. c) Debe existir conexión activa con la base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder al módulo "Usuarios y Roles" desde el menú lateral administrativo. | Se despliega la tabla de colaboradores y clientes con columnas de rol, sucursal y estado de cuenta. | Satisfactorio |
+| 2 | Presionar el botón "+ Crear nuevo colaborador". | Se abre el formulario modal solicitando datos personales, rol (CAJERO / ADMIN) y sucursal. | Satisfactorio |
+| 3 | Guardar el nuevo colaborador con rol CAJERO en la sucursal Equipetrol. | Se persiste el registro en BD y la lista se actualiza inmediatamente reflejando el nuevo usuario. | Satisfactorio |
+| 4 | Identificar un usuario con estado BLOQUEADO_POR_INTENTOS en la tabla. | La fila muestra badge rojo de alerta y habilita la acción "Desbloquear". | Satisfactorio |
+| 5 | Presionar la acción "Desbloquear Cuenta" sobre el usuario bloqueado. | El sistema restablece intentos_fallidos = 0, bloqueado_hasta = NULL y estado = ACTIVO. | Satisfactorio |
+| 6 | Verificar que el usuario desbloqueado pueda autenticarse inmediatamente. | El usuario inicia sesión de forma fluida sin requerir esperar los 30 minutos. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador General |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU5: Gestión de Sucursales y Ciudades
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 5 | Gestión de Sucursales y Ciudades |
+| Descripción | Permite registrar, editar y georreferenciar las tiendas físicas de FashionStore, configurando su ciudad, dirección física, coordenadas GPS (latitud y longitud), horarios de atención y la cantidad de probadores físicos disponibles para reservas omnicanal. |
+| Precondiciones | a) Sesión iniciada con rol ADMINISTRADOR. b) Catálogo de ciudades previamente cargado en la base de datos. c) Conexión activa con el backend y base de datos. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Ingresar al módulo "Sucursales" desde el panel de configuración. | Se despliega la lista de tiendas físicas activas con su ciudad y capacidad de probadores. | Satisfactorio |
+| 2 | Presionar "+ Registrar Nueva Sucursal". | Se despliega el formulario modal de registro de sucursal física. | Satisfactorio |
+| 3 | Seleccionar ciudad "Santa Cruz" e ingresar nombre "Sucursal Equipetrol". | Se validan los datos básicos de denominación de la tienda. | Satisfactorio |
+| 4 | Ingresar coordenadas GPS (-17.76823, -63.18342) y 6 probadores disponibles. | El mapa interactivo centra el pin en la dirección y valida capacidad física mayor a 0. | Satisfactorio |
+| 5 | Presionar "Guardar Sucursal". | Se crea el registro en PostgreSQL, HTTP 201 Created y se emite notificación de éxito. | Satisfactorio |
+| 6 | Verificar aparición de la sucursal en el mapa y en el selector del catálogo. | La tienda se encuentra disponible inmediatamente para selección y asignación de stock. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador de Operaciones |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU6: Gestión de Productos, Tallas y Colores
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 6 | Gestión de Productos, Tallas y Colores |
+| Descripción | Permite el mantenimiento del catálogo de prendas de vestir masculinas, gestionando información descriptiva, precio base, categoría y la configuración ortogonal de variantes por Talla (S, M, L, XL) y Color (nombre y código hexadecimal HEX). |
+| Precondiciones | a) Sesión iniciada con privilegios de gestión de catálogo. b) Categorías de prendas creadas en el sistema. c) Conexión operativa con la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder a "Catálogo de Prendas" en el menú administrativo. | Se despliega la grilla de productos con miniaturas, SKU, precio y variantes asociadas. | Satisfactorio |
+| 2 | Presionar el botón "+ Crear Nueva Prenda". | Se abre el modal de creación de producto con pestañas de Datos Generales y Variantes. | Satisfactorio |
+| 3 | Ingresar SKU SHIRT-SLIM-001, nombre "Camisa Oxford Slim Fit" y precio 180.00 Bs. | El formulario valida unicidad de SKU y formato positivo del precio base. | Satisfactorio |
+| 4 | Seleccionar tallas multivaluadas [S, M, L, XL] y colores [#000080 Azul, #FFFFFF Blanco]. | Se genera la matriz de combinaciones posibles en la tabla de variantes. | Satisfactorio |
+| 5 | Cargar imagen de la prenda y presionar "Guardar Prenda". | Se persisten registros normalizados en productos, producto_tallas y producto_colores. | Satisfactorio |
+| 6 | Consultar el producto en el catálogo administrativo. | La prenda aparece con sus variantes habilitadas y lista para recibir stock en almacén. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador de Catálogo |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU7: Gestión de Temporadas y Colecciones
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 7 | Gestión de Temporadas y Colecciones |
+| Descripción | Permite calendarizar y administrar campañas estacionales de moda masculina (Primavera-Verano, Otoño-Invierno), controlando sus fechas de vigencia cronológica para activar colecciones y promociones temáticas. |
+| Precondiciones | a) Sesión activa con rol ADMINISTRADOR. b) Módulo de temporadas habilitado. c) Conexión a la base de datos activa. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Ingresar al módulo "Temporadas" desde el menú de comercialización. | Se muestran las temporadas registradas organizadas por estado (Vigente, Próxima, Cerrada). | Satisfactorio |
+| 2 | Presionar "+ Nueva Campaña Estacional". | Se abre el formulario modal de registro de temporada. | Satisfactorio |
+| 3 | Ingresar código SS-2026 y denominación "Colección Primavera - Verano 2026". | Se valida unicidad del código alfanumérico de temporada. | Satisfactorio |
+| 4 | Definir rango de fechas del 2026-08-01 al 2027-01-31 y estado VIGENTE. | El sistema verifica que la fecha final sea estrictamente posterior a la fecha inicial. | Satisfactorio |
+| 5 | Presionar "Guardar y Activar Temporada". | La temporada se persiste en PostgreSQL y se establece como activa en el motor de catálogo. | Satisfactorio |
+| 6 | Verificar filtro de temporada en la tienda virtual. | La colección SS-2026 aparece destacada en la página principal con sus prendas asociadas. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador / Jefe de Marketing |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU8: Gestión de Proveedores Textiles
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 8 | Gestión de Proveedores Textiles |
+| Descripción | Permite el registro y homologación de empresas fabricantes de textiles e insumos de confección, validando obligatoriamente el formato numérico y la unicidad del Número de Identificación Tributaria (NIT) nacional. |
+| Precondiciones | a) Sesión iniciada con rol ADMINISTRADOR. b) Módulo de compras y aprovisionamiento activo. c) Conexión a la base de datos PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder al módulo "Proveedores" desde el menú de aprovisionamiento. | Se visualiza el directorio comercial de empresas proveedoras registradas. | Satisfactorio |
+| 2 | Presionar "+ Registrar Proveedor". | Se despliega el formulario modal de registro de nuevo proveedor textil. | Satisfactorio |
+| 3 | Ingresar Razón Social "Textiles Andinos S.A." y datos de contacto. | Se validan los campos de nombre, teléfono y dirección física. | Satisfactorio |
+| 4 | Ingresar NIT 1028392019 que ya se encuentra registrado en el sistema. | El sistema captura la restricción de unicidad y muestra alerta de conflicto HTTP 409. | Satisfactorio |
+| 5 | Corregir el NIT ingresando uno válido y único (9482710015). | El validador sintáctico verifica que sea numérico de 7 a 12 dígitos y habilita el guardado. | Satisfactorio |
+| 6 | Presionar "Guardar Proveedor" y verificar en el listado general. | Se crea el proveedor en base de datos y la tabla refleja el nuevo registro de forma inmediata. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Administrador / Encargado de Compras |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU9: Control de Inventario Multi-Sucursal y Costo Promedio Ponderado CPP
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 9 | Control de Inventario Multi-Sucursal y Costo Promedio Ponderado CPP |
+| Descripción | Permite registrar entradas por compras a proveedores, actualizando automáticamente el stock físico de la variante en la sucursal seleccionada, recalculando matemáticamente el Costo Promedio Ponderado (CPP) y asentando el movimiento en el Kardex inmutable. |
+| Precondiciones | a) Prenda, variante (talla/color), sucursal y proveedor deben encontrarse activos. b) Sesión iniciada con permisos de inventario. c) Conexión transaccional ACID activa con PostgreSQL. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder al módulo "Inventario y Kardex" y seleccionar la sucursal Equipetrol. | Se despliega el saldo actual de la variante: Stock = 15 uds, CPP = 90.00 Bs. | Satisfactorio |
+| 2 | Presionar "+ Registrar Entrada por Compra (Lote Factura F-4892)". | Se despliega el formulario modal de ingreso de lote de prendas. | Satisfactorio |
+| 3 | Seleccionar la variante "Camisa Oxford Slim M Azul" e ingresar 20 unidades a 120.00 Bs/ud. | El formulario valida cantidades enteras positivas y costo unitario numérico. | Satisfactorio |
+| 4 | Confirmar la recepción del lote y procesar la transacción. | Se ejecuta la fórmula: CPP = (15*90 + 20*120) / 35 = 3750 / 35 = 107.14 Bs. | Satisfactorio |
+| 5 | Verificar actualización en la entidad de inventario. | stock_fisico = 35, ultimo_costo = 120.00 Bs, costo_promedio_ponderado = 107.14 Bs. | Satisfactorio |
+| 6 | Consultar el asiento generado en el Kardex inmutable. | Se visualiza el registro histórico con tipo COMPRA, cantidad entrada, nuevo saldo físico y saldo CPP. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Encargado de Almacén / Administrador |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+### Prueba de caso de uso CU10: Consulta de Catálogo y Disponibilidad por Sucursal
+
+| Campo | Detalle |
+|-------|---------|
+| Caso de uso 10 | Consulta de Catálogo y Disponibilidad por Sucursal |
+| Descripción | Permite a clientes y personal consultar prendas masculinas aplicando filtros por categoría, temporada, talla y color, desplegando en tiempo real la disponibilidad física real versus prendas reservadas en probadores para la sucursal seleccionada. |
+| Precondiciones | a) El catálogo de prendas debe encontrarse publicado. b) Existencias físicas cargadas en el subsistema de inventario. c) Conexión activa con el backend. |
+
+| Paso | Acción | Resultado esperado | Estado |
+|------|--------|-------------------|--------|
+| 1 | Acceder al Catálogo Público en la web o app móvil. | Se muestra la galería de prendas masculinas con selector de filtros en la barra lateral. | Satisfactorio |
+| 2 | Filtrar por talla "M" y color "Azul Marino". | La galería se actualiza dinámicamente mostrando las prendas que disponen de dicha variante. | Satisfactorio |
+| 3 | Seleccionar la prenda "Camisa Oxford Slim Fit" para ver su ficha de detalle. | Se visualiza precio (180 Bs), selector de tallas/colores y bloque de disponibilidad en tienda. | Satisfactorio |
+| 4 | Seleccionar la tienda "Sucursal Equipetrol (Santa Cruz)" en el desplegable de sucursales. | Se consulta la API /inventario/disponibilidad en tiempo real para la variante elegida. | Satisfactorio |
+| 5 | Verificar desglose de existencias en pantalla. | Muestra: "35 unidades físicas en tienda, 5 reservadas en probadores, 30 disponibles para compra inmediata". | Satisfactorio |
+| 6 | Comprobar concordancia con el stock físico del almacén. | El stock coincide con exactitud con el saldo reportado por el Kardex de la sucursal. | Satisfactorio |
+
+| Campo | Detalle |
+|-------|---------|
+| Responsable | Cliente / Vendedor de Tienda |
+| Resultado de la prueba | Satisfactorio |
+
+---
+
+# Conclusiones y Recomendaciones
+
+## 6.1 Conclusiones
+
+1. **Cumplimiento Integral del Alcance del Ciclo 1:**
+Se implementaron y validaron al 100% los 10 Casos de Uso Fundacionales (CU01 al CU10) planificados para el primer ciclo evolutivo bajo la metodología PUDS (Proceso Unificado de Desarrollo de Software), abarcando desde la autenticación robusta con control de acceso basado en roles (RBAC) y auto-registro, recuperación de credenciales mediante códigos OTP con despacho real vía SMTP Gmail, hasta la administración multi-sucursal, catálogo de indumentaria masculina con atributos cromáticos HEX y tallas, gestión de proveedores, valuación matemática de inventarios por Costo Promedio Ponderado (CPP) con Kardex inmutable, y consulta de disponibilidad omnicanal en tiempo real.
+
+2. **Rigor Metodológico y Trazabilidad en Modelado UML 2.5+:**
+Se logró una correspondencia biunívoca y trazabilidad completa entre la especificación analítica y el software desarrollado. Cada caso de uso cuenta con su respectivo diagrama de casos de uso (con relaciones <<include>> y <<extend>>), diagramas de comunicación bajo el patrón Boundary-Control-Entity (BCE), diseño de arquitectura lógica en 4 capas, diagramas de interacción (secuencia con operadores alt y opt), diagramas de estados finitos, diagrama de tiempo para el ciclo de vida del stock y el diagrama de despliegue físico modelado y sincronizado en Enterprise Architect (diagramas1erParcial.eapx).
+
+3. **Arquitectura Tecnológica Robusta y Desacoplada:**
+La combinación de FastAPI (Python 3.11) en el backend y Angular 19 (TypeScript) en el frontend demostró ser altamente eficiente. El backend ofrece tiempos de respuesta sub-milisegundo gracias al paradigma asíncrono ASGI (Uvicorn), tipado estricto con Pydantic v2 y transaccionalidad ACID mediante SQLAlchemy ORM. Por su parte, la Single Page Application (SPA) en Angular proporciona una experiencia de usuario reactiva, fluida y adaptativa para dispositivos de escritorio y móviles con navegación basada en hash (HashLocationStrategy).
+
+4. **Garantía de Calidad Mediante Pruebas Automatizadas de Aceptación:**
+La ejecución de la suite de pruebas unitarias y de integración (pytest tests/test_ciclo1_api.py -v) arrojó una tasa de éxito del 100% (11/11 casos de prueba superados). Se validaron escenarios críticos como la prevención de ataques por fuerza bruta (bloqueo automático tras 5 intentos fallidos), unicidad tributaria de NIT en proveedores, y la precisión matemática del recálculo dinámico de costos ponderados en el inventario.
+
+5. **Despliegue Continuo y Disponibilidad en la Nube:**
+La contenerización del sistema mediante Docker multi-stage y el empaquetado optimizado del frontend pre-compilado (web_dist) permitieron un despliegue cloud continuo, reproducible y de bajo consumo en Render.com, garantizando acceso público bajo protocolo seguro HTTPS con certificados TLS automáticos tanto a la interfaz web como a la documentación interactiva de la API (Swagger / OpenAPI).
+
+## 6.2 Recomendaciones
+
+1. **Evolución hacia los Ciclos 2 y 3 (Transaccionalidad y Servicios Avanzados):**
+Se recomienda dar continuidad inmediata a las fases de elaboración y construcción subsiguientes del PUDS para incorporar los módulos de Venta Digital Omnicanal (carrito de compras sincronizado, checkout con pasarelas de pago sandbox como Stripe, PayPal y QR interoperable boliviano), Punto de Venta Presencial (POS) para sucursales físicas y el subsistema de Reservas de Prendas en Tienda con asignación de probadores (CU11 al CU15).
+
+2. **Implementación de Capa de Caché y Bloqueo Concurrente con Redis:**
+A medida que el tráfico de usuarios concurrentes escale en eventos comerciales de alta demanda (CyberDays, promociones de fin de temporada), se sugiere incorporar Redis para almacenar en memoria caché las consultas de catálogo frecuente y aplicar bloqueos distribuidos (distributed locks) sobre el stock de prendas durante el proceso de reserva y checkout, evitando colisiones de inventario (race conditions).
+
+3. **Integración Profunda del Vestidor Virtual (RA) y Motor de IA Contextual:**
+Para la versión móvil en Flutter, se recomienda finalizar la integración del visor tridimensional mediante soporte para modelos glTF/GLB optimizados para Realidad Aumentada, y conectar el asistente de estilo con la API meteorológica (OpenWeatherMap) y modelos LLM (OpenAI / Gemini) para recomendaciones contextuales de outfits basadas en temperatura ambiente y colorimetría.
+
+4. **Migración a Base de Datos PostgreSQL Gestionada en Producción:**
+Si bien el sistema cuenta con auto-siembra transparente en SQLite para entornos de prueba y demostración, se recomienda aprovisionar una instancia gestionada de PostgreSQL 15+ en la nube (mediante Render Managed PostgreSQL, Supabase o Neon) aprovechando la variable de entorno DATABASE_URL, activando políticas de copias de seguridad continuas (Point-in-Time Recovery - PITR) y particionamiento de la tabla de Kardex a medida que el volumen histórico de movimientos crezca.
+
+5. **Monitoreo, Trazabilidad y Seguridad Avanzada:**
+Se aconseja implementar herramientas de observabilidad como Sentry para la captura proactiva de excepciones en producción y la auditoría periódica de la tabla bitacora_accesos, así como establecer políticas de rotación periódica para la clave SECRET_KEY de firma de tokens JWT y la contraseña de aplicaciones SMTP de Google.
+
+---
+
+# Bibliografía
+
+Booch, G., Rumbaugh, J., & Jacobson, I. (2006). El Lenguaje Unificado de Modelado: Guía del Usuario (2ª ed.). Addison-Wesley.
+
+Fowler, M. (2003). UML Distilled: A Brief Guide to the Standard Object Modeling Language (3ª ed.). Addison-Wesley.
+
+Larman, C. (2003). UML y Patrones: Una introducción al análisis y diseño orientado a objetos y al desarrollo iterativo (2ª ed.). Prentice Hall.
+
+Jacobson, I., Booch, G., & Rumbaugh, J. (2000). El Proceso Unificado de Desarrollo de Software. Addison-Wesley.
+
+Pressman, R. S., & Maxim, B. R. (2020). Ingeniería de Software: Un enfoque práctico (9ª ed.). McGraw-Hill.
+
+---
+
+# Anexos
+
+## Enlace repositorio y QR
+
+https://github.com/INGvainilla/1erParcial.git
+
+## Enlace despliegue
+
+- Web: https://despliegue-parcial1.onrender.com/app/#/catalogo

@@ -21,6 +21,10 @@ import app.modules.proveedores.models
 import app.modules.temporadas.models
 import app.modules.productos.models
 import app.modules.inventario.models
+import app.modules.reservas.models
+import app.modules.carrito.models
+import app.modules.ordenes.models
+import app.modules.pagos.models
 
 # Importar enrutadores
 from app.modules.auth.router import router as auth_router
@@ -31,6 +35,13 @@ from app.modules.temporadas.router import router as temporadas_router
 from app.modules.proveedores.router import router as proveedores_router
 from app.modules.inventario.router import router as inventario_router
 from app.modules.catalogo.router import router as catalogo_router
+from app.modules.reservas.router import router as reservas_router
+from app.modules.carrito.router import router as carrito_router
+from app.modules.ordenes.router import router as ordenes_router
+from app.modules.pos.router import router as pos_router
+from app.modules.pagos.router import router as pagos_router
+from app.modules.pagos.config_router import router as config_pagos_router
+from app.modules.logistica.router import router as logistica_router
 
 # Inicializar tablas de base de datos
 Base.metadata.create_all(bind=engine)
@@ -59,7 +70,7 @@ app = FastAPI(
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200", "http://localhost:8000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,6 +87,13 @@ app.include_router(temporadas_router, prefix=API_PREFIX)
 app.include_router(proveedores_router, prefix=API_PREFIX)
 app.include_router(inventario_router, prefix=API_PREFIX)
 app.include_router(catalogo_router, prefix=API_PREFIX)
+app.include_router(reservas_router, prefix=API_PREFIX)
+app.include_router(carrito_router, prefix=API_PREFIX)
+app.include_router(ordenes_router, prefix=API_PREFIX)
+app.include_router(pos_router, prefix=API_PREFIX)
+app.include_router(pagos_router, prefix=API_PREFIX)
+app.include_router(config_pagos_router, prefix=API_PREFIX)
+app.include_router(logistica_router, prefix=API_PREFIX)
 
 # Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))

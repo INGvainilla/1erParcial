@@ -1,0 +1,64 @@
+<div class="reserva-container">
+  <div class="reserva-card">
+    <div class="reserva-header">
+      <h2>Reservar en Sucursal</h2>
+      <p>Selecciona una sucursal física para probarte tus prendas elegidas.</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-alert">
+      {{ errorMessage }}
+    </div>
+
+    <div class="reserva-content">
+      <div class="form-section">
+        <h3>1. Tus Prendas Seleccionadas</h3>
+        <ul class="cart-items">
+          <li *ngFor="let item of cartItems" class="cart-item">
+            <div class="item-icon">👕</div>
+            <div class="item-details">
+              <strong>Producto ID: {{ item.id_producto }}</strong>
+              <span>Talla: {{ item.talla }} | Color: {{ item.color }}</span>
+            </div>
+            <div class="item-qty">x{{ item.cantidad }}</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="form-section">
+        <h3>2. Dónde y Cuándo</h3>
+        
+        <div class="form-group">
+          <label for="sucursal">Sucursal</label>
+          <select id="sucursal" [(ngModel)]="selectedSucursal" class="premium-input">
+            <option [ngValue]="null" disabled>Selecciona una sucursal</option>
+            <option *ngFor="let suc of sucursales" [ngValue]="suc.id_sucursal">
+              {{ suc.nombre }} ({{ suc.ciudad }})
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha">Fecha de Visita</label>
+            <input type="date" id="fecha" [(ngModel)]="fechaVisita" class="premium-input">
+          </div>
+          <div class="form-group">
+            <label for="hora">Hora</label>
+            <input type="time" id="hora" [(ngModel)]="horaVisita" class="premium-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reserva-footer">
+      <button 
+        class="btn-primary" 
+        [disabled]="isLoading || !selectedSucursal || !fechaVisita || !horaVisita" 
+        (click)="crearReserva()"
+      >
+        <span *ngIf="!isLoading">Confirmar Reserva</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>

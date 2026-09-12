@@ -55,3 +55,50 @@ export const proveedoresGuard: CanActivateFn = () => {
   router.navigate(['/catalogo']);
   return false;
 };
+
+/**
+ * Guard para rutas del Encargado de Sucursal (CU12: Preparar y Atender Reservas)
+ */
+export const encargadoGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const rol = auth.currentUser()?.rol;
+  if (rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL') {
+    return true;
+  }
+  router.navigate(['/catalogo']);
+  return false;
+};
+
+/**
+ * Guard para rutas del Punto de Venta / Terminal POS (CU15)
+ * Permite acceso a Cajeros, Encargados de Sucursal y Administradores
+ */
+export const posGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const rol = auth.currentUser()?.rol;
+  if (rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL' || rol === 'CAJERO') {
+    return true;
+  }
+  router.navigate(['/catalogo']);
+  return false;
+};
+
+/**
+ * Guard para rutas de Logística y Despacho de Delivery (CU18)
+ * Permite acceso a personal de LOGISTICA y ADMINISTRADOR
+ */
+export const logisticaGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const rol = auth.currentUser()?.rol;
+  if (rol === 'ADMINISTRADOR' || rol === 'LOGISTICA' || rol === 'ENCARGADO_SUCURSAL') {
+    return true;
+  }
+  router.navigate(['/catalogo']);
+  return false;
+};
+
+
+

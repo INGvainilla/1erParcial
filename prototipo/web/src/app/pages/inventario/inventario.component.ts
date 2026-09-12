@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../core/services/fashion-api.service';
@@ -306,8 +306,9 @@ export class InventarioComponent implements OnInit {
 
   constructor(
     private api: FashionApiService,
+    public auth: AuthService,
     private toast: ToastService,
-    public auth: AuthService
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -334,9 +335,11 @@ export class InventarioComponent implements OnInit {
       next: (data) => {
         this.inventario = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.loading = false;
+        this.cdr.detectChanges();
         this.toast.error('Inventario', 'No se pudo cargar el inventario.');
       }
     });

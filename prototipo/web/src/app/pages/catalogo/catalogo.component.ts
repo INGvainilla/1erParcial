@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../core/services/fashion-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CarritoService } from '../../core/services/carrito.service';
 import { CatalogoItem, Sucursal, Categoria, StockSucursalItem } from '../../core/models/fashion.models';
 
 @Component({
@@ -18,15 +19,25 @@ import { CatalogoItem, Sucursal, Categoria, StockSucursalItem } from '../../core
           <p class="subtitle">Colección Masculina Premium con Vestidores Virtuales y Realidad Aumentada (CU10 / CU06)</p>
         </div>
 
-        <!-- Selector de Sucursal Omnicanal (CU10) -->
-        <div class="branch-selector-box">
-          <label for="branch-select"><i class="fas fa-map-marker-alt"></i> Verificar Stock en Sucursal Física:</label>
-          <select id="branch-select" [(ngModel)]="selectedSucursalId" (change)="loadCatalogo()" class="form-control select-branch">
-            <option [ngValue]="null">🌐 Todas las Sucursales (Stock Red Total)</option>
-            <option *ngFor="let s of sucursales" [ngValue]="s.id_sucursal">
-              📍 {{ s.nombre_sucursal }} ({{ s.nombre_ciudad || s.ciudad?.nombre_ciudad || 'Bolivia' }})
-            </option>
-          </select>
+        <!-- Selector de Sucursal Omnicanal (CU10) y Carrito (CU13) -->
+        <div class="header-right-box">
+          <div class="branch-selector-box">
+            <label for="branch-select"><i class="fas fa-map-marker-alt"></i> Verificar Stock en Sucursal Física:</label>
+            <select id="branch-select" [(ngModel)]="selectedSucursalId" (change)="loadCatalogo()" class="form-control select-branch">
+              <option [ngValue]="null">🌐 Todas las Sucursales (Stock Red Total)</option>
+              <option *ngFor="let s of sucursales" [ngValue]="s.id_sucursal">
+                📍 {{ s.nombre_sucursal }} ({{ s.nombre_ciudad || s.ciudad?.nombre_ciudad || 'Bolivia' }})
+              </option>
+            </select>
+          </div>
+
+          <button class="btn-catalog-cart" (click)="carritoService.openCart()" title="Ver Bolsa de Compras">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Bolsa</span>
+            <span class="cart-badge-pill" *ngIf="carritoService.totalItems() > 0">
+              {{ carritoService.totalItems() }}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -103,22 +114,34 @@ import { CatalogoItem, Sucursal, Categoria, StockSucursalItem } from '../../core
             <h3 class="product-title">{{ item.nombre }}</h3>
             <p class="product-desc">{{ item.descripcion || 'Confección de alta sastrería con acabados reforzados.' }}</p>
 
-            <!-- Paleta de Colores HEX -->
+            <!-- Paleta de Colores HEX Interactivo -->
             <div class="color-swatches" *ngIf="item.colores?.length">
-              <span class="swatch-label">Colores:</span>
+              <span class="swatch-label">Color: <strong>{{ getColor(item) }}</strong></span>
               <div class="swatches-row">
                 <span
                   *ngFor="let col of item.colores"
                   class="color-dot"
+                  [class.active-dot]="getColor(item) === col.color_nombre"
                   [style.background-color]="col.codigo_hex"
+                  (click)="setColor(item, col.color_nombre)"
                   [title]="col.color_nombre + ' (' + col.codigo_hex + ')'"
                 ></span>
               </div>
             </div>
 
-            <!-- Tallas Disponibles -->
+            <!-- Tallas Disponibles Interactivas -->
             <div class="sizes-row" *ngIf="item.tallas?.length">
-              <span class="size-chip" *ngFor="let t of item.tallas">{{ t.talla }}</span>
+              <span class="swatch-label">Talla: <strong>{{ getTalla(item) }}</strong></span>
+              <div class="chips-row">
+                <span
+                  class="size-chip"
+                  *ngFor="let t of item.tallas"
+                  [class.active-chip]="getTalla(item) === t.talla"
+                  (click)="setTalla(item, t.talla)"
+                >
+                  {{ t.talla }}
+                </span>
+              </div>
             </div>
 
             <div class="card-divider"></div>
@@ -154,9 +177,27 @@ import { CatalogoItem, Sucursal, Categoria, StockSucursalItem } from '../../core
                 </span>
               </div>
             </div>
+
+            <!-- Botón Añadir al Carrito (CU13) -->
+            <button
+              class="btn-add-cart-action"
+              (click)="agregarAlCarrito(item)"
+              [disabled]="(selectedSucursalId !== null && (getBranchStock(item)?.stock_disponible || 0) <= 0) || (selectedSucursalId === null && item.stock_total_disponible <= 0)"
+            >
+              <i class="fas fa-cart-plus"></i>
+              <span>Añadir a la Bolsa</span>
+            </button>
           </div>
         </div>
       </div>
+
+      <!-- Botón Flotante Carrito (CU13) -->
+      <button class="btn-floating-bag" (click)="carritoService.openCart()" title="Ver Bolsa de Compras">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="floating-bag-badge" *ngIf="carritoService.totalItems() > 0">
+          {{ carritoService.totalItems() }}
+        </span>
+      </button>
     </div>
   `,
   styles: [`
@@ -472,13 +513,143 @@ import { CatalogoItem, Sucursal, Categoria, StockSucursalItem } from '../../core
       padding: 3rem;
       color: var(--text-secondary);
     }
-    .empty-state h3 {
-      color: var(--text-primary);
-      margin: 1rem 0 0.5rem;
+    /* CU13: Carrito & Interacciones */
+    .header-right-box {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .btn-catalog-cart {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1.15rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.3));
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-catalog-cart:hover {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+    .cart-badge-pill {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+    }
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+    .size-chip {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .size-chip:hover {
+      border-color: #818cf8;
+      color: #ffffff;
+    }
+    .size-chip.active-chip {
+      background: #4f46e5;
+      color: #ffffff;
+      border-color: #818cf8;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+    .color-dot {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .color-dot:hover {
+      transform: scale(1.2);
+    }
+    .color-dot.active-dot {
+      transform: scale(1.25);
+      box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #818cf8;
+    }
+    .btn-add-cart-action {
+      width: 100%;
+      margin-top: 0.85rem;
+      padding: 0.65rem 1rem;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(129, 140, 248, 0.25));
+      border: 1px solid rgba(129, 140, 248, 0.35);
+      border-radius: 8px;
+      color: #c7d2fe;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-add-cart-action:hover:not([disabled]) {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-add-cart-action[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .btn-floating-bag {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.5);
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-floating-bag:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 30px rgba(79, 70, 229, 0.7);
+    }
+    .floating-bag-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ef4444;
+      border: 2px solid #0f172a;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   `]
 })
 export class CatalogoComponent implements OnInit {
+  carritoService = inject(CarritoService);
+
   productos: CatalogoItem[] = [];
   categorias: Categoria[] = [];
   sucursales: Sucursal[] = [];
@@ -489,9 +660,41 @@ export class CatalogoComponent implements OnInit {
   loading = false;
   private searchTimer: any;
 
+  selectedColorMap: { [id: number]: string } = {};
+  selectedTallaMap: { [id: number]: string } = {};
+
+  getColor(item: CatalogoItem): string {
+    if (this.selectedColorMap[item.id_producto]) {
+      return this.selectedColorMap[item.id_producto];
+    }
+    return item.colores && item.colores.length > 0 ? item.colores[0].color_nombre : 'Único';
+  }
+
+  setColor(item: CatalogoItem, color: string): void {
+    this.selectedColorMap[item.id_producto] = color;
+  }
+
+  getTalla(item: CatalogoItem): string {
+    if (this.selectedTallaMap[item.id_producto]) {
+      return this.selectedTallaMap[item.id_producto];
+    }
+    return item.tallas && item.tallas.length > 0 ? item.tallas[0].talla : 'M';
+  }
+
+  setTalla(item: CatalogoItem, talla: string): void {
+    this.selectedTallaMap[item.id_producto] = talla;
+  }
+
+  agregarAlCarrito(item: CatalogoItem): void {
+    const talla = this.getTalla(item);
+    const color = this.getColor(item);
+    this.carritoService.agregarItem(item.id_producto, talla, color, 1);
+  }
+
   constructor(
     private api: FashionApiService,
-    private toast: ToastService
+    private toast: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   onSearchInput(): void {
@@ -533,9 +736,11 @@ export class CatalogoComponent implements OnInit {
       next: (data) => {
         this.productos = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
+        this.cdr.detectChanges();
         this.toast.error('Error de Catálogo', 'No se pudieron consultar los productos.');
       }
     });
