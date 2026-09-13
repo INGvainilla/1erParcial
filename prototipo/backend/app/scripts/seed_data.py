@@ -8,7 +8,7 @@ e inventario multi-sucursal valuado por Costo Promedio Ponderado (CPP) y Kardex.
 import sys
 import os
 from datetime import datetime, date, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 def utc_now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -295,7 +295,59 @@ def seed_database(force_reset: bool = False):
             modelo_3d_glb="https://assets.fashionstore.bo/models/blazer_lino_casual.glb",
             estado="PUBLICADO"
         )
-        db.add_all([prod_camisa, prod_pant, prod_blazer])
+        prod_zapato = Producto(
+            id_categoria=cat_calzado.id_categoria,
+            id_marca=m_bocaccio.id_marca,
+            id_temporada=t_fw26.id_temporada,
+            id_proveedor=p_italiana.id_proveedor,
+            codigo_sku_base="SHOE-OXFD-004",
+            nombre="Zapato Oxford Cap-Toe Cuero Genuino",
+            descripcion="Calzado formal artesanal en cuero vacuno plena flor con suela de cuero cosida Goodyear Welted",
+            precio_base=Decimal("540.00"),
+            imagen_principal="https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600&q=80",
+            modelo_3d_glb="https://assets.fashionstore.bo/models/oxford_shoes.glb",
+            estado="PUBLICADO"
+        )
+        prod_traje = Producto(
+            id_categoria=cat_trajes.id_categoria,
+            id_marca=m_sartorial.id_marca,
+            id_temporada=t_ss26.id_temporada,
+            id_proveedor=p_andina.id_proveedor,
+            codigo_sku_base="SUIT-SLIM-005",
+            nombre="Traje Ejecutivo Slim Fit 2 Piezas",
+            descripcion="Conjunto formal de saco y pantalón entallado en lana fría super 120s para ocasiones de gala y corporativas",
+            precio_base=Decimal("980.00"),
+            imagen_principal="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
+            modelo_3d_glb="https://assets.fashionstore.bo/models/suit_executive.glb",
+            estado="PUBLICADO"
+        )
+        prod_mocasines = Producto(
+            id_categoria=cat_calzado.id_categoria,
+            id_marca=m_bocaccio.id_marca,
+            id_temporada=t_ss26.id_temporada,
+            id_proveedor=p_hilasur.id_proveedor,
+            codigo_sku_base="MOCA-LOAF-006",
+            nombre="Mocasín Náutico Confort de Cuero",
+            descripcion="Mocasín sin cordones de cuero gamuzado ultra flexible con plantilla ortopédica acolchada",
+            precio_base=Decimal("460.00"),
+            imagen_principal="https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=600&q=80",
+            modelo_3d_glb="https://assets.fashionstore.bo/models/mocasines.glb",
+            estado="PUBLICADO"
+        )
+        prod_camisa_lino = Producto(
+            id_categoria=cat_camisas.id_categoria,
+            id_marca=m_oxford.id_marca,
+            id_temporada=t_ss26.id_temporada,
+            id_proveedor=p_andina.id_proveedor,
+            codigo_sku_base="SHIRT-LINO-007",
+            nombre="Camisa de Lino Cuello Mao Italiana",
+            descripcion="Camisa veraniega fresca en 100% lino natural lavado con cuello oriental y botones madera",
+            precio_base=Decimal("310.00"),
+            imagen_principal="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600&q=80",
+            modelo_3d_glb="https://assets.fashionstore.bo/models/shirt_lino_mao.glb",
+            estado="PUBLICADO"
+        )
+        db.add_all([prod_camisa, prod_pant, prod_blazer, prod_zapato, prod_traje, prod_mocasines, prod_camisa_lino])
         db.flush()
 
         # 8. Colores HEX Multivaluados
@@ -308,7 +360,17 @@ def seed_database(force_reset: bool = False):
             (prod_pant.id_producto, "Azul Noche", "#191970"),
             (prod_pant.id_producto, "Verde Oliva", "#556B2F"),
             (prod_blazer.id_producto, "Azul Cobalto", "#0047AB"),
-            (prod_blazer.id_producto, "Gris Plomo", "#708090")
+            (prod_blazer.id_producto, "Gris Plomo", "#708090"),
+            (prod_zapato.id_producto, "Negro Clásico", "#1A1A1A"),
+            (prod_zapato.id_producto, "Marrón Suizo", "#5C4033"),
+            (prod_zapato.id_producto, "Cognac", "#9E4714"),
+            (prod_traje.id_producto, "Azul Noche", "#191970"),
+            (prod_traje.id_producto, "Gris Marengo", "#4A4E69"),
+            (prod_mocasines.id_producto, "Azul Marino", "#000080"),
+            (prod_mocasines.id_producto, "Tabaco", "#6F4E37"),
+            (prod_camisa_lino.id_producto, "Blanco Puro", "#FFFFFF"),
+            (prod_camisa_lino.id_producto, "Verde Salvia", "#8A9A5B"),
+            (prod_camisa_lino.id_producto, "Celeste Pastel", "#B0E0E6")
         ]
         for p_id, col_nom, hex_code in colores_data:
             db.add(ProductoColor(id_producto=p_id, color_nombre=col_nom, codigo_hex=hex_code))
@@ -318,7 +380,11 @@ def seed_database(force_reset: bool = False):
         tallas_data = [
             (prod_camisa.id_producto, ["S", "M", "L", "XL"]),
             (prod_pant.id_producto, ["30", "32", "34", "36"]),
-            (prod_blazer.id_producto, ["38", "40", "42"])
+            (prod_blazer.id_producto, ["38", "40", "42"]),
+            (prod_zapato.id_producto, ["39", "40", "41", "42"]),
+            (prod_traje.id_producto, ["38", "40", "42", "44"]),
+            (prod_mocasines.id_producto, ["39", "40", "41", "42"]),
+            (prod_camisa_lino.id_producto, ["S", "M", "L", "XL"])
         ]
         for p_id, tallas_list in tallas_data:
             for t in tallas_list:
@@ -395,6 +461,64 @@ def seed_database(force_reset: bool = False):
         )
         db.add_all([inv1, inv2, inv3, inv4, inv5])
         db.flush()
+
+        # Generar inventario omnicanal para todas las combinaciones de producto/talla/color en todas las sucursales
+        print("Poblando stock completo multi-sucursal para todas las tallas y colores...")
+        combinaciones_existentes = {
+            (inv1.id_sucursal, inv1.id_producto, inv1.talla, inv1.color),
+            (inv2.id_sucursal, inv2.id_producto, inv2.talla, inv2.color),
+            (inv3.id_sucursal, inv3.id_producto, inv3.talla, inv3.color),
+            (inv4.id_sucursal, inv4.id_producto, inv4.talla, inv4.color),
+            (inv5.id_sucursal, inv5.id_producto, inv5.talla, inv5.color),
+        }
+        
+        sucursales_todas = [s_equi, s_cent, s_cala, s_prad]
+        prods_info = [
+            (prod_camisa, ["S", "M", "L", "XL"], ["Azul Marino", "Blanco Óptico", "Celeste Cielo"], Decimal("110.00")),
+            (prod_pant, ["30", "32", "34", "36"], ["Beige Arena", "Azul Noche", "Verde Oliva"], Decimal("130.00")),
+            (prod_blazer, ["38", "40", "42"], ["Azul Cobalto", "Gris Plomo"], Decimal("280.00")),
+            (prod_zapato, ["39", "40", "41", "42"], ["Negro Clásico", "Marrón Suizo", "Cognac"], Decimal("250.00")),
+            (prod_traje, ["38", "40", "42", "44"], ["Azul Noche", "Gris Marengo"], Decimal("420.00")),
+            (prod_mocasines, ["39", "40", "41", "42"], ["Azul Marino", "Tabaco"], Decimal("210.00")),
+            (prod_camisa_lino, ["S", "M", "L", "XL"], ["Blanco Puro", "Verde Salvia", "Celeste Pastel"], Decimal("125.00"))
+        ]
+
+        def calcular_costo_talla(costo_base: Decimal, talla: str) -> Decimal:
+            factores = {
+                "S": Decimal("0.90"), "M": Decimal("1.00"), "L": Decimal("1.10"), "XL": Decimal("1.20"), "XXL": Decimal("1.30"),
+                "30": Decimal("0.92"), "32": Decimal("1.00"), "34": Decimal("1.08"), "36": Decimal("1.18"),
+                "38": Decimal("0.92"), "40": Decimal("1.00"), "42": Decimal("1.08"), "44": Decimal("1.18"),
+                "39": Decimal("0.94"), "41": Decimal("1.06")
+            }
+            factor = factores.get(talla.upper(), Decimal("1.00"))
+            return (costo_base * factor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        nuevos_invs = []
+        for suc in sucursales_todas:
+            for p, tallas_l, cols_l, costo in prods_info:
+                for t in tallas_l:
+                    costo_talla = calcular_costo_talla(costo, t)
+                    for c in cols_l:
+                        key = (suc.id_sucursal, p.id_producto, t, c)
+                        if key not in combinaciones_existentes:
+                            inv_item = Inventario(
+                                id_sucursal=suc.id_sucursal,
+                                id_producto=p.id_producto,
+                                talla=t,
+                                color=c,
+                                stock_fisico=20,
+                                stock_reservado=0,
+                                stock_disponible=20,
+                                stock_minimo=5,
+                                ultimo_costo_compra=costo_talla,
+                                costo_promedio_ponderado=costo_talla
+                            )
+                            nuevos_invs.append(inv_item)
+                            combinaciones_existentes.add(key)
+        
+        if nuevos_invs:
+            db.add_all(nuevos_invs)
+            db.flush()
 
         # Asientos de Kardex inmutable
         k1 = KardexMovimiento(

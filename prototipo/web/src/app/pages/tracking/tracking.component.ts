@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LogisticaService, TrackingOrden } from '../../core/services/logistica.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-tracking',
@@ -17,16 +18,28 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
               <i class="fas fa-arrow-left"></i> Volver a la Tienda
             </a>
             <h1 class="page-title">
-              <i class="fas fa-shipping-fast text-sky"></i> Seguimiento en Vivo
+              <ng-container *ngIf="tracking.modalidad_entrega === 'RETIRO_TIENDA'; else deliveryTitle">
+                <i class="fas fa-store text-emerald"></i> Seguimiento — Retiro en Tienda
+              </ng-container>
+              <ng-template #deliveryTitle>
+                <i class="fas fa-shipping-fast text-sky"></i> Seguimiento en Vivo — Delivery
+              </ng-template>
             </h1>
             <p class="order-subtitle">
               Orden <strong>#{{ tracking.id_orden }}</strong> &bull; Factura <strong>{{ tracking.numero_factura || 'En Emisión' }}</strong>
+              <span *ngIf="tracking.nombre_sucursal"> &bull; {{ tracking.nombre_sucursal }}</span>
             </p>
           </div>
 
-          <div class="live-pulse">
-            <span class="pulse-dot"></span>
-            <span>Actualización en tiempo real</span>
+          <div class="header-right">
+            <div class="modality-pill" [class.modality-pickup]="tracking.modalidad_entrega === 'RETIRO_TIENDA'">
+              <i [class]="tracking.modalidad_entrega === 'RETIRO_TIENDA' ? 'fas fa-store' : 'fas fa-motorcycle'"></i>
+              <span>{{ tracking.modalidad_entrega === 'RETIRO_TIENDA' ? 'Retiro en Tienda' : 'Envío a Domicilio' }}</span>
+            </div>
+            <div class="live-pulse">
+              <span class="pulse-dot"></span>
+              <span>Actualización en tiempo real</span>
+            </div>
           </div>
         </div>
 
@@ -41,7 +54,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
                  [class.completed]="p.completado"
                  [class.active]="p.activo">
               <div class="step-icon-wrap">
-                <i [class]="p.icono" [class.fa-bounce]="p.activo && p.codigo === 'EN_TRANSITO'"></i>
+                <i [class]="p.icono" [class.fa-bounce]="p.activo && (p.codigo === 'EN_TRANSITO' || p.codigo === 'PREPARACION')"></i>
               </div>
               <div class="step-label">{{ p.titulo }}</div>
               <div class="step-desc" *ngIf="p.activo">{{ p.descripcion }}</div>
@@ -51,68 +64,153 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
 
         <!-- MAIN DETAILS GRID -->
         <div class="details-grid">
-          <!-- COURIER & REPARTIDOR CARD -->
-          <div class="detail-card courier-card">
-            <div class="card-head">
-              <div class="head-title">
-                <i class="fas fa-id-card-alt text-purple"></i>
-                <h3>Datos del Conductor / Repartidor</h3>
-              </div>
-              <span class="badge-status" [class.badge-transit]="tracking.estado_logistica === 'EN_TRANSITO'">
-                {{ tracking.estado_logistica }}
-              </span>
-            </div>
-
-            <div class="courier-body" *ngIf="tracking.nombre_repartidor; else noCourier">
-              <div class="courier-avatar">
-                <i class="fas fa-motorcycle"></i>
-              </div>
-              <div class="courier-info">
-                <h4 class="courier-name">{{ tracking.nombre_repartidor }}</h4>
-                <p class="courier-role">Encargado de Entrega a Domicilio</p>
-                <div class="courier-contact" *ngIf="tracking.telefono_repartidor">
-                  <a [href]="'tel:' + tracking.telefono_repartidor" class="btn-contact-action">
-                    <i class="fas fa-phone-alt"></i> Llamar ({{ tracking.telefono_repartidor }})
-                  </a>
-                  <a [href]="'https://wa.me/591' + tracking.telefono_repartidor" target="_blank" class="btn-contact-action btn-wa">
-                    <i class="fab fa-whatsapp"></i> WhatsApp
-                  </a>
+          <!-- CARD IZQUIERDA: RETIRO EN TIENDA O COURIER DELIVERY -->
+          <ng-container *ngIf="tracking.modalidad_entrega === 'RETIRO_TIENDA'; else courierCardTpl">
+            <div class="detail-card pickup-card">
+              <div class="card-head">
+                <div class="head-title">
+                  <i class="fas fa-store text-emerald"></i>
+                  <h3>Punto de Retiro en Tienda</h3>
                 </div>
+                <span class="badge-status badge-pickup">
+                  {{ tracking.estado_logistica === 'LISTO_DESPACHO' ? 'LISTO PARA RETIRO' : tracking.estado_logistica }}
+                </span>
               </div>
-            </div>
 
-            <ng-template #noCourier>
-              <div class="courier-pending">
-                <i class="fas fa-warehouse text-amber"></i>
-                <p>Tu orden está siendo empaquetada en el centro logístico. Te asignaremos un conductor en breve.</p>
-              </div>
-            </ng-template>
-
-            <!-- DIRECCIÓN Y DISTANCIA -->
-            <div class="delivery-destination">
-              <div class="dest-item">
-                <i class="fas fa-map-marker-alt text-red"></i>
+              <!-- BANNERS DE ESTADO DINÁMICOS -->
+              <div *ngIf="tracking.estado_logistica === 'LISTO_DESPACHO'" class="pickup-banner ready">
+                <i class="fas fa-check-circle"></i>
                 <div>
-                  <span class="dest-lbl">Dirección de Destino</span>
-                  <p class="dest-val">{{ tracking.direccion_envio }}</p>
+                  <h4>¡Tus prendas están listas para recoger!</h4>
+                  <p>Pasa por el mostrador de <strong>{{ tracking.nombre_sucursal || 'Sucursal Equipetrol' }}</strong> presentando tu Cédula o tu Factura <strong>{{ tracking.numero_factura }}</strong>.</p>
                 </div>
               </div>
-              <div class="dest-item" *ngIf="tracking.distancia_km">
-                <i class="fas fa-route text-sky"></i>
+
+              <div *ngIf="tracking.estado_logistica === 'PREPARACION'" class="pickup-banner prep">
+                <i class="fas fa-box-open"></i>
                 <div>
-                  <span class="dest-lbl">Distancia Estimada (Haversine)</span>
-                  <p class="dest-val">{{ tracking.distancia_km }} Kilómetros</p>
+                  <h4>En Preparación en Tienda</h4>
+                  <p>El personal de la sucursal está alistando, doblando e inspeccionando tus prendas en bodega.</p>
+                </div>
+              </div>
+
+              <div *ngIf="tracking.estado_logistica === 'CREADA' || tracking.estado_logistica === 'PAGADO'" class="pickup-banner wait">
+                <i class="fas fa-receipt"></i>
+                <div>
+                  <h4>Pago Aprobado</h4>
+                  <p>Tu orden ingresó al centro de atención de la sucursal. Comenzaremos la preparación de inmediato.</p>
+                </div>
+              </div>
+
+              <div *ngIf="tracking.estado_logistica === 'ENTREGADA'" class="pickup-banner done">
+                <i class="fas fa-handshake"></i>
+                <div>
+                  <h4>¡Orden Retirada Satisfactoriamente!</h4>
+                  <p>Las prendas fueron entregadas al cliente en mostrador. ¡Gracias por tu compra!</p>
+                </div>
+              </div>
+
+              <!-- DETALLES DE SUCURSAL -->
+              <div class="pickup-details-list">
+                <div class="info-row">
+                  <i class="fas fa-building text-emerald"></i>
+                  <div>
+                    <span class="info-lbl">Sucursal Seleccionada</span>
+                    <p class="info-val">{{ tracking.nombre_sucursal || 'Sucursal Equipetrol' }}</p>
+                  </div>
+                </div>
+
+                <div class="info-row">
+                  <i class="fas fa-map-marker-alt text-red"></i>
+                  <div>
+                    <span class="info-lbl">Dirección de Retiro</span>
+                    <p class="info-val">{{ tracking.direccion_sucursal || 'Av. San Martín #450, entre 3er y 4to anillo' }}</p>
+                  </div>
+                </div>
+
+                <div class="info-row">
+                  <i class="fas fa-clock text-amber"></i>
+                  <div>
+                    <span class="info-lbl">Horario de Atención</span>
+                    <p class="info-val">Lunes a Sábado: 09:00 – 20:00 | Domingo: 10:00 – 16:00</p>
+                  </div>
+                </div>
+
+                <div class="info-row" *ngIf="tracking.nombre_cliente">
+                  <i class="fas fa-user-check text-sky"></i>
+                  <div>
+                    <span class="info-lbl">Titular / Cliente</span>
+                    <p class="info-val">{{ tracking.nombre_cliente }}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </ng-container>
 
-          <!-- RESUMEN DE ARTÍCULOS EN EL PAQUETE -->
+          <!-- PLANTILLA COURIER (DELIVERY) -->
+          <ng-template #courierCardTpl>
+            <div class="detail-card courier-card">
+              <div class="card-head">
+                <div class="head-title">
+                  <i class="fas fa-id-card-alt text-purple"></i>
+                  <h3>Datos del Conductor / Repartidor</h3>
+                </div>
+                <span class="badge-status" [class.badge-transit]="tracking.estado_logistica === 'EN_TRANSITO'">
+                  {{ tracking.estado_logistica }}
+                </span>
+              </div>
+
+              <div class="courier-body" *ngIf="tracking.nombre_repartidor; else noCourier">
+                <div class="courier-avatar">
+                  <i class="fas fa-motorcycle"></i>
+                </div>
+                <div class="courier-info">
+                  <h4 class="courier-name">{{ tracking.nombre_repartidor }}</h4>
+                  <p class="courier-role">Encargado de Entrega a Domicilio</p>
+                  <div class="courier-contact" *ngIf="tracking.telefono_repartidor">
+                    <a [href]="'tel:' + tracking.telefono_repartidor" class="btn-contact-action">
+                      <i class="fas fa-phone-alt"></i> Llamar ({{ tracking.telefono_repartidor }})
+                    </a>
+                    <a [href]="'https://wa.me/591' + tracking.telefono_repartidor" target="_blank" class="btn-contact-action btn-wa">
+                      <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <ng-template #noCourier>
+                <div class="courier-pending">
+                  <i class="fas fa-warehouse text-amber"></i>
+                  <p>Tu orden está siendo empaquetada en el centro logístico. Te asignaremos un conductor en breve.</p>
+                </div>
+              </ng-template>
+
+              <!-- DIRECCIÓN Y DISTANCIA -->
+              <div class="delivery-destination">
+                <div class="dest-item">
+                  <i class="fas fa-map-marker-alt text-red"></i>
+                  <div>
+                    <span class="dest-lbl">Dirección de Destino</span>
+                    <p class="dest-val">{{ tracking.direccion_envio || 'Dirección registrada en pedido' }}</p>
+                  </div>
+                </div>
+                <div class="dest-item" *ngIf="tracking.distancia_km">
+                  <i class="fas fa-route text-sky"></i>
+                  <div>
+                    <span class="dest-lbl">Distancia Estimada (Haversine)</span>
+                    <p class="dest-val">{{ tracking.distancia_km }} Kilómetros</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- RESUMEN DE ARTÍCULOS EN LA ORDEN -->
           <div class="detail-card items-card">
             <div class="card-head">
               <div class="head-title">
                 <i class="fas fa-tshirt text-sky"></i>
-                <h3>Prendas en este Envío</h3>
+                <h3>Prendas en esta Orden</h3>
               </div>
               <span class="items-count">{{ tracking.prendas.length }} Artículo(s)</span>
             </div>
@@ -138,15 +236,33 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
 
             <div class="payment-summary">
               <div class="pay-row">
-                <span>Costo de Despacho (Delivery):</span>
-                <span>Bs. {{ tracking.costo_envio.toFixed(2) }}</span>
+                <span>Modalidad de Despacho:</span>
+                <span class="fw-bold text-sky">{{ tracking.modalidad_entrega === 'RETIRO_TIENDA' ? 'Retiro en Sucursal' : 'Envío a Domicilio' }}</span>
+              </div>
+              <div class="pay-row">
+                <span>Costo de Despacho:</span>
+                <span>{{ tracking.costo_envio === 0 ? 'Gratis (Bs. 0.00)' : ('Bs. ' + (tracking.costo_envio | number:'1.2-2')) }}</span>
+              </div>
+              <div class="pay-row">
+                <span>Estado de Pago:</span>
+                <span class="badge-paid"><i class="fas fa-check-circle"></i> PAGADO</span>
               </div>
               <div class="pay-row total-row">
-                <span>Total Pagado:</span>
-                <span class="total-highlight">Bs. {{ tracking.total.toFixed(2) }}</span>
+                <span>Total Abonado:</span>
+                <span class="total-highlight">Bs. {{ (tracking.total || 0) | number:'1.2-2' }}</span>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- ACCIONES INFERIORES -->
+        <div class="footer-actions">
+          <a routerLink="/catalogo" class="btn-action-outline">
+            <i class="fas fa-shopping-bag"></i> Seguir Comprando
+          </a>
+          <a *ngIf="auth.isAdmin() || auth.isLogistics() || auth.isManager()" routerLink="/logistica/dashboard" class="btn-action-admin">
+            <i class="fas fa-shipping-fast"></i> Abrir Tablero de Despacho (CU18)
+          </a>
         </div>
       </div>
 
@@ -177,7 +293,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     }
 
     .tracking-container {
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -191,6 +307,8 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       align-items: flex-end;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       padding-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .btn-back {
@@ -208,7 +326,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     .btn-back:hover { color: #38bdf8; }
 
     .page-title {
-      font-size: 2rem;
+      font-size: 1.85rem;
       font-weight: 800;
       margin: 0 0 0.25rem 0;
       display: flex;
@@ -220,6 +338,8 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     .text-purple { color: #c084fc; }
     .text-red { color: #f87171; }
     .text-amber { color: #fbbf24; }
+    .text-emerald { color: #34d399; }
+    .fw-bold { font-weight: 700; }
 
     .order-subtitle {
       color: #94a3b8;
@@ -227,74 +347,105 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       margin: 0;
     }
 
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+    }
+
+    .modality-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .modality-pill.modality-pickup {
+      background: rgba(52, 211, 153, 0.12);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
     .live-pulse {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-size: 0.82rem;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.3rem 0.75rem;
       border-radius: 20px;
     }
 
     .pulse-dot {
-      width: 8px;
-      height: 8px;
-      background: #38bdf8;
+      width: 7px;
+      height: 7px;
+      background: #34d399;
       border-radius: 50%;
-      box-shadow: 0 0 8px #38bdf8;
+      box-shadow: 0 0 6px #34d399;
       animation: pulse 1.8s infinite;
     }
 
     @keyframes pulse {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
     }
 
     /* STEPPER CARD */
     .stepper-card {
-      background: #0f172a;
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 2.2rem 2rem;
-      position: relative;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      padding: 2rem 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
     .stepper-progress-bar {
-      position: absolute;
-      top: 52px;
-      left: 60px;
-      right: 60px;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      z-index: 1;
-      border-radius: 2px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin: 0 2rem 2.2rem;
+      overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #38bdf8, #a855f7);
-      border-radius: 2px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399);
       transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .stepper-steps {
       display: flex;
       justify-content: space-between;
-      position: relative;
-      z-index: 2;
+      gap: 0.75rem;
     }
 
     .step-item {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      max-width: 140px;
+      opacity: 0.45;
+      transition: all 0.3s ease;
+    }
+
+    .step-item.completed {
+      opacity: 0.9;
+    }
+
+    .step-item.active {
+      opacity: 1;
+      transform: scale(1.05);
     }
 
     .step-icon-wrap {
@@ -302,57 +453,59 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       height: 44px;
       border-radius: 50%;
       background: #1e293b;
-      border: 2px solid rgba(255,255,255,0.2);
+      border: 2px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      color: #64748b;
-      margin-bottom: 0.65rem;
-      transition: all 0.3s ease;
+      font-size: 1.15rem;
+      color: #94a3b8;
+      margin-bottom: 0.6rem;
+      transition: all 0.3s;
     }
 
     .step-item.completed .step-icon-wrap {
       background: #0284c7;
       border-color: #38bdf8;
       color: #ffffff;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
     }
 
     .step-item.active .step-icon-wrap {
-      background: #7e22ce;
-      border-color: #c084fc;
+      background: #059669;
+      border-color: #34d399;
       color: #ffffff;
-      box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
-      transform: scale(1.15);
+      box-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
     }
 
     .step-label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      color: #94a3b8;
+      color: #cbd5e1;
       margin-bottom: 0.25rem;
     }
 
-    .step-item.completed .step-label { color: #f1f5f9; }
-    .step-item.active .step-label { color: #c084fc; font-weight: 800; }
-
     .step-desc {
       font-size: 0.72rem;
-      color: #cbd5e1;
-      line-height: 1.2;
+      color: #94a3b8;
+      max-width: 140px;
+      line-height: 1.3;
     }
 
     /* DETAILS GRID */
     .details-grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
     }
 
+    @media (max-width: 768px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .detail-card {
-      background: #0f172a;
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
       padding: 1.5rem;
       display: flex;
@@ -364,131 +517,218 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       padding-bottom: 0.85rem;
     }
 
     .head-title {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.65rem;
     }
 
     .head-title h3 {
-      margin: 0;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
-      color: #ffffff;
+      margin: 0;
+      color: #f1f5f9;
     }
 
     .badge-status {
       font-size: 0.72rem;
       font-weight: 800;
-      background: rgba(255,255,255,0.06);
       padding: 0.25rem 0.65rem;
       border-radius: 6px;
-      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      text-transform: uppercase;
     }
 
-    .badge-transit {
+    .badge-status.badge-transit {
       background: rgba(168, 85, 247, 0.2);
       color: #c084fc;
-      border: 1px solid rgba(168, 85, 247, 0.3);
+      border: 1px solid rgba(168, 85, 247, 0.35);
     }
 
+    .badge-status.badge-pickup {
+      background: rgba(52, 211, 153, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    /* PICKUP BANNERS */
+    .pickup-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 1rem 1.1rem;
+      border-radius: 10px;
+    }
+
+    .pickup-banner i {
+      font-size: 1.4rem;
+      margin-top: 0.1rem;
+    }
+
+    .pickup-banner h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .pickup-banner p {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .pickup-banner.ready {
+      background: rgba(52, 211, 153, 0.15);
+      border: 1.5px solid rgba(52, 211, 153, 0.4);
+      color: #a7f3d0;
+    }
+    .pickup-banner.ready i { color: #34d399; }
+    .pickup-banner.ready h4 { color: #6ee7b7; }
+
+    .pickup-banner.prep {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: #fef3c7;
+    }
+    .pickup-banner.prep i { color: #fbbf24; }
+    .pickup-banner.prep h4 { color: #fde68a; }
+
+    .pickup-banner.wait {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #e0f2fe;
+    }
+    .pickup-banner.wait i { color: #38bdf8; }
+    .pickup-banner.wait h4 { color: #bae6fd; }
+
+    .pickup-banner.done {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #d1fae5;
+    }
+    .pickup-banner.done i { color: #10b981; }
+    .pickup-banner.done h4 { color: #a7f3d0; }
+
+    .pickup-details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .info-row i {
+      font-size: 1rem;
+      margin-top: 0.2rem;
+    }
+
+    .info-lbl {
+      display: block;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .info-val {
+      margin: 0.15rem 0 0 0;
+      font-size: 0.88rem;
+      color: #f1f5f9;
+      font-weight: 500;
+    }
+
+    /* COURIER CARD (DELIVERY) */
     .courier-body {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.06);
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 10px;
-      padding: 1rem 1.25rem;
+      padding: 1rem;
     }
 
     .courier-avatar {
-      width: 54px;
-      height: 54px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      background: rgba(168, 85, 247, 0.15);
-      border: 2px solid rgba(168, 85, 247, 0.4);
+      background: #0284c7;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.4rem;
-      color: #c084fc;
-    }
-
-    .courier-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+      color: #fff;
     }
 
     .courier-name {
       margin: 0;
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
     }
 
     .courier-role {
-      margin: 0;
+      margin: 0.15rem 0 0.5rem 0;
       font-size: 0.78rem;
       color: #94a3b8;
     }
 
     .courier-contact {
       display: flex;
-      gap: 0.6rem;
-      margin-top: 0.4rem;
+      gap: 0.5rem;
     }
 
     .btn-contact-action {
       font-size: 0.75rem;
-      font-weight: 700;
       padding: 0.35rem 0.75rem;
       border-radius: 6px;
       text-decoration: none;
-      background: rgba(255,255,255,0.08);
-      color: #ffffff;
+      font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      transition: background 0.2s;
-    }
-
-    .btn-contact-action:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
     .btn-wa {
-      background: rgba(34, 197, 94, 0.2);
-      color: #4ade80;
-    }
-
-    .btn-wa:hover {
-      background: rgba(34, 197, 94, 0.35);
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+      border-color: rgba(34, 197, 94, 0.3);
     }
 
     .courier-pending {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      padding: 1.25rem;
       background: rgba(251, 191, 36, 0.08);
-      border: 1px solid rgba(251, 191, 36, 0.2);
+      border: 1px dashed rgba(251, 191, 36, 0.25);
       border-radius: 10px;
-      padding: 1rem;
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 0.85rem;
     }
 
-    .courier-pending i { font-size: 1.8rem; }
-    .courier-pending p { margin: 0; font-size: 0.82rem; color: #fde68a; }
+    .courier-pending i {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
 
     .delivery-destination {
       display: flex;
       flex-direction: column;
       gap: 0.85rem;
-      background: rgba(0,0,0,0.25);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 10px;
       padding: 1rem;
     }
@@ -508,7 +748,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
 
     .dest-val {
       margin: 0.15rem 0 0 0;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       color: #f1f5f9;
       font-weight: 500;
     }
@@ -517,7 +757,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     .items-count {
       font-size: 0.75rem;
       color: #94a3b8;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       padding: 0.15rem 0.5rem;
       border-radius: 4px;
     }
@@ -534,8 +774,8 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       display: flex;
       align-items: center;
       gap: 0.85rem;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 8px;
       padding: 0.6rem 0.8rem;
     }
@@ -576,7 +816,7 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
 
     .spec-badge {
       font-size: 0.68rem;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       padding: 0.1rem 0.35rem;
       border-radius: 4px;
       color: #cbd5e1;
@@ -592,11 +832,11 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     }
 
     .payment-summary {
-      border-top: 1px solid rgba(255,255,255,0.08);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.45rem;
     }
 
     .pay-row {
@@ -606,15 +846,74 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
       color: #94a3b8;
     }
 
+    .badge-paid {
+      color: #34d399;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
     .total-row {
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       font-weight: 800;
       color: #ffffff;
       margin-top: 0.2rem;
+      padding-top: 0.4rem;
+      border-top: 1px dashed rgba(255,255,255,0.08);
     }
 
     .total-highlight {
       color: #22c55e;
+      font-size: 1.1rem;
+    }
+
+    /* FOOTER ACTIONS */
+    .footer-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .btn-action-outline {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      text-decoration: none;
+      padding: 0.75rem 1.6rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-action-outline:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-action-admin {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.75rem 1.6rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-action-admin:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
     }
 
     /* LOADING & ERROR */
@@ -624,9 +923,15 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
     }
 
     .spinner-box i {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       color: #38bdf8;
       margin-bottom: 1rem;
+    }
+
+    .spinner-box p {
+      color: #cbd5e1;
+      font-size: 1.05rem;
+      font-weight: 500;
     }
 
     .error-box {
@@ -660,6 +965,8 @@ import { LogisticaService, TrackingOrden } from '../../core/services/logistica.s
 export class TrackingComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private logisticaService = inject(LogisticaService);
+  private cdr = inject(ChangeDetectorRef);
+  public auth = inject(AuthService);
 
   idOrden: number = 0;
   tracking: TrackingOrden | null = null;
@@ -669,16 +976,17 @@ export class TrackingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
+    if (idParam && !isNaN(Number(idParam))) {
       this.idOrden = Number(idParam);
       this.cargarTracking();
-      // Short-polling cada 8 segundos para tracking en tiempo real
+      // Polling cada 7 segundos para tracking en tiempo real
       this.pollTimer = setInterval(() => {
         this.cargarTracking(false);
-      }, 8000);
+      }, 7000);
     } else {
       this.cargando = false;
       this.errorMsg = 'Identificador de orden inválido';
+      this.cdr.detectChanges();
     }
   }
 
@@ -689,15 +997,20 @@ export class TrackingComponent implements OnInit, OnDestroy {
   }
 
   cargarTracking(mostrarSpinner = true): void {
-    if (mostrarSpinner) this.cargando = true;
+    if (mostrarSpinner) {
+      this.cargando = true;
+      this.cdr.detectChanges();
+    }
     this.logisticaService.getTracking(this.idOrden).subscribe({
       next: (data) => {
         this.tracking = data;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMsg = err.error?.detail || 'No se pudo cargar la información de tracking.';
+        this.errorMsg = err.error?.detail || 'No se pudo cargar la información de tracking de esta orden.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }

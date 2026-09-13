@@ -21,7 +21,7 @@ from app.modules.logistica.geo import calcular_distancia_haversine, calcular_tar
 TRANSICIONES_PERMITIDAS = {
     "CREADA": ["PREPARACION"],
     "PREPARACION": ["LISTO_DESPACHO"],
-    "LISTO_DESPACHO": ["EN_TRANSITO"],
+    "LISTO_DESPACHO": ["EN_TRANSITO", "ENTREGADA"],
     "EN_TRANSITO": ["ENTREGADA"],
     "ENTREGADA": []  # Estado terminal
 }
@@ -75,10 +75,10 @@ def formatear_orden_logistica(orden: OrdenVenta) -> LogisticaOrdenResponse:
     )
 
 
-def listar_ordenes_delivery(db: Session, estado_filtro: Optional[str] = None) -> List[LogisticaOrdenResponse]:
+def listar_ordenes_delivery(db: Session, estado_filtro: Optional[str] = None, modalidad_filtro: Optional[str] = None) -> List[LogisticaOrdenResponse]:
     """
-    Retorna todas las órdenes con modalidad DELIVERY y estado de pago PAGADO.
-    Opcionalmente filtra por estado_logistica.
+    Retorna todas las órdenes pagadas (CU16).
+    Opcionalmente filtra por modalidad (DELIVERY / RETIRO_TIENDA) y por estado_logistica.
     """
     query = (
         db.query(OrdenVenta)
@@ -88,10 +88,12 @@ def listar_ordenes_delivery(db: Session, estado_filtro: Optional[str] = None) ->
             joinedload(OrdenVenta.detalles).joinedload(OrdenDetalle.producto)
         )
         .filter(
-            OrdenVenta.modalidad_entrega == "DELIVERY",
             OrdenVenta.estado_pago == "PAGADO"
         )
     )
+
+    if modalidad_filtro and modalidad_filtro.upper() != "TODAS":
+        query = query.filter(OrdenVenta.modalidad_entrega == modalidad_filtro.upper())
 
     if estado_filtro:
         query = query.filter(OrdenVenta.estado_logistica == estado_filtro)
@@ -122,13 +124,7 @@ def transicionar_estado_logistica(db: Session, id_orden: int, nuevo_estado: str)
             detail=f"La orden #{id_orden} no existe en el sistema."
         )
 
-    if orden.modalidad_entrega != "DELIVERY":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"La orden #{id_orden} tiene modalidad '{orden.modalidad_entrega}'. El flujo logístico de despacho aplica solo a órdenes DELIVERY."
-        )
-
-    estado_actual = orden.estado_logistica
+    estado_actual = orden.estado_logistica or "CREADA"
     nuevo_estado_clean = nuevo_estado.strip().upper()
 
     if nuevo_estado_clean == estado_actual:
@@ -147,12 +143,13 @@ def transicionar_estado_logistica(db: Session, id_orden: int, nuevo_estado: str)
             )
         )
 
-    # Validar prerrequisito de asignación para entrar en tránsito
-    if nuevo_estado_clean == "EN_TRANSITO" and not orden.nombre_repartidor:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="No se puede poner la orden 'EN_TRANSITO' sin haber asignado previamente un repartidor o courier."
-        )
+    # Validar prerrequisito de asignación para entrar en tránsito en órdenes de Delivery
+    if orden.modalidad_entrega == "DELIVERY":
+        if nuevo_estado_clean == "EN_TRANSITO" and not orden.nombre_repartidor:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No se puede poner la orden 'EN_TRANSITO' sin haber asignado previamente un repartidor o courier."
+            )
 
     orden.estado_logistica = nuevo_estado_clean
     db.commit()
@@ -205,12 +202,14 @@ def asignar_repartidor_a_orden(db: Session, id_orden: int, request: AsignarRepar
 def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
     """
     Genera el estado en tiempo real para la vista de Tracking del Cliente (CU18).
-    Incluye los 4 pasos del Stepper y el porcentaje de progreso acumulado.
+    Incluye los pasos del Stepper y el porcentaje de progreso adaptado a la modalidad
+    (DELIVERY o RETIRO_TIENDA).
     """
     orden = (
         db.query(OrdenVenta)
         .options(
             joinedload(OrdenVenta.usuario),
+            joinedload(OrdenVenta.sucursal),
             joinedload(OrdenVenta.detalles).joinedload(OrdenDetalle.producto)
         )
         .filter(OrdenVenta.id_orden == id_orden)
@@ -223,66 +222,105 @@ def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
             detail=f"No se encontró información de tracking para la orden #{id_orden}."
         )
 
-    estado = orden.estado_logistica
-    
-    # Secuencia de pasos
-    # 1. Pago Confirmado
-    # 2. En Preparación / Empacando
-    # 3. Listo para Despacho
-    # 4. En Camino (Delivery)
-    # 5. Entregado
+    estado = orden.estado_logistica or "CREADA"
+    modalidad = orden.modalidad_entrega or "DELIVERY"
+    nombre_suc = orden.sucursal.nombre_sucursal if orden.sucursal else "Sucursal Equipetrol"
+    dir_suc = orden.sucursal.direccion if orden.sucursal else "Av. San Martín #450, Santa Cruz"
 
-    pasos = [
-        TrackingPaso(
-            codigo="PAGADO",
-            titulo="Pago Confirmado",
-            descripcion="Tu pago fue procesado exitosamente y la orden fue emitida.",
-            completado=orden.estado_pago == "PAGADO",
-            activo=orden.estado_logistica == "CREADA",
-            icono="fas fa-receipt"
-        ),
-        TrackingPaso(
-            codigo="PREPARACION",
-            titulo="En Empaque",
-            descripcion="El equipo de almacén está seleccionando y empaquetando tus prendas.",
-            completado=estado in ["PREPARACION", "LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
-            activo=estado == "PREPARACION",
-            icono="fas fa-box-open"
-        ),
-        TrackingPaso(
-            codigo="LISTO_DESPACHO",
-            titulo="Listo para Despacho",
-            descripcion="Paquete embalado con precinto de seguridad, a la espera del courier.",
-            completado=estado in ["LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
-            activo=estado == "LISTO_DESPACHO",
-            icono="fas fa-dolly"
-        ),
-        TrackingPaso(
-            codigo="EN_TRANSITO",
-            titulo="En Camino",
-            descripcion=f"El repartidor {orden.nombre_repartidor or ''} va en camino a tu domicilio." if orden.nombre_repartidor else "El repartidor va en camino a tu domicilio.",
-            completado=estado in ["EN_TRANSITO", "ENTREGADA"],
-            activo=estado == "EN_TRANSITO",
-            icono="fas fa-motorcycle"
-        ),
-        TrackingPaso(
-            codigo="ENTREGADA",
-            titulo="Entregado",
-            descripcion="¡Pedido entregado satisfactoriamente en destino!",
-            completado=estado == "ENTREGADA",
-            activo=estado == "ENTREGADA",
-            icono="fas fa-check-circle"
-        )
-    ]
+    if modalidad == "RETIRO_TIENDA":
+        pasos = [
+            TrackingPaso(
+                codigo="PAGADO",
+                titulo="Pago Confirmado",
+                descripcion="Tu transacción fue validada exitosamente y la orden fue emitida.",
+                completado=orden.estado_pago == "PAGADO",
+                activo=estado in ["CREADA", "PAGADO"],
+                icono="fas fa-receipt"
+            ),
+            TrackingPaso(
+                codigo="PREPARACION",
+                titulo="En Preparación",
+                descripcion=f"El equipo de {nombre_suc} está empaquetando tus prendas para entrega en mostrador.",
+                completado=estado in ["PREPARACION", "LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
+                activo=estado == "PREPARACION",
+                icono="fas fa-box-open"
+            ),
+            TrackingPaso(
+                codigo="LISTO_DESPACHO",
+                titulo="Listo para Retiro",
+                descripcion=f"¡Tus prendas están listas para recoger en {nombre_suc}! Presenta tu factura {orden.numero_factura or ''}.",
+                completado=estado in ["LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
+                activo=estado in ["LISTO_DESPACHO", "EN_TRANSITO"],
+                icono="fas fa-store"
+            ),
+            TrackingPaso(
+                codigo="ENTREGADA",
+                titulo="Entregado en Tienda",
+                descripcion="¡Prendas retiradas y entregadas satisfactoriamente en tienda física!",
+                completado=estado == "ENTREGADA",
+                activo=estado == "ENTREGADA",
+                icono="fas fa-check-circle"
+            )
+        ]
+        porcentaje_map = {
+            "CREADA": 25,
+            "PREPARACION": 50,
+            "LISTO_DESPACHO": 85,
+            "EN_TRANSITO": 90,
+            "ENTREGADA": 100
+        }
+    else:
+        pasos = [
+            TrackingPaso(
+                codigo="PAGADO",
+                titulo="Pago Confirmado",
+                descripcion="Tu pago fue procesado exitosamente y la orden fue emitida.",
+                completado=orden.estado_pago == "PAGADO",
+                activo=estado in ["CREADA", "PAGADO"],
+                icono="fas fa-receipt"
+            ),
+            TrackingPaso(
+                codigo="PREPARACION",
+                titulo="En Empaque",
+                descripcion="El equipo de almacén está seleccionando y empaquetando tus prendas.",
+                completado=estado in ["PREPARACION", "LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
+                activo=estado == "PREPARACION",
+                icono="fas fa-box-open"
+            ),
+            TrackingPaso(
+                codigo="LISTO_DESPACHO",
+                titulo="Listo para Despacho",
+                descripcion="Paquete embalado con precinto de seguridad, a la espera del courier.",
+                completado=estado in ["LISTO_DESPACHO", "EN_TRANSITO", "ENTREGADA"],
+                activo=estado == "LISTO_DESPACHO",
+                icono="fas fa-dolly"
+            ),
+            TrackingPaso(
+                codigo="EN_TRANSITO",
+                titulo="En Camino",
+                descripcion=f"El repartidor {orden.nombre_repartidor or ''} va en camino a tu domicilio." if orden.nombre_repartidor else "El repartidor va en camino a tu domicilio.",
+                completado=estado in ["EN_TRANSITO", "ENTREGADA"],
+                activo=estado == "EN_TRANSITO",
+                icono="fas fa-motorcycle"
+            ),
+            TrackingPaso(
+                codigo="ENTREGADA",
+                titulo="Entregado",
+                descripcion="¡Pedido entregado satisfactoriamente en destino!",
+                completado=estado == "ENTREGADA",
+                activo=estado == "ENTREGADA",
+                icono="fas fa-check-circle"
+            )
+        ]
+        porcentaje_map = {
+            "CREADA": 20,
+            "PREPARACION": 40,
+            "LISTO_DESPACHO": 60,
+            "EN_TRANSITO": 85,
+            "ENTREGADA": 100
+        }
 
-    porcentaje_map = {
-        "CREADA": 20,
-        "PREPARACION": 40,
-        "LISTO_DESPACHO": 60,
-        "EN_TRANSITO": 85,
-        "ENTREGADA": 100
-    }
-    porcentaje = porcentaje_map.get(estado, 10)
+    porcentaje = porcentaje_map.get(estado, 15)
 
     prendas = []
     for d in (orden.detalles or []):
@@ -306,6 +344,10 @@ def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
     return TrackingResponse(
         id_orden=orden.id_orden,
         numero_factura=orden.numero_factura,
+        modalidad_entrega=modalidad,
+        id_sucursal=orden.id_sucursal,
+        nombre_sucursal=nombre_suc,
+        direccion_sucursal=dir_suc,
         estado_pago=orden.estado_pago,
         estado_logistica=orden.estado_logistica,
         direccion_envio=orden.direccion_envio,

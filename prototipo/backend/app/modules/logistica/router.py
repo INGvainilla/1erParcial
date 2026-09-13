@@ -26,14 +26,15 @@ router = APIRouter(prefix="/logistica", tags=["Logística y Despacho de Delivery
 @router.get("/ordenes", response_model=List[LogisticaOrdenResponse])
 def get_ordenes_logistica(
     estado: Optional[str] = Query(None, description="Filtro opcional por estado logístico"),
+    modalidad: Optional[str] = Query(None, description="Filtro opcional por modalidad: DELIVERY, RETIRO_TIENDA, TODAS"),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"]))
 ):
     """
-    Retorna el listado de órdenes en modalidad DELIVERY que ya fueron pagadas (CU16).
+    Retorna el listado de órdenes pagadas para gestión logística y empaque (CU18).
     Utilizado por el Tablero Kanban de Logística (CU18).
     """
-    return listar_ordenes_delivery(db, estado_filtro=estado)
+    return listar_ordenes_delivery(db, estado_filtro=estado, modalidad_filtro=modalidad)
 
 
 @router.post("/ordenes/{id_orden}/asignar", response_model=LogisticaOrdenResponse)

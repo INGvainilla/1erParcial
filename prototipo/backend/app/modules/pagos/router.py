@@ -33,6 +33,12 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     summary="Generar Intención de Pago en Stripe (CU16)"
 )
+@router.post(
+    "/intenciones",
+    response_model=IntencionPagoResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False
+)
 def api_crear_intencion_pago(
     payload: IntencionPagoRequest,
     db: Session = Depends(get_db),
@@ -70,6 +76,26 @@ def api_confirmar_pago(
         id_orden=payload.id_orden,
         payment_intent_id=payload.payment_intent_id
     )
+
+
+@router.get(
+    "/orden/{id_orden}",
+    response_model=Optional[TransaccionResponse],
+    summary="Obtener transacción de pago para una orden (CU16)"
+)
+def api_obtener_transaccion_orden(
+    id_orden: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Retorna los datos de la transacción de pago aprobada para la orden solicitada.
+    """
+    from app.modules.pagos.models import TransaccionPago
+    tx = db.query(TransaccionPago).filter(TransaccionPago.id_orden == id_orden).order_by(TransaccionPago.id_transaccion.desc()).first()
+    if not tx:
+        return None
+    return TransaccionResponse.model_validate(tx)
 
 
 @router.post(

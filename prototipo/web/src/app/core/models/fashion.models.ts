@@ -170,6 +170,17 @@ export interface StockSucursalItem {
   colores_disponibles: string[];
 }
 
+export interface InventarioVarianteItem {
+  id_inventario: number;
+  id_sucursal: number;
+  talla: string;
+  color: string;
+  stock_fisico: number;
+  stock_reservado: number;
+  stock_disponible: number;
+  costo_promedio_ponderado: number;
+}
+
 export interface CatalogoItem {
   id_producto: number;
   codigo_sku_base: string;
@@ -190,4 +201,11 @@ export interface CatalogoItem {
   tallas: TallaVariante[];
   stock_total_disponible: number;
   disponibilidad_sucursales: StockSucursalItem[];
+  cpp_promedio?: number | null;
+  inventario_variantes?: InventarioVarianteItem[];
+  selectedColor?: string;
+  selectedTalla?: string;
+  selectedCantidad?: number;
 }
+
+

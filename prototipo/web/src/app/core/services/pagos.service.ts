@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { API_BASE_URL } from '../constants/api.constants';
 
 export interface IntencionPagoResponse {
   client_secret: string;
@@ -33,7 +34,7 @@ export interface TransaccionResponse {
 export class PagosService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private apiUrl = '/api/v1/pagos';
+  private apiUrl = `${API_BASE_URL}/pagos`;
 
   crearIntencionPago(id_orden: number): Observable<IntencionPagoResponse> {
     return this.http.post<IntencionPagoResponse>(
@@ -47,6 +48,13 @@ export class PagosService {
     return this.http.post<TransaccionResponse>(
       `${this.apiUrl}/confirmar`,
       { id_orden, payment_intent_id },
+      { headers: this.auth.getAuthHeaders() }
+    );
+  }
+
+  obtenerTransaccionOrden(id_orden: number): Observable<TransaccionResponse | null> {
+    return this.http.get<TransaccionResponse | null>(
+      `${this.apiUrl}/orden/${id_orden}`,
       { headers: this.auth.getAuthHeaders() }
     );
   }

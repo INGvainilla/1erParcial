@@ -1,12 +1,16 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { EncargadoService, ReservaEncargado } from '../../shared/services/encargado.service';
 import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
+import { API_BASE_URL } from '../../core/constants/api.constants';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   selector: 'app-encargado-dashboard',
   template: `
     <div class="dashboard-container">
@@ -15,9 +19,9 @@ import { ToastService } from '../../core/services/toast.service';
         <div class="header-left">
           <h1 class="page-title">
             <i class="fas fa-clipboard-list"></i>
-            Tablero de Reservas del Día
+            Tablero de Reservas y Probador
           </h1>
-          <p class="page-subtitle">CU12 — Preparar y Atender Reservas Presenciales</p>
+          <p class="page-subtitle">CU12 — Preparar prendas en probador y atender clientes presenciales</p>
         </div>
         <div class="header-actions">
           <button class="btn-refresh" (click)="cargarReservas()" [disabled]="isLoading">
@@ -31,34 +35,62 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
       </div>
 
+      <!-- Barra de Filtros Operativos (Fecha y Sucursal) -->
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label><i class="fas fa-calendar-alt"></i> Ver Reservas:</label>
+          <div class="filter-pills">
+            <button class="filter-pill" [class.active]="filtroFecha === 'todas'" (click)="cambiarFiltroFecha('todas')">
+              Todas
+            </button>
+            <button class="filter-pill" [class.active]="filtroFecha === 'hoy'" (click)="cambiarFiltroFecha('hoy')">
+              Hoy
+            </button>
+            <button class="filter-pill" [class.active]="filtroFecha === 'proximas'" (click)="cambiarFiltroFecha('proximas')">
+              Próximas
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-group" *ngIf="auth.isAdmin() && sucursales.length > 0">
+          <label><i class="fas fa-store"></i> Sucursal:</label>
+          <select [(ngModel)]="filtroSucursal" (change)="cargarReservas()" class="filter-select">
+            <option [ngValue]="null">📍 Todas las Sucursales</option>
+            <option *ngFor="let s of sucursales" [ngValue]="s.id_sucursal">
+              📍 {{ s.nombre_sucursal }} ({{ s.nombre_ciudad || s.ciudad || 'Bolivia' }})
+            </option>
+          </select>
+        </div>
+      </div>
+
       <!-- Stats Bar -->
       <div class="stats-bar">
         <div class="stat-card stat-pendiente">
           <div class="stat-icon"><i class="fas fa-clock"></i></div>
           <div class="stat-info">
             <span class="stat-number">{{ pendientes.length }}</span>
-            <span class="stat-label">Pendientes</span>
+            <span class="stat-label">Pendientes de Preparar</span>
           </div>
         </div>
         <div class="stat-card stat-preparada">
           <div class="stat-icon"><i class="fas fa-box-open"></i></div>
           <div class="stat-info">
             <span class="stat-number">{{ preparadas.length }}</span>
-            <span class="stat-label">Preparadas</span>
+            <span class="stat-label">Listas en Probador</span>
           </div>
         </div>
         <div class="stat-card stat-atendida">
           <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
           <div class="stat-info">
             <span class="stat-number">{{ atendidas.length }}</span>
-            <span class="stat-label">Atendidas</span>
+            <span class="stat-label">Atendidas / Finalizadas</span>
           </div>
         </div>
         <div class="stat-card stat-total">
           <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
           <div class="stat-info">
             <span class="stat-number">{{ todasReservas.length }}</span>
-            <span class="stat-label">Total Hoy</span>
+            <span class="stat-label">Total en Vista</span>
           </div>
         </div>
       </div>
@@ -70,7 +102,7 @@ import { ToastService } from '../../core/services/toast.service';
           <div class="column-header">
             <div class="column-title">
               <span class="column-dot dot-pendiente"></span>
-              Pendientes
+              Pendientes de Preparar
             </div>
             <span class="column-count">{{ pendientes.length }}</span>
           </div>
@@ -82,20 +114,24 @@ import { ToastService } from '../../core/services/toast.service';
               </div>
               <div class="card-client">
                 <i class="fas fa-user-circle"></i>
-                <span>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</span>
+                <strong>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</strong>
+              </div>
+              <div class="card-sucursal" *ngIf="r.nombre_sucursal">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ r.nombre_sucursal }}</span>
               </div>
               <div class="card-time">
-                <i class="fas fa-clock"></i>
-                <span>{{ formatHora(r.fecha_visita) }}</span>
+                <i class="fas fa-calendar-check"></i>
+                <span>{{ formatFecha(r.fecha_visita) }} &bull; {{ formatHora(r.fecha_visita) }}</span>
               </div>
               <div class="card-items">
                 <div class="item-row" *ngFor="let d of r.detalles">
                   <span class="item-dot"></span>
-                  Producto #{{ d.id_producto }} — {{ d.talla }}/{{ d.color }} x{{ d.cantidad }}
+                  <span>{{ d.nombre_producto || ('Producto #' + d.id_producto) }} — <strong>Talla {{ d.talla }}</strong>, {{ d.color }} (x{{ d.cantidad }})</span>
                 </div>
               </div>
               <button class="btn-preparar" (click)="prepararReserva(r)" [disabled]="processingId !== null">
-                <i class="fas fa-box-open"></i> Marcar como Preparada
+                <i class="fas fa-box-open"></i> Marcar como Preparada en Probador
               </button>
             </div>
             <div class="column-empty" *ngIf="pendientes.length === 0">
@@ -110,33 +146,41 @@ import { ToastService } from '../../core/services/toast.service';
           <div class="column-header">
             <div class="column-title">
               <span class="column-dot dot-preparada"></span>
-              Preparadas
+              Listas en Probador (Esperando)
             </div>
             <span class="column-count">{{ preparadas.length }}</span>
           </div>
           <div class="column-body">
-            <div class="reserva-card" *ngFor="let r of preparadas">
+            <div class="reserva-card" *ngFor="let r of preparadas" [class.card-processing]="r.id_reserva === processingId">
               <div class="card-header-row">
                 <span class="reserva-id">#{{ r.id_reserva }}</span>
                 <span class="badge badge-preparada">PREPARADA</span>
               </div>
               <div class="card-client">
                 <i class="fas fa-user-circle"></i>
-                <span>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</span>
+                <strong>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</strong>
+              </div>
+              <div class="card-sucursal" *ngIf="r.nombre_sucursal">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ r.nombre_sucursal }}</span>
               </div>
               <div class="card-time">
-                <i class="fas fa-clock"></i>
-                <span>{{ formatHora(r.fecha_visita) }}</span>
+                <i class="fas fa-calendar-check"></i>
+                <span>{{ formatFecha(r.fecha_visita) }} &bull; {{ formatHora(r.fecha_visita) }}</span>
               </div>
               <div class="card-items">
                 <div class="item-row" *ngFor="let d of r.detalles">
                   <span class="item-dot"></span>
-                  Producto #{{ d.id_producto }} — {{ d.talla }}/{{ d.color }} x{{ d.cantidad }}
+                  <span>{{ d.nombre_producto || ('Producto #' + d.id_producto) }} — <strong>Talla {{ d.talla }}</strong>, {{ d.color }} (x{{ d.cantidad }})</span>
                 </div>
               </div>
               <div class="card-waiting">
-                <i class="fas fa-hourglass-half"></i> Esperando al cliente con QR
+                <i class="fas fa-door-open"></i>
+                <span>Prendas en probador. Esperando escaneo QR o llegada del cliente.</span>
               </div>
+              <button class="btn-atender-directo" (click)="atenderReserva(r)" [disabled]="processingId !== null">
+                <i class="fas fa-user-check"></i> Validar / Atender Cliente
+              </button>
             </div>
             <div class="column-empty" *ngIf="preparadas.length === 0">
               <i class="fas fa-box"></i>
@@ -150,7 +194,7 @@ import { ToastService } from '../../core/services/toast.service';
           <div class="column-header">
             <div class="column-title">
               <span class="column-dot dot-atendida"></span>
-              Atendidas
+              Atendidas / Finalizadas
             </div>
             <span class="column-count">{{ atendidas.length }}</span>
           </div>
@@ -158,18 +202,24 @@ import { ToastService } from '../../core/services/toast.service';
             <div class="reserva-card card-completed" *ngFor="let r of atendidas">
               <div class="card-header-row">
                 <span class="reserva-id">#{{ r.id_reserva }}</span>
-                <span class="badge badge-atendida">ATENDIDA</span>
+                <span class="badge" [class.badge-atendida]="r.estado === 'ATENDIDA'" [class.badge-pos]="r.estado === 'CERRADA_POR_VENTA'">
+                  {{ r.estado === 'CERRADA_POR_VENTA' ? 'COMPRADA EN POS' : 'ATENDIDA' }}
+                </span>
               </div>
               <div class="card-client">
                 <i class="fas fa-user-check"></i>
-                <span>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</span>
+                <strong>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</strong>
+              </div>
+              <div class="card-sucursal" *ngIf="r.nombre_sucursal">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ r.nombre_sucursal }}</span>
               </div>
               <div class="card-time">
                 <i class="fas fa-check"></i>
-                <span>{{ formatHora(r.fecha_visita) }}</span>
+                <span>{{ formatFecha(r.fecha_visita) }} &bull; {{ formatHora(r.fecha_visita) }}</span>
               </div>
               <div class="card-items compact">
-                <span>{{ r.detalles.length }} producto(s) entregados</span>
+                <span>{{ r.detalles?.length || 0 }} producto(s) tramitado(s)</span>
               </div>
             </div>
             <div class="column-empty" *ngIf="atendidas.length === 0">
@@ -185,17 +235,22 @@ import { ToastService } from '../../core/services/toast.service';
         <div class="empty-icon">
           <i class="fas fa-calendar-times"></i>
         </div>
-        <h2>Sin reservas para hoy</h2>
-        <p>No hay reservas programadas para el día de hoy en esta sucursal.</p>
-        <button class="btn-refresh" (click)="cargarReservas()">
-          <i class="fas fa-sync-alt"></i> Reintentar
-        </button>
+        <h2>Sin reservas para este criterio</h2>
+        <p>No se encontraron reservas con el filtro seleccionado ({{ filtroFecha }}).</p>
+        <div class="empty-actions">
+          <button class="btn-refresh" (click)="cambiarFiltroFecha('todas')">
+            <i class="fas fa-list"></i> Ver Todas las Reservas
+          </button>
+          <button class="btn-refresh" (click)="cargarReservas()">
+            <i class="fas fa-sync-alt"></i> Reintentar
+          </button>
+        </div>
       </div>
 
       <!-- Loading State -->
       <div class="loading-state" *ngIf="isLoading">
         <div class="spinner"></div>
-        <p>Cargando reservas del día...</p>
+        <p>Actualizando reservas y probadores...</p>
       </div>
     </div>
   `,
@@ -459,6 +514,27 @@ import { ToastService } from '../../core/services/toast.service';
     .btn-preparar:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(59,130,246,0.35); }
     .btn-preparar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+    .btn-atender-directo {
+      width: 100%;
+      margin-top: 0.6rem;
+      padding: 0.55rem 0;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+      box-shadow: 0 3px 10px rgba(16,185,129,0.25);
+    }
+    .btn-atender-directo:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(16,185,129,0.35); }
+    .btn-atender-directo:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
     .card-waiting {
       margin-top: 0.6rem;
       padding: 0.5rem 0.75rem;
@@ -470,6 +546,79 @@ import { ToastService } from '../../core/services/toast.service';
       display: flex;
       align-items: center;
       gap: 0.4rem;
+    }
+
+    .card-sucursal {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: #a5b4fc;
+      margin-bottom: 0.35rem;
+    }
+
+    .badge-pos {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+
+    /* Filters Bar */
+    .filters-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 0.85rem 1.25rem;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .filter-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.2rem;
+      border-radius: 8px;
+    }
+    .filter-pill {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-pill.active {
+      background: #6366f1;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+    .filter-select {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      outline: none;
     }
 
     .column-empty {
@@ -500,6 +649,7 @@ import { ToastService } from '../../core/services/toast.service';
     .empty-icon i { font-size: 2rem; color: #a78bfa; }
     .empty-state h2 { font-size: 1.2rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem; }
     .empty-state p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+    .empty-actions { display: flex; justify-content: center; gap: 0.75rem; }
 
     .loading-state {
       text-align: center;
@@ -525,6 +675,7 @@ import { ToastService } from '../../core/services/toast.service';
       .dashboard-container { padding: 1rem; }
       .stats-bar { grid-template-columns: 1fr; }
       .dashboard-header { flex-direction: column; }
+      .filters-bar { flex-direction: column; align-items: stretch; }
     }
   `]
 })
@@ -536,12 +687,22 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
   isLoading = false;
   processingId: number | null = null;
 
+  filtroFecha: string = 'todas';
+  filtroSucursal: number | null = null;
+  sucursales: any[] = [];
+
   private refreshInterval: any;
 
   private encargadoService = inject(EncargadoService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
+  auth = inject(AuthService);
+  private http = inject(HttpClient);
 
   ngOnInit(): void {
+    if (this.auth.isAdmin()) {
+      this.cargarSucursales();
+    }
     this.cargarReservas();
     // Auto-refresh cada 30 segundos
     this.refreshInterval = setInterval(() => this.cargarReservas(), 30000);
@@ -553,18 +714,37 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  cargarSucursales(): void {
+    this.http.get<any[]>(`${API_BASE_URL}/sucursales`).subscribe({
+      next: (data) => {
+        this.sucursales = data || [];
+        this.cdr.detectChanges();
+      },
+      error: (e) => console.warn('Error cargando sucursales para filtro', e)
+    });
+  }
+
+  cambiarFiltroFecha(f: string): void {
+    this.filtroFecha = f;
+    this.cargarReservas();
+  }
+
   cargarReservas(): void {
     this.isLoading = true;
-    this.encargadoService.getReservasHoy().subscribe({
+    this.cdr.detectChanges();
+
+    this.encargadoService.getReservasHoy(this.filtroSucursal, this.filtroFecha).subscribe({
       next: (data) => {
-        this.todasReservas = data;
+        this.todasReservas = data || [];
         this.clasificarReservas();
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading = false;
         console.error('Error cargando reservas', err);
-        this.toast.error('Error', 'No se pudieron cargar las reservas del día.');
+        this.toast.error('Error', 'No se pudieron cargar las reservas.');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -572,14 +752,16 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
   private clasificarReservas(): void {
     this.pendientes = this.todasReservas.filter(r => r.estado === 'PENDIENTE');
     this.preparadas = this.todasReservas.filter(r => r.estado === 'PREPARADA');
-    this.atendidas = this.todasReservas.filter(r => r.estado === 'ATENDIDA');
+    this.atendidas = this.todasReservas.filter(r => r.estado === 'ATENDIDA' || r.estado === 'CERRADA_POR_VENTA');
   }
 
   prepararReserva(reserva: ReservaEncargado): void {
     this.processingId = reserva.id_reserva;
+    this.cdr.detectChanges();
+
     this.encargadoService.cambiarEstadoReserva(reserva.id_reserva, 'PREPARADA').subscribe({
       next: () => {
-        this.toast.success('¡Listo!', `Reserva #${reserva.id_reserva} marcada como PREPARADA.`);
+        this.toast.success('¡Listo!', `Reserva #${reserva.id_reserva} marcada como PREPARADA en probador.`);
         this.processingId = null;
         this.cargarReservas();
       },
@@ -587,14 +769,55 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
         this.processingId = null;
         const msg = err.error?.detail || 'Error al cambiar el estado.';
         this.toast.error('Error', msg);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  atenderReserva(reserva: ReservaEncargado): void {
+    this.processingId = reserva.id_reserva;
+    this.cdr.detectChanges();
+
+    this.encargadoService.cambiarEstadoReserva(reserva.id_reserva, 'ATENDIDA').subscribe({
+      next: () => {
+        this.toast.success('¡Atendida!', `Reserva #${reserva.id_reserva} atendida con éxito.`);
+        this.processingId = null;
+        this.cargarReservas();
+      },
+      error: (err) => {
+        this.processingId = null;
+        const msg = err.error?.detail || 'Error al cambiar el estado.';
+        this.toast.error('Error', msg);
+        this.cdr.detectChanges();
       }
     });
   }
 
   formatHora(fechaIso: string): string {
+    if (!fechaIso) return '';
+    const match = fechaIso.match(/[T ](\d{2}):(\d{2})/);
+    if (match) {
+      return `${match[1]}:${match[2]} hrs`;
+    }
     try {
       const d = new Date(fechaIso);
-      return d.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) + ' hrs';
+    } catch {
+      return fechaIso;
+    }
+  }
+
+  formatFecha(fechaIso: string): string {
+    if (!fechaIso) return '';
+    try {
+      const partes = fechaIso.split(/[T ]/)[0].split('-');
+      if (partes.length === 3) {
+        const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const dia = partes[2];
+        const mesIndex = parseInt(partes[1], 10) - 1;
+        return `${dia} ${meses[mesIndex] || partes[1]}`;
+      }
+      return new Date(fechaIso).toLocaleDateString();
     } catch {
       return fechaIso;
     }

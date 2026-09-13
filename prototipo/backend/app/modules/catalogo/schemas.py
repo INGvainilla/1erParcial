@@ -19,6 +19,20 @@ class StockSucursalItem(BaseModel):
     tallas_disponibles: List[str] = []
     colores_disponibles: List[str] = []
 
+class InventarioVarianteResponse(BaseModel):
+    id_inventario: int
+    id_sucursal: int
+    talla: str
+    color: str
+    stock_fisico: int
+    stock_reservado: int
+    stock_disponible: int
+    ultimo_costo_compra: Decimal
+    costo_promedio_ponderado: Decimal
+
+    class Config:
+        from_attributes = True
+
 class PrendaCatalogoResponse(BaseModel):
     id_producto: int
     codigo_sku_base: str
@@ -39,6 +53,8 @@ class PrendaCatalogoResponse(BaseModel):
     tallas: List[TallaResponse] = []
     stock_total_disponible: int = 0
     disponibilidad_sucursales: List[StockSucursalItem] = []
+    inventario_variantes: List[InventarioVarianteResponse] = []
+    cpp_promedio: Optional[Decimal] = None
 
     class Config:
         from_attributes = True

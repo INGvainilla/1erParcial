@@ -1082,8 +1082,8 @@ export class CheckoutComponent implements OnInit {
         this.toast.success('¡Orden Formalizada!', `Orden #${ordenCreada.id_orden} registrada exitosamente.`);
         // Recargar carrito (ahora vacío)
         this.carritoService.cargarCarrito();
-        // Redirigir a la pantalla de confirmación
-        this.router.navigate(['/checkout/confirmacion', ordenCreada.id_orden]);
+        // Redirigir directamente al apartado de pago electrónico (CU16)
+        this.router.navigate(['/pagos', ordenCreada.id_orden]);
       },
       error: (err) => {
         this.submitting = false;

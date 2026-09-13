@@ -79,6 +79,10 @@ class TrackingPaso(BaseModel):
 class TrackingResponse(BaseModel):
     id_orden: int
     numero_factura: Optional[str] = None
+    modalidad_entrega: str = "DELIVERY"
+    id_sucursal: Optional[int] = None
+    nombre_sucursal: Optional[str] = None
+    direccion_sucursal: Optional[str] = None
     estado_pago: str
     estado_logistica: str
     direccion_envio: Optional[str] = None
@@ -92,3 +96,4 @@ class TrackingResponse(BaseModel):
     porcentaje_progreso: int
     pasos: List[TrackingPaso]
     prendas: List[PrendaEmpaqueItem] = []
+

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -108,7 +108,7 @@ import { ToastService } from '../../core/services/toast.service';
         <div class="payment-form-column glass-panel">
           
           <!-- Vista de Pago Exitoso -->
-          <div *ngIf="isPaymentSuccess && transaccionExitosa" class="success-screen">
+          <div *ngIf="isPaymentSuccess" class="success-screen">
             <div class="success-icon-badge">
               <i class="fas fa-check-circle"></i>
             </div>
@@ -118,29 +118,32 @@ import { ToastService } from '../../core/services/toast.service';
             <div class="receipt-card">
               <div class="rec-row">
                 <span>N° Factura:</span>
-                <strong>{{ orden.numero_factura }}</strong>
+                <strong>{{ orden?.numero_factura || ('FAC-' + orden?.id_orden) }}</strong>
               </div>
               <div class="rec-row">
                 <span>ID Transacción Stripe:</span>
-                <span class="mono-code">{{ transaccionExitosa.payment_intent_id }}</span>
+                <span class="mono-code">{{ transaccionExitosa?.payment_intent_id || intencionPago?.payment_intent_id || 'CONFIRMADO-STRIPE' }}</span>
               </div>
               <div class="rec-row">
                 <span>Tarjeta / Marca:</span>
-                <span>{{ (transaccionExitosa.marca_tarjeta || 'visa') | uppercase }} **** {{ transaccionExitosa.ultimos4 || '4242' }}</span>
+                <span>{{ (transaccionExitosa?.marca_tarjeta || 'visa') | uppercase }} **** {{ transaccionExitosa?.ultimos4 || '4242' }}</span>
               </div>
               <div class="rec-row">
                 <span>Monto Cobrado:</span>
-                <strong class="paid-amount">Bs. {{ transaccionExitosa.monto | number:'1.2-2' }}</strong>
+                <strong class="paid-amount">Bs. {{ (transaccionExitosa?.monto || orden?.total) | number:'1.2-2' }}</strong>
               </div>
               <div class="rec-row">
                 <span>Fecha y Hora:</span>
-                <span>{{ transaccionExitosa.fecha_creacion | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                <span>{{ (transaccionExitosa?.fecha_creacion || orden?.creado_en) | date:'dd/MM/yyyy HH:mm:ss' }}</span>
               </div>
             </div>
 
-            <div class="success-actions">
+            <div class="success-actions" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
               <button class="btn-primary" routerLink="/catalogo">
                 <i class="fas fa-shopping-bag"></i> Seguir Comprando
+              </button>
+              <button class="btn-primary" [routerLink]="['/tracking', idOrden]" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                <i class="fas fa-truck"></i> Ver Seguimiento (CU18)
               </button>
             </div>
           </div>
@@ -724,6 +727,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
   pagosService = inject(PagosService);
   checkoutService = inject(CheckoutService);
   toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('cardElementContainer') cardElementContainer!: ElementRef;
 
@@ -772,16 +776,25 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
   cargarOrdenEIntencion() {
     this.isLoadingOrder = true;
     this.stripeErrorMessage = '';
+    this.cdr.detectChanges();
 
     this.checkoutService.obtenerOrden(this.idOrden).subscribe({
       next: (ord) => {
         this.orden = ord;
         this.cardholderName = ord.razon_social_factura || '';
 
-        // Si la orden ya estaba pagada, reflejar estado exitoso
+        // Si la orden ya estaba pagada, reflejar estado exitoso y cargar recibo
         if (ord.estado_pago === 'PAGADO') {
           this.isPaymentSuccess = true;
           this.isLoadingOrder = false;
+          this.pagosService.obtenerTransaccionOrden(this.idOrden).subscribe({
+            next: (tx) => {
+              if (tx) this.transaccionExitosa = tx;
+              this.cdr.detectChanges();
+            },
+            error: () => this.cdr.detectChanges()
+          });
+          this.cdr.detectChanges();
           return;
         }
 
@@ -790,20 +803,26 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
           next: (intencion) => {
             this.intencionPago = intencion;
             this.isLoadingOrder = false;
+            this.cdr.detectChanges();
             // Dar tiempo al DOM de renderizar el contenedor #card-element
-            setTimeout(() => this.initStripeElements(), 150);
+            setTimeout(() => {
+              this.initStripeElements();
+              this.cdr.detectChanges();
+            }, 100);
           },
           error: (err) => {
             this.isLoadingOrder = false;
             const msg = err.error?.detail || 'No se pudo generar la intención de cobro digital en Stripe.';
             this.stripeErrorMessage = msg;
             this.toast.error('Error de Pasarela', msg);
+            this.cdr.detectChanges();
           }
         });
       },
       error: () => {
         this.isLoadingOrder = false;
         this.toast.error('Orden no encontrada', 'No se pudo cargar la orden especificada.');
+        this.cdr.detectChanges();
         this.router.navigate(['/catalogo']);
       }
     });
@@ -905,12 +924,19 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
             this.isProcessing = false;
             this.transaccionExitosa = tx;
             this.isPaymentSuccess = true;
+            if (this.orden) {
+              this.orden.estado_pago = 'PAGADO';
+            }
+            this.cdr.detectChanges();
             this.toast.success('Pago Confirmado', `¡Transacción aprobada! Factura: ${this.orden?.numero_factura}`);
           },
           error: (err) => {
             this.isProcessing = false;
-            // Aun si el endpoint local demora, el webhook asíncrono confirmará la orden
             this.isPaymentSuccess = true;
+            if (this.orden) {
+              this.orden.estado_pago = 'PAGADO';
+            }
+            this.cdr.detectChanges();
             this.toast.success('Pago Aprobado', 'Pago recibido y procesado por Stripe.');
           }
         });

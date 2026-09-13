@@ -16,7 +16,8 @@ from app.modules.inventario.models import Inventario
 from app.modules.sucursales.models import Sucursal
 from app.modules.productos.schemas import ColorResponse, TallaResponse
 from app.modules.catalogo.schemas import (
-    PrendaCatalogoResponse, StockSucursalItem, DisponibilidadPrendaDetalle
+    PrendaCatalogoResponse, StockSucursalItem, DisponibilidadPrendaDetalle,
+    InventarioVarianteResponse
 )
 
 class CatalogoControl:
@@ -167,7 +168,29 @@ class CatalogoControl:
             colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
             tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla) for t in p.tallas]
 
-            # Paso 1.6: CatalogoControl serializa y consolida la respuesta del catálogo con stock real
+            # Mapear variantes de inventario y calcular CPP promedio (CU09 -> CU10)
+            lista_variantes = []
+            cpp_acumulado = Decimal("0.00")
+            cpp_count = 0
+            for it in items_inv:
+                lista_variantes.append(InventarioVarianteResponse(
+                    id_inventario=it.id_inventario,
+                    id_sucursal=it.id_sucursal,
+                    talla=it.talla,
+                    color=it.color,
+                    stock_fisico=it.stock_fisico,
+                    stock_reservado=it.stock_reservado,
+                    stock_disponible=it.stock_disponible,
+                    ultimo_costo_compra=it.ultimo_costo_compra,
+                    costo_promedio_ponderado=it.costo_promedio_ponderado
+                ))
+                if it.costo_promedio_ponderado > Decimal("0.00"):
+                    cpp_acumulado += it.costo_promedio_ponderado
+                    cpp_count += 1
+
+            cpp_prom = (cpp_acumulado / Decimal(str(cpp_count))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if cpp_count > 0 else None
+
+            # Paso 1.6: CatalogoControl serializa y consolida la respuesta del catálogo con stock real y CPP
             catalogo_resultado.append(PrendaCatalogoResponse(
                 id_producto=p.id_producto,
                 codigo_sku_base=p.codigo_sku_base,
@@ -187,7 +210,9 @@ class CatalogoControl:
                 colores=colores_resp,
                 tallas=tallas_resp,
                 stock_total_disponible=stock_total,
-                disponibilidad_sucursales=lista_sucursales_dto
+                disponibilidad_sucursales=lista_sucursales_dto,
+                inventario_variantes=lista_variantes,
+                cpp_promedio=cpp_prom
             ))
 
         # Paso 1.7: CatalogoControl entrega el catálogo enriquecido

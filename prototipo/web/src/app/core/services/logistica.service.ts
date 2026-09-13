@@ -71,6 +71,10 @@ export interface TrackingPaso {
 export interface TrackingOrden {
   id_orden: number;
   numero_factura?: string;
+  modalidad_entrega?: string;
+  id_sucursal?: number;
+  nombre_sucursal?: string;
+  direccion_sucursal?: string;
   estado_pago: string;
   estado_logistica: string;
   direccion_envio?: string;
@@ -122,9 +126,12 @@ export class LogisticaService {
     };
   }
 
-  getOrdenes(estado?: string): Observable<OrdenLogistica[]> {
-    const url = estado ? `${this.apiUrl}/ordenes?estado=${estado}` : `${this.apiUrl}/ordenes`;
-    return this.http.get<OrdenLogistica[]>(url, this.getHeaders());
+  getOrdenes(estado?: string, modalidad?: string): Observable<OrdenLogistica[]> {
+    const params: string[] = [];
+    if (estado) params.push(`estado=${encodeURIComponent(estado)}`);
+    if (modalidad) params.push(`modalidad=${encodeURIComponent(modalidad)}`);
+    const query = params.length > 0 ? `?${params.join('&')}` : '';
+    return this.http.get<OrdenLogistica[]>(`${this.apiUrl}/ordenes${query}`, this.getHeaders());
   }
 
   asignarRepartidor(idOrden: number, payload: AsignarRepartidorPayload): Observable<OrdenLogistica> {
@@ -140,7 +147,7 @@ export class LogisticaService {
   }
 
   getTracking(idOrden: number): Observable<TrackingOrden> {
-    return this.http.get<TrackingOrden>(`${this.apiUrl}/tracking/${idOrden}`);
+    return this.http.get<TrackingOrden>(`${this.apiUrl}/tracking/${idOrden}`, this.getHeaders());
   }
 
   calcularTarifa(payload: CotizarTarifaPayload): Observable<CotizarTarifaResponse> {

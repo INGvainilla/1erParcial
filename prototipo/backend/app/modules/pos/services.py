@@ -19,6 +19,7 @@ from app.modules.inventario.models import Inventario, KardexMovimiento
 from app.modules.reservas.models import Reserva, ReservaDetalle
 from app.modules.ordenes.models import OrdenVenta, OrdenDetalle
 from app.modules.sucursales.models import Sucursal
+from app.modules.pagos.models import MetodoPagoConfig
 
 
 def buscar_producto_por_sku(db: Session, sku: str, id_sucursal: int) -> PosProductoLookupResponse:
@@ -178,6 +179,14 @@ def procesar_venta_pos(
     subtotal_total = round(subtotal_total, 2)
 
     metodo = venta_in.metodo_pago.strip().upper()
+    codigo_cfg = "EFECTIVO" if metodo == "EFECTIVO" else ("TARJETA_POS" if "TARJETA" in metodo else "QR_BCB")
+    metodo_cfg = db.query(MetodoPagoConfig).filter(MetodoPagoConfig.codigo == codigo_cfg).first()
+    if metodo_cfg and not metodo_cfg.activo:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El método de cobro '{metodo_cfg.nombre}' se encuentra actualmente deshabilitado por administración."
+        )
+
     if metodo == "EFECTIVO":
         if venta_in.monto_recibido < subtotal_total:
             raise HTTPException(

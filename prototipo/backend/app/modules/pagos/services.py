@@ -56,6 +56,14 @@ def crear_intencion_pago(
             detail=f"La orden #{id_orden} ({orden.numero_factura}) ya figura como PAGADA."
         )
 
+    # CU17: Verificar disponibilidad operativa del canal de cobro Stripe
+    metodo_stripe = db.query(MetodoPagoConfig).filter(MetodoPagoConfig.codigo == "STRIPE").first()
+    if metodo_stripe and not metodo_stripe.activo:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La pasarela de pagos en línea (Stripe) se encuentra temporalmente deshabilitada por administración. Por favor consulte a soporte o intente más tarde."
+        )
+
     monto_float = float(orden.total)
     if monto_float <= 0:
         raise HTTPException(
@@ -139,6 +147,14 @@ def confirmar_transaccion_pago(
             ultimos4=tx_existente.ultimos4,
             fecha_creacion=tx_existente.fecha_creacion,
             numero_factura=orden.numero_factura
+        )
+
+    # CU17: Verificar si Stripe está activo
+    metodo_stripe = db.query(MetodoPagoConfig).filter(MetodoPagoConfig.codigo == "STRIPE").first()
+    if metodo_stripe and not metodo_stripe.activo:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La pasarela de pagos en línea (Stripe) ha sido deshabilitada temporalmente por la administración."
         )
 
     try:

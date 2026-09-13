@@ -10,6 +10,8 @@ export interface ReservaDetalle {
   talla: string;
   color: string;
   cantidad: number;
+  nombre_producto?: string;
+  codigo_sku_base?: string;
 }
 
 export interface ReservaEncargado {
@@ -21,6 +23,8 @@ export interface ReservaEncargado {
   fecha_visita: string;
   estado: string;
   creado_en: string;
+  nombre_sucursal?: string;
+  nombre_ciudad?: string;
   nombre_cliente?: string;
   detalles: ReservaDetalle[];
 }
@@ -37,10 +41,14 @@ export class EncargadoService {
   ) {}
 
   /**
-   * CU12: Obtener reservas del día de hoy para la sucursal del encargado
+   * CU12: Obtener reservas para la sucursal del encargado (opcionalmente filtradas por sucursal y fecha)
    */
-  getReservasHoy(): Observable<ReservaEncargado[]> {
-    return this.http.get<ReservaEncargado[]>(`${this.apiUrl}/sucursal/hoy`, {
+  getReservasHoy(idSucursal?: number | null, fecha: string = 'todas'): Observable<ReservaEncargado[]> {
+    const params: string[] = [];
+    if (idSucursal) params.push(`id_sucursal=${idSucursal}`);
+    if (fecha) params.push(`fecha=${fecha}`);
+    const query = params.length > 0 ? `?${params.join('&')}` : '';
+    return this.http.get<ReservaEncargado[]>(`${this.apiUrl}/sucursal/hoy${query}`, {
       headers: this.auth.getAuthHeaders()
     });
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -79,8 +79,25 @@ interface CredFieldDef {
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div *ngIf="isLoading && metodos.length === 0" class="state-panel glass-panel">
+        <i class="fas fa-circle-notch fa-spin state-icon loading"></i>
+        <h3>Sincronizando Medios de Cobro...</h3>
+        <p>Consultando canales de recaudación registrados en la base de datos.</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && metodos.length === 0" class="state-panel glass-panel">
+        <i class="fas fa-exclamation-triangle state-icon warning"></i>
+        <h3>No se encontraron canales de cobro</h3>
+        <p>No se pudieron recuperar los métodos de pago. Verifique que el backend esté operativo.</p>
+        <button class="btn-refresh" (click)="cargarMetodos()" style="margin-top: 1rem;">
+          <i class="fas fa-sync-alt"></i> Reintentar Conexión
+        </button>
+      </div>
+
       <!-- Grid de Métodos de Pago -->
-      <div class="methods-grid">
+      <div *ngIf="metodos.length > 0" class="methods-grid">
         <div *ngFor="let m of metodos" class="method-card glass-panel" [class.inactive]="!m.activo">
           <div class="card-top">
             <div class="method-icon-wrap" [ngClass]="getMethodColorClass(m.codigo)">
@@ -683,11 +700,49 @@ interface CredFieldDef {
     .btn-save:hover:not(:disabled) {
       filter: brightness(1.1);
     }
+
+    /* State Panels (Loading & Empty) */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 2rem;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin: 1.5rem 0;
+    }
+    .state-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .state-icon.loading {
+      color: #818cf8;
+    }
+    .state-icon.warning {
+      color: #fbbf24;
+    }
+    .state-panel h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 0.5rem;
+    }
+    .state-panel p {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      max-width: 460px;
+      margin: 0;
+      line-height: 1.5;
+    }
   `]
 })
 export class AdminPagosConfigComponent implements OnInit {
   pagoConfig = inject(PagoConfigService);
   toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   metodos: MetodoPagoResponse[] = [];
   isLoading: boolean = false;
@@ -717,14 +772,19 @@ export class AdminPagosConfigComponent implements OnInit {
 
   cargarMetodos() {
     this.isLoading = true;
+    this.cdr.detectChanges();
+
     this.pagoConfig.getMetodos().subscribe({
       next: (data) => {
         this.metodos = data;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
-        this.toast.error('Error de Configuración', 'No se pudieron cargar los métodos de pago.');
+        this.cdr.detectChanges();
+        const msg = err.error?.detail || 'No se pudieron cargar los métodos de pago.';
+        this.toast.error('Error de Configuración', msg);
       }
     });
   }
@@ -743,10 +803,12 @@ export class AdminPagosConfigComponent implements OnInit {
     const nuevoEstado = !metodo.activo;
     // Actualización optimista en UI
     metodo.activo = nuevoEstado;
+    this.cdr.detectChanges();
 
     this.pagoConfig.actualizarMetodo(metodo.id_metodo, { activo: nuevoEstado }).subscribe({
       next: (updated) => {
         metodo.activo = updated.activo;
+        this.cdr.detectChanges();
         const msg = updated.activo
           ? `El canal '${metodo.nombre}' fue habilitado.`
           : `El canal '${metodo.nombre}' fue desactivado temporalmente.`;
@@ -755,6 +817,7 @@ export class AdminPagosConfigComponent implements OnInit {
       error: (err) => {
         // Revertir estado ante fallo
         metodo.activo = !nuevoEstado;
+        this.cdr.detectChanges();
         const msg = err.error?.detail || 'No se pudo actualizar el estado del método de pago.';
         this.toast.error('Fallo al Actualizar', msg);
       }
@@ -768,16 +831,18 @@ export class AdminPagosConfigComponent implements OnInit {
 
     // Inicializar formulario con los valores enmascarados actuales
     for (const f of this.currentFields) {
-      this.editForm[f.key] = metodo.credenciales_enmascaradas[f.key] || '';
+      this.editForm[f.key] = (metodo.credenciales_enmascaradas && metodo.credenciales_enmascaradas[f.key]) || '';
     }
 
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   closeModal() {
     this.showModal = false;
     this.selectedMetodo = undefined;
     this.editForm = {};
+    this.cdr.detectChanges();
   }
 
   private buildFieldDefinitions(codigo: string): CredFieldDef[] {
@@ -811,6 +876,7 @@ export class AdminPagosConfigComponent implements OnInit {
     if (!this.selectedMetodo) return;
 
     this.isSaving = true;
+    this.cdr.detectChanges();
 
     const updatePayload: MetodoPagoUpdate = {
       credenciales: { ...this.editForm }
@@ -829,6 +895,7 @@ export class AdminPagosConfigComponent implements OnInit {
       },
       error: (err) => {
         this.isSaving = false;
+        this.cdr.detectChanges();
         const msg = err.error?.detail || 'Error al guardar las credenciales.';
         this.toast.error('Error de Guardado', msg);
       }

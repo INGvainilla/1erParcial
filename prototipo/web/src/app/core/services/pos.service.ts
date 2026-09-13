@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { API_BASE_URL } from '../constants/api.constants';
 
 export interface PosItemInput {
   id_producto: number;
@@ -78,25 +79,28 @@ export interface PosTicketResponse {
 export class PosService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private apiUrl = '/api/v1/pos';
+  private apiUrl = `${API_BASE_URL}/pos`;
 
-  lookupProducto(sku: string): Observable<PosProductoLookupResponse> {
+  lookupProducto(sku: string, idSucursal?: number): Observable<PosProductoLookupResponse> {
+    const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.get<PosProductoLookupResponse>(
-      `${this.apiUrl}/productos/${encodeURIComponent(sku.trim())}`,
+      `${this.apiUrl}/productos/${encodeURIComponent(sku.trim())}${query}`,
       { headers: this.auth.getAuthHeaders() }
     );
   }
 
-  lookupReserva(codigoQr: string): Observable<PosReservaLoadResponse> {
+  lookupReserva(codigoQr: string, idSucursal?: number): Observable<PosReservaLoadResponse> {
+    const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.get<PosReservaLoadResponse>(
-      `${this.apiUrl}/reservas/${encodeURIComponent(codigoQr.trim())}`,
+      `${this.apiUrl}/reservas/${encodeURIComponent(codigoQr.trim())}${query}`,
       { headers: this.auth.getAuthHeaders() }
     );
   }
 
-  procesarVenta(venta: PosVentaCreate): Observable<PosTicketResponse> {
+  procesarVenta(venta: PosVentaCreate, idSucursal?: number): Observable<PosTicketResponse> {
+    const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.post<PosTicketResponse>(
-      `${this.apiUrl}/venta`,
+      `${this.apiUrl}/venta${query}`,
       venta,
       { headers: this.auth.getAuthHeaders() }
     );

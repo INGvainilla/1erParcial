@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -364,26 +364,40 @@ interface TicketItem extends PosItemInput {
           <div class="modal-body">
             <div class="variant-prod-header">
               <img [src]="scannedProduct.imagen_principal || 'assets/placeholder-suit.jpg'" [alt]="scannedProduct.nombre" class="variant-thumb" />
-              <div>
+              <div class="variant-header-info">
                 <h4>{{ scannedProduct.nombre }}</h4>
-                <span class="sku-badge">{{ scannedProduct.codigo_sku_base }}</span>
-                <span class="price-highlight">Bs. {{ scannedProduct.precio_base | number:'1.2-2' }}</span>
+                <div class="header-badges">
+                  <span class="sku-badge">{{ scannedProduct.codigo_sku_base }}</span>
+                  <span class="talla-badge-curr">Talla: {{ selectedTalla }}</span>
+                </div>
+                <div class="price-container">
+                  <span class="price-highlight">Bs. {{ precioUnitarioVariante | number:'1.2-2' }}</span>
+                  <span class="unit-label" *ngIf="getFactorTalla(selectedTalla) !== 1">
+                    ({{ (getFactorTalla(selectedTalla) - 1) > 0 ? '+' : '' }}{{ ((getFactorTalla(selectedTalla) - 1) * 100) | number:'1.0-0' }}% por talla {{ selectedTalla }})
+                  </span>
+                </div>
+                <div class="subtotal-box" *ngIf="selectedQty > 1">
+                  Subtotal ({{ selectedQty }} uds): <strong>Bs. {{ subtotalVariante | number:'1.2-2' }}</strong>
+                </div>
                 <p class="stock-info">Stock disponible en sucursal: <strong>{{ scannedProduct.stock_disponible_sucursal }} uds.</strong></p>
               </div>
             </div>
 
             <!-- Selector de Talla -->
             <div class="variant-selector-group">
-              <label>Talla Disponible:</label>
+              <label>Talla Disponible (Ajusta precio base):</label>
               <div class="chips-group">
                 <button
                   *ngFor="let t of scannedProduct.tallas"
                   type="button"
                   class="variant-chip"
                   [class.selected]="selectedTalla === t"
-                  (click)="selectedTalla = t"
+                  (click)="selectTalla(t)"
                 >
-                  {{ t }}
+                  <span>{{ t }}</span>
+                  <small *ngIf="getFactorTalla(t) !== 1" class="chip-factor">
+                    {{ (getFactorTalla(t) - 1) > 0 ? '+' : '' }}{{ ((getFactorTalla(t) - 1) * 100) | number:'1.0-0' }}%
+                  </small>
                 </button>
               </div>
             </div>
@@ -397,7 +411,7 @@ interface TicketItem extends PosItemInput {
                   type="button"
                   class="variant-chip"
                   [class.selected]="selectedColor === c"
-                  (click)="selectedColor = c"
+                  (click)="selectColor(c)"
                 >
                   {{ c }}
                 </button>
@@ -408,9 +422,13 @@ interface TicketItem extends PosItemInput {
             <div class="variant-selector-group qty-row">
               <label>Cantidad:</label>
               <div class="modal-qty-control">
-                <button type="button" class="qty-btn" (click)="selectedQty = selectedQty > 1 ? selectedQty - 1 : 1"><i class="fas fa-minus"></i></button>
+                <button type="button" class="qty-btn" (click)="cambiarCantidadModal(-1)"><i class="fas fa-minus"></i></button>
                 <span class="qty-display">{{ selectedQty }}</span>
-                <button type="button" class="qty-btn" (click)="selectedQty = selectedQty + 1"><i class="fas fa-plus"></i></button>
+                <button type="button" class="qty-btn" (click)="cambiarCantidadModal(1)"><i class="fas fa-plus"></i></button>
+              </div>
+              <div class="qty-subtotal-summary">
+                <span>Total a Agregar:</span>
+                <strong>Bs. {{ subtotalVariante | number:'1.2-2' }}</strong>
               </div>
             </div>
           </div>
@@ -807,66 +825,79 @@ interface TicketItem extends PosItemInput {
     }
     .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-auto-rows: 230px;
+      align-content: start;
+      align-items: start;
+      gap: 1rem;
       overflow-y: auto;
-      padding-right: 0.35rem;
+      padding: 0.5rem 0.5rem 1rem 0;
       flex: 1;
     }
     .pos-product-card {
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 10px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
       overflow: hidden;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s ease;
       display: flex;
       flex-direction: column;
+      height: 230px;
+      box-sizing: border-box;
     }
     .pos-product-card:hover {
-      border-color: rgba(99, 102, 241, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      border-color: rgba(99, 102, 241, 0.6);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      background: rgba(30, 41, 59, 0.85);
     }
     .card-img-wrap {
-      height: 105px;
+      height: 125px;
       position: relative;
       background: #0f172a;
+      overflow: hidden;
     }
     .card-img-wrap img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .pos-product-card:hover .card-img-wrap img {
+      transform: scale(1.06);
     }
     .stock-pill {
       position: absolute;
       top: 6px;
       right: 6px;
-      background: rgba(16, 185, 129, 0.85);
+      background: rgba(16, 185, 129, 0.9);
       color: white;
       font-size: 0.65rem;
       font-weight: 800;
-      padding: 0.15rem 0.4rem;
+      padding: 0.15rem 0.45rem;
       border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     .stock-pill.low-stock {
-      background: rgba(239, 68, 68, 0.85);
+      background: rgba(239, 68, 68, 0.9);
     }
     .card-info {
-      padding: 0.55rem;
+      padding: 0.65rem;
       flex: 1;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
     }
     .sku-tag {
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       color: #818cf8;
       font-weight: 700;
     }
     .prod-name {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 600;
-      color: #e2e8f0;
+      color: #f1f5f9;
       margin: 0.2rem 0;
       white-space: nowrap;
       overflow: hidden;
@@ -878,24 +909,31 @@ interface TicketItem extends PosItemInput {
       align-items: center;
       margin-top: auto;
       padding-top: 0.35rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
     .prod-price {
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: #38bdf8;
     }
     .btn-add-mini {
-      width: 22px;
-      height: 22px;
+      width: 26px;
+      height: 26px;
       border-radius: 6px;
-      background: rgba(99, 102, 241, 0.25);
-      border: none;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.35);
       color: #818cf8;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-add-mini:hover {
+      background: #6366f1;
+      color: #ffffff;
+      transform: scale(1.1);
     }
     .empty-catalog {
       display: flex;
@@ -1450,16 +1488,75 @@ interface TicketItem extends PosItemInput {
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .variant-thumb {
-      width: 70px;
-      height: 70px;
+      width: 75px;
+      height: 75px;
       object-fit: cover;
       border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .variant-header-info {
+      flex: 1;
     }
     .variant-prod-header h4 {
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin: 0 0 0.25rem;
+      margin: 0 0 0.35rem;
       color: #fff;
+    }
+    .header-badges {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+    .talla-badge-curr {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+    .price-container {
+      display: flex;
+      align-items: baseline;
+      gap: 0.45rem;
+      margin: 0.25rem 0;
+    }
+    .unit-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+    .subtotal-box {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #e0e7ff;
+      margin: 0.35rem 0;
+    }
+    .subtotal-box strong {
+      color: #38bdf8;
+    }
+    .chip-factor {
+      display: block;
+      font-size: 0.62rem;
+      opacity: 0.8;
+      margin-top: 1px;
+    }
+    .qty-subtotal-summary {
+      margin-left: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+    .qty-subtotal-summary strong {
+      font-size: 1.05rem;
+      color: #34d399;
     }
     .sku-badge {
       display: inline-block;
@@ -1718,6 +1815,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   posService = inject(PosService);
   fashionApi = inject(FashionApiService);
   toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Sucursal activa
   sucursales: Sucursal[] = [];
@@ -1770,6 +1868,45 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     );
   }
 
+  getFactorTalla(talla: string): number {
+    const t = (talla || '').trim().toUpperCase();
+    const factores: { [k: string]: number } = {
+      'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
+      '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
+      '38': 0.95, '40': 1.00, '42': 1.05, '44': 1.10,
+      '39': 0.95, '41': 1.05
+    };
+    return factores[t] !== undefined ? factores[t] : 1.00;
+  }
+
+  get precioUnitarioVariante(): number {
+    if (!this.scannedProduct) return 0;
+    const factor = this.getFactorTalla(this.selectedTalla);
+    return Math.round(this.scannedProduct.precio_base * factor * 100) / 100;
+  }
+
+  get subtotalVariante(): number {
+    return Math.round(this.precioUnitarioVariante * this.selectedQty * 100) / 100;
+  }
+
+  selectTalla(t: string) {
+    this.selectedTalla = t;
+    this.cdr.detectChanges();
+  }
+
+  selectColor(c: string) {
+    this.selectedColor = c;
+    this.cdr.detectChanges();
+  }
+
+  cambiarCantidadModal(delta: number) {
+    const nueva = this.selectedQty + delta;
+    if (nueva >= 1) {
+      this.selectedQty = nueva;
+      this.cdr.detectChanges();
+    }
+  }
+
   get totalTicket(): number {
     return this.ticketItems.reduce((acc, it) => acc + (it.precio_unitario * it.cantidad), 0);
   }
@@ -1792,6 +1929,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.initClock();
     this.loadSucursales();
     this.loadCatalog();
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy() {
@@ -1808,6 +1946,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   private updateClock() {
     const now = new Date();
     this.currentTime = now.toLocaleTimeString('es-BO', { hour12: false });
+    this.cdr.detectChanges();
   }
 
   private loadSucursales() {
@@ -1821,30 +1960,40 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
           this.selectedSucursalId = data[0].id_sucursal;
         }
         this.onSucursalChange();
+        this.cdr.detectChanges();
       },
-      error: () => this.toast.error('Error de Sucursales', 'No se pudieron cargar las sucursales.')
+      error: () => {
+        this.toast.error('Error de Sucursales', 'No se pudieron cargar las sucursales.');
+        this.cdr.detectChanges();
+      }
     });
   }
 
   onSucursalChange() {
     this.sucursalActual = this.sucursales.find(s => s.id_sucursal === Number(this.selectedSucursalId));
     this.clearTicket();
+    this.cdr.detectChanges();
   }
 
   private loadCatalog() {
     this.fashionApi.getProductos().subscribe({
       next: (prods) => {
         this.catalogProducts = prods;
+        this.cdr.detectChanges();
       },
-      error: () => console.warn('No se pudo cargar el catálogo de productos')
+      error: () => {
+        console.warn('No se pudo cargar el catálogo de productos');
+        this.cdr.detectChanges();
+      }
     });
   }
 
   onBarcodeScan() {
     if (!this.skuSearchTerm.trim()) return;
     this.isLoadingScan = true;
+    this.cdr.detectChanges();
 
-    this.posService.lookupProducto(this.skuSearchTerm).subscribe({
+    this.posService.lookupProducto(this.skuSearchTerm, Number(this.selectedSucursalId)).subscribe({
       next: (resp) => {
         this.isLoadingScan = false;
         this.scannedProduct = resp;
@@ -1853,11 +2002,13 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         this.selectedQty = 1;
         this.showVariantModal = true;
         this.skuSearchTerm = '';
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoadingScan = false;
         const msg = err.error?.detail || `Prenda con código '${this.skuSearchTerm}' no encontrada.`;
         this.toast.error('Búsqueda Fallida', msg);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1869,6 +2020,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
   confirmVariantAdd() {
     if (!this.scannedProduct) return;
+    const precioFinal = this.precioUnitarioVariante;
 
     // Verificar si ya existe el item con la misma talla y color en el ticket
     const existIdx = this.ticketItems.findIndex(
@@ -1885,6 +2037,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       } else {
         item.cantidad += this.selectedQty;
       }
+      item.precio_unitario = precioFinal;
     } else {
       this.ticketItems.push({
         id_producto: this.scannedProduct.id_producto,
@@ -1893,20 +2046,22 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         talla: this.selectedTalla,
         color: this.selectedColor,
         cantidad: this.selectedQty,
-        precio_unitario: this.scannedProduct.precio_base,
+        precio_unitario: precioFinal,
         stock_max: this.scannedProduct.stock_disponible_sucursal || 99,
         imagen: this.scannedProduct.imagen_principal
       });
     }
 
     this.showVariantModal = false;
-    this.toast.success('Prenda Agregada', `Agregado: ${this.scannedProduct.nombre} (${this.selectedTalla})`);
+    this.toast.success('Prenda Agregada', `Agregado: ${this.scannedProduct.nombre} (${this.selectedTalla}) - Bs. ${precioFinal.toFixed(2)}`);
+    this.cdr.detectChanges();
   }
 
   incrementItem(index: number) {
     const it = this.ticketItems[index];
     if (it.cantidad < it.stock_max) {
       it.cantidad++;
+      this.cdr.detectChanges();
     }
   }
 
@@ -1917,21 +2072,25 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     } else {
       this.removeItem(index);
     }
+    this.cdr.detectChanges();
   }
 
   removeItem(index: number) {
     this.ticketItems.splice(index, 1);
+    this.cdr.detectChanges();
   }
 
   clearTicket() {
     this.ticketItems = [];
     this.reservaVinculada = undefined;
     this.montoRecibido = 0;
+    this.cdr.detectChanges();
   }
 
   setSinNombre() {
     this.nitCliente = '0';
     this.nombreCliente = 'Control Fiscal / C/F';
+    this.cdr.detectChanges();
   }
 
   selectMetodoPago(metodo: string) {
@@ -1939,14 +2098,17 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     if (metodo === 'EFECTIVO' && this.montoRecibido < this.totalTicket) {
       this.montoRecibido = this.totalTicket;
     }
+    this.cdr.detectChanges();
   }
 
   setExactCash() {
     this.montoRecibido = this.totalTicket;
+    this.cdr.detectChanges();
   }
 
   addCash(amount: number) {
     this.montoRecibido = (Number(this.montoRecibido) || 0) + amount;
+    this.cdr.detectChanges();
   }
 
   openReservaModal() {

@@ -15,6 +15,9 @@ class ReservaDetalleResponse(BaseModel):
     talla: str
     color: str
     cantidad: int
+    nombre_producto: Optional[str] = None
+    codigo_sku_base: Optional[str] = None
+    imagen_principal: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,9 +31,13 @@ class ReservaResponse(BaseModel):
     id_usuario: int
     id_sucursal: int
     codigo_qr: str
+    qr_texto: Optional[str] = None
     fecha_visita: datetime
     estado: str
     creado_en: datetime
+    nombre_sucursal: Optional[str] = None
+    nombre_ciudad: Optional[str] = None
+    nombre_cliente: Optional[str] = None
     detalles: List[ReservaDetalleResponse]
 
     model_config = ConfigDict(from_attributes=True)
@@ -51,6 +58,8 @@ class ReservaEncargadoResponse(BaseModel):
     fecha_visita: datetime
     estado: str
     creado_en: datetime
+    nombre_sucursal: Optional[str] = None
+    nombre_ciudad: Optional[str] = None
     nombre_cliente: Optional[str] = None
     detalles: List[ReservaDetalleResponse]
 

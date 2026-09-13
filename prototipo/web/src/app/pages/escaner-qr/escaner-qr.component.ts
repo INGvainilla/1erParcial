@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -444,6 +444,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
 
   private encargadoService = inject(EncargadoService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     // Default to manual mode since camera may not be available
@@ -466,9 +467,11 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
           this.videoElement.nativeElement.srcObject = this.mediaStream;
         }
       }, 100);
+      this.cdr.detectChanges();
     } catch (err: any) {
       this.cameraError = 'No se pudo acceder a la cámara. Verifique los permisos del navegador o use el ingreso manual.';
       console.error('Camera error:', err);
+      this.cdr.detectChanges();
     }
   }
 
@@ -485,6 +488,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
 
     this.isProcessing = true;
     this.lastResult = null;
+    this.cdr.detectChanges();
 
     this.encargadoService.escanearQr(codigo).subscribe({
       next: (reserva) => {
@@ -493,10 +497,11 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
         this.lastResult = {
           type: 'success',
           title: '¡Reserva Atendida Exitosamente!',
-          message: `La reserva #${reserva.id_reserva} ha sido marcada como ATENDIDA. El cliente puede recoger sus prendas.`,
+          message: `La reserva #${reserva.id_reserva} ha sido marcada como ATENDIDA. El cliente puede pasar a su probador asignado.`,
           reserva
         };
         this.toast.success('¡Éxito!', `Reserva #${reserva.id_reserva} atendida correctamente.`);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isProcessing = false;
@@ -507,6 +512,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
           message: detail
         };
         this.toast.error('Error', detail);
+        this.cdr.detectChanges();
       }
     });
   }

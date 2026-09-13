@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { API_BASE_URL } from '../constants/api.constants';
 
 export interface MetodoPagoResponse {
   id_metodo: number;
@@ -35,7 +36,7 @@ export interface MetodoPagoUpdate {
 export class PagoConfigService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private apiUrl = '/api/v1/configuracion/pagos';
+  private apiUrl = `${API_BASE_URL}/configuracion/pagos`;
 
   getMetodos(): Observable<MetodoPagoResponse[]> {
     return this.http.get<MetodoPagoResponse[]>(this.apiUrl, {

@@ -42,6 +42,7 @@ from app.modules.pos.router import router as pos_router
 from app.modules.pagos.router import router as pagos_router
 from app.modules.pagos.config_router import router as config_pagos_router
 from app.modules.logistica.router import router as logistica_router
+from app.modules.dashboard.router import router as dashboard_router
 
 # Inicializar tablas de base de datos
 Base.metadata.create_all(bind=engine)
@@ -94,6 +95,7 @@ app.include_router(pos_router, prefix=API_PREFIX)
 app.include_router(pagos_router, prefix=API_PREFIX)
 app.include_router(config_pagos_router, prefix=API_PREFIX)
 app.include_router(logistica_router, prefix=API_PREFIX)
+app.include_router(dashboard_router, prefix=API_PREFIX)
 
 # Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))

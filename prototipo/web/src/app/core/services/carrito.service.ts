@@ -58,7 +58,7 @@ export class CarritoService {
 
   openCart(): void {
     this.isOpen.set(true);
-    if (!this.cart() && this.auth.currentUser()) {
+    if (this.auth.currentUser()) {
       this.cargarCarrito();
     }
   }
@@ -79,7 +79,10 @@ export class CarritoService {
    * CU13: Carga el carrito del usuario autenticado
    */
   cargarCarrito(): void {
-    if (!this.auth.currentUser()) return;
+    if (!this.auth.currentUser()) {
+      this.loading.set(false);
+      return;
+    }
 
     this.loading.set(true);
     this.http.get<CarritoData>(this.apiUrl, { headers: this.auth.getAuthHeaders() }).pipe(
@@ -96,18 +99,18 @@ export class CarritoService {
   }
 
   /**
-   * CU13: Añadir producto al carrito con validación atómica
+   * CU13: Añadir producto al carrito con validación atómica y apertura reactiva
    */
-  agregarItem(id_producto: number, talla: string, color: string, cantidad: number = 1): Observable<CarritoData> {
+  agregarItem(id_producto: number, talla: string, color: string, cantidad: number = 1): void {
     if (!this.auth.currentUser()) {
       this.toast.info('Sesión requerida', 'Debes iniciar sesión para agregar productos a tu carrito.');
-      return throwError(() => new Error('No autenticado'));
+      return;
     }
 
     this.loading.set(true);
     const body = { id_producto, talla, color, cantidad };
 
-    return this.http.post<CarritoData>(`${this.apiUrl}/items`, body, {
+    this.http.post<CarritoData>(`${this.apiUrl}/items`, body, {
       headers: this.auth.getAuthHeaders()
     }).pipe(
       tap(data => {
@@ -122,7 +125,7 @@ export class CarritoService {
         this.toast.warning('Existencias Insuficientes', detail);
         return throwError(() => err);
       })
-    );
+    ).subscribe();
   }
 
   /**

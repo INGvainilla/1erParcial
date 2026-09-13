@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CheckoutService, OrdenData } from '../../core/services/checkout.service';
@@ -385,6 +385,7 @@ export class CheckoutConfirmacionComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private checkoutService = inject(CheckoutService);
+  private cdr = inject(ChangeDetectorRef);
 
   orden: OrdenData | null = null;
   loading = true;
@@ -397,10 +398,12 @@ export class CheckoutConfirmacionComponent implements OnInit {
         next: (data) => {
           this.orden = data;
           this.loading = false;
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.loading = false;
           console.error('Error cargando orden', err);
+          this.cdr.detectChanges();
         }
       });
     }

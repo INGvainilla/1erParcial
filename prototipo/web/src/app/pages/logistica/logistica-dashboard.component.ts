@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -18,9 +18,20 @@ import { ToastService } from '../../core/services/toast.service';
             <i class="fas fa-truck"></i> MÓDULO DE DISTRIBUCIÓN
           </div>
           <h1 class="page-title">Tablero de Despacho & Logística</h1>
-          <p class="page-subtitle">CU18 — Orquestación de empaque, asignación de couriers y entregas a domicilio</p>
+          <p class="page-subtitle">CU18 — Orquestación de empaque, asignación de couriers y entregas</p>
         </div>
         <div class="header-actions">
+          <div class="filter-pills">
+            <button class="pill-btn" [class.active]="filtroModalidad === 'TODAS'" (click)="setFiltroModalidad('TODAS')">
+              Todas
+            </button>
+            <button class="pill-btn" [class.active]="filtroModalidad === 'DELIVERY'" (click)="setFiltroModalidad('DELIVERY')">
+              <i class="fas fa-motorcycle"></i> Delivery
+            </button>
+            <button class="pill-btn" [class.active]="filtroModalidad === 'RETIRO_TIENDA'" (click)="setFiltroModalidad('RETIRO_TIENDA')">
+              <i class="fas fa-store"></i> Retiro Tienda
+            </button>
+          </div>
           <button class="btn-refresh" (click)="cargarOrdenes()" [disabled]="cargando">
             <i class="fas fa-sync-alt" [class.fa-spin]="cargando"></i> Actualizar
           </button>
@@ -81,6 +92,10 @@ import { ToastService } from '../../core/services/toast.service';
               <div class="card-head">
                 <span class="order-id">#{{ ord.id_orden }}</span>
                 <span class="invoice-num">{{ ord.numero_factura || 'ORDEN' }}</span>
+                <span class="modality-tag" [class.tag-pickup]="ord.modalidad_entrega === 'RETIRO_TIENDA'">
+                  <i [class]="ord.modalidad_entrega === 'RETIRO_TIENDA' ? 'fas fa-store' : 'fas fa-motorcycle'"></i>
+                  {{ ord.modalidad_entrega === 'RETIRO_TIENDA' ? 'Retiro Tienda' : 'Delivery' }}
+                </span>
               </div>
 
               <div class="client-info">
@@ -170,7 +185,10 @@ import { ToastService } from '../../core/services/toast.service';
               </div>
 
               <div class="card-footer">
-                <button class="btn-action btn-asignar" (click)="abrirModalAsignar(ord)">
+                <button *ngIf="ord.modalidad_entrega === 'RETIRO_TIENDA'" class="btn-action btn-empacar" (click)="marcarEntregada(ord)" [disabled]="procesandoId === ord.id_orden">
+                  <i class="fas fa-handshake"></i> Entregar en Tienda
+                </button>
+                <button *ngIf="ord.modalidad_entrega !== 'RETIRO_TIENDA'" class="btn-action btn-asignar" (click)="abrirModalAsignar(ord)">
                   <i class="fas fa-motorcycle"></i> Asignar Repartidor
                 </button>
               </div>
@@ -942,16 +960,68 @@ import { ToastService } from '../../core/services/toast.service';
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    .filter-pills {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .pill-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .pill-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .modality-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-left: auto;
+    }
+
+    .modality-tag.tag-pickup {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
   `]
 })
 export class LogisticaDashboardComponent implements OnInit {
   private logisticaService = inject(LogisticaService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   cargando = false;
   procesandoId: number | null = null;
   ordenes: OrdenLogistica[] = [];
   repartidores: RepartidorDisponible[] = [];
+  filtroModalidad: string = 'TODAS';
 
   // Control de expansión de acordeón de prendas
   expandedCards = new Set<number>();
@@ -968,16 +1038,24 @@ export class LogisticaDashboardComponent implements OnInit {
     this.cargarRepartidores();
   }
 
+  setFiltroModalidad(mod: string): void {
+    this.filtroModalidad = mod;
+    this.cargarOrdenes();
+  }
+
   cargarOrdenes(): void {
     this.cargando = true;
-    this.logisticaService.getOrdenes().subscribe({
+    this.cdr.detectChanges();
+    this.logisticaService.getOrdenes(undefined, this.filtroModalidad).subscribe({
       next: (res) => {
         this.ordenes = res;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.toast.error('Error', 'No se pudieron recuperar las órdenes de despacho');
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -986,6 +1064,7 @@ export class LogisticaDashboardComponent implements OnInit {
     this.logisticaService.getRepartidores().subscribe({
       next: (reps) => {
         this.repartidores = reps;
+        this.cdr.detectChanges();
       },
       error: () => {}
     });
@@ -1114,15 +1193,18 @@ export class LogisticaDashboardComponent implements OnInit {
 
   marcarEntregada(ord: OrdenLogistica): void {
     this.procesandoId = ord.id_orden;
+    this.cdr.detectChanges();
     this.logisticaService.cambiarEstado(ord.id_orden, { nuevo_estado: 'ENTREGADA' }).subscribe({
       next: (actualizada) => {
         this.procesandoId = null;
         this.toast.success('Entrega Confirmada', `La orden #${ord.id_orden} fue marcada como ENTREGADA`);
         this.actualizarOrdenEnLista(actualizada);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.procesandoId = null;
         this.toast.error('Conflicto Logístico', err.error?.detail || 'No se pudo marcar la entrega');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1134,5 +1216,6 @@ export class LogisticaDashboardComponent implements OnInit {
     } else {
       this.ordenes.unshift(actualizada);
     }
+    this.cdr.detectChanges();
   }
 }

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CarritoService, CarritoItem } from '../../../core/services/carrito.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 import { Router } from '@angular/router';
 
@@ -57,11 +58,17 @@ import { Router } from '@angular/router';
           <div class="empty-icon-wrap">
             <i class="fas fa-shopping-cart"></i>
           </div>
-          <h3>Tu carrito está vacío</h3>
-          <p>Explora nuestra colección de alta sastrería masculina y añade tus prendas preferidas.</p>
-          <button class="btn-explore" (click)="carritoService.closeCart()" routerLink="/catalogo">
+          <h3 *ngIf="auth.isAuthenticated()">Tu carrito está vacío</h3>
+          <p *ngIf="auth.isAuthenticated()">Explora nuestra colección de alta sastrería masculina y añade tus prendas preferidas.</p>
+          <h3 *ngIf="!auth.isAuthenticated()">Inicia sesión para ver tu bolsa</h3>
+          <p *ngIf="!auth.isAuthenticated()">Para sincronizar tu carrito en todos tus dispositivos y comprar, inicia sesión con tu cuenta.</p>
+          <button *ngIf="auth.isAuthenticated()" class="btn-explore" (click)="carritoService.closeCart()" routerLink="/catalogo">
             <i class="fas fa-compass"></i>
             Explorar Catálogo
+          </button>
+          <button *ngIf="!auth.isAuthenticated()" class="btn-explore" (click)="carritoService.closeCart()" routerLink="/login">
+            <i class="fas fa-user-circle"></i>
+            Iniciar Sesión
           </button>
         </div>
 
@@ -179,6 +186,11 @@ import { Router } from '@angular/router';
             <i class="fas fa-lock"></i>
             <span>Proceder al Pago (Checkout)</span>
             <i class="fas fa-arrow-right"></i>
+          </button>
+
+          <button class="btn-reserve-cart" (click)="reservarCarritoEnSucursal()">
+            <i class="fas fa-calendar-check"></i>
+            <span>Reservar Bolsa en Tienda (CU11)</span>
           </button>
 
           <button
@@ -618,6 +630,28 @@ import { Router } from '@angular/router';
       color: #ef4444;
       border-color: rgba(239, 68, 68, 0.2);
     }
+    .btn-reserve-cart {
+      width: 100%;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.25));
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      border-radius: 10px;
+      color: #6ee7b7;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.25s;
+    }
+    .btn-reserve-cart:hover {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
 
     @keyframes fadeIn {
       from { opacity: 0; }
@@ -627,10 +661,27 @@ import { Router } from '@angular/router';
 })
 export class CarritoSidebarComponent {
   carritoService = inject(CarritoService);
+  auth = inject(AuthService);
   private router = inject(Router);
 
   procederCheckout(): void {
     this.carritoService.closeCart();
     this.router.navigate(['/checkout']);
+  }
+
+  reservarCarritoEnSucursal(): void {
+    const items = this.carritoService.items().map(it => ({
+      id_producto: it.id_producto,
+      nombre_producto: it.nombre_producto,
+      codigo_sku_base: it.codigo_sku_base,
+      talla: it.talla,
+      color: it.color,
+      cantidad: it.cantidad,
+      imagen_principal: it.imagen_principal
+    }));
+    this.carritoService.closeCart();
+    this.router.navigate(['/reservas/crear'], {
+      state: { items }
+    });
   }
 }

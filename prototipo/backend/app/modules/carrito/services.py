@@ -116,6 +116,19 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
     
     carrito = obtener_o_crear_carrito_activo(db, id_usuario)
 
+    # Factores de talla y descuento estacional consistentes con el catálogo
+    factores_talla = {
+        'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
+        '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
+        '38': 0.95, '40': 1.00, '42': 1.05, '44': 1.10,
+        '39': 0.95, '41': 1.05
+    }
+    factor = factores_talla.get(item_in.talla.strip().upper(), 1.00)
+    descuento_pct = 0.0
+    if producto.temporada and producto.temporada.estado == "LIQUIDACION" and producto.temporada.descuento_liquidacion > 0:
+        descuento_pct = float(producto.temporada.descuento_liquidacion)
+    precio_unit = round(float(producto.precio_base) * factor * (1.0 - descuento_pct / 100.0), 2)
+
     # Verificar si ya existe el ítem en el carrito con misma talla y color
     item_existente = db.query(CarritoItem).filter(
         CarritoItem.id_carrito == carrito.id_carrito,
@@ -132,6 +145,7 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
                 detail=f"Stock insuficiente. Solo quedan {stock_disponible} unidades disponibles para {item_in.talla} / {item_in.color} (ya tienes {item_existente.cantidad} en tu carrito)."
             )
         item_existente.cantidad = nueva_cantidad
+        item_existente.precio_unitario = precio_unit
     else:
         if item_in.cantidad > stock_disponible:
             raise HTTPException(
@@ -144,7 +158,7 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
             talla=item_in.talla,
             color=item_in.color,
             cantidad=item_in.cantidad,
-            precio_unitario=producto.precio_base
+            precio_unitario=precio_unit
         )
         db.add(nuevo_item)
 

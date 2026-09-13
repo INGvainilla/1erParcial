@@ -170,7 +170,17 @@ export class FashionApiService {
   // ==========================================
   // CU10: CONSULTA OMNICANAL Y DISPONIBILIDAD
   // ==========================================
-  getCatalogo(filtros?: { id_categoria?: number; id_sucursal?: number; busqueda?: string }): Observable<CatalogoItem[]> {
+  getCatalogo(filtros?: {
+    id_categoria?: number;
+    id_sucursal?: number;
+    busqueda?: string;
+    id_marca?: number;
+    id_temporada?: number;
+    talla?: string;
+    color?: string;
+    precio_min?: number;
+    precio_max?: number;
+  }): Observable<CatalogoItem[]> {
     let params = new HttpParams();
     if (filtros?.id_categoria) {
       params = params.set('id_categoria', filtros.id_categoria.toString());
@@ -181,6 +191,35 @@ export class FashionApiService {
     if (filtros?.busqueda) {
       params = params.set('busqueda', filtros.busqueda);
     }
+    if (filtros?.id_marca) {
+      params = params.set('id_marca', filtros.id_marca.toString());
+    }
+    if (filtros?.id_temporada) {
+      params = params.set('id_temporada', filtros.id_temporada.toString());
+    }
+    if (filtros?.talla) {
+      params = params.set('talla', filtros.talla);
+    }
+    if (filtros?.color) {
+      params = params.set('color', filtros.color);
+    }
+    if (filtros?.precio_min !== undefined && filtros?.precio_min !== null) {
+      params = params.set('precio_min', filtros.precio_min.toString());
+    }
+    if (filtros?.precio_max !== undefined && filtros?.precio_max !== null) {
+      params = params.set('precio_max', filtros.precio_max.toString());
+    }
     return this.http.get<CatalogoItem[]>(`${this.apiUrl}/catalogo`, { params });
   }
+
+  // ==========================================
+  // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU18)
+  // ==========================================
+  getDashboardMetricas(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/dashboard/metricas`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
 }
+
+

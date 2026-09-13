@@ -34,6 +34,11 @@ import { CarritoService } from '../../core/services/carrito.service';
           <span>Reservar Prendas (CU11)</span>
         </a>
 
+        <a *ngIf="auth.isAuthenticated()" routerLink="/reservas/ticket" routerLinkActive="active" class="nav-item">
+          <i class="fas fa-qrcode"></i>
+          <span>Mis Tickets QR (CU11)</span>
+        </a>
+
         <a (click)="carritoService.openCart()" class="nav-item nav-cart-item" style="cursor: pointer;">
           <i class="fas fa-shopping-bag"></i>
           <span>Bolsa de Compras (CU13)</span>

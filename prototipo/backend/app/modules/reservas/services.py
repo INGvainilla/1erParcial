@@ -11,6 +11,24 @@ from datetime import date
 from app.modules.reservas.models import Reserva, ReservaDetalle
 from app.modules.reservas.schemas import ReservaCreate
 from app.modules.inventario.models import Inventario, KardexMovimiento
+from app.modules.sucursales.models import Sucursal
+from app.modules.productos.models import Producto
+
+def enriquecer_reserva(reserva: Reserva) -> Reserva:
+    if not reserva:
+        return reserva
+    if reserva.sucursal:
+        reserva.nombre_sucursal = reserva.sucursal.nombre_sucursal
+        if hasattr(reserva.sucursal, "ciudad") and reserva.sucursal.ciudad:
+            reserva.nombre_ciudad = reserva.sucursal.ciudad.nombre_ciudad
+    if reserva.usuario:
+        reserva.nombre_cliente = f"{reserva.usuario.nombres} {reserva.usuario.apellidos}".strip()
+    for det in (reserva.detalles or []):
+        if det.producto:
+            det.nombre_producto = det.producto.nombre
+            det.codigo_sku_base = det.producto.codigo_sku_base
+            det.imagen_principal = det.producto.imagen_principal
+    return reserva
 
 def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Reserva:
     # 1. Validar Stock y apartar
@@ -79,36 +97,73 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
         db.add(db_detalle)
     
     db.commit()
-    db.refresh(db_reserva)
-    return db_reserva
+    
+    # Recargar con relaciones completas
+    reserva_creada = db.query(Reserva).options(
+        joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
+        joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
+        joinedload(Reserva.usuario)
+    ).filter(Reserva.id_reserva == db_reserva.id_reserva).first()
+    
+    return enriquecer_reserva(reserva_creada or db_reserva)
 
 
 # ==========================================
 # CU12: PREPARAR Y ATENDER RESERVA PRESENCIAL
 # ==========================================
 
-def listar_reservas_sucursal_hoy(db: Session, id_sucursal: int):
+def listar_reservas_sucursal_hoy(db: Session, id_sucursal: Optional[int] = None, fecha_filtro: Optional[str] = "hoy"):
     """
-    Lista las reservas de una sucursal para el día de hoy,
-    ordenadas por hora de visita.
+    CU12: Lista las reservas de una sucursal (o todas si id_sucursal es None),
+    filtrando opcionalmente por fecha ('hoy', 'todas', 'proximas', o 'YYYY-MM-DD').
     """
+    from datetime import datetime as dt
     hoy = date.today()
-    reservas = db.query(Reserva).options(
-        joinedload(Reserva.detalles),
+    hoy_str = str(hoy)
+    
+    query = db.query(Reserva).options(
+        joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
+        joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
         joinedload(Reserva.usuario)
-    ).filter(
-        Reserva.id_sucursal == id_sucursal
-    ).all()
+    )
+    if id_sucursal:
+        query = query.filter(Reserva.id_sucursal == id_sucursal)
     
-    # Filtrar por fecha del día (comparar solo la parte date)
-    reservas_hoy = [
-        r for r in reservas
-        if r.fecha_visita and r.fecha_visita.date() == hoy
-    ]
+    reservas = query.all()
     
-    # Ordenar por hora de visita
-    reservas_hoy.sort(key=lambda r: r.fecha_visita)
-    return reservas_hoy
+    def obtener_fecha_str(f):
+        if not f:
+            return ""
+        return str(f)[:10]
+
+    # Filtrar según fecha_filtro
+    if fecha_filtro == "todas":
+        reservas_filtradas = reservas
+    elif fecha_filtro == "proximas":
+        reservas_filtradas = [
+            r for r in reservas
+            if obtener_fecha_str(r.fecha_visita) >= hoy_str
+        ]
+    elif fecha_filtro and fecha_filtro != "hoy":
+        # Fecha específica YYYY-MM-DD
+        reservas_filtradas = [
+            r for r in reservas
+            if obtener_fecha_str(r.fecha_visita) == fecha_filtro
+        ]
+    else:
+        # Por defecto 'hoy', pero si hoy no hay reservas, retornar también próximas para evitar pantalla vacía
+        reservas_hoy = [
+            r for r in reservas
+            if obtener_fecha_str(r.fecha_visita) == hoy_str
+        ]
+        # Si hoy hay reservas o no se especificó otra cosa, usamos las de hoy
+        reservas_filtradas = reservas_hoy if len(reservas_hoy) > 0 else reservas
+    
+    # Ordenar por fecha y hora de visita
+    reservas_filtradas.sort(key=lambda r: str(r.fecha_visita))
+    for r in reservas_filtradas:
+        enriquecer_reserva(r)
+    return reservas_filtradas
 
 
 def actualizar_estado_reserva(db: Session, id_reserva: int, nuevo_estado: str, id_sucursal: Optional[int] = None, es_admin: bool = False) -> Reserva:
@@ -132,7 +187,7 @@ def actualizar_estado_reserva(db: Session, id_reserva: int, nuevo_estado: str, i
     
     # Validar transiciones de estado válidas
     transiciones_validas = {
-        "PENDIENTE": ["PREPARADA", "CANCELADA"],
+        "PENDIENTE": ["PREPARADA", "ATENDIDA", "CANCELADA"],
         "PREPARADA": ["ATENDIDA", "CANCELADA"],
     }
     
@@ -167,7 +222,8 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
         conds.append(Reserva.id_reserva == int(codigo_clean))
 
     reserva = db.query(Reserva).options(
-        joinedload(Reserva.detalles),
+        joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
+        joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
         joinedload(Reserva.usuario)
     ).filter(or_(*conds)).first()
     
@@ -198,4 +254,45 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
     reserva.estado = "ATENDIDA"
     db.commit()
     db.refresh(reserva)
-    return reserva
+    return enriquecer_reserva(reserva)
+
+
+def listar_mis_reservas(db: Session, id_usuario: int):
+    """
+    CU11: Lista todas las reservas del cliente autenticado con detalles completos.
+    """
+    reservas = db.query(Reserva).options(
+        joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
+        joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
+        joinedload(Reserva.usuario)
+    ).filter(Reserva.id_usuario == id_usuario).order_by(Reserva.creado_en.desc()).all()
+
+    for r in reservas:
+        enriquecer_reserva(r)
+    return reservas
+
+
+def obtener_reserva_por_id(db: Session, id_reserva: int, id_usuario: Optional[int] = None, es_admin: bool = False) -> Reserva:
+    """
+    CU11: Obtiene los datos detallados de una reserva por su identificador único.
+    """
+    reserva = db.query(Reserva).options(
+        joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
+        joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
+        joinedload(Reserva.usuario)
+    ).filter(Reserva.id_reserva == id_reserva).first()
+
+    if not reserva:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Reserva #{id_reserva} no encontrada."
+        )
+
+    if not es_admin and id_usuario and reserva.id_usuario != id_usuario:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes autorización para consultar esta reserva."
+        )
+
+    return enriquecer_reserva(reserva)
+
