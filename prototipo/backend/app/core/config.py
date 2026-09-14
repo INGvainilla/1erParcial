@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         env_url = os.getenv("DATABASE_URL")
         if env_url:
+            # Compatibilidad con proveedores cloud (Render, Supabase, Heroku) que usan postgres://
+            if env_url.startswith("postgres://"):
+                env_url = env_url.replace("postgres://", "postgresql://", 1)
             return env_url
         if self.POSTGRES_PASSWORD:
             return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

@@ -68,10 +68,16 @@ app = FastAPI(
     """
 )
 
-# Configuración de CORS
+# Configuración de CORS con soporte para dominios locales y cloud (Render, etc.)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200", "http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -159,3 +165,9 @@ def health_check():
 def root_redirect():
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/app/")
+
+@app.get("/app", tags=["Estado del Sistema"])
+def app_redirect():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/app/")
+

@@ -2908,9 +2908,9 @@ A continuación se resume el inventario consolidado de las pantallas y prototipo
 
 ---
 
-### 1.5 Estructurar Modelo de Casos de Uso
+### 1.5 Estructurar Modelo de Casos de Uso (Ciclo 1 + Ciclo 2)
 
-A fin de organizar modularmente los requerimientos del Ciclo 1 y evidenciar la cohesión funcional del software, se estructura el modelo de casos de uso organizado en **Paquetes de Casos de Uso**:
+A fin de organizar modularmente los requerimientos completos del sistema (Ciclo 1 + Ciclo 2) y evidenciar la cohesión funcional del software, se estructura el modelo de casos de uso organizado en **10 Paquetes de Casos de Uso** que agrupan los 18 casos de uso:
 
 ```plantuml
 @startuml
@@ -2943,16 +2943,59 @@ package "Paquete 5: Inventario y Costos Ponderados" as Pkg_Inventario {
     usecase "Asentar en Kardex" as UC9_2
 }
 
+package "Paquete 6: Reservas Presenciales (M10)" as Pkg_Reservas {
+    usecase "CU11: Solicitar Reserva en Sucursal" as UC11
+    usecase "CU12: Preparar y Atender Reserva" as UC12
+}
+
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" as Pkg_VentaDigital {
+    usecase "CU13: Administrar Carrito Omnicanal" as UC13
+    usecase "CU14: Procesar Compra y Checkout" as UC14
+}
+
+package "Paquete 8: Punto de Venta POS (M13)" as Pkg_POS {
+    usecase "CU15: Registrar Venta en Caja (POS)" as UC15
+}
+
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" as Pkg_Pagos {
+    usecase "CU16: Procesar Pago con Pasarela" as UC16
+    usecase "CU17: Gestionar Tipos y Medios de Cobro" as UC17
+}
+
+package "Paquete 10: Logística y Delivery (M19)" as Pkg_Logistica {
+    usecase "CU18: Gestionar Despacho y Delivery" as UC18
+}
+
 ' Relaciones de dependencia y uso entre paquetes
 Pkg_Sucursales ..> Pkg_Seguridad : <<use>>
 Pkg_Catalogo ..> Pkg_Seguridad : <<use>>
 Pkg_Proveedores ..> Pkg_Seguridad : <<use>>
 Pkg_Inventario ..> Pkg_Seguridad : <<use>>
+Pkg_Reservas ..> Pkg_Seguridad : <<use>>
+Pkg_VentaDigital ..> Pkg_Seguridad : <<use>>
+Pkg_POS ..> Pkg_Seguridad : <<use>>
+Pkg_Pagos ..> Pkg_Seguridad : <<use>>
+Pkg_Logistica ..> Pkg_Seguridad : <<use>>
 
 Pkg_Inventario ..> Pkg_Sucursales : <<use>>
 Pkg_Inventario ..> Pkg_Catalogo : <<use>>
 Pkg_Inventario ..> Pkg_Proveedores : <<use>>
 Pkg_Catalogo ..> Pkg_Inventario : <<consulta stock>>
+
+Pkg_Reservas ..> Pkg_Sucursales : <<use>>
+Pkg_Reservas ..> Pkg_Inventario : <<apartado stock>>
+Pkg_Reservas ..> Pkg_POS : <<deriva a venta>>
+
+Pkg_VentaDigital ..> Pkg_Catalogo : <<consulta prendas>>
+Pkg_VentaDigital ..> Pkg_Inventario : <<reserva stock>>
+Pkg_VentaDigital ..> Pkg_Pagos : <<solicita cobro>>
+Pkg_VentaDigital ..> Pkg_Logistica : <<programa delivery>>
+
+Pkg_POS ..> Pkg_Sucursales : <<use>>
+Pkg_POS ..> Pkg_Inventario : <<descuenta stock>>
+Pkg_POS ..> Pkg_Pagos : <<valida medios cobro>>
+
+Pkg_Pagos ..> Pkg_Logistica : <<dispara despacho>>
 @enduml
 ```
 
@@ -2969,26 +3012,41 @@ El análisis arquitectónico del Ciclo 1 descompone el sistema en subsistemas y 
 
 ---
 
-#### 3.1.1 Identificar Paquetes
+#### 3.1.1 Identificar Paquetes (Ciclo 1 + Ciclo 2)
 
-En esta etapa se identifican los **5 paquetes de análisis** que componen el núcleo arquitectónico del Ciclo 1, especificando para cada uno el nombre del paquete y una descripción concisa de su propósito, responsabilidades y alcance funcional:
+En esta etapa se identifican los **10 paquetes de análisis** que componen la arquitectura integral del sistema en el Ciclo 1 y Ciclo 2, especificando para cada uno el nombre del paquete y una descripción concisa de su propósito, responsabilidades y alcance funcional:
 
 1. **Paquete 1: Seguridad y Acceso (RBAC)**  
-   *Descripción:* Gestiona el control de acceso, la autenticación criptográfica de credenciales mediante hashing Bcrypt, la emisión y validación de tokens de sesión JWT, el auto-registro de nuevos clientes, la recuperación autoservicio de contraseñas mediante códigos OTP de un solo uso y la administración integral de usuarios, roles y permisos del sistema.
+   *Descripción:* Gestiona el control de acceso, la autenticación criptográfica de credenciales mediante hashing Bcrypt, la emisión y validación de tokens de sesión JWT, el auto-registro de nuevos clientes, la recuperación autoservicio de contraseñas mediante códigos OTP de un solo uso y la administración integral de usuarios, roles y permisos del sistema (CU01, CU02, CU03, CU04).
 
 2. **Paquete 2: Estructura Operativa (Sucursales)**  
-   *Descripción:* Administra la infraestructura física y geográfica de la cadena minorista, incluyendo ciudades operativas, sucursales físicas habilitadas, georreferenciación satelital GPS (latitud y longitud), horarios de atención y la parametrización de capacidad física de probadores para reservas presenciales.
+   *Descripción:* Administra la infraestructura física y geográfica de la cadena minorista, incluyendo ciudades operativas, sucursales físicas habilitadas, georreferenciación satelital GPS (latitud y longitud), horarios de atención y la parametrización de capacidad física de probadores para reservas presenciales (CU05).
 
 3. **Paquete 3: Catálogo y Moda Masculina**  
-   *Descripción:* Centraliza la definición de prendas de vestir masculinas con atributos multivaluados normalizados (tallas estándar, códigos cromáticos hexadecimales HEX y nombres de color), la calendarización y gestión de temporadas comerciales (Spring-Summer / Fall-Winter) y la publicación omnicanal del catálogo de productos.
+   *Descripción:* Centraliza la definición de prendas de vestir masculinas con atributos multivaluados normalizados (tallas estándar, códigos cromáticos hexadecimales HEX y nombres de color), la calendarización y gestión de temporadas comerciales (Spring-Summer / Fall-Winter) y la publicación omnicanal del catálogo de productos (CU06, CU07, CU10).
 
 4. **Paquete 4: Aprovisionamiento y Proveedores**  
-   *Descripción:* Gestiona el directorio comercial de empresas proveedoras de textiles y confección masculina, la validación estricta de identificación tributaria (NIT único normalizado), los canales de contacto y los términos comerciales de suministro y condiciones de pago.
+   *Descripción:* Gestiona el directorio comercial de empresas proveedoras de textiles y confección masculina, la validación estricta de identificación tributaria (NIT único normalizado), los canales de contacto y los términos comerciales de suministro y condiciones de pago (CU08).
 
 5. **Paquete 5: Inventario y Costos Ponderados (CPP)**  
-   *Descripción:* Controla las existencias físicas multi-sucursal en tiempo real, el registro de ingresos de lotes por compra, el recálculo matemático algorítmico del Costo Promedio Ponderado ($CPP$) ante cada entrada de mercadería y la generación inmutable de asientos de auditoría en el Kardex valorizado.
+   *Descripción:* Controla las existencias físicas multi-sucursal en tiempo real, el registro de ingresos de lotes por compra, el recálculo matemático algorítmico del Costo Promedio Ponderado ($CPP$) ante cada entrada de mercadería y la generación inmutable de asientos de auditoría en el Kardex valorizado (CU09).
 
-A continuación, se presenta el diagrama de paquetes de análisis que ilustra su identificación y las relaciones de dependencia funcional y arquitectónica entre los módulos del sistema:
+6. **Paquete 6: Reservas Presenciales (M10)**  
+   *Descripción:* Gestión del ciclo de vida de visitas físicas a probadores, preselección de prendas, asignación de tienda y fecha/hora en huso horario local (-04:00), apartado físico en probadores inteligentes y verificación presencial por escaneo de ticket QR (CU11, CU12).
+
+7. **Paquete 7: Venta Digital y Carrito (M11, M12)**  
+   *Descripción:* Administración de la bolsa de compras omnicanal persistente con inserción atómica, edición reactiva de cantidades, cálculo dinámico de subtotales y formalización del checkout guiado en 3 pasos (logística, facturación NIT/CI y orden de venta) (CU13, CU14).
+
+8. **Paquete 8: Punto de Venta POS (M13)**  
+   *Descripción:* Facturación rápida en mostrador físico, lectura de códigos de barras SKU, conversión de reservas presenciales a ventas, recálculo dinámico de precios por talla (+5% a +15%), cobro multi-método (Efectivo con cálculo de cambio, Tarjeta, QR) y emisión de ticket fiscal (CU15).
+
+9. **Paquete 9: Procesamiento de Pagos y Finanzas (M14, M15)**  
+   *Descripción:* Integración con Stripe SDK (PaymentIntents, Stripe Elements PCI-DSS, 3D Secure), registro inmutable de transacciones financieras y panel administrativo de tipos y medios de cobro con interruptores toggle en caliente y revelación de secretos por icono de ojo (CU16, CU17).
+
+10. **Paquete 10: Logística y Delivery (M19)**  
+    *Descripción:* Máquina de estados finita de despachos (CREADA -> PREPARACION -> LISTO_DESPACHO -> EN_TRANSITO -> ENTREGADA), cálculo geodésico de tarifas y distancias mediante Haversine esférico, asignación de choferes de flota y tracking satelital GPS en vivo (CU18).
+
+A continuación, se presenta el diagrama de paquetes de análisis que ilustra su identificación y las relaciones de dependencia funcional y arquitectónica entre todos los módulos del sistema:
 
 ```plantuml
 @startuml
@@ -3019,35 +3077,77 @@ package "Paquete 4: Aprovisionamiento y Proveedores\n---\nProveedores textiles, 
 package "Paquete 5: Inventario y Costos Ponderados (CPP)\n---\nStock multi-sucursal, Kardex\ny cálculo matemático de CPP" as Pkg_Inventario #FAF5FF {
 }
 
-' Dependencias entre paquetes
+package "Paquete 6: Reservas Presenciales (M10)\n---\nVisitas a probador, apartado de stock\ny validación por ticket QR" as Pkg_Reservas #E0F2FE {
+}
+
+package "Paquete 7: Venta Digital y Carrito (M11, M12)\n---\nBolsa omnicanal atómica y wizard\nde checkout en 3 pasos" as Pkg_VentaDigital #ECFCCB {
+}
+
+package "Paquete 8: Punto de Venta POS (M13)\n---\nFacturación mostrador, escaneo SKU,\nprecios por talla y cálculo vuelto" as Pkg_POS #FEF3C7 {
+}
+
+package "Paquete 9: Procesamiento de Pagos (M14, M15)\n---\nStripe Elements PCI, 3D Secure\ny parametrización de canales cobro" as Pkg_Pagos #FCE7F3 {
+}
+
+package "Paquete 10: Logística y Delivery (M19)\n---\nMáquina de estados finita, cálculo\nHaversine y tracking GPS en vivo" as Pkg_Logistica #F3E8FF {
+}
+
+' Dependencias base de seguridad
 Pkg_Sucursales ..> Pkg_Seguridad : <<use>>
 Pkg_Catalogo ..> Pkg_Seguridad : <<use>>
 Pkg_Proveedores ..> Pkg_Seguridad : <<use>>
 Pkg_Inventario ..> Pkg_Seguridad : <<use>>
+Pkg_Reservas ..> Pkg_Seguridad : <<use>>
+Pkg_VentaDigital ..> Pkg_Seguridad : <<use>>
+Pkg_POS ..> Pkg_Seguridad : <<use>>
+Pkg_Pagos ..> Pkg_Seguridad : <<use>>
+Pkg_Logistica ..> Pkg_Seguridad : <<use>>
 
+' Operaciones de inventario y compras
 Pkg_Inventario ..> Pkg_Sucursales : <<use>>
 Pkg_Inventario ..> Pkg_Catalogo : <<use>>
 Pkg_Inventario ..> Pkg_Proveedores : <<use>>
 Pkg_Catalogo ..> Pkg_Inventario : <<consulta stock>>
+
+' Flujos omnicanal y transaccionales
+Pkg_Reservas ..> Pkg_Sucursales : <<use>>
+Pkg_Reservas ..> Pkg_Inventario : <<apartado stock>>
+Pkg_Reservas ..> Pkg_POS : <<deriva a venta>>
+
+Pkg_VentaDigital ..> Pkg_Catalogo : <<consulta prendas>>
+Pkg_VentaDigital ..> Pkg_Inventario : <<reserva stock>>
+Pkg_VentaDigital ..> Pkg_Pagos : <<solicita cobro>>
+Pkg_VentaDigital ..> Pkg_Logistica : <<programa delivery>>
+
+Pkg_POS ..> Pkg_Sucursales : <<use>>
+Pkg_POS ..> Pkg_Inventario : <<descuenta stock>>
+Pkg_POS ..> Pkg_Pagos : <<valida medios cobro>>
+
+Pkg_Pagos ..> Pkg_Logistica : <<dispara despacho>>
 
 @enduml
 ```
 
 ---
 
-#### 3.1.2 Relacionar paquetes y casos de uso
+#### 3.1.2 Relacionar paquetes y casos de uso (Ciclo 1 + Ciclo 2)
 
-En esta sección se formaliza la relación estricta entre los **5 paquetes de análisis del Ciclo 1** y los **10 Casos de Uso** implementados en esta primera iteración (`CU01` al `CU10`), estableciendo la cohesión modular y el límite de responsabilidad funcional de cada subsistema:
+En esta sección se formaliza la relación estricta entre los **10 paquetes de análisis** y los **18 Casos de Uso** implementados (`CU01` al `CU18`), consolidando la cohesión modular y el límite de responsabilidad funcional de cada subsistema:
 
-| Paquete de Análisis del Ciclo | Casos de Uso Contenidos | Actores Asociados | Justificación y Responsabilidad de Arquitectura |
+| Paquete de Análisis | Casos de Uso Contenidos | Actores Asociados | Justificación y Responsabilidad de Arquitectura |
 |:---|:---|:---|:---|
 | **Paquete 1: Seguridad y Acceso (RBAC)** | • **CU01**: Autenticar Usuario (Login RBAC)<br>• **CU02**: Registrar Cliente (Sign Up)<br>• **CU03**: Recuperar Contraseña (OTP)<br>• **CU04**: Gestionar Usuarios y Roles | Usuario, Cliente, Administrador | Centraliza el control perimetral de acceso, autenticación criptográfica con Bcrypt, emisión de tokens JWT, alta autoservicio de clientes, recuperación con OTP de 6 dígitos y administración centralizada de cuentas de usuario y roles. |
 | **Paquete 2: Estructura Operativa (Sucursales)** | • **CU05**: Gestionar Ciudades y Sucursales | Administrador General | Provee la estructura territorial multiciudad, parametrización de coordenadas GPS (latitud/longitud) para mapas digitales, control de horarios y aforo físico de probadores de ropa. |
 | **Paquete 3: Catálogo y Moda Masculina** | • **CU06**: Gestionar Productos y Atributos<br>• **CU07**: Gestionar Temporadas y Campañas<br>• **CU10**: Consultar Catálogo y Disponibilidad | Administrador, Cliente, Encargado Sucursal | Gestiona las fichas técnicas de prendas para varón, atributos multivaluados normalizados (colores HEX y tallas), calendarización de temporadas comerciales (SS/FW) y catálogo público omnicanal con stock por sucursal. |
 | **Paquete 4: Aprovisionamiento y Proveedores** | • **CU08**: Gestionar Proveedores Textiles | Administrador, Personal Logística | Administra el padrón de proveedores de confección textil, validación de NIT tributario único, información de contacto corporativo y términos comerciales de crédito y pago. |
 | **Paquete 5: Inventario y Costos Ponderados (CPP)** | • **CU09**: Gestionar Inventario Multi-Sucursal | Personal Logística, Encargado Sucursal | Controla el stock físico de prendas distribuido en cada tienda, registro de ingresos por compra, recálculo algorítmico del Costo Promedio Ponderado ($CPP$) y registro inmutable en el Kardex valorizado. |
+| **Paquete 6: Reservas Presenciales (M10)** | • **CU11**: Solicitar Reserva en Sucursal<br>• **CU12**: Preparar y Atender Reserva | Cliente Final, Encargado de Sucursal | Gestión de citas físicas a probadores inteligentes con fecha/hora local, generación de ticket QR en Base64, apartado físico en tienda y verificación presencial por escáner. |
+| **Paquete 7: Venta Digital y Carrito (M11, M12)** | • **CU13**: Administrar Carrito Omnicanal<br>• **CU14**: Procesar Compra Digital y Checkout | Cliente Final | Bolsa de compras persistente en base de datos con comprobación atómica de existencias y wizard en 3 etapas para cotización Haversine de flete, facturación fiscal y emisión de orden. |
+| **Paquete 8: Punto de Venta POS (M13)** | • **CU15**: Registrar Venta Presencial en Caja | Cajero de Sucursal | Facturación de mostrador físico con escaneo de código de barras, selector interactivo de variantes con recálculo dinámico de precio por talla, cobro multi-canal y emisión de tickets. |
+| **Paquete 9: Procesamiento de Pagos (M14, M15)** | • **CU16**: Procesar Pago con Pasarela<br>• **CU17**: Gestionar Tipos y Medios de Cobro | Cliente, Pasarela Stripe, Administrador | Recaudación digital segura con Stripe Elements (PCI-DSS / 3DS), registro inmutable de transacciones y panel de habilitación/deshabilitación de pasarelas y credenciales en caliente. |
+| **Paquete 10: Logística y Delivery (M19)** | • **CU18**: Gestionar Despacho y Logística | Personal Logística, Repartidor, Cliente | Máquina de estados finita de pedidos a domicilio, cálculo geodésico Haversine, asignación de choferes y seguimiento GPS en tiempo real con simulación interactiva. |
 
-A continuación se presenta el diagrama UML de **Relación entre Paquetes y Casos de Uso** del Ciclo 1:
+A continuación se presenta el diagrama UML de **Relación entre Paquetes y Casos de Uso** integral (Ciclo 1 + Ciclo 2):
 
 ```plantuml
 @startuml
@@ -3072,37 +3172,49 @@ package "Paquete 2: Estructura Operativa (Sucursales)" as P2 #F0FDF4
 package "Paquete 3: Catálogo y Moda Masculina" as P3 #FEFCE8
 package "Paquete 4: Aprovisionamiento y Proveedores" as P4 #FFF7ED
 package "Paquete 5: Inventario y Costos Ponderados (CPP)" as P5 #FAF5FF
+package "Paquete 6: Reservas Presenciales (M10)" as P6 #E0F2FE
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" as P7 #ECFCCB
+package "Paquete 8: Punto de Venta POS (M13)" as P8 #FEF3C7
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" as P9 #FCE7F3
+package "Paquete 10: Logística y Delivery (M19)" as P10 #F3E8FF
 
 usecase "CU01: Autenticar Usuario (RBAC)" as CU01
 usecase "CU02: Registrar Cliente (SignUp)" as CU02
 usecase "CU03: Recuperar Contraseña (OTP)" as CU03
 usecase "CU04: Gestionar Usuarios y Roles" as CU04
-
 usecase "CU05: Gestionar Ciudades y Sucursales" as CU05
-
 usecase "CU06: Gestionar Productos y Atributos" as CU06
 usecase "CU07: Gestionar Temporadas y Campañas" as CU07
 usecase "CU10: Consultar Catálogo y Disponibilidad" as CU10
-
 usecase "CU08: Gestionar Proveedores Textiles" as CU08
+usecase "CU09: Gestionar Inventario (CPP)" as CU09
+usecase "CU11: Solicitar Reserva en Sucursal" as CU11
+usecase "CU12: Preparar y Atender Reserva" as CU12
+usecase "CU13: Administrar Carrito Omnicanal" as CU13
+usecase "CU14: Procesar Compra y Checkout" as CU14
+usecase "CU15: Registrar Venta en Caja (POS)" as CU15
+usecase "CU16: Procesar Pago con Pasarela" as CU16
+usecase "CU17: Gestionar Medios de Cobro" as CU17
+usecase "CU18: Gestionar Despacho y Delivery" as CU18
 
-usecase "CU09: Gestionar Inventario y Costo Ponderado (CPP)" as CU09
-
-' Relaciones de contención lógica Paquete -> Casos de Uso
 P1 ..> CU01 : <<contiene>>
 P1 ..> CU02 : <<contiene>>
 P1 ..> CU03 : <<contiene>>
 P1 ..> CU04 : <<contiene>>
-
 P2 ..> CU05 : <<contiene>>
-
 P3 ..> CU06 : <<contiene>>
 P3 ..> CU07 : <<contiene>>
 P3 ..> CU10 : <<contiene>>
-
 P4 ..> CU08 : <<contiene>>
-
 P5 ..> CU09 : <<contiene>>
+P6 ..> CU11 : <<contiene>>
+P6 ..> CU12 : <<contiene>>
+P7 ..> CU13 : <<contiene>>
+P7 ..> CU14 : <<contiene>>
+P8 ..> CU15 : <<contiene>>
+P9 ..> CU16 : <<contiene>>
+P9 ..> CU17 : <<contiene>>
+P10 ..> CU18 : <<contiene>>
 
 @enduml
 ```

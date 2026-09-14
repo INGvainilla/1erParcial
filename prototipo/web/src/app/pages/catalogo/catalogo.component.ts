@@ -933,6 +933,137 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
       align-items: center;
       justify-content: center;
     }
+
+    /* ==========================================================================
+       RESPONSIVE ADAPTATIONS (<= 1024px, <= 768px, <= 480px)
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .page-container {
+        padding: 1.25rem 1rem;
+      }
+      .catalog-header {
+        padding: 1.25rem;
+      }
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.25rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-container {
+        padding: 1rem 0.75rem;
+      }
+      .catalog-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        gap: 1rem;
+      }
+      .header-right-box {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.75rem;
+      }
+      .branch-selector-box {
+        min-width: unset;
+        width: 100%;
+      }
+      .btn-catalog-cart {
+        display: none;
+      }
+      .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .category-pills {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 0.4rem;
+        -webkit-overflow-scrolling: touch;
+      }
+      .pill-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .search-box {
+        min-width: unset;
+        width: 100%;
+      }
+      .subfilters-bar {
+        padding: 0.75rem;
+        gap: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+        width: 100%;
+      }
+      .filter-select {
+        width: 100%;
+      }
+      .filter-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-between;
+      }
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      .product-card {
+        padding: 0.85rem;
+      }
+      .product-image-container {
+        height: 140px;
+      }
+      .cloth-icon-wrap i {
+        font-size: 2.8rem;
+      }
+      .product-title {
+        font-size: 0.92rem;
+      }
+      .product-desc {
+        display: none;
+      }
+      .card-buttons-row {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+      }
+      .btn-add-cart-action, .btn-reserve-action {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+      }
+      .btn-floating-bag {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+      }
+      .product-card {
+        padding: 0.75rem;
+      }
+      .product-image-container {
+        height: 120px;
+      }
+      .price-box .amount {
+        font-size: 1.05rem;
+      }
+      .badge-3d {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
+      }
+    }
   `]
 })
 export class CatalogoComponent implements OnInit {

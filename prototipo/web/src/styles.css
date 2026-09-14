@@ -784,3 +784,163 @@ body {
   color: var(--color-success);
   font-weight: 700;
 }
+
+/* ==========================================================================
+   SISTEMA RESPONSIVO GLOBAL (Mobile-First / Fluid Breakpoints)
+   ========================================================================== */
+
+/* Prevenir desbordamiento horizontal general */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Tablas con scroll horizontal suave en dispositivos táctiles */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+/* Breakpoint: Tablets y Pantallas Medianas (<= 1024px) */
+@media (max-width: 1024px) {
+  .content-wrapper,
+  .page-container {
+    padding: 1.25rem 1rem !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .topbar {
+    padding: 0 1rem;
+    height: 60px;
+  }
+
+  .modal-content {
+    max-width: 90vw;
+    width: 90vw;
+  }
+}
+
+/* Breakpoint: Dispositivos Móviles (<= 768px) */
+@media (max-width: 768px) {
+  .content-wrapper,
+  .page-container {
+    padding: 1rem 0.75rem !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Tarjetas y Contenedores */
+  .card {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  /* Grilla de Métricas Dashboard */
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .metric-card {
+    padding: 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .metric-value {
+    font-size: 1.25rem;
+  }
+
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.15rem;
+  }
+
+  /* Formularios y Grillas Adaptables */
+  .form-row,
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Modales en Móvil */
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    padding: 1.25rem !important;
+    margin: 1rem auto;
+    max-height: 88vh;
+  }
+
+  /* Tablas en Móvil */
+  .table-modern th,
+  .table-modern td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* Notificaciones Toast en Móvil */
+  #toast-container {
+    bottom: 4.75rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: unset;
+  }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.82rem;
+    padding: 10px 14px;
+  }
+}
+
+/* Breakpoint: Teléfonos Pequeños (<= 480px) */
+@media (max-width: 480px) {
+  .content-wrapper,
+  .page-container {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-title,
+  h1 {
+    font-size: 1.35rem !important;
+  }
+
+  h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .btn {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+  }
+}
+

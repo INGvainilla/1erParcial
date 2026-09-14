@@ -20,8 +20,9 @@
 6. [Fase 3: Ejecución del Frontend Web (Angular)](#-fase-3-ejecución-del-frontend-web-angular)
 7. [Fase 4: Ejecución de la Aplicación Móvil (Flutter)](#-fase-4-ejecución-de-la-aplicación-móvil-flutter)
 8. [Fase 5: Pruebas Automatizadas de Aceptación (Pytest)](#-fase-5-pruebas-automatizadas-de-aceptación-pytest)
-9. [Credenciales, Roles RBAC y Matriz de Acceso](#-credenciales-roles-rbac-y-matriz-de-acceso)
-10. [Solución de Problemas Frecuentes (FAQ)](#-solución-de-problemas-frecuentes-faq)
+9. [Fase 6: Despliegue en la Nube y Docker (Render / Local)](#-fase-6-despliegue-en-la-nube-y-docker-render--local)
+10. [Credenciales, Roles RBAC y Matriz de Acceso](#-credenciales-roles-rbac-y-matriz-de-acceso)
+11. [Solución de Problemas Frecuentes (FAQ)](#-solución-de-problemas-frecuentes-faq)
 
 ---
 
@@ -319,6 +320,135 @@ tests/test_ciclo1_api.py::test_tc11_catalogo_omnicanal_y_disponibilidad_sucursal
 
 ====================== 11 passed in 16.24s =======================
 ```
+
+---
+
+## ☁ Fase 6: Despliegue en la Nube y Docker (Render / Local)
+
+El proyecto incluye una arquitectura de despliegue contenerizada de alta eficiencia basada en un **Dockerfile Multi-Etapa (Multi-Stage Build)** que compila el frontend web Angular y empaqueta el backend FastAPI con Uvicorn en una sola imagen optimizada y lista para producción.
+
+```
+┌────────────────────────────────────────────────────────┐
+│               CONTENEDOR DOCKER UNIFICADO             │
+│                                                        │
+│  [Etapa 1: Node.js 20] ──> Compila Angular SPA (dist)  │
+│                                   │                    │
+│                                   ▼                    │
+│  [Etapa 2: Python 3.11] ──> Servidor FastAPI + Uvicorn │
+│                                   │                    │
+│   ├── /api/v1/*   (Endpoints REST de la API)           │
+│   ├── /docs       (Swagger UI interactivo OpenAPI)     │
+│   ├── /health     (Health Check del contenedor)        │
+│   └── /app/       (Frontend Web Angular SPA embebido)  │
+│                                                        │
+│  Base de Datos: PostgreSQL Nube / Fallback SQLite      │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 6.1 Despliegue en la Nube con Render (Recomendado)
+
+[Render](https://render.com) permite desplegar la aplicación completa de forma gratuita utilizando el archivo `render.yaml` (Blueprint) o configurando un servicio Web Service conectado a su repositorio GitHub.
+
+#### Método 1: Despliegue Automático con Blueprint (`render.yaml`)
+1. Suba sus cambios a su repositorio de GitHub:
+   ```powershell
+   git add .
+   git commit -m "feat: configuracion de despliegue Docker y Render"
+   git push origin main
+   ```
+2. Inicie sesión en [dashboard.render.com](https://dashboard.render.com/).
+3. Haga clic en **New +** y seleccione **Blueprint**.
+4. Conecte su repositorio de GitHub.
+5. Render detectará automáticamente el archivo `render.yaml` y preconfigurará el servicio web con todas las variables de entorno requeridas.
+6. Haga clic en **Apply**. Render compilará la imagen Docker y generará la URL pública (ejemplo: `https://fashionstore-platform.onrender.com`).
+
+#### Método 2: Despliegue Manual como Web Service en Render
+1. En el panel de Render, haga clic en **New +** > **Web Service**.
+2. Seleccione su repositorio de GitHub.
+3. Configure los siguientes parámetros:
+   * **Name:** `fashionstore-platform`
+   * **Region:** `Oregon (US West)` o la más cercana
+   * **Branch:** `main`
+   * **Runtime:** `Docker`
+   * **Dockerfile Path:** `./Dockerfile`
+   * **Instance Type:** `Free`
+4. En la sección **Environment Variables**, agregue las siguientes variables:
+
+| Variable de Entorno | Valor Recomendado | Propósito |
+| :--- | :--- | :--- |
+| `PORT` | `8000` | Puerto asignado por Render para escuchar tráfico |
+| `SECRET_KEY` | *(Generar un hash seguro aleatorio)* | Firma de tokens JWT |
+| `EMAIL_HOST_USER` | `mrgrueso2005@gmail.com` | Cuenta de correo para envío de OTP (CU03) |
+| `EMAIL_HOST_PASSWORD` | `plwx ztda stmt qxeu` | Contraseña de aplicación Gmail |
+| `DEFAULT_FROM_EMAIL` | `SIGEPSI <mrgrueso2005@gmail.com>` | Remitente visible de correos |
+| `STRIPE_SECRET_KEY` | `sk_test_51UEsz81HD8WYieY54E...` | Llave secreta para pasarela Stripe (CU16) |
+| `STRIPE_PUBLISHABLE_KEY` | `pk_test_51UEsz81HD8WYieY5OV...` | Llave pública de Stripe para el frontend |
+| `STRIPE_CURRENCY` | `bob` | Moneda de cobro (Bolivianos) |
+| `DATABASE_URL` *(Opcional)* | `postgresql://user:pass@host:5432/db` | Conexión a PostgreSQL en la nube (ej. Render Postgres o Supabase). Si se omite, opera automáticamente con SQLite local. |
+
+5. Haga clic en **Create Web Service**. El despliegue comenzará de inmediato.
+
+---
+
+### 6.2 Despliegue y Ejecución con Docker Local
+
+Si dispone de **Docker Desktop** instalado localmente, puede construir y probar el contenedor idéntico a como correrá en la nube:
+
+#### 1. Construir la Imagen Docker:
+Desde la raíz del proyecto (`1erPARCIAL/`):
+```powershell
+docker build -t fashionstore:latest .
+```
+
+#### 2. Ejecutar el Contenedor:
+```powershell
+docker run -d --name fashionstore_app -p 8000:8000 fashionstore:latest
+```
+
+*Con variables de entorno personalizadas o conexión a PostgreSQL externo:*
+```powershell
+docker run -d --name fashionstore_app `
+  -p 8000:8000 `
+  -e PORT=8000 `
+  -e SECRET_KEY="clave_super_secreta_jwt_produccion" `
+  -e EMAIL_HOST_USER="mrgrueso2005@gmail.com" `
+  -e EMAIL_HOST_PASSWORD="plwx ztda stmt qxeu" `
+  fashionstore:latest
+```
+
+#### 3. Verificar el Estado del Contenedor:
+```powershell
+# Ver logs en vivo
+docker logs -f fashionstore_app
+
+# Inspeccionar contenedores activos
+docker ps
+```
+
+#### 4. Detener y Limpiar el Contenedor:
+```powershell
+docker stop fashionstore_app
+docker rm fashionstore_app
+```
+
+---
+
+### 6.3 Verificación de Acceso en Producción / Docker
+
+Una vez levantado el contenedor (localmente en `http://localhost:8000` o en Render en `https://su-app.onrender.com`):
+
+* 🌐 **Frontend Web (Angular SPA):**  
+  👉 `http://localhost:8000/app/` *(o simplemente `http://localhost:8000/` que redirige a `/app/`)*
+* 📚 **Documentación Interactiva Swagger / OpenAPI:**  
+  👉 `http://localhost:8000/docs`
+* 🩺 **Health Check del Sistema:**  
+  👉 `http://localhost:8000/health` (Responde `{ "status": "ONLINE", ... }`)
+* 🔌 **Prefijo Base de la API REST:**  
+  👉 `http://localhost:8000/api/v1`
+
+> 💡 **Inicialización Autónoma de Datos (Auto-Seed):** Al arrancar por primera vez en la nube o contenedor, el servidor detecta si la base de datos se encuentra vacía y ejecuta automáticamente el script semilla (`seed_database()`), dejando el sistema listo para operar con todos los usuarios, prendas, sucursales y stock sin requerir pasos manuales adicionales.
 
 ---
 

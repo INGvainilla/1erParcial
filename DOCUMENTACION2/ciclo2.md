@@ -498,18 +498,19 @@ CU18 ..> UC_Tracking : <<include>>
 
 ---
 
-## 1.3 Estructurar Modelo de Casos de Uso (Ciclo 2)
+## 1.3 Estructurar Modelo de Casos de Uso (Ciclo 1 + Ciclo 2)
 
-El modelo global integra los 8 casos de uso del Ciclo 2 en perfecta sincronía con los actores del sistema:
+El modelo global integra y consolida la totalidad de los **18 casos de uso** que estructuran el sistema a lo largo del Ciclo 1 y Ciclo 2 en perfecta sincronía con todos los actores del sistema:
 
 ```plantuml
-@startuml Estructurar_Caso_de_Uso_Ciclo2
+@startuml Estructurar_Caso_de_Uso_Global
 left to right direction
 skinparam usecase {
   BackgroundColor #D6EAF8
   BorderColor #2E86C1
 }
 
+actor "Usuario del Sistema" as Usuario
 actor "Cliente" as Cliente
 actor "Encargado de Sucursal" as Encargado
 actor "Cajero" as Cajero
@@ -518,7 +519,20 @@ actor "Personal de Logística" as Logistica
 actor "Repartidor" as Delivery
 actor "Pasarela Stripe" as Pasarela
 
-package "Ciclo 2: Transaccionalidad Omnicanal, Pagos y Logística" {
+package "FashionStore: Casos de Uso del Sistema (Ciclo 1 + Ciclo 2)" {
+  ' Casos de Uso - Ciclo 1 (Seguridad, Catálogo, Sucursales, Inventario)
+  usecase "CU01: Autenticar Usuario (Login RBAC)" as CU01
+  usecase "CU02: Registrarse en FashionStore (Sign Up)" as CU02
+  usecase "CU03: Recuperar Contraseña (Token OTP)" as CU03
+  usecase "CU04: Gestionar Usuarios y Roles (RBAC)" as CU04
+  usecase "CU05: Gestionar Ciudades y Sucursales" as CU05
+  usecase "CU06: Gestionar Productos de Moda Masculina" as CU06
+  usecase "CU07: Gestionar Temporadas y Colecciones" as CU07
+  usecase "CU08: Gestionar Proveedores Textiles" as CU08
+  usecase "CU09: Gestionar Inventario Multi-Sucursal (CPP)" as CU09
+  usecase "CU10: Consultar Catálogo y Disponibilidad" as CU10
+
+  ' Casos de Uso - Ciclo 2 (Reservas, Venta Digital, POS, Pagos, Logística)
   usecase "CU11: Solicitar Reserva de Prendas" as CU11
   usecase "CU12: Preparar y Atender Reserva" as CU12
   usecase "CU13: Administrar Carrito Omnicanal" as CU13
@@ -529,19 +543,47 @@ package "Ciclo 2: Transaccionalidad Omnicanal, Pagos y Logística" {
   usecase "CU18: Gestionar Despacho y Delivery" as CU18
 }
 
+' Conexiones de Actores a Casos de Uso
+Usuario --> CU01
+Usuario --> CU03
+
+Cliente --> CU02
+Cliente --> CU10
 Cliente --> CU11
 Cliente --> CU13
 Cliente --> CU14
 Cliente --> CU16
 Cliente --> CU18
 
+Encargado --> CU10
 Encargado --> CU12
+
+Cajero --> CU10
 Cajero --> CU15
-Pasarela --> CU16
+
+Admin --> CU04
+Admin --> CU05
+Admin --> CU06
+Admin --> CU07
+Admin --> CU08
 Admin --> CU17
+
+Logistica --> CU08
+Logistica --> CU09
 Logistica --> CU18
+
+Pasarela --> CU16
 Delivery --> CU18
 
+' Relaciones de dependencia y negocio entre casos de uso
+CU02 ..> CU01 : <<precede a login>>
+CU03 ..> CU01 : <<restablece acceso>>
+CU01 ..> CU04 : <<control acceso>>
+CU06 ..> CU07 : <<asocia temporadas>>
+CU08 ..> CU09 : <<abastece lote>>
+CU10 ..> CU09 : <<consulta existencias>>
+CU10 ..> CU11 : <<deriva a reserva>>
+CU10 ..> CU13 : <<agrega prendas>>
 CU11 ..> CU12 : <<precede>>
 CU12 ..> CU15 : <<deriva a venta>>
 CU13 ..> CU14 : <<continua a>>
@@ -577,6 +619,1170 @@ Para el Ciclo 2, la arquitectura en 3 capas se fortalece con módulos transaccio
 | **P8: Punto de Venta** | CU15 | Cajero, Administrador | `app.modules.pos` | `app/pages/pos` |
 | **P9: Pagos y Finanzas** | CU16, CU17 | Cliente, Pasarela Stripe, Admin | `app.modules.pagos` | `app/pages/pagos`, `app/pages/admin-pagos` |
 | **P10: Logística** | CU18 | Personal Logística, Delivery, Cliente | `app.modules.logistica` | `app/pages/logistica`, `app/pages/tracking` |
+
+A continuación se presenta el diagrama UML de **Relación entre Paquetes y Casos de Uso** del Ciclo 2:
+
+![Relacionar Paquetes y Casos de Uso - Ciclo 2](../diagramas/2.1.2_Relacionar_Paquetes_y_Casos_de_Uso_Ciclo2.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 12
+skinparam shadowing true
+skinparam usecase {
+    BackgroundColor #FFFFFF
+    BorderColor #2563EB
+    BorderThickness 1.5
+}
+skinparam package {
+    BackgroundColor #F8FAFC
+    BorderColor #334155
+    BorderThickness 1.5
+    FontStyle bold
+}
+
+package "Paquete 6: Reservas Presenciales (M10)" as P6 #E0F2FE
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" as P7 #ECFCCB
+package "Paquete 8: Punto de Venta POS (M13)" as P8 #FEF3C7
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" as P9 #FCE7F3
+package "Paquete 10: Logística y Delivery (M19)" as P10 #F3E8FF
+
+usecase "CU11: Solicitar Reserva en Sucursal" as CU11
+usecase "CU12: Preparar y Atender Reserva" as CU12
+usecase "CU13: Administrar Carrito Omnicanal" as CU13
+usecase "CU14: Procesar Compra y Checkout" as CU14
+usecase "CU15: Registrar Venta en Caja (POS)" as CU15
+usecase "CU16: Procesar Pago con Pasarela" as CU16
+usecase "CU17: Gestionar Medios de Cobro" as CU17
+usecase "CU18: Gestionar Despacho y Delivery" as CU18
+
+P6 ..> CU11 : <<contiene>>
+P6 ..> CU12 : <<contiene>>
+P7 ..> CU13 : <<contiene>>
+P7 ..> CU14 : <<contiene>>
+P8 ..> CU15 : <<contiene>>
+P9 ..> CU16 : <<contiene>>
+P9 ..> CU17 : <<contiene>>
+P10 ..> CU18 : <<contiene>>
+
+P6 ..> P8 : <<deriva a venta>>
+P7 ..> P9 : <<solicita cobro>>
+P8 ..> P9 : <<valida medios cobro>>
+P7 ..> P10 : <<programa delivery>>
+P9 ..> P10 : <<dispara despacho>>
+@enduml
+```
+
+---
+
+### 2.1.3 Vista de casos de uso
+
+En la metodología PUDS y el modelado arquitectónico UML, la **Vista de Casos de Uso** representa a los paquetes vistos desde su interior: **el entorno/frontera exterior es el propio paquete contenedor y dentro de él residen los diagramas de casos de uso que dicho paquete contiene**, junto con sus relaciones funcionales internas (`<<include>>`, `<<extend>>`) y la conexión con los **Actores** que interactúan con ellos desde fuera del paquete.
+
+A continuación, se presenta el diagrama consolidado de la **Vista de Casos de Uso por Paquete (Ciclo 2)**:
+
+![Vista de Casos de Uso por Paquetes - Ciclo 2](../diagramas/2.1.3_Vista_Casos_de_Uso_Paquetes_Ciclo2.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 11
+skinparam shadowing true
+
+actor "Cliente" as ActCli
+actor "Encargado Sucursal" as ActEnc
+actor "Cajero" as ActCaj
+actor "Administrador General" as ActAdm
+actor "Pasarela Stripe" as ActPas
+actor "Personal Logística" as ActLog
+actor "Repartidor" as ActRep
+
+package "Paquete 6: Reservas Presenciales (M10)" as Pkg_Reservas #E0F2FE {
+    usecase "CU11: Solicitar Reserva en Sucursal" as UC11
+    usecase "CU12: Preparar y Atender Reserva" as UC12
+    UC11 .> UC12 : <<precede>>
+}
+
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" as Pkg_Venta #ECFCCB {
+    usecase "CU13: Administrar Carrito Omnicanal" as UC13
+    usecase "CU14: Procesar Compra y Checkout" as UC14
+    UC13 .> UC14 : <<continua a>>
+}
+
+package "Paquete 8: Punto de Venta POS (M13)" as Pkg_POS #FEF3C7 {
+    usecase "CU15: Registrar Venta en Caja (POS)" as UC15
+}
+
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" as Pkg_Pagos #FCE7F3 {
+    usecase "CU16: Procesar Pago con Pasarela" as UC16
+    usecase "CU17: Gestionar Medios de Cobro" as UC17
+}
+
+package "Paquete 10: Logística y Delivery (M19)" as Pkg_Logistica #F3E8FF {
+    usecase "CU18: Gestionar Despacho y Delivery" as UC18
+}
+
+ActCli --> UC11
+ActCli --> UC13
+ActCli --> UC14
+ActCli --> UC16
+ActCli --> UC18
+
+ActEnc --> UC12
+ActCaj --> UC15
+ActAdm --> UC17
+ActPas --> UC16
+ActLog --> UC18
+ActRep --> UC18
+
+UC12 ..> UC15 : <<deriva a venta>>
+UC14 ..> UC16 : <<solicita pago>>
+UC16 ..> UC18 : <<dispara despacho>>
+UC17 ..> UC14 : <<restringe canales>>
+UC17 ..> UC15 : <<restringe caja>>
+@enduml
+```
+
+Asimismo, se detallan las vistas internas individuales de cada uno de los 5 paquetes del ciclo:
+
+#### 2.1.3.1 Vista Interna - Paquete 6: Reservas Presenciales (M10)
+
+![Vista Interna - Paquete 6](../diagramas/2.1.3.1_Vista_P6_Reservas_Presenciales.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Cliente" as ActCli
+actor "Encargado de Sucursal" as ActEnc
+
+package "Paquete 6: Reservas Presenciales (M10)" #E0F2FE {
+    usecase "CU11: Solicitar Reserva de Prendas en Sucursal" as UC11
+    usecase "CU12: Preparar y Atender Reserva Presencial" as UC12
+    UC11 .> UC12 : <<precede>>
+}
+
+ActCli --> UC11
+ActEnc --> UC12
+@enduml
+```
+
+#### 2.1.3.2 Vista Interna - Paquete 7: Venta Digital y Carrito (M11, M12)
+
+![Vista Interna - Paquete 7](../diagramas/2.1.3.2_Vista_P7_Venta_Digital_Carrito.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Cliente Final" as ActCli
+
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" #ECFCCB {
+    usecase "CU13: Administrar Carrito de Compras" as UC13
+    usecase "CU14: Procesar Compra Digital y Checkout" as UC14
+    UC13 .> UC14 : <<continua a>>
+}
+
+ActCli --> UC13
+ActCli --> UC14
+@enduml
+```
+
+#### 2.1.3.3 Vista Interna - Paquete 8: Punto de Venta POS (M13)
+
+![Vista Interna - Paquete 8](../diagramas/2.1.3.3_Vista_P8_Punto_Venta_POS.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Cajero de Sucursal" as ActCaj
+
+package "Paquete 8: Punto de Venta POS (M13)" #FEF3C7 {
+    usecase "CU15: Registrar Venta Presencial en Caja (POS)" as UC15
+}
+
+ActCaj --> UC15
+@enduml
+```
+
+#### 2.1.3.4 Vista Interna - Paquete 9: Procesamiento de Pagos (M14, M15)
+
+![Vista Interna - Paquete 9](../diagramas/2.1.3.4_Vista_P9_Procesamiento_Pagos.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Cliente" as ActCli
+actor "Pasarela Stripe" as ActPas
+actor "Administrador General" as ActAdm
+
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" #FCE7F3 {
+    usecase "CU16: Procesar Pago con Pasarela Electrónica" as UC16
+    usecase "CU17: Gestionar Tipos y Medios de Cobro" as UC17
+}
+
+ActCli --> UC16
+ActPas --> UC16
+ActAdm --> UC17
+@enduml
+```
+
+#### 2.1.3.5 Vista Interna - Paquete 10: Logística y Delivery (M19)
+
+![Vista Interna - Paquete 10](../diagramas/2.1.3.5_Vista_P10_Logistica_Delivery.png)
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+
+actor "Personal de Logística" as ActLog
+actor "Repartidor de Flota" as ActRep
+actor "Cliente Final" as ActCli
+
+package "Paquete 10: Logística y Delivery (M19)" #F3E8FF {
+    usecase "CU18: Gestionar Despacho y Logística de Delivery" as UC18
+}
+
+ActLog --> UC18
+ActRep --> UC18
+ActCli --> UC18
+@enduml
+```
+
+---
+
+## 2.2 Analizar Casos de Uso (Diagramas de Comunicación UML)
+
+A continuación se presentan los **Diagramas de Comunicación UML** para cada uno de los 8 Casos de Uso del Ciclo 2 (**CU11 al CU18**). Conforme a las directrices de la cátedra expresadas en clase (`B4.txt`), cada caso de uso se analiza de forma rigurosa modelando la colaboración entre la clase de interfaz (`<<boundary>>`), la clase de lógica (`<<control>>` sin atributos) y la clase de datos (`<<entity>>`), con mensajes numerados cronológicamente (`1`, `1.1`, `1.2`, etc.):
+
+### 2.2.1 Diagrama de Comunicación - CU11: Solicitar Reserva de Prendas en Sucursal
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Cliente" as Cliente
+boundary ":IU_ReservaBoundary" as UI
+control ":ReservaControl" as Ctrl
+entity ":SucursalEntity" as SucEnt
+entity ":InventarioEntity" as InvEnt
+entity ":ReservaEntity" as ResEnt
+entity ":ReservaDetalleEntity" as DetEnt
+entity ":QrCodeService" as QrEnt
+
+Cliente -> UI : 1: Seleccionar sucursal, fecha/hora y prendas
+UI -> Ctrl : 1.1: solicitarReserva(sucursal_id, fecha, items)
+Ctrl -> SucEnt : 1.2: verificarHorarioYAforo(sucursal_id, fecha)
+SucEnt --> Ctrl : 1.3: aforoDisponible=true
+Ctrl -> InvEnt : 1.4: verificarStockDisponible(sucursal_id, items)
+InvEnt --> Ctrl : 1.5: existenciasConfirmadas=true
+Ctrl -> QrEnt : 1.6: generarCodigoQrBase64(token_uuid)
+QrEnt --> Ctrl : 1.7: qr_base64, qr_texto
+Ctrl -> ResEnt : 1.8: crearReserva(usuario_id, sucursal_id, fecha, qr_texto, estado='PENDIENTE')
+ResEnt --> Ctrl : 1.9: id_reserva
+Ctrl -> DetEnt : 1.10: registrarDetalles(id_reserva, items)
+Ctrl --> UI : 1.11: confirmarReservaExitosa(id_reserva, qr_base64, qr_texto)
+UI --> Cliente : 1.12: mostrarTicketQrDescargable()
+@enduml
+```
+
+### 2.2.2 Diagrama de Comunicación - CU12: Preparar y Atender Reserva Presencial
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":EncargadoSucursal" as Encargado
+actor ":Cliente" as Cliente
+boundary ":IU_TableroReservasBoundary" as UITablero
+boundary ":IU_EscanerQrBoundary" as UIEscaner
+control ":AtencionReservaControl" as Ctrl
+entity ":ReservaEntity" as ResEnt
+entity ":ProbadorEntity" as ProbEnt
+entity ":PosVentaAdapter" as PosEnt
+
+Encargado -> UITablero : 1: Consultar tablero de sucursal
+UITablero -> Ctrl : 1.1: listarReservasPendientes(sucursal_id)
+Ctrl -> ResEnt : 1.2: buscarPorSucursalYEstado(sucursal_id, 'PENDIENTE')
+ResEnt --> Ctrl : 1.3: listaReservas
+Ctrl --> UITablero : 1.4: renderizarTarjetasPendientes()
+
+Encargado -> UITablero : 2: Apartar prendas en probador
+UITablero -> Ctrl : 2.1: cambiarEstadoPreparada(id_reserva, numeroProbador)
+Ctrl -> ProbEnt : 2.2: asignarProbador(numeroProbador, id_reserva)
+Ctrl -> ResEnt : 2.3: actualizarEstado(id_reserva, 'PREPARADA')
+Ctrl --> UITablero : 2.4: notificarApartadoExitoso()
+
+Cliente -> Encargado : 3: Presentar ticket QR en tienda
+Encargado -> UIEscaner : 3.1: Escanear código QR del cliente
+UIEscaner -> Ctrl : 3.2: validarTokenQr(qr_texto, sucursal_id)
+Ctrl -> ResEnt : 3.3: verificarPertenenciaSucursal(qr_texto, sucursal_id)
+ResEnt --> Ctrl : 3.4: reservaValida=true
+Ctrl -> ResEnt : 3.5: actualizarEstado(id_reserva, 'ATENDIDA')
+Ctrl -> PosEnt : 3.6: precargarItemsParaCajaPos(id_reserva)
+Ctrl --> UIEscaner : 3.7: confirmarAtencionYDerivarPos()
+@enduml
+```
+
+### 2.2.3 Diagrama de Comunicación - CU13: Administrar Carrito de Compras Omnicanal
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Cliente" as Cliente
+boundary ":IU_CarritoDrawerBoundary" as UI
+control ":CarritoControl" as Ctrl
+entity ":InventarioEntity" as InvEnt
+entity ":CarritoEntity" as CartEnt
+entity ":CarritoItemEntity" as ItemEnt
+
+Cliente -> UI : 1: Agregar prenda al carrito (producto_id, talla, color, cant)
+UI -> Ctrl : 1.1: agregarItemCarrito(usuario_id, producto_id, talla, color, cant)
+Ctrl -> InvEnt : 1.2: validarStockMaximo(producto_id, talla, color)
+InvEnt --> Ctrl : 1.3: stockDisponible
+Ctrl -> CartEnt : 1.4: obtenerOCrearCarrito(usuario_id)
+CartEnt --> Ctrl : 1.5: id_carrito
+Ctrl -> ItemEnt : 1.6: guardarOIncrementarItem(id_carrito, producto_id, talla, color, cant, precio)
+Ctrl -> ItemEnt : 1.7: recalcularSubtotalYTotal(id_carrito)
+ItemEnt --> Ctrl : 1.8: totalCalculado
+Ctrl --> UI : 1.9: retornarEstadoCarrito(items, subtotal, total)
+UI --> Cliente : 1.10: desplegarGavetaLateralYActualizarBadge()
+@enduml
+```
+
+### 2.2.4 Diagrama de Comunicación - CU14: Procesar Compra Digital y Checkout
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Cliente" as Cliente
+boundary ":IU_CheckoutWizardBoundary" as UI
+control ":CheckoutControl" as Ctrl
+entity ":HaversineGeoService" as GeoEnt
+entity ":CarritoEntity" as CartEnt
+entity ":OrdenVentaEntity" as OrdenEnt
+entity ":OrdenDetalleEntity" as DetEnt
+
+Cliente -> UI : 1: Seleccionar modalidad entrega (Delivery / Retiro)
+UI -> Ctrl : 1.1: cotizarEntrega(modalidad, lat_destino, lon_destino)
+Ctrl -> GeoEnt : 1.2: calcularDistanciaYTarifa(lat_sucursal, lon_sucursal, lat_dest, lon_dest)
+GeoEnt --> Ctrl : 1.3: distancia_km, costo_envio
+Ctrl --> UI : 1.4: mostrarCostoEnvioYTotal()
+
+Cliente -> UI : 2: Ingresar datos fiscales (NIT/CI, Razón Social) y confirmar
+UI -> Ctrl : 2.1: procesarCheckout(usuario_id, datosFiscales, modalidad, costo_envio)
+Ctrl -> CartEnt : 2.2: obtenerItemsActivos(usuario_id)
+CartEnt --> Ctrl : 2.3: listaItems, subtotal
+Ctrl -> OrdenEnt : 2.4: registrarOrdenVenta(usuario_id, subtotal, costo_envio, total, 'PENDIENTE')
+OrdenEnt --> Ctrl : 2.5: id_orden, numero_factura
+Ctrl -> DetEnt : 2.6: insertarDetalles(id_orden, listaItems)
+Ctrl -> CartEnt : 2.7: vaciarCarrito(usuario_id)
+Ctrl --> UI : 2.8: retornarOrdenCreada(id_orden)
+UI --> Cliente : 2.9: redirigirAPantallaPagoStripe(id_orden)
+@enduml
+```
+
+### 2.2.5 Diagrama de Comunicación - CU15: Registrar Venta Presencial en Caja (POS)
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Cajero" as Cajero
+boundary ":IU_PosTerminalBoundary" as UI
+control ":PosVentaControl" as Ctrl
+entity ":ProductoEntity" as ProdEnt
+entity ":MetodoPagoEntity" as PagoConfigEnt
+entity ":OrdenVentaEntity" as OrdenEnt
+entity ":InventarioEntity" as InvEnt
+entity ":KardexEntity" as KardexEnt
+
+Cajero -> UI : 1: Escanear código de barras o seleccionar prenda
+UI -> Ctrl : 1.1: buscarVariantePorSku(sku, talla, sucursal_id)
+Ctrl -> ProdEnt : 1.2: obtenerProductoYPrecios(sku, talla)
+ProdEnt --> Ctrl : 1.3: precioBase, factorTalla(+10%)
+Ctrl --> UI : 1.4: mostrarModalVarianteYPreciosDinamicos()
+
+Cajero -> UI : 2: Confirmar cobro (Efectivo, Bs. recibido)
+UI -> Ctrl : 2.1: procesarVentaMostrador(sucursal_id, items, metodo='EFECTIVO', montoRecibido)
+Ctrl -> PagoConfigEnt : 2.2: verificarCanalActivo('EFECTIVO')
+PagoConfigEnt --> Ctrl : 2.3: canalHabilitado=true
+Ctrl -> Ctrl : 2.4: calcularCambioVuelto(montoRecibido, total)
+Ctrl -> OrdenEnt : 2.5: crearOrdenFacturada(sucursal_id, canal='POS', estado='PAGADO')
+OrdenEnt --> Ctrl : 2.6: id_orden, numero_factura
+Ctrl -> InvEnt : 2.7: descontarStockFisico(sucursal_id, items)
+Ctrl -> KardexEnt : 2.8: registrarSalidaVentaKardex(id_orden, items)
+Ctrl --> UI : 2.9: retornarVentaExitosa(vuelto, factura)
+UI --> Cajero : 2.10: desplegarEImprimirTicketTermico()
+@enduml
+```
+
+### 2.2.6 Diagrama de Comunicación - CU16: Procesar Pago con Pasarela Electrónica
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Cliente" as Cliente
+boundary ":IU_StripeElementsBoundary" as UI
+control ":PagosStripeControl" as Ctrl
+entity ":StripeApiAdapter" as StripeSdk
+entity ":OrdenVentaEntity" as OrdenEnt
+entity ":TransaccionPagoEntity" as TransEnt
+
+Cliente -> UI : 1: Ingresar a pasarela de pago para orden
+UI -> Ctrl : 1.1: iniciarPagoOrden(id_orden)
+Ctrl -> OrdenEnt : 1.2: obtenerTotalAPagar(id_orden)
+OrdenEnt --> Ctrl : 1.3: total_bob
+Ctrl -> StripeSdk : 1.4: crearPaymentIntent(montoCentavos, moneda='BOB')
+StripeSdk --> Ctrl : 1.5: client_secret, payment_intent_id
+Ctrl --> UI : 1.6: suministrarClientSecret(client_secret)
+
+Cliente -> UI : 2: Digitar tarjeta y presionar pagar
+UI -> StripeSdk : 2.1: tokenizarYConfirmarPago(tarjeta, 3DSecure)
+StripeSdk --> UI : 2.2: pagoConfirmado(payment_intent_id, ultimos4, marca)
+UI -> Ctrl : 2.3: registrarConfirmacion(id_orden, payment_intent_id)
+Ctrl -> StripeSdk : 2.4: verificarEstadoPaymentIntent(payment_intent_id)
+StripeSdk --> Ctrl : 2.5: status='succeeded'
+Ctrl -> OrdenEnt : 2.6: actualizarEstadoOrden(id_orden, pago='PAGADO', logistica='PREPARACION')
+Ctrl -> TransEnt : 2.7: asentarTransaccionInmutable(id_orden, payment_intent_id, monto)
+Ctrl --> UI : 2.8: confirmarPagoExitoso()
+UI --> Cliente : 2.9: desplegarComprobanteYAccesoTracking()
+@enduml
+```
+
+### 2.2.7 Diagrama de Comunicación - CU17: Gestionar Tipos y Medios de Cobro
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":Administrador" as Admin
+boundary ":IU_AdminPagosBoundary" as UI
+control ":ConfigCobrosControl" as Ctrl
+entity ":MetodoPagoEntity" as PagoEnt
+entity ":StripeClientService" as StripeEnt
+
+Admin -> UI : 1: Acceder al panel de configuración financiera
+UI -> Ctrl : 1.1: listarCanalesDeCobro()
+Ctrl -> PagoEnt : 1.2: obtenerTodosLosCanales()
+PagoEnt --> Ctrl : 1.3: listaMetodosConClavesEnmascaradas
+Ctrl --> UI : 1.4: renderizarTarjetasConToggleSwitches()
+
+Admin -> UI : 2: Alternar switch (activar/desactivar canal)
+UI -> Ctrl : 2.1: conmutarEstadoCanal(codigo, nuevoEstado)
+Ctrl -> PagoEnt : 2.2: actualizarActivo(codigo, nuevoEstado)
+Ctrl --> UI : 2.3: confirmarCambioToast()
+
+Admin -> UI : 3: Guardar nuevas credenciales API (Stripe Secret Key)
+UI -> Ctrl : 3.1: actualizarCredenciales(codigo, credenciales_json)
+Ctrl -> PagoEnt : 3.2: persistirParametrosCifrados(codigo, credenciales_json)
+Ctrl -> StripeEnt : 3.3: reconfigurarClienteEnCaliente(apiKey)
+Ctrl --> UI : 3.4: alertarGuardadoExitoso()
+@enduml
+```
+
+### 2.2.8 Diagrama de Comunicación - CU18: Gestionar Despacho y Logística de Delivery
+
+```plantuml
+@startuml
+skinparam actorStyle awesome
+
+actor ":PersonalLogistica" as Logistica
+actor ":Repartidor" as Chofer
+actor ":Cliente" as Cliente
+boundary ":IU_TableroLogisticaBoundary" as UILog
+boundary ":IU_TrackingMapaBoundary" as UITrack
+control ":LogisticaDespachoControl" as Ctrl
+entity ":OrdenVentaEntity" as OrdenEnt
+entity ":UsuarioEntity" as UserEnt
+entity ":TrackingGpsEntity" as GpsEnt
+
+Logistica -> UILog : 1: Consultar pedidos para empaque y despacho
+UILog -> Ctrl : 1.1: listarOrdenesParaDespacho()
+Ctrl -> OrdenEnt : 1.2: buscarPorEstados(['PAGADO', 'PREPARACION'])
+OrdenEnt --> Ctrl : 1.3: listaOrdenes
+Ctrl --> UILog : 1.4: mostrarColumnasKanban()
+
+Logistica -> UILog : 2: Asignar repartidor y despachar
+UILog -> Ctrl : 2.1: asignarChoferYDespachar(id_orden, id_repartidor)
+Ctrl -> UserEnt : 2.2: validarRolRepartidor(id_repartidor)
+UserEnt --> Ctrl : 2.3: choferValido=true
+Ctrl -> OrdenEnt : 2.4: transicionarEstado(id_orden, 'EN_TRANSITO', choferDatos)
+Ctrl --> UILog : 2.5: ordenEnCaminoNotificada()
+
+Chofer -> Ctrl : 3: Transmitir telemetría GPS móvil
+Ctrl -> GpsEnt : 3.1: registrarCoordenadaActual(id_orden, lat_actual, lon_actual)
+
+Cliente -> UITrack : 4: Consultar estado de entrega en vivo
+UITrack -> Ctrl : 4.1: obtenerTrackingEnVivo(id_orden)
+Ctrl -> OrdenEnt : 4.2: obtenerDatosOrdenYChofer(id_orden)
+Ctrl -> GpsEnt : 4.3: obtenerUltimaPosicion(id_orden)
+Ctrl --> UITrack : 4.4: renderizarMapaRutaYStepper4Etapas()
+@enduml
+```
+
+---
+
+## 2.3 Análisis de Clases (Diagramas de Robustez)
+
+Siguiendo estrictamente las directrices metodológicas del PUDS y los estereotipos de Ivar Jacobson evaluados por la cátedra (`B4.txt`), a continuación se detallan los **Diagramas de Clases de Análisis (Robustez)** para los 8 casos de uso del Ciclo 2 (**CU11 al CU18**).  
+**Regla de Oro de la Cátedra:**  
+- **Clases de Interfaz (`<<Boundary>>`, prefijo `IU_`)**: Contienen atributos representativos de los datos capturados o desplegados en la interfaz y métodos de eventos visuales.
+- **Clases de Control (`<<Control>>`, prefijo `CTR_`)**: Orquestan las reglas de negocio, validaciones y cálculos. **NO CONTIENEN NINGÚN ATRIBUTO DE DATOS**, únicamente métodos de lógica de negocio.
+- **Clases de Entidad (`<<Entity>>`, prefijo `CE_`)**: Mapean las tablas de la base de datos PostgreSQL, encapsulando el estado persistente y operaciones CRUD.
+
+### 2.3.1 Diagrama de Análisis de Clases - CU11: Solicitar Reserva de Prendas en Sucursal
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as Actor
+
+class "IU_ReservaSucursal" as UI <<Boundary>> {
+    +sucursalSeleccionada: Integer
+    +fechaVisita: DateTime
+    +prendasSeleccionadas: List
+    +ticketQrGenerado: String
+    --
+    +seleccionarSucursal(): void
+    +definirFechaHora(): void
+    +confirmarReserva(): void
+    +descargarTicketQr(): void
+    +mostrarAlertaSinStock(): void
+}
+
+class "CTR_ReservaSucursal" as Ctrl <<Control>> {
+    --
+    +solicitarReservaPrendas(id_usuario, id_sucursal, fecha, items): ReservaDTO
+    +validarStockSucursal(id_sucursal, items): Boolean
+    +generarQrToken(id_usuario, id_sucursal): String
+    +persistirReserva(id_usuario, id_sucursal, fecha, token): Integer
+}
+
+class "CE_Reserva" as EntRes <<Entity>> {
+    +id_reserva: Integer
+    +id_usuario: Integer
+    +id_sucursal: Integer
+    +codigo_qr: String
+    +qr_texto: String
+    +fecha_visita: DateTime
+    +estado: String
+    +creado_en: DateTime
+    --
+    +guardarReserva(): Integer
+    +buscarPorQrTexto(token: String): Reserva
+}
+
+class "CE_ReservaDetalle" as EntDet <<Entity>> {
+    +id_reserva_detalle: Integer
+    +id_reserva: Integer
+    +id_producto: Integer
+    +talla: String
+    +color: String
+    +cantidad: Integer
+    --
+    +guardarDetalle(): void
+}
+
+class "CE_Sucursal" as EntSuc <<Entity>> {
+    +id_sucursal: Integer
+    +nombre: String
+    +direccion: String
+    +capacidad_probadores: Integer
+    --
+    +verificarAforoDisponible(fecha: DateTime): Boolean
+}
+
+class "CE_QrCodeTicket" as EntQr <<Entity>> {
+    +token_unico: String
+    +imagen_base64: String
+    --
+    +generarDataUri(): String
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntRes
+Ctrl -- EntDet
+Ctrl -- EntSuc
+Ctrl -- EntQr
+@enduml
+```
+
+### 2.3.2 Diagrama de Análisis de Clases - CU12: Preparar y Atender Reserva Presencial
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ENCARGADO SUCURSAL" as ActorEnc
+actor "CLIENTE" as ActorCli
+
+class "IU_TableroReservas" as UI <<Boundary>> {
+    +sucursalId: Integer
+    +filtroEstado: String
+    +qrEscaneado: String
+    +probadorAsignado: Integer
+    --
+    +cargarReservasDelDia(): void
+    +apartarPrendasEnProbador(): void
+    +activarEscanerCamara(): void
+    +ingresarTokenManual(): void
+    +derivarAVentaPos(): void
+}
+
+class "CTR_AtencionReserva" as Ctrl <<Control>> {
+    --
+    +listarReservasPorSucursal(id_sucursal): List
+    +apartarPrendasProbador(id_reserva, probador): Boolean
+    +procesarLecturaQr(token, id_sucursal): ReservaDTO
+    +marcarComoAtendida(id_reserva): void
+    +transferirAVentaPos(id_reserva): Integer
+}
+
+class "CE_Reserva" as EntRes <<Entity>> {
+    +id_reserva: Integer
+    +estado: String
+    +qr_texto: String
+    --
+    +actualizarEstado(nuevoEstado: String): void
+    +obtenerDetallesPrendas(): List
+}
+
+class "CE_Probador" as EntProb <<Entity>> {
+    +numero_probador: Integer
+    +id_sucursal: Integer
+    +estado: String
+    --
+    +asignarPrendas(id_reserva: Integer): void
+    +liberarProbador(): void
+}
+
+ActorEnc -- UI
+ActorCli -- UI
+UI -- Ctrl
+Ctrl -- EntRes
+Ctrl -- EntProb
+@enduml
+```
+
+### 2.3.3 Diagrama de Análisis de Clases - CU13: Administrar Carrito Omnicanal
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as Actor
+
+class "IU_CarritoDrawer" as UI <<Boundary>> {
+    +itemsCarrito: List
+    +subtotal: Decimal
+    +total: Decimal
+    --
+    +abrirGavetaCarrito(): void
+    +incrementarCantidad(id_item): void
+    +decrementarCantidad(id_item): void
+    +eliminarPrenda(id_item): void
+    +procederACheckout(): void
+}
+
+class "CTR_GestionCarrito" as Ctrl <<Control>> {
+    --
+    +agregarPrendaAlCarrito(id_usuario, id_producto, talla, color, cant): CarritoDTO
+    +modificarCantidadItem(id_item, nuevaCantidad): CarritoDTO
+    +eliminarItemCarrito(id_item): CarritoDTO
+    +validarExistenciasMaximas(id_producto, talla, cant): Boolean
+    +calcularTotales(id_carrito): Decimal
+}
+
+class "CE_Carrito" as EntCart <<Entity>> {
+    +id_carrito: Integer
+    +id_usuario: Integer
+    +actualizado_en: DateTime
+    --
+    +obtenerPorUsuario(id_usuario: Integer): Carrito
+    +limpiarCarrito(): void
+}
+
+class "CE_CarritoItem" as EntItem <<Entity>> {
+    +id_item: Integer
+    +id_carrito: Integer
+    +id_producto: Integer
+    +talla: String
+    +color: String
+    +cantidad: Integer
+    +precio_unitario: Decimal
+    +subtotal: Decimal
+    --
+    +guardarItem(): void
+    +actualizarCantidad(cant: Integer): void
+    +eliminar(): void
+}
+
+class "CE_Inventario" as EntInv <<Entity>> {
+    +id_inventario: Integer
+    +id_producto: Integer
+    +stock_fisico: Integer
+    --
+    +verificarStock(id_prod: Integer, cant: Integer): Boolean
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntCart
+Ctrl -- EntItem
+Ctrl -- EntInv
+@enduml
+```
+
+### 2.3.4 Diagrama de Análisis de Clases - CU14: Procesar Compra Digital y Checkout
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as Actor
+
+class "IU_CheckoutWizard" as UI <<Boundary>> {
+    +modalidadEntrega: String
+    +direccionEnvio: String
+    +latitudDestino: Decimal
+    +longitudDestino: Decimal
+    +nitFactura: String
+    +razonSocial: String
+    --
+    +seleccionarModalidad(): void
+    +calcularFlete(): void
+    +ingresarDatosFiscales(): void
+    +confirmarOrdenVenta(): void
+}
+
+class "CTR_ProcesarCheckout" as Ctrl <<Control>> {
+    --
+    +cotizarTarifaDelivery(lat_dest, lon_dest): Decimal
+    +formalizarOrden(id_usuario, datosFiscales, modalidad, costo_envio): OrdenDTO
+    +validarCamposFiscales(nit, razonSocial): Boolean
+    +vaciarBolsaPostOrden(id_usuario): void
+}
+
+class "CE_OrdenVenta" as EntOrden <<Entity>> {
+    +id_orden: Integer
+    +id_usuario: Integer
+    +numero_factura: String
+    +canal_venta: String
+    +modalidad_entrega: String
+    +nit_factura: String
+    +razon_social_factura: String
+    +subtotal: Decimal
+    +costo_envio: Decimal
+    +total: Decimal
+    +estado_pago: String
+    +estado_logistica: String
+    --
+    +crearOrden(): Integer
+    +actualizarEstadoPago(estado: String): void
+}
+
+class "CE_OrdenDetalle" as EntDet <<Entity>> {
+    +id_detalle_orden: Integer
+    +id_orden: Integer
+    +id_producto: Integer
+    +talla: String
+    +color: String
+    +cantidad: Integer
+    +precio_unitario: Decimal
+    +subtotal: Decimal
+    --
+    +insertarDetallesLote(items: List): void
+}
+
+class "CE_CalculoHaversine" as EntGeo <<Entity>> {
+    +radio_tierra_km: Decimal
+    --
+    +calcularDistanciaKm(lat1, lon1, lat2, lon2): Decimal
+    +calcularTarifa(distancia_km: Decimal): Decimal
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntOrden
+Ctrl -- EntDet
+Ctrl -- EntGeo
+@enduml
+```
+
+### 2.3.5 Diagrama de Análisis de Clases - CU15: Registrar Venta Presencial en Caja (POS)
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CAJERO" as Actor
+
+class "IU_TerminalPos" as UI <<Boundary>> {
+    +skuBusqueda: String
+    +tallaSeleccionada: String
+    +cantidad: Integer
+    +montoEfectivoRecibido: Decimal
+    +metodoPagoSeleccionado: String
+    --
+    +escanearCodigoSku(): void
+    +seleccionarVarianteTalla(): void
+    +cargarReservaQr(): void
+    +cobrarVenta(): void
+    +imprimirTicketTermico(): void
+}
+
+class "CTR_VentaPos" as Ctrl <<Control>> {
+    --
+    +buscarPrendaPorSku(sku, sucursal_id): PrendaDTO
+    +calcularPrecioPorTalla(precioBase, talla): Decimal
+    +calcularVueltoEfectivo(montoRecibido, total): Decimal
+    +procesarCobroPos(sucursal_id, items, metodo, recibido): VentaDTO
+    +asentarSalidaStockKardex(sucursal_id, items, id_orden): void
+}
+
+class "CE_OrdenVenta" as EntOrden <<Entity>> {
+    +id_orden: Integer
+    +numero_factura: String
+    +canal_venta: String
+    +total: Decimal
+    +estado_pago: String
+    --
+    +registrarVentaCaja(): Integer
+}
+
+class "CE_Inventario" as EntInv <<Entity>> {
+    +id_sucursal: Integer
+    +id_producto: Integer
+    +stock_fisico: Integer
+    --
+    +descontarStock(cant: Integer): void
+}
+
+class "CE_Kardex" as EntKardex <<Entity>> {
+    +id_kardex: Integer
+    +tipo_movimiento: String
+    +cantidad: Integer
+    +costo_unitario: Decimal
+    --
+    +asentarSalidaVenta(id_orden: Integer): void
+}
+
+class "CE_MetodoPago" as EntMetodo <<Entity>> {
+    +codigo: String
+    +activo: Boolean
+    --
+    +verificarCanalHabilitado(codigo: String): Boolean
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntOrden
+Ctrl -- EntInv
+Ctrl -- EntKardex
+Ctrl -- EntMetodo
+@enduml
+```
+
+### 2.3.6 Diagrama de Análisis de Clases - CU16: Procesar Pago con Pasarela Electrónica
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "CLIENTE" as ActorCli
+actor "PASARELA STRIPE" as ActorPas
+
+class "IU_CobroStripeElements" as UI <<Boundary>> {
+    +ordenId: Integer
+    +montoTotal: Decimal
+    +titularTarjeta: String
+    +clientSecret: String
+    --
+    +montarStripeElements(): void
+    +ejecutarPagoSeguro(): void
+    +completarReto3DSecure(): void
+    +mostrarComprobanteExito(): void
+    +mostrarAlertaPagoRechazado(): void
+}
+
+class "CTR_ProcesarPagoStripe" as Ctrl <<Control>> {
+    --
+    +generarIntencionPago(id_orden): PaymentIntentDTO
+    +confirmarTransaccion(id_orden, payment_intent_id): Boolean
+    +manejarWebhookStripe(eventoStripe): void
+    +actualizarEstadoOrdenAPagado(id_orden): void
+}
+
+class "CE_OrdenVenta" as EntOrden <<Entity>> {
+    +id_orden: Integer
+    +total: Decimal
+    +estado_pago: String
+    +estado_logistica: String
+    --
+    +cambiarAPagado(): void
+    +avanzarAPreparacion(): void
+}
+
+class "CE_TransaccionPago" as EntTrans <<Entity>> {
+    +id_transaccion: Integer
+    +id_orden: Integer
+    +pasarela: String
+    +payment_intent_id: String
+    +monto: Decimal
+    +moneda: String
+    +estado: String
+    +ultimos4: String
+    +marca_tarjeta: String
+    --
+    +registrarTransaccionInmutable(): Integer
+}
+
+class "CE_StripeConfig" as EntStripe <<Entity>> {
+    +api_key_publica: String
+    +api_key_secreta: String
+    --
+    +obtenerClientSecret(montoCentavos: Integer): String
+    +consultarPaymentIntent(intent_id: String): Object
+}
+
+ActorCli -- UI
+ActorPas -- UI
+UI -- Ctrl
+Ctrl -- EntOrden
+Ctrl -- EntTrans
+Ctrl -- EntStripe
+@enduml
+```
+
+### 2.3.7 Diagrama de Análisis de Clases - CU17: Gestionar Tipos y Medios de Cobro
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "ADMINISTRADOR GENERAL" as Actor
+
+class "IU_AdminCanalesCobro" as UI <<Boundary>> {
+    +canalesListados: List
+    +canalSeleccionado: String
+    +credencialesVisibles: Boolean
+    --
+    +cargarCanalesPago(): void
+    +alternarInterruptorActivo(codigo, estado): void
+    +abrirModalConfiguracion(codigo): void
+    +revelarUocultarClaveSecreta(): void
+    +guardarCredenciales(): void
+}
+
+class "CTR_ConfigCobros" as Ctrl <<Control>> {
+    --
+    +listarMetodosCobroEnmascarados(): List
+    +actualizarEstadoCanal(codigo, activo): Boolean
+    +actualizarParametrosApi(codigo, credenciales_json): Boolean
+    +reconfigurarStripeEnCaliente(secret_key): void
+}
+
+class "CE_MetodoPago" as EntMetodo <<Entity>> {
+    +id_metodo: Integer
+    +codigo: String
+    +nombre: String
+    +tipo: String
+    +activo: Boolean
+    +requiere_credenciales: Boolean
+    +credenciales_json: String
+    --
+    +listarTodos(): List
+    +conmutarActivo(nuevoEstado: Boolean): void
+    +guardarCredenciales(json: String): void
+}
+
+Actor -- UI
+UI -- Ctrl
+Ctrl -- EntMetodo
+@enduml
+```
+
+### 2.3.8 Diagrama de Análisis de Clases - CU18: Gestionar Despacho y Logística de Delivery
+
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+actor "PERSONAL LOGISTICA" as ActorLog
+actor "REPARTIDOR" as ActorRep
+actor "CLIENTE" as ActorCli
+
+class "IU_TableroDespachoKanban" as UILog <<Boundary>> {
+    +ordenesPorEstado: Map
+    +choferSeleccionado: Integer
+    --
+    +cargarTableroKanban(): void
+    +asignarRepartidor(id_orden, id_chofer): void
+    +avanzarEtapaLogistica(id_orden, nuevoEstado): void
+}
+
+class "IU_TrackingGpsMapa" as UITrack <<Boundary>> {
+    +idOrden: Integer
+    +latitudActual: Decimal
+    +longitudActual: Decimal
+    +etapaActual: Integer
+    --
+    +cargarTrackingOrden(): void
+    +actualizarPosicionEnMapa(): void
+    +mostrarDatosRepartidor(): void
+}
+
+class "CTR_LogisticaDespacho" as Ctrl <<Control>> {
+    --
+    +obtenerPedidosPorDespachar(): List
+    +asignarChoferAOrden(id_orden, id_chofer): Boolean
+    +transicionarEstadoLogistico(id_orden, nuevoEstado): Boolean
+    +registrarUbicacionGps(id_orden, lat, lon): void
+    +obtenerDatosTrackingEnVivo(id_orden): TrackingDTO
+}
+
+class "CE_OrdenVenta" as EntOrden <<Entity>> {
+    +id_orden: Integer
+    +numero_factura: String
+    +id_repartidor: Integer
+    +nombre_repartidor: String
+    +telefono_repartidor: String
+    +estado_logistica: String
+    +latitud_destino: Decimal
+    +longitud_destino: Decimal
+    --
+    +asignarChofer(id_chofer: Integer): void
+    +actualizarEstadoLogistica(estado: String): void
+}
+
+class "CE_TrackingGps" as EntGps <<Entity>> {
+    +id_tracking: Integer
+    +id_orden: Integer
+    +latitud: Decimal
+    +longitud: Decimal
+    +marca_tiempo: DateTime
+    --
+    +asentarPuntoGps(id_orden: Integer, lat: Decimal, lon: Decimal): void
+    +obtenerUltimoPunto(id_orden: Integer): Point
+}
+
+ActorLog -- UILog
+ActorRep -- UILog
+ActorCli -- UITrack
+UILog -- Ctrl
+UITrack -- Ctrl
+Ctrl -- EntOrden
+Ctrl -- EntGps
+@enduml
+```
+
+---
+
+## 2.4 Análisis de Paquetes
+
+En el análisis de paquetes (fundamentado en la metodología PUDS y las directrices de la cátedra `B4.txt`), se evalúa la arquitectura del Ciclo 2 bajo las dos métricas cardinales del diseño modular de software:
+1. **Acoplamiento**: Mide el grado de interdependencia entre paquetes. Se procura un **bajo acoplamiento** mediante interfaces de servicio claras para evitar el efecto dominó ante modificaciones.
+2. **Cohesión**: Mide el grado de afinidad temática y responsabilidad única interna de los elementos contenidos en cada paquete. Se procura una **alta cohesión funcional**, asegurando que cada paquete encapsule clases dedicadas estrictamente a su contexto delimitado (*Bounded Context*).
+
+```plantuml
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultFontName "Segoe UI", Arial, sans-serif
+skinparam defaultFontSize 11
+
+package "Paquete 6: Reservas Presenciales (M10)" as PkgRes #E0F2FE {
+    class AtencionReservaControl
+    class ReservaEntity
+    class ReservaDetalleEntity
+    class ProbadorEntity
+    class QrCodeService
+}
+
+package "Paquete 7: Venta Digital y Carrito (M11, M12)" as PkgVenta #ECFCCB {
+    class CarritoControl
+    class CheckoutControl
+    class CarritoEntity
+    class CarritoItemEntity
+    class OrdenVentaEntity
+    class HaversineGeoService
+}
+
+package "Paquete 8: Punto de Venta POS (M13)" as PkgPOS #FEF3C7 {
+    class PosVentaControl
+    class OrdenVentaEntity as PosOrdenEnt
+    class MetodoPagoEntity as PosMetodoEnt
+    class InventarioEntity as PosInvEnt
+    class KardexEntity as PosKardexEnt
+}
+
+package "Paquete 9: Procesamiento de Pagos (M14, M15)" as PkgPagos #FCE7F3 {
+    class PagosStripeControl
+    class ConfigCobrosControl
+    class TransaccionPagoEntity
+    class StripeConfigEntity
+    class MetodoPagoEntity as PagosMetodoEnt
+}
+
+package "Paquete 10: Logística y Delivery (M19)" as PkgLogistica #F3E8FF {
+    class LogisticaDespachoControl
+    class OrdenVentaEntity as LogOrdenEnt
+    class TrackingGpsEntity
+    class UsuarioEntity as RepartidorEnt
+}
+
+' Relaciones de dependencia e integración entre paquetes
+PkgRes ..> PkgPOS : deriva prendas probadas para facturación
+PkgVenta ..> PkgPagos : solicita creación de PaymentIntent y cobro
+PkgPOS ..> PkgPagos : valida medios de cobro habilitados y comisiones
+PkgVenta ..> PkgLogistica : programa despacho con coordenadas geodésicas
+PkgPagos ..> PkgLogistica : dispara despacho al confirmar pago exitoso
+@enduml
+```
+
+| Paquete de Análisis | Nivel de Cohesión | Nivel de Acoplamiento | Justificación Técnica de Diseño y Responsabilidad Arquitectónica |
+|:---|:---:|:---:|:---|
+| **P6: Reservas Presenciales** | **Alta (Funcional)** | **Bajo (Eferente: 1, Aferente: 0)** | Gestiona de forma autónoma la agenda de probadores, citas y verificación QR en tienda física; solo deriva a POS cuando el cliente decide adquirir las prendas. |
+| **P7: Venta Digital y Carrito** | **Alta (Transaccional)** | **Medio (Eferente: 2, Aferente: 0)** | Consolida la bolsa de compras omnicanal, cotización Haversine y formalización de pedidos online; delega el recaudo a Pagos y la entrega a Logística. |
+| **P8: Punto de Venta POS** | **Muy Alta (Operativa)** | **Medio (Eferente: 1, Aferente: 1)** | Administra la facturación rápida en caja, soporte de escáner de barras, selector de tallas y descuento atómico de stock físico en Kardex; consulta configuración a Pagos. |
+| **P9: Procesamiento de Pagos** | **Alta (Servicio/Financiero)** | **Controlado (Eferente: 1, Aferente: 2)** | Módulo financiero desacoplado con integración segura Stripe SDK (PCI-DSS / 3DS), llaves API enmascaradas y registro inmutable de transacciones. |
+| **P10: Logística y Delivery** | **Alta (Dominio Logístico)** | **Bajo (Eferente: 0, Aferente: 2)** | Encapsula la máquina de estados finita de despacho, asignación de repartidores y rastreo GPS satelital en tiempo real con simulación reactiva. |
 
 ---
 

@@ -1,23 +1,62 @@
-# Docker ignore
+# ==============================================================================
+# Docker Ignore: FashionStore Omnicanal
+# Excluye directorios pesados y archivos de desarrollo del contexto de Docker
+# ==============================================================================
+
+# Control de versiones y configuración
 .git/
 .gitignore
+.github/
+.vscode/
+.idea/
+.gemini/
+
+# Variables de entorno y secretos locales
 .env
 .env.*
+*.env
+
+# Dependencias y cachés Web Angular
 node_modules/
+**/node_modules/
 prototipo/web/node_modules/
 prototipo/web/.angular/
 prototipo/web/cache/
-prototipo/backend/.pytest_cache/
-prototipo/backend/__pycache__/
-prototipo/backend/fashionstore_local.db
-*.db
-*.sqlite3
+prototipo/web/dist/
+
+# Aplicación móvil Flutter (no requerida en servidor web/backend)
+prototipo/movil/
+
+# Caché y entornos virtuales Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 venv/
 .venv/
-scratch/
+env/
+.pytest_cache/
+**/pytest_cache/
+prototipo/backend/.pytest_cache/
+prototipo/backend/tests/
+
+# Bases de datos locales de desarrollo (se regeneran automáticamente)
+*.db
+*.sqlite
+*.sqlite3
+prototipo/backend/fashionstore_local.db
+
+# Documentación, diagramas Enterprise Architect y archivos pesados
+DOCUMENTACION2/
 documentacion/
 diagramas/
 Datos/
+scratch/
 *.docx
 *.pdf
 *.bat
+*.eapx
+*.eap
+*.mp4
+*.webp
+

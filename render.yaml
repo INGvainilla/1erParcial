@@ -1,10 +1,11 @@
 services:
   - type: web
-    name: fashionstore-ciclo1
+    name: fashionstore-platform
     runtime: docker
     dockerfilePath: Dockerfile
     plan: free
     region: oregon
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 8000
@@ -16,3 +17,23 @@ services:
         value: plwx ztda stmt qxeu
       - key: DEFAULT_FROM_EMAIL
         value: SIGEPSI <mrgrueso2005@gmail.com>
+      - key: STRIPE_SECRET_KEY
+        value: sk_test_51UEsz81HD8WYieY54Eoz9aGdj05qbsEnEbLOISaxEf5TF2E6RWswKA3lsGO0Au0YVodJ0JOqbRElxv5GUlgwcYHY00LRGUdXFK
+      - key: STRIPE_PUBLISHABLE_KEY
+        value: pk_test_51UEsz81HD8WYieY5OVqcN7AqDcwmlIpf9ClUu7VzfdPDigt5FgbaTPuk8cErY6ySu3CXc8U0r7SY2UINr0e3AMyg00LCwwrfgN
+      - key: STRIPE_CURRENCY
+        value: bob
+      # Si se vincula una base de datos PostgreSQL en Render, descomentar:
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: fashionstore-db
+      #     property: connectionString
+
+# (Opcional) Descomentar si se desea aprovisionar base de datos PostgreSQL gestionada en Render:
+# databases:
+#   - name: fashionstore-db
+#     plan: free
+#     region: oregon
+#     databaseName: fashionstore_db
+#     user: postgres
+
