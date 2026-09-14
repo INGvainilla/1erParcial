@@ -1,27 +1,8 @@
 # ==============================================================================
-# Dockerfile Multi-Stage: FashionStore Omnicanal (Ciclos 1 y 2: SI2 - 2-2026)
-# Backend: FastAPI + Uvicorn + SQLAlchemy + PostgreSQL / SQLite
-# Frontend: Angular SPA (Compilado en Node.js y servido estáticamente)
+# Dockerfile: FashionStore Omnicanal (Ciclos 1 y 2: SI2 - 2-2026)
+# Backend: FastAPI + Uvicorn + SQLAlchemy + SQLite/PostgreSQL
+# Frontend: Angular 19 SPA (Pre-compilado en web_dist para despliegue ultra-rápido y sin OOM)
 # ==============================================================================
-
-# ------------------------------------------------------------------------------
-# Etapa 1: Compilación del Frontend Web Angular
-# ------------------------------------------------------------------------------
-FROM node:20-alpine AS web-builder
-
-WORKDIR /app/web
-
-# Instalar dependencias npm
-COPY prototipo/web/package*.json ./
-RUN npm ci --prefer-offline --no-audit || npm install --legacy-peer-deps
-
-# Copiar el código fuente web y compilar para producción
-COPY prototipo/web/ ./
-RUN npm run build -- --configuration production
-
-# ------------------------------------------------------------------------------
-# Etapa 2: Runtime Backend Python / FastAPI + Frontend Embebido
-# ------------------------------------------------------------------------------
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -40,15 +21,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY prototipo/backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el backend de la aplicación
+# Copiar el backend completo (incluyendo web_dist con la SPA Angular compilada)
 COPY prototipo/backend/ ./
-
-# Copiar los activos web compilados de Angular desde la Etapa 1 hacia web_dist
-COPY --from=web-builder /app/web/dist/web_app/browser/ ./web_dist/
 
 # Exponer el puerto por defecto
 EXPOSE 8000
 
 # Comando de inicio: Uvicorn en 0.0.0.0 en el puerto asignado dinámicamente por la nube (Render PORT)
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
-
