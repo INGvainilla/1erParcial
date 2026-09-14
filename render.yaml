@@ -18,9 +18,9 @@ services:
       - key: DEFAULT_FROM_EMAIL
         value: SIGEPSI <mrgrueso2005@gmail.com>
       - key: STRIPE_SECRET_KEY
-        value: sk_test_51UEsz81HD8WYieY54Eoz9aGdj05qbsEnEbLOISaxEf5TF2E6RWswKA3lsGO0Au0YVodJ0JOqbRElxv5GUlgwcYHY00LRGUdXFK
+        sync: false
       - key: STRIPE_PUBLISHABLE_KEY
-        value: pk_test_51UEsz81HD8WYieY5OVqcN7AqDcwmlIpf9ClUu7VzfdPDigt5FgbaTPuk8cErY6ySu3CXc8U0r7SY2UINr0e3AMyg00LCwwrfgN
+        sync: false
       - key: STRIPE_CURRENCY
         value: bob
       # Si se vincula una base de datos PostgreSQL en Render, descomentar:

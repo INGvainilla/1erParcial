@@ -51,7 +51,13 @@ prototipo/movil/.dart_tool/
 # Variables de entorno y secretos
 .env
 .env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
+prototipo/backend/.env
 !.env.example
+!**/.env.example
 
 # IDEs y Editores
 .vscode/
