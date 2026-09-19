@@ -1,10 +1,10 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../../../core/constants/api_constants.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/carrito_provider.dart';
+import '../../../core/theme/app_theme.dart';
 import 'registro_screen.dart';
 import 'otp_screen.dart';
-import '../../catalogo/views/catalogo_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,159 +14,226 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: "alberto.delgado@store.bo");
-  final _passwordController = TextEditingController(text: "Admin123*");
-  bool _isLoading = false;
-  String? _errorMessage;
+  final _emailController = TextEditingController(text: 'rodrigo.cliente@gmail.com');
+  final _passwordController = TextEditingController(text: 'Admin123*');
+  bool _obscurePassword = true;
 
-  // ===========================================================================
-  // CASO DE USO: CU01 - Autenticar Usuario y Control de Acceso (RBAC)
-  // ===========================================================================
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _iniciarSesion() async {
-    // Paso 1: El usuario ingresa credenciales (email y password) en la app móvil
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = "Complete todos los campos de acceso.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor ingresa tu correo y contraseña.'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final ok = await auth.login(email, password);
 
-    // Paso 1.1: ILoginBoundary invoca solicitarAutenticacion mediante POST a /api/v1/auth/login
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.login),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+    if (!mounted) return;
+
+    if (ok) {
+      // Cargar carrito del usuario autenticado
+      await Provider.of<CarritoProvider>(context, listen: false).cargarCarrito();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bienvenido de vuelta, ${auth.usuario?.displayName ?? ""}'),
+          backgroundColor: AppTheme.bgElevated,
+        ),
       );
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        // Paso 1.2: Se recibe token JWT con rol asignado
-        final token = data["access_token"];
-        final rol = data["rol"];
-        final nombre = data["nombre_completo"];
-
-        // Paso 1.3: Redirección al catálogo móvil con sesión iniciada
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Bienvenido, $nombre ($rol)")),
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CatalogoScreen()),
-        );
-      } else {
-        // Paso 1.4: Si la cuenta fue bloqueada por 5 intentos erróneos, mostrar feedback preventivo
-        setState(() {
-          _errorMessage = data["detail"] ?? "Error en autenticación.";
-        });
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
       }
-    } catch (e) {
-      setState(() => _errorMessage = "Error de conexión con el servidor.");
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
+      appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 40),
-              const Icon(Icons.checkroom, size: 64, color: Color(0xFF6366F1)),
-              const SizedBox(height: 16),
-              const Text(
-                "FashionStore",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                "Plataforma Omnicanal Masculina",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 40),
-
-              if (_errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo e isotipo boutique
+                Center(
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgSurface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.accentGold.withOpacity(0.4), width: 1.5),
+                    ),
+                    child: const Icon(Icons.checkroom, size: 36, color: AppTheme.accentGold),
                   ),
-                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'FASHIONSTORE',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.0,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Acceso Exclusivo para Clientes',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.accentGold, fontSize: 12, letterSpacing: 0.8),
+                ),
+                const SizedBox(height: 32),
+
+                // Mensaje de error (e.g. gate rechaza admin o credenciales incorrectas)
+                if (auth.errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.danger.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.danger.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.error_outline, color: AppTheme.danger, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            auth.errorMessage!,
+                            style: const TextStyle(color: AppTheme.danger, fontSize: 13, height: 1.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Campos de login
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Correo Electrónico',
+                    prefixIcon: Icon(Icons.email_outlined, color: AppTheme.textMuted, size: 20),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.textMuted, size: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: AppTheme.textMuted,
+                        size: 20,
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
                 ),
 
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: "Correo Electrónico",
-                  prefixIcon: Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: "Contraseña",
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const OtpScreen()));
-                  },
-                  child: const Text("¿Olvidó su contraseña?"),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              ElevatedButton(
-                onPressed: _isLoading ? null : _iniciarSesion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Iniciar Sesión", style: TextStyle(fontSize: 16)),
-              ),
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("¿No tienes cuenta?"),
-                  TextButton(
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RegistroScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OtpScreen()),
+                      );
                     },
-                    child: const Text("Regístrate"),
+                    child: const Text(
+                      '¿Olvidaste tu contraseña?',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+
+                const SizedBox(height: 12),
+
+                ElevatedButton(
+                  onPressed: auth.isLoading ? null : _iniciarSesion,
+                  child: auth.isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(color: AppTheme.bgMain, strokeWidth: 2),
+                        )
+                      : const Text('Iniciar Sesión'),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Botón rápido de demo
+                OutlinedButton.icon(
+                  onPressed: () {
+                    _emailController.text = 'rodrigo.cliente@gmail.com';
+                    _passwordController.text = 'Admin123*';
+                    _iniciarSesion();
+                  },
+                  icon: const Icon(Icons.flash_on, size: 16, color: AppTheme.accentGold),
+                  label: const Text(
+                    'Ingresar con Demo (Rodrigo Cliente)',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('¿No tienes cuenta?', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RegistroScreen()),
+                        );
+                      },
+                      child: const Text(
+                        'Regístrate aquí',
+                        style: TextStyle(color: AppTheme.accentGold, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

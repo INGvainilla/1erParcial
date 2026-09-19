@@ -25,6 +25,7 @@ import app.modules.reservas.models
 import app.modules.carrito.models
 import app.modules.ordenes.models
 import app.modules.pagos.models
+import app.modules.gamificacion.models
 
 # Importar enrutadores
 from app.modules.auth.router import router as auth_router
@@ -43,6 +44,8 @@ from app.modules.pagos.router import router as pagos_router
 from app.modules.pagos.config_router import router as config_pagos_router
 from app.modules.logistica.router import router as logistica_router
 from app.modules.dashboard.router import router as dashboard_router
+from app.modules.gamificacion.router import router as gamificacion_router
+from app.modules.ia_recomendaciones.router import router as recomendaciones_router
 
 # Inicializar tablas de base de datos
 Base.metadata.create_all(bind=engine)
@@ -102,6 +105,8 @@ app.include_router(pagos_router, prefix=API_PREFIX)
 app.include_router(config_pagos_router, prefix=API_PREFIX)
 app.include_router(logistica_router, prefix=API_PREFIX)
 app.include_router(dashboard_router, prefix=API_PREFIX)
+app.include_router(gamificacion_router, prefix=API_PREFIX)
+app.include_router(recomendaciones_router, prefix=API_PREFIX)
 
 # Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))

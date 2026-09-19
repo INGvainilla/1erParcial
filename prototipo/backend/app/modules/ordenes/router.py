@@ -2,6 +2,7 @@
 """
 Controlador / Router: Procesar Compra Digital y Checkout (CU14 - M12)
 """
+from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -11,10 +12,26 @@ from app.modules.auth.models import Usuario
 from app.modules.ordenes.schemas import OrdenCreateRequest, OrdenResponse
 from app.modules.ordenes.services import (
     crear_orden_desde_carrito,
-    obtener_orden_por_id
+    obtener_orden_por_id,
+    listar_ordenes_usuario
 )
 
 router = APIRouter(prefix="/ordenes", tags=["Órdenes y Checkout (CU14)"])
+
+
+@router.get("", response_model=List[OrdenResponse])
+def listar_mis_ordenes_endpoint(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Lista las órdenes de compra realizadas por el usuario autenticado (Mis Pedidos).
+    """
+    return listar_ordenes_usuario(
+        db=db,
+        id_usuario=current_user.id_usuario
+    )
+
 
 
 @router.post("/checkout", response_model=OrdenResponse, status_code=status.HTTP_201_CREATED)

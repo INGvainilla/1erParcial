@@ -14,6 +14,7 @@ class OrdenCreateRequest(BaseModel):
     nit_factura: str = Field(..., description="NIT o Carnet de Identidad para la factura fiscal")
     razon_social_factura: str = Field(..., description="Razón Social o Nombre completo para la factura")
     notas_entrega: Optional[str] = Field(None, description="Instrucciones adicionales para la entrega")
+    canal_venta: Optional[str] = Field("WEB", description="Canal de origen de la orden ('WEB', 'APP')")
 
 class OrdenDetalleResponse(BaseModel):
     id_detalle_orden: int

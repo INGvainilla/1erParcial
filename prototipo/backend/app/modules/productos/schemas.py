@@ -15,6 +15,7 @@ class CategoriaCreate(BaseModel):
 class CategoriaResponse(BaseModel):
     id_categoria: int
     nombre_categoria: str
+    nombre: Optional[str] = None
     descripcion: Optional[str] = None
 
     class Config:

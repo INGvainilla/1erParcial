@@ -157,12 +157,16 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
         total_orden = subtotal_acum + costo_envio
         correlativo_fac = f"FAC-{datetime.now().year}-{uuid.uuid4().hex[:6].upper()}"
 
+        canal_val = (orden_in.canal_venta or "WEB").strip().upper()
+        if canal_val not in ["WEB", "APP", "POS"]:
+            canal_val = "WEB"
+
         # Crear cabecera de orden
         nueva_orden = OrdenVenta(
             id_usuario=id_usuario,
             id_sucursal=sucursal_id,
             numero_factura=correlativo_fac,
-            canal_venta="WEB",
+            canal_venta=canal_val,
             modalidad_entrega=modalidad,
             direccion_envio=orden_in.direccion_envio.strip() if orden_in.direccion_envio else None,
             telefono_contacto=orden_in.telefono_contacto.strip() if orden_in.telefono_contacto else None,
@@ -238,3 +242,21 @@ def obtener_orden_por_id(db: Session, id_orden: int, id_usuario: int) -> OrdenRe
             )
 
     return construir_orden_response(orden)
+
+
+def listar_ordenes_usuario(db: Session, id_usuario: int) -> list[OrdenResponse]:
+    """
+    Recupera el historial de órdenes del usuario autenticado ordenadas por fecha reciente.
+    """
+    ordenes = (
+        db.query(OrdenVenta)
+        .options(
+            joinedload(OrdenVenta.detalles).joinedload(OrdenDetalle.producto),
+            joinedload(OrdenVenta.sucursal)
+        )
+        .filter(OrdenVenta.id_usuario == id_usuario)
+        .order_by(OrdenVenta.creado_en.desc())
+        .all()
+    )
+    return [construir_orden_response(o) for o in ordenes]
+

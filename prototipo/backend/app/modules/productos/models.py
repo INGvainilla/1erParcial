@@ -15,6 +15,10 @@ class Categoria(Base):
     nombre_categoria = Column(String(50), unique=True, nullable=False)
     descripcion = Column(String(200), nullable=True)
 
+    @property
+    def nombre(self) -> str:
+        return self.nombre_categoria
+
     productos = relationship("Producto", back_populates="categoria")
 
 

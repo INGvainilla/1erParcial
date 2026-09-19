@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../../../core/constants/api_constants.dart';
-import '../../catalogo/views/catalogo_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/app_theme.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({Key? key}) : super(key: key);
@@ -17,129 +16,258 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _telefonoController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMessage;
+  bool _obscurePassword = true;
 
-  // ===========================================================================
-  // CASO DE USO: CU02 - Registrar Cliente (Auto-registro de Clientes)
-  // ===========================================================================
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _nombresController.dispose();
+    _apellidosController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _telefonoController.dispose();
+    super.dispose();
+  }
+
+  bool get _tiene8Caracteres => _passwordController.text.length >= 8;
+  bool get _tieneMayuscula => RegExp(r'[A-Z]').hasMatch(_passwordController.text);
+  bool get _tieneMinuscula => RegExp(r'[a-z]').hasMatch(_passwordController.text);
+  bool get _tieneNumeroSimbolo => RegExp(r'[0-9!@#\$%^&*(),.?":{}|<>]').hasMatch(_passwordController.text);
+  bool get _cumpleRequisitosPassword =>
+      _tiene8Caracteres && _tieneMayuscula && _tieneMinuscula && _tieneNumeroSimbolo;
+
+  Widget _buildRequisitoItem(String texto, bool cumplido) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: Row(
+        children: [
+          Icon(
+            cumplido ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 16,
+            color: cumplido ? AppTheme.success : AppTheme.textSecondary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              texto,
+              style: TextStyle(
+                color: cumplido ? Colors.white : AppTheme.textSecondary,
+                fontSize: 12,
+                fontWeight: cumplido ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _procesarRegistro() async {
-    // Paso 1: El cliente ingresa sus datos personales y contraseña en IRegistroBoundary
     final nombres = _nombresController.text.trim();
     final apellidos = _apellidosController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final telefono = _telefonoController.text.trim();
 
-    if (nombres.isEmpty || apellidos.isEmpty || email.isEmpty || password.length < 8) {
-      setState(() => _errorMessage = "Complete todos los campos. Clave mínima de 8 caracteres.");
+    if (nombres.isEmpty || apellidos.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor completa todos los campos personales obligatorios.'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    // Paso 1.1: Envío del payload a POST /api/v1/auth/registro
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.registro),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "nombres": nombres,
-          "apellidos": apellidos,
-          "email": email,
-          "password": password,
-          "telefono": telefono.isNotEmpty ? telefono : null,
-        }),
+    if (!_cumpleRequisitosPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La contraseña debe cumplir con todos los requisitos de seguridad listados.'),
+          backgroundColor: AppTheme.danger,
+        ),
       );
+      return;
+    }
 
-      final data = jsonDecode(response.body);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final ok = await auth.registro(
+      nombres: nombres,
+      apellidos: apellidos,
+      email: email,
+      password: password,
+      telefono: telefono.isNotEmpty ? telefono : null,
+    );
 
-      if (response.statusCode == 201) {
-        // Paso 1.2: Registro persistido en PostgreSQL con rol CLIENTE y Bcrypt
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cuenta creada exitosamente. ¡Bienvenido a FashionStore!")),
-        );
+    if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CatalogoScreen()),
-        );
-      } else {
-        setState(() {
-          _errorMessage = data["detail"] ?? "No se pudo completar el registro.";
-        });
-      }
-    } catch (e) {
-      setState(() => _errorMessage = "Error de conexión.");
-    } finally {
-      setState(() => _isLoading = false);
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('¡Bienvenido $nombres! Cuenta creada y sesión iniciada con éxito.'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Crear Cuenta de Cliente")),
+      appBar: AppBar(
+        title: const Text('Crear Cuenta de Cliente'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_errorMessage != null)
+              if (auth.errorMessage != null)
                 Container(
                   padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
+                    color: AppTheme.danger.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.danger.withOpacity(0.4)),
                   ),
-                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: AppTheme.danger, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          auth.errorMessage!,
+                          style: const TextStyle(color: AppTheme.danger, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
               TextField(
                 controller: _nombresController,
-                decoration: const InputDecoration(labelText: "Nombres", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Nombres *',
+                  prefixIcon: Icon(Icons.person_outline, size: 20),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
               TextField(
                 controller: _apellidosController,
-                decoration: const InputDecoration(labelText: "Apellidos", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Apellidos *',
+                  prefixIcon: Icon(Icons.person_outline, size: 20),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: "Correo Electrónico", border: OutlineInputBorder()),
                 keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Correo Electrónico *',
+                  prefixIcon: Icon(Icons.email_outlined, size: 20),
+                  hintText: 'ejemplo@correo.com',
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
               TextField(
                 controller: _telefonoController,
-                decoration: const InputDecoration(labelText: "Teléfono Móvil", border: OutlineInputBorder()),
                 keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono Celular (opcional)',
+                  prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                  hintText: '70012345',
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: "Contraseña (min. 8 caracteres)", border: OutlineInputBorder()),
-                obscureText: true,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Contraseña *',
+                  hintText: 'Ej: Moda2026*',
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Panel Informativo de Requisitos de Contraseña
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.bgCard,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _cumpleRequisitosPassword
+                        ? AppTheme.success.withOpacity(0.4)
+                        : Colors.white12,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _cumpleRequisitosPassword ? Icons.check_circle : Icons.shield_outlined,
+                          size: 16,
+                          color: _cumpleRequisitosPassword ? AppTheme.success : AppTheme.accentGold,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Requisitos de seguridad de contraseña:',
+                          style: TextStyle(
+                            color: AppTheme.accentGold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildRequisitoItem('Mínimo 8 caracteres', _tiene8Caracteres),
+                    _buildRequisitoItem('Al menos una letra mayúscula (A-Z)', _tieneMayuscula),
+                    _buildRequisitoItem('Al menos una letra minúscula (a-z)', _tieneMinuscula),
+                    _buildRequisitoItem(
+                      'Al menos un número (0-9) o símbolo (*, @, #, etc.)',
+                      _tieneNumeroSimbolo,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 
               ElevatedButton(
-                onPressed: _isLoading ? null : _procesarRegistro,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Registrarme", style: TextStyle(fontSize: 16)),
+                onPressed: auth.isLoading ? null : _procesarRegistro,
+                child: auth.isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(color: AppTheme.bgMain, strokeWidth: 2),
+                      )
+                    : const Text('Registrarme como Cliente'),
               ),
             ],
           ),
