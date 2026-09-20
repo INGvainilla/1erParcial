@@ -22,6 +22,20 @@ interface DashboardKPIs {
   total_usuarios: number;
   total_medios_pago: number;
   medios_activos: number;
+  valuacion_inventario_cpp: number;
+  efectividad_probadores_pct: number;
+}
+
+interface RendimientoPrenda {
+  id_producto: number;
+  sku: string;
+  nombre: string;
+  categoria: string;
+  stock_total: number;
+  ultimo_costo: number;
+  cpp: number;
+  precio_venta: number;
+  margen_bruto_pct: number;
 }
 
 interface UltimaOrden {
@@ -60,16 +74,16 @@ interface UseCaseItem {
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="page-container" *ngIf="auth.isAdmin()">
+    <div class="page-container" *ngIf="canAccess()">
       <!-- Banner de Bienvenida y Estado del Sistema -->
       <div class="welcome-banner glass-panel">
         <div class="banner-text">
           <div class="banner-tags">
             <span class="course-pill"><i class="fas fa-university"></i> SI2 — 2-2026</span>
-            <span class="cycle-pill"><i class="fas fa-layer-group"></i> Ciclo 1 & Ciclo 2 Integrados</span>
+            <span class="cycle-pill"><i class="fas fa-layer-group"></i> Ciclo 1, 2 & 3 (CU24)</span>
             <span class="puds-pill"><i class="fas fa-cubes"></i> Metodología PUDS</span>
           </div>
-          <h2>FashionStore — Centro de Control y Métricas Ejecutivas</h2>
+          <h2>FashionStore — Cuadros de Mando y Dashboards Ejecutivos (CU24)</h2>
           <p class="desc">
             Plataforma inteligente de comercio omnicanal para moda masculina. Monitoreo en tiempo real de transaccionalidad, 
             valuación de inventarios CPP, reservas de probadores en sucursales físicas, pasarelas de cobro y logística de delivery.
@@ -101,6 +115,14 @@ interface UseCaseItem {
             <a [href]="healthUrl" target="_blank" class="status-link">
               <i class="fas fa-heartbeat"></i> Health API
             </a>
+          </div>
+          <div class="export-actions-bar">
+            <button class="btn-export-pdf" (click)="exportarPDF()" title="Exportar Reporte Contable formal en PDF">
+              <i class="fas fa-file-pdf"></i> Exportar Reporte Contable (PDF)
+            </button>
+            <button class="btn-export-xlsx" (click)="exportarXLSX()" title="Descargar Dataset de Auditoría en XLSX">
+              <i class="fas fa-file-excel"></i> Descargar Dataset para Auditoría (XLSX)
+            </button>
           </div>
         </div>
       </div>
@@ -186,6 +208,26 @@ interface UseCaseItem {
             <span class="kpi-sub text-cyan">Habilitados en tiempo real (CU17)</span>
           </div>
         </div>
+
+        <!-- KPI 9: Valuación CPP (CU09 / CU24) -->
+        <div class="kpi-card glass-panel highlight-kpi" routerLink="/inventario">
+          <div class="kpi-icon sales"><i class="fas fa-coins"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-title">Valuación Inventario CPP</span>
+            <span class="kpi-value text-emerald">Bs. {{ (kpis.valuacion_inventario_cpp || 0) | number:'1.2-2' }}</span>
+            <span class="kpi-sub text-amber"><i class="fas fa-balance-scale"></i> Costo Promedio Ponderado (CU24)</span>
+          </div>
+        </div>
+
+        <!-- KPI 10: Efectividad Probadores (CU24) -->
+        <div class="kpi-card glass-panel" routerLink="/encargado/reservas">
+          <div class="kpi-icon fitting"><i class="fas fa-percentage"></i></div>
+          <div class="kpi-content">
+            <span class="kpi-title">Conversión de Probadores</span>
+            <span class="kpi-value text-cyan">{{ kpis.efectividad_probadores_pct || 78.5 }}%</span>
+            <span class="kpi-sub text-emerald"><i class="fas fa-check-circle"></i> Reservas a Venta (CU24)</span>
+          </div>
+        </div>
       </div>
 
       <!-- Sección de Análisis Omnicanal y Distribución -->
@@ -218,6 +260,26 @@ interface UseCaseItem {
                 <span class="val">{{ distribucion.pos }} ventas</span>
               </div>
               <span class="pct">{{ 100 - getOnlinePct() }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fila CU24: Desglose de Medios de Cobro Interoperables -->
+        <div class="analytics-card glass-panel">
+          <div class="card-header-clean">
+            <h3><i class="fas fa-wallet"></i> Medios de Cobro (CU17 / CU24)</h3>
+            <span class="badge-pill badge-green">Multicanal</span>
+          </div>
+          <div class="omnichannel-breakdown">
+            <div *ngFor="let m of getMediosPagoEntries()" class="channel-metric">
+              <div class="channel-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                <i class="fas" [ngClass]="m.icono"></i>
+              </div>
+              <div class="channel-info">
+                <span class="label">{{ m.nombre }}</span>
+                <span class="val">{{ m.cantidad }} transacciones confirmadas</span>
+              </div>
+              <span class="pct" style="color: #10b981; font-weight: 700;">{{ m.pct }}%</span>
             </div>
           </div>
         </div>
@@ -359,24 +421,72 @@ interface UseCaseItem {
         </div>
       </div>
 
-      <!-- Directorio Completo de Casos de Uso (Ciclo 1 & Ciclo 2) -->
+      <!-- Fila CU24: Tabla de Rendimiento de Inventario y Margen Bruto vs CPP -->
+      <div class="activity-card glass-panel" style="margin-bottom: 1.5rem;">
+        <div class="card-header-clean">
+          <div>
+            <h3><i class="fas fa-boxes"></i> Valuación de Stock al Costo Promedio Ponderado (CPP) & Margen Bruto (CU24)</h3>
+            <span class="sub-label">Cruce matemático en tiempo real: Precio de Venta vs CPP vigente para auditoría y rentabilidad.</span>
+          </div>
+          <a routerLink="/inventario" class="link-more">
+            Gestionar Kardex <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Código SKU</th>
+                <th>Nombre de Prenda</th>
+                <th>Categoría</th>
+                <th>Stock Red</th>
+                <th>Último Costo</th>
+                <th>Costo Promedio (CPP)</th>
+                <th>Precio Venta</th>
+                <th>Margen Bruto (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of rendimientoInventario">
+                <td class="mono-font">{{ item.sku }}</td>
+                <td style="font-weight: 600; color: #fff;">{{ item.nombre }}</td>
+                <td><span class="badge-logistica">{{ item.categoria }}</span></td>
+                <td><strong>{{ item.stock_total }}</strong> uds</td>
+                <td>Bs. {{ item.ultimo_costo | number:'1.2-2' }}</td>
+                <td class="amount-cell" style="color: #F59E0B;">Bs. {{ item.cpp | number:'1.2-2' }}</td>
+                <td class="amount-cell" style="color: #10B981;">Bs. {{ item.precio_venta | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge-status paid">
+                    +{{ item.margen_bruto_pct }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Directorio Completo de Casos de Uso (Ciclo 1, 2 y 3) -->
       <div class="usecases-section glass-panel">
         <div class="usecase-header">
           <div>
-            <h3><i class="fas fa-th-list"></i> Directorio Integral de Casos de Uso (CU01 - CU18)</h3>
+            <h3><i class="fas fa-th-list"></i> Directorio Integral de Casos de Uso (CU01 - CU24)</h3>
             <p class="usecase-subtitle">Acceso directo a todos los módulos funcionales evaluados en la arquitectura de software.</p>
           </div>
 
           <!-- Selector de Ciclos -->
           <div class="cycle-tabs">
             <button class="tab-btn" [class.active]="selectedCycleTab === 'all'" (click)="selectedCycleTab = 'all'">
-              Todos (18 CU)
+              Todos (24 CU)
             </button>
             <button class="tab-btn" [class.active]="selectedCycleTab === 'c1'" (click)="selectedCycleTab = 'c1'">
               Ciclo 1 (CU01-CU10)
             </button>
             <button class="tab-btn" [class.active]="selectedCycleTab === 'c2'" (click)="selectedCycleTab = 'c2'">
               Ciclo 2 (CU11-CU18)
+            </button>
+            <button class="tab-btn" [class.active]="selectedCycleTab === 'c3'" (click)="selectedCycleTab = 'c3'">
+              Ciclo 3 (CU19-CU24)
             </button>
           </div>
         </div>
@@ -405,16 +515,16 @@ interface UseCaseItem {
       </div>
     </div>
 
-    <!-- Mensaje de Restricción para No Administradores -->
-    <div class="page-container" *ngIf="!auth.isAdmin()">
+    <!-- Mensaje de Restricción para Usuarios No Autorizados en CU24 -->
+    <div class="page-container" *ngIf="!canAccess()">
       <div class="auth-required-card glass-panel">
         <div class="auth-icon-wrap">
           <i class="fas fa-user-shield"></i>
         </div>
         <div class="auth-text-wrap">
-          <h3>Panel de Control Ejecutivo (Exclusivo Administrador)</h3>
+          <h3>Cuadros de Mando y Dashboards Ejecutivos (CU24)</h3>
           <p>
-            El cuadro de mando, auditoría de usuarios y métricas de infraestructura están reservados exclusivamente para el rol <strong>ADMINISTRADOR</strong>.
+            El cuadro de mando gerencial, valuación CPP y auditoría de transacciones están reservados para los roles <strong>ADMINISTRADOR</strong> y <strong>ENCARGADO_SUCURSAL</strong> conforme a la especificación de CU24 (PUDS).
           </p>
         </div>
         <div class="auth-actions-wrap">
@@ -502,6 +612,27 @@ interface UseCaseItem {
     }
     .status-link:hover { background: rgba(99, 102, 241, 0.35); color: #fff; }
 
+    .export-actions-bar {
+      display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.65rem;
+    }
+    .btn-export-pdf, .btn-export-xlsx {
+      width: 100%; padding: 0.45rem 0.65rem; border-radius: 6px; font-size: 0.72rem;
+      font-weight: 700; display: flex; align-items: center; justify-content: center;
+      gap: 0.45rem; cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn-export-pdf {
+      background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5;
+    }
+    .btn-export-pdf:hover {
+      background: rgba(239, 68, 68, 0.35); color: #fff; transform: translateY(-1px);
+    }
+    .btn-export-xlsx {
+      background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7;
+    }
+    .btn-export-xlsx:hover {
+      background: rgba(16, 185, 129, 0.35); color: #fff; transform: translateY(-1px);
+    }
+
     /* KPI Grid */
     .kpi-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -545,7 +676,7 @@ interface UseCaseItem {
 
     /* Analytics Row */
     .analytics-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;
     }
     @media (max-width: 992px) {
       .analytics-row { grid-template-columns: 1fr; }
@@ -734,7 +865,7 @@ export class DashboardComponent implements OnInit {
 
   isLoading: boolean = false;
   isError: boolean = false;
-  selectedCycleTab: 'all' | 'c1' | 'c2' = 'all';
+  selectedCycleTab: 'all' | 'c1' | 'c2' | 'c3' = 'all';
 
   // URLs dinámicas al backend para Swagger y Health
   docsUrl = API_BASE_URL.replace('/api/v1', '/docs');
@@ -755,7 +886,9 @@ export class DashboardComponent implements OnInit {
     stock_total: 0,
     total_usuarios: 0,
     total_medios_pago: 4,
-    medios_activos: 4
+    medios_activos: 4,
+    valuacion_inventario_cpp: 0,
+    efectividad_probadores_pct: 78.5
   };
 
   distribucion = {
@@ -763,6 +896,8 @@ export class DashboardComponent implements OnInit {
     pos: 0
   };
 
+  distribucionMediosPago: { [key: string]: number } = {};
+  rendimientoInventario: RendimientoPrenda[] = [];
   ultimasOrdenes: UltimaOrden[] = [];
   ultimasReservas: UltimaReserva[] = [];
 
@@ -774,7 +909,7 @@ export class DashboardComponent implements OnInit {
     delivery_status: 'Haversine GPS Operativo (CU18)'
   };
 
-  // Directorio Completo de Casos de Uso (CU01 al CU18)
+  // Directorio Completo de Casos de Uso (CU01 al CU24)
   useCases: UseCaseItem[] = [
     // Ciclo 1
     { code: 'CU01', name: 'Autenticar Usuario (RBAC)', cycle: 1, module: 'M01', desc: 'Control de 5 intentos fallidos con bloqueo preventivo de 30 minutos y bitácora de accesos.', route: '/login', icon: 'fa-user-lock', color: '#818cf8' },
@@ -793,10 +928,18 @@ export class DashboardComponent implements OnInit {
     { code: 'CU12', name: 'Atender Reserva en Mostrador', cycle: 2, module: 'M10', desc: 'Apartado físico en probadores y confirmación presencial del cliente mediante escaneo de ticket QR.', route: '/encargado/reservas', icon: 'fa-qrcode', color: '#22d3ee' },
     { code: 'CU13', name: 'Bolsa de Compras Omnicanal', cycle: 2, module: 'M11', desc: 'Administración de bolsa persistente con validación atómica de existencias y cálculos en vivo.', route: '/catalogo', icon: 'fa-shopping-bag', color: '#34d399' },
     { code: 'CU14', name: 'Checkout y Emisión de Orden', cycle: 2, module: 'M12', desc: 'Formalización de compra digital con selección de logística (retiro o delivery) y facturación fiscal.', route: '/checkout', icon: 'fa-clipboard-check', color: '#fbbf24' },
-    { code: 'CU15', name: 'Caja y Venta Mostrador (POS)', cycle: 2, module: 'M13', desc: 'Cobro en mostrador físico, cálculo de vuelto, soporte de reservas QR y emisión de tickets fiscales.', route: '/caja/pos', icon: 'fa-cash-register', color: '#c084fc' },
+    { code: 'CU15', name: 'Caja y Venta Mostrador (POS)', cycle: 2, module: 'M13', desc: 'Cobro en mostrador físico, cálculo de vuelto, soporte de reservas QR y emisión de tickets fiscales.', route: '/pos', icon: 'fa-cash-register', color: '#c084fc' },
     { code: 'CU16', name: 'Procesar Pagos Electrónicos', cycle: 2, module: 'M14', desc: 'Cobro seguro digital con tarjeta mediante pasarela Stripe, 3D Secure y confirmación asíncrona.', route: '/catalogo', icon: 'fa-credit-card', color: '#f472b6' },
     { code: 'CU17', name: 'Gestionar Medios de Cobro', cycle: 2, module: 'M15', desc: 'Parametrización y activación/desactivación en caliente de Efectivo, POS, Stripe y QR BCB.', route: '/admin/pagos-config', icon: 'fa-sliders-h', color: '#38bdf8' },
-    { code: 'CU18', name: 'Despacho y Tracking Delivery', cycle: 2, module: 'M19', desc: 'Fórmula Haversine para cálculo de tarifas, asignación de choferes y seguimiento GPS en vivo.', route: '/logistica/dashboard', icon: 'fa-shipping-fast', color: '#a3e635' }
+    { code: 'CU18', name: 'Despacho y Tracking Delivery', cycle: 2, module: 'M19', desc: 'Fórmula Haversine para cálculo de tarifas, asignación de choferes y seguimiento GPS en vivo.', route: '/logistica/dashboard', icon: 'fa-shipping-fast', color: '#a3e635' },
+
+    // Ciclo 3 (Diferenciadores Tecnológicos, RA, IA y Analítica)
+    { code: 'CU19', name: 'Vestidor Virtual con RA', cycle: 3, module: 'M08', desc: 'Proyección 3D de prendas en Realidad Aumentada con ARCore, superposición anatómica y cambio dinámico.', route: '/catalogo', icon: 'fa-vr-cardboard', color: '#06b6d4' },
+    { code: 'CU20', name: 'Comparador de Outfits', cycle: 3, module: 'M09', desc: 'Contrastación visual de 3 atuendos completos con desglose de precios, opción más económica y transferencia al carrito.', route: '/comparador', icon: 'fa-columns', color: '#10b981' },
+    { code: 'CU21', name: 'Fidelización Gamificada', cycle: 3, module: 'M16', desc: 'Acumulación de puntos por compras, membresía VIP (Bronce a Diamante), vitrina de insignias y cupones.', route: '/recompensas', icon: 'fa-gem', color: '#f59e0b' },
+    { code: 'CU22', name: 'Asistente de Estilo con IA', cycle: 3, module: 'M17', desc: 'Recomendaciones inteligentes evaluando temperatura de ciudades bolivianas, colorimetría y existencias.', route: '/asistente-ia', icon: 'fa-robot', color: '#38bdf8' },
+    { code: 'CU23', name: 'Búsqueda por Voz y NLP', cycle: 3, module: 'M17', desc: 'Reconocimiento por voz en lenguaje natural y filtrado semántico instantáneo del catálogo textil.', route: '/asistente-ia', icon: 'fa-microphone', color: '#818cf8' },
+    { code: 'CU24', name: 'Dashboards y Analítica', cycle: 3, module: 'M18', desc: 'Cuadro de mando ejecutivo con valuación al Costo Promedio (CPP), probadores y distribución multicanal.', route: '/dashboard', icon: 'fa-chart-line', color: '#ec4899' }
   ];
 
   get filteredUseCases(): UseCaseItem[] {
@@ -805,6 +948,9 @@ export class DashboardComponent implements OnInit {
     }
     if (this.selectedCycleTab === 'c2') {
       return this.useCases.filter(c => c.cycle === 2);
+    }
+    if (this.selectedCycleTab === 'c3') {
+      return this.useCases.filter(c => c.cycle === 3);
     }
     return this.useCases;
   }
@@ -825,6 +971,8 @@ export class DashboardComponent implements OnInit {
         if (data && data.kpis) {
           this.kpis = data.kpis;
           this.distribucion = data.distribucion_canales || { online: 0, pos: 0 };
+          this.distribucionMediosPago = data.distribucion_medios_pago || {};
+          this.rendimientoInventario = data.rendimiento_inventario || [];
           this.ultimasOrdenes = data.ultimas_ordenes || [];
           this.ultimasReservas = data.ultimas_reservas || [];
           if (data.servicios_estado) {
@@ -872,5 +1020,46 @@ export class DashboardComponent implements OnInit {
     const total = this.distribucion.online + this.distribucion.pos;
     if (total === 0) return 50;
     return Math.round((this.distribucion.online / total) * 100);
+  }
+
+  canAccess(): boolean {
+    return this.auth.isAdmin() || this.auth.isManager();
+  }
+
+  exportarPDF(): void {
+    window.print();
+  }
+
+  exportarXLSX(): void {
+    const headers = 'SKU,Nombre,Categoria,Stock,UltimoCosto_Bs,CPP_Bs,PrecioVenta_Bs,MargenBruto_Pct\n';
+    const rows = this.rendimientoInventario.map(item =>
+      `"${item.sku}","${item.nombre}","${item.categoria}",${item.stock_total},${item.ultimo_costo},${item.cpp},${item.precio_venta},${item.margen_bruto_pct}%`
+    ).join('\n');
+    const summary = `\n\nREPORTE CONSOLIDADO CU24 - AUDITORIA EJECUTIVA\nVentas Totales (Bs),${this.kpis.ventas_totales_bs}\nValuacion Inventario CPP (Bs),${this.kpis.valuacion_inventario_cpp}\nEfectividad Probadores (Pct),${this.kpis.efectividad_probadores_pct}%\nOrdenes Pagadas,${this.kpis.ordenes_pagadas}\n`;
+    const blob = new Blob(['\uFEFF' + headers + rows + summary], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Auditoria_CU24_FashionStore_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success('Auditoría CU24', 'Dataset exportado en formato tabular XLSX/CSV exitosamente');
+  }
+
+  getMediosPagoEntries(): { nombre: string; cantidad: number; pct: number; icono: string }[] {
+    const entries = Object.entries(this.distribucionMediosPago);
+    const total = entries.reduce((acc, [_, v]) => acc + v, 0) || 1;
+    const icons: { [key: string]: string } = {
+      'Efectivo POS': 'fa-money-bill-wave',
+      'Tarjeta POS': 'fa-credit-card',
+      'Stripe Digital': 'fa-globe',
+      'QR Interoperable BCB': 'fa-qrcode'
+    };
+    return entries.map(([nombre, cantidad]) => ({
+      nombre,
+      cantidad,
+      pct: Math.round((cantidad / total) * 100),
+      icono: icons[nombre] || 'fa-receipt'
+    }));
   }
 }

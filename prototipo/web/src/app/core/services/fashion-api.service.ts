@@ -213,11 +213,84 @@ export class FashionApiService {
   }
 
   // ==========================================
-  // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU18)
+  // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU24)
   // ==========================================
   getDashboardMetricas(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/dashboard/metricas`, {
       headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  // ==========================================
+  // CU21: FIDELIZACIÓN GAMIFICADA (M16)
+  // ==========================================
+  getGamificacionPerfil(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/gamificacion/perfil`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getRecompensas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/gamificacion/recompensas`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  canjearRecompensa(codigoRecompensa: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/canjear`, {
+      codigo_recompensa: codigoRecompensa
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  otorgarBonoAccion(accion: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/bono-accion`, {
+      accion: accion
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getMisCupones(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/gamificacion/mis-cupones`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  validarCupon(codigoCupon: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/validar-cupon`, {
+      codigo_cupon: codigoCupon
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  // ==========================================
+  // CU22 & CU23: ASISTENTE IA, CLIMA Y VOZ (M17)
+  // ==========================================
+  getClimaLocal(ciudad?: string): Observable<any> {
+    let params = new HttpParams();
+    if (ciudad) {
+      params = params.set('ciudad', ciudad);
+    }
+    return this.http.get<any>(`${this.apiUrl}/recomendaciones/clima`, { params });
+  }
+
+  getOutfitsRecomendados(ciudad?: string, ocasion?: string): Observable<any> {
+    let params = new HttpParams();
+    if (ciudad) {
+      params = params.set('ciudad', ciudad);
+    }
+    if (ocasion) {
+      params = params.set('ocasion', ocasion);
+    }
+    return this.http.get<any>(`${this.apiUrl}/recomendaciones/outfits`, { params });
+  }
+
+  buscarPorVoz(consultaVoz: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/recomendaciones/busqueda-voz`, {
+      consulta_voz: consultaVoz
     });
   }
 }

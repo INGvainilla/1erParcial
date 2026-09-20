@@ -328,6 +328,41 @@ import { Sucursal } from '../../core/models/fashion.models';
             </div>
           </div>
 
+          <!-- Caja de Cupón de Fidelización CU21 -->
+          <div class="coupon-box-summary">
+            <label class="coupon-title-label">
+              <i class="fas fa-ticket-alt"></i> ¿Tienes un Cupón de Fidelización? (CU21)
+            </label>
+            <div class="coupon-field-row">
+              <input
+                type="text"
+                [(ngModel)]="codigoCuponInput"
+                placeholder="Ej: FS-DESC_50BS-XXXX"
+                [disabled]="cuponAplicado != null"
+                class="form-input coupon-text-input"
+              />
+              <button 
+                *ngIf="!cuponAplicado"
+                class="btn-apply-code"
+                [disabled]="validandoCupon || !codigoCuponInput.trim()"
+                (click)="aplicarCupon()">
+                <i *ngIf="validandoCupon" class="fas fa-spinner fa-spin"></i>
+                <span *ngIf="!validandoCupon">Aplicar</span>
+              </button>
+              <button
+                *ngIf="cuponAplicado"
+                class="btn-clear-code"
+                title="Quitar cupón"
+                (click)="removerCupon()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div *ngIf="cuponAplicado" class="coupon-valid-alert">
+              <i class="fas fa-check-circle"></i> {{ cuponAplicado.mensaje }} 
+              <strong *ngIf="montoDescuentoCupon > 0">(-Bs. {{ montoDescuentoCupon | number:'1.2-2' }})</strong>
+            </div>
+          </div>
+
           <!-- Desglose de Totales -->
           <div class="summary-totals-box">
             <div class="total-line">
@@ -340,9 +375,13 @@ import { Sucursal } from '../../core/models/fashion.models';
                 {{ costoEnvio === 0 ? 'GRATIS' : 'Bs. ' + (costoEnvio | number:'1.2-2') }}
               </span>
             </div>
+            <div *ngIf="montoDescuentoCupon > 0" class="total-line discount-coupon-line">
+              <span><i class="fas fa-award"></i> Descuento Cupón (CU21):</span>
+              <span class="discount-pill">-Bs. {{ montoDescuentoCupon | number:'1.2-2' }}</span>
+            </div>
             <div class="total-line grand-total">
               <span>Total a Pagar:</span>
-              <span class="total-highlight">Bs. {{ (carritoService.totalGeneral() + costoEnvio) | number:'1.2-2' }}</span>
+              <span class="total-highlight">Bs. {{ calcularTotalFinal() | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>
@@ -926,6 +965,77 @@ import { Sucursal } from '../../core/models/fashion.models';
       letter-spacing: -0.5px;
     }
 
+    /* Estilos del Cupón CU21 en Checkout */
+    .coupon-box-summary {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px dashed rgba(245, 158, 11, 0.4);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-top: 1rem;
+    }
+    .coupon-title-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #fbbf24;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .coupon-field-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .coupon-text-input {
+      font-size: 0.82rem;
+      padding: 0.45rem 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-apply-code {
+      background: #f59e0b;
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-apply-code:hover:not(:disabled) {
+      background: #fbbf24;
+    }
+    .btn-apply-code:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-clear-code {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      border-radius: 8px;
+      padding: 0 0.75rem;
+      cursor: pointer;
+    }
+    .coupon-valid-alert {
+      margin-top: 0.45rem;
+      font-size: 0.75rem;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .discount-coupon-line {
+      color: #34d399;
+      font-weight: 600;
+    }
+    .discount-pill {
+      color: #34d399;
+      font-weight: 800;
+    }
+
     .animate-fade {
       animation: fadeIn 0.25s ease-out;
     }
@@ -967,8 +1077,59 @@ export class CheckoutComponent implements OnInit {
   razonSocialFactura = '';
   usarMisDatos = false;
 
+  // CU21: Cupones de Fidelización Gamificada
+  codigoCuponInput = '';
+  validandoCupon = false;
+  cuponAplicado: any = null;
+  montoDescuentoCupon = 0.0;
+
   get selectedSucursal(): Sucursal | undefined {
     return this.sucursales.find(s => s.id_sucursal === this.selectedSucursalId);
+  }
+
+  calcularTotalFinal(): number {
+    const totalItems = this.carritoService.totalGeneral();
+    const envio = this.cuponAplicado && this.cuponAplicado.tipo_beneficio === 'ENVIO_GRATIS' ? 0.0 : this.costoEnvio;
+    const base = totalItems + envio - this.montoDescuentoCupon;
+    return Math.max(0.0, base);
+  }
+
+  aplicarCupon(): void {
+    const codigo = this.codigoCuponInput.trim();
+    if (!codigo) return;
+
+    this.validandoCupon = true;
+    this.api.validarCupon(codigo).subscribe({
+      next: (res: any) => {
+        this.validandoCupon = false;
+        if (res.valido) {
+          this.cuponAplicado = res;
+          if (res.tipo_beneficio === 'ENVIO_GRATIS') {
+            this.montoDescuentoCupon = this.costoEnvio;
+            this.toast.success('¡Envío Bonificado!', 'Se ha aplicado 100% de descuento en el costo de transporte.');
+          } else {
+            this.montoDescuentoCupon = Number(res.monto_descuento) || 0.0;
+            this.toast.success('¡Cupón Válido!', `Descuento de Bs. ${this.montoDescuentoCupon} aplicado con éxito.`);
+          }
+        } else {
+          this.cuponAplicado = null;
+          this.montoDescuentoCupon = 0.0;
+          this.toast.error('Cupón Inválido', res.mensaje || 'El cupón no pudo ser aplicado.');
+        }
+      },
+      error: (err: any) => {
+        this.validandoCupon = false;
+        const msg = err.error?.detail || 'Error al validar el cupón de fidelización.';
+        this.toast.error('Cupón Inválido', msg);
+      }
+    });
+  }
+
+  removerCupon(): void {
+    this.cuponAplicado = null;
+    this.montoDescuentoCupon = 0.0;
+    this.codigoCuponInput = '';
+    this.toast.info('Cupón Removido', 'Se ha retirado el descuento del total.');
   }
 
   ngOnInit(): void {
@@ -1016,6 +1177,9 @@ export class CheckoutComponent implements OnInit {
   setModalidad(mode: 'RETIRO_TIENDA' | 'DELIVERY'): void {
     this.modalidad = mode;
     this.costoEnvio = mode === 'DELIVERY' ? 25.0 : 0.0;
+    if (this.cuponAplicado && this.cuponAplicado.tipo_beneficio === 'ENVIO_GRATIS') {
+      this.montoDescuentoCupon = this.costoEnvio;
+    }
   }
 
   validarPaso1(advance = true): boolean {
@@ -1073,7 +1237,8 @@ export class CheckoutComponent implements OnInit {
       telefono_contacto: this.telefonoContacto || null,
       nit_factura: this.nitFactura.trim(),
       razon_social_factura: this.razonSocialFactura.trim(),
-      notas_entrega: this.notasEntrega || null
+      notas_entrega: this.notasEntrega || null,
+      codigo_cupon: this.cuponAplicado ? this.cuponAplicado.codigo_cupon : null
     };
 
     this.checkoutService.procesarCheckout(payload).subscribe({
@@ -1093,3 +1258,4 @@ export class CheckoutComponent implements OnInit {
     });
   }
 }
+

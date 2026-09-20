@@ -3,12 +3,25 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Guard para rutas exclusivas de Administrador General (CU04, Dashboard, etc.)
+ * Guard para rutas exclusivas de Administrador General (CU04, etc.)
  */
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAdmin()) {
+    return true;
+  }
+  router.navigate(['/catalogo']);
+  return false;
+};
+
+/**
+ * Guard para Dashboard Ejecutivo (CU24: Administrador General y Encargado de Sucursal)
+ */
+export const dashboardGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isAdmin() || auth.isManager()) {
     return true;
   }
   router.navigate(['/catalogo']);

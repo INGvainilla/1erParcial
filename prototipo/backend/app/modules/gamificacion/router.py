@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Controlador / Router: Fidelización Gamificada (CU21 - M16)
-"""
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
@@ -14,13 +10,18 @@ from app.modules.gamificacion.schemas import (
     RecompensaDTO,
     CanjeRequest,
     CanjeResponse,
-    BonoAccionRequest
+    BonoAccionRequest,
+    CuponUsuarioDTO,
+    ValidarCuponRequest,
+    ValidarCuponResponse
 )
 from app.modules.gamificacion.services import (
     obtener_o_crear_perfil,
     listar_recompensas,
     canjear_recompensa_usuario,
-    otorgar_bono_accion
+    otorgar_bono_accion,
+    obtener_mis_cupones,
+    validar_cupon_descuento
 )
 
 router = APIRouter(prefix="/gamificacion", tags=["Fidelización Gamificada (CU21)"])
@@ -51,7 +52,7 @@ def get_recompensas_disponibles(
     Retorna el catálogo de beneficios y recompensas canjeables con su disponibilidad según los puntos del usuario.
     """
     perfil = obtener_o_crear_perfil(db, current_user.id_usuario)
-    return listar_recompensas(perfil.puntos_actuales)
+    return listar_recompensas(perfil.puntos_actuales, db=db)
 
 
 @router.post("/canjear", response_model=CanjeResponse)
@@ -61,9 +62,32 @@ def post_canjear_recompensa(
     db: Session = Depends(get_db)
 ):
     """
-    Canjea una recompensa descontando los puntos requeridos y emitiendo el código de cupón.
+    Canjea una recompensa descontando los puntos requeridos y emitiendo el código de cupón único.
     """
     return canjear_recompensa_usuario(db, current_user.id_usuario, request.codigo_recompensa)
+
+
+@router.get("/mis-cupones", response_model=List[CuponUsuarioDTO])
+def get_mis_cupones(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna todos los cupones de fidelización canjeados por el cliente actual.
+    """
+    return obtener_mis_cupones(db, current_user.id_usuario)
+
+
+@router.post("/validar-cupon", response_model=ValidarCuponResponse)
+def post_validar_cupon(
+    request: ValidarCuponRequest,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Valida un cupón alfanumérico para su aplicación inmediata en el checkout (CU14).
+    """
+    return validar_cupon_descuento(db, request.codigo_cupon, current_user.id_usuario)
 
 
 @router.post("/bono-accion")
@@ -79,3 +103,4 @@ def post_bono_accion(
     - COMPARTIR_LOOK: +20 pts
     """
     return otorgar_bono_accion(db, current_user.id_usuario, request.accion)
+

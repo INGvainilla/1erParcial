@@ -209,6 +209,14 @@ def confirmar_transaccion_pago(
     db.commit()
     db.refresh(tx)
 
+    # CU21: Acreditar puntos de fidelización (1 pt por cada 10 Bs consumidos)
+    if orden.id_usuario:
+        try:
+            from app.modules.gamificacion.services import otorgar_puntos_por_compra
+            otorgar_puntos_por_compra(db, orden.id_usuario, float(orden.total), canal=orden.canal_venta or "ONLINE")
+        except Exception:
+            pass
+
     return TransaccionResponse(
         id_transaccion=tx.id_transaccion,
         id_orden=tx.id_orden,

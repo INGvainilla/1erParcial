@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterModule } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ReservaService, ReservaCreate, ReservaDetalleCreate } from '../../../shared/services/reserva.service';
 import { API_BASE_URL } from '../../../core/constants/api.constants';
 import { AuthService } from '../../../core/services/auth.service';
@@ -23,6 +23,7 @@ export class ReservaCrear implements OnInit {
   selectedSucursal: number | null = null;
   fechaVisita: string = '';
   horaVisita: string = '';
+  outfitNombre: string = '';
   
   // Lista dinámica de prendas a reservar (CU11)
   cartItems: ReservaDetalleCreate[] = [];
@@ -37,6 +38,7 @@ export class ReservaCrear implements OnInit {
   private http = inject(HttpClient);
   private reservaService = inject(ReservaService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   auth = inject(AuthService);
   private carritoService = inject(CarritoService);
   private toast = inject(ToastService);
@@ -57,11 +59,11 @@ export class ReservaCrear implements OnInit {
     this.fechaVisita = fecha.toISOString().split('T')[0];
     this.horaVisita = '11:00';
 
-    // 3. Cargar sucursales de la base de datos
-    this.cargarSucursales();
-
-    // 4. Cargar prendas seleccionadas desde navegación o carrito
+    // 3. Cargar prendas seleccionadas desde navegación o carrito
     this.inicializarPrendas();
+
+    // 4. Cargar sucursales de la base de datos
+    this.cargarSucursales();
 
     // 5. Cargar catálogo disponible para añadir prendas adicionales
     this.cargarCatalogo();
@@ -71,12 +73,29 @@ export class ReservaCrear implements OnInit {
     this.http.get<any[]>(`${API_BASE_URL}/sucursales`).subscribe({
       next: (data) => {
         this.sucursales = data || [];
-        // Si vino una sucursal en el estado de navegación, seleccionarla
         const state = history.state;
+        const qParams = this.route.snapshot.queryParams;
+
         if (state && state.id_sucursal) {
           this.selectedSucursal = state.id_sucursal;
-        } else if (this.sucursales.length > 0 && !this.selectedSucursal) {
-          this.selectedSucursal = this.sucursales[0].id_sucursal;
+        } else if (state && state.sucursal_preferida) {
+          const match = this.sucursales.find(s =>
+            (s.nombre_sucursal || '').toLowerCase().includes(state.sucursal_preferida.toLowerCase())
+          );
+          if (match) this.selectedSucursal = match.id_sucursal;
+        } else if (qParams['sucursal']) {
+          const match = this.sucursales.find(s =>
+            (s.nombre_sucursal || '').toLowerCase().includes(qParams['sucursal'].toLowerCase())
+          );
+          if (match) this.selectedSucursal = match.id_sucursal;
+        }
+
+        // Si aún no hay sucursal seleccionada, priorizar Equipetrol
+        if (!this.selectedSucursal && this.sucursales.length > 0) {
+          const eq = this.sucursales.find(s =>
+            (s.nombre_sucursal || '').toLowerCase().includes('equipetrol')
+          );
+          this.selectedSucursal = eq ? eq.id_sucursal : this.sucursales[0].id_sucursal;
         }
         this.cdr.detectChanges();
       },
@@ -94,8 +113,17 @@ export class ReservaCrear implements OnInit {
 
   inicializarPrendas() {
     const state = history.state;
+    const qParams = this.route.snapshot.queryParams;
+
+    // Detectar si proviene de un outfit
+    if (state && state.outfit_nombre) {
+      this.outfitNombre = state.outfit_nombre;
+    } else if (qParams['outfit_nombre'] || qParams['outfit']) {
+      this.outfitNombre = qParams['outfit_nombre'] || qParams['outfit'];
+    }
+
     if (state && Array.isArray(state.items) && state.items.length > 0) {
-      // Viene desde el Catálogo o desde el Carrito con prendas seleccionadas
+      // Viene desde el Comparador, Catálogo o Carrito con prendas seleccionadas
       this.cartItems = state.items.map((it: any) => ({
         id_producto: it.id_producto,
         talla: it.talla || 'M',
@@ -105,6 +133,28 @@ export class ReservaCrear implements OnInit {
         codigo_sku_base: it.codigo_sku_base || '',
         imagen_principal: it.imagen_principal || ''
       }));
+      this.cdr.detectChanges();
+    } else if (qParams['producto_id']) {
+      const pid = Number(qParams['producto_id']);
+      if (pid) {
+        this.http.get<any>(`${API_BASE_URL}/productos/${pid}`).subscribe({
+          next: (prod: any) => {
+            if (prod) {
+              this.cartItems = [{
+                id_producto: prod.id_producto,
+                talla: 'M',
+                color: 'Azul Marino',
+                cantidad: 1,
+                nombre_producto: prod.nombre,
+                codigo_sku_base: prod.codigo_sku_base,
+                imagen_principal: prod.imagen_principal
+              }];
+              this.cdr.detectChanges();
+            }
+          },
+          error: () => this.cdr.detectChanges()
+        });
+      }
     } else if (this.carritoService.items().length > 0) {
       // Viene con ítems en el carrito activo
       this.cartItems = this.carritoService.items().map(it => ({
@@ -116,6 +166,7 @@ export class ReservaCrear implements OnInit {
         codigo_sku_base: it.codigo_sku_base,
         imagen_principal: it.imagen_principal
       }));
+      this.cdr.detectChanges();
     }
   }
 

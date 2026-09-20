@@ -19,13 +19,16 @@ import { PagoOrdenComponent } from './pages/pagos/pago-orden.component';
 import { AdminPagosConfigComponent } from './pages/admin-pagos/admin-pagos-config.component';
 import { LogisticaDashboardComponent } from './pages/logistica/logistica-dashboard.component';
 import { TrackingComponent } from './pages/tracking/tracking.component';
-import { adminGuard, staffGuard, inventarioGuard, proveedoresGuard, encargadoGuard, posGuard, logisticaGuard } from './core/guards/auth.guard';
+import { ComparadorComponent } from './pages/comparador/comparador.component';
+import { RecompensasComponent } from './pages/recompensas/recompensas.component';
+import { AsistenteIaComponent } from './pages/asistente-ia/asistente-ia.component';
+import { adminGuard, dashboardGuard, staffGuard, inventarioGuard, proveedoresGuard, encargadoGuard, posGuard, logisticaGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   // Ruta por defecto: La tienda digital / catálogo es la entrada pública
   { path: '', redirectTo: 'catalogo', pathMatch: 'full' },
   
-  // Canales Públicos / Clientes
+  // Canales Públicos / Clientes (Ciclo 1, 2 y 3)
   { path: 'catalogo', component: CatalogoComponent },
   { path: 'login', component: LoginComponent },
   { path: 'reservas/crear', component: ReservaCrear },
@@ -35,8 +38,13 @@ export const routes: Routes = [
   { path: 'pagos/:id', component: PagoOrdenComponent },
   { path: 'tracking/:id', component: TrackingComponent },
 
+  // Ciclo 3: Diferenciadores Tecnológicos Web (CU20, CU21, CU22, CU23)
+  { path: 'comparador', component: ComparadorComponent },
+  { path: 'recompensas', component: RecompensasComponent },
+  { path: 'asistente-ia', component: AsistenteIaComponent },
+
   // Panel Ejecutivo y Gestión RBAC (Exclusivo Administrador)
-  { path: 'dashboard', component: DashboardComponent, canActivate: [adminGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [dashboardGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [adminGuard] },
   { path: 'temporadas', component: TemporadasComponent, canActivate: [adminGuard] },
   { path: 'admin/pagos-config', component: AdminPagosConfigComponent, canActivate: [adminGuard] },

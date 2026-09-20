@@ -154,12 +154,28 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
                 "subtotal": sub_linea
             })
 
-        total_orden = subtotal_acum + costo_envio
+        # CU21: Validar y aplicar cupón de fidelización de puntos
+        descuento_cupon = Decimal("0.00")
+        if orden_in.codigo_cupon and orden_in.codigo_cupon.strip():
+            try:
+                from app.modules.gamificacion.services import validar_cupon_descuento, marcar_cupon_utilizado
+                val_res = validar_cupon_descuento(db, orden_in.codigo_cupon.strip(), id_usuario)
+                if val_res.valido:
+                    if val_res.tipo_beneficio == "ENVIO_GRATIS":
+                        costo_envio = Decimal("0.00")
+                    else:
+                        descuento_cupon = Decimal(str(val_res.monto_descuento))
+                    marcar_cupon_utilizado(db, orden_in.codigo_cupon.strip())
+            except Exception:
+                pass
+
+        total_orden = max(Decimal("0.00"), subtotal_acum - descuento_cupon + costo_envio)
         correlativo_fac = f"FAC-{datetime.now().year}-{uuid.uuid4().hex[:6].upper()}"
 
         canal_val = (orden_in.canal_venta or "WEB").strip().upper()
         if canal_val not in ["WEB", "APP", "POS"]:
             canal_val = "WEB"
+
 
         # Crear cabecera de orden
         nueva_orden = OrdenVenta(
