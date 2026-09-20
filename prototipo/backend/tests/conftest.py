@@ -4,7 +4,7 @@ Fixtures compartidos de Pytest para la suite de pruebas de FashionStore.
 """
 import pytest
 from app.core.database import SessionLocal
-from app.modules.auth.models import Usuario
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.core.security import get_password_hash, create_access_token
 
 

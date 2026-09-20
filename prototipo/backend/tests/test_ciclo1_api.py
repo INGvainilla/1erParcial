@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.core.database import SessionLocal
-from app.modules.auth.models import Usuario, TokenRecuperacion
+from app.modules.p01_seguridad_acceso.auth.models import Usuario, TokenRecuperacion
 from app.core.security import get_password_hash
 
 client = TestClient(app)
@@ -251,7 +251,7 @@ def test_tc06_alta_sucursal_gps_probadores():
 
     # Obtener una ciudad existente
     db = SessionLocal()
-    from app.modules.sucursales.models import Ciudad
+    from app.modules.p02_estructura_operativa.sucursales.models import Ciudad
     ciudad = db.query(Ciudad).first()
     id_ciudad = ciudad.id_ciudad
     db.close()
@@ -278,7 +278,7 @@ def test_tc06_alta_sucursal_gps_probadores():
 
     # Limpieza de la sucursal de prueba para no duplicar en el catálogo
     db = SessionLocal()
-    from app.modules.sucursales.models import Sucursal
+    from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
     db.query(Sucursal).filter(Sucursal.nombre_sucursal == "Sucursal Ventura Mall Test").delete()
     db.commit()
     db.close()
@@ -295,7 +295,7 @@ def test_tc07_alta_producto_con_colores_hex_y_tallas():
     headers = {"Authorization": f"Bearer {token}"}
 
     db = SessionLocal()
-    from app.modules.productos.models import Categoria, Marca
+    from app.modules.p03_catalogo_estilismo_ia.productos.models import Categoria, Marca
     cat = db.query(Categoria).first()
     mrc = db.query(Marca).first()
     db.close()
@@ -327,7 +327,7 @@ def test_tc07_alta_producto_con_colores_hex_y_tallas():
 
     # Limpieza de prenda de prueba
     db = SessionLocal()
-    from app.modules.productos.models import Producto, ProductoColor, ProductoTalla
+    from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto, ProductoColor, ProductoTalla
     p_test = db.query(Producto).filter(Producto.codigo_sku_base == sku_test).first()
     if p_test:
         db.query(ProductoColor).filter(ProductoColor.id_producto == p_test.id_producto).delete()
@@ -365,7 +365,7 @@ def test_tc08_temporada_campana_estacional():
 
     # Limpieza de temporada de prueba
     db = SessionLocal()
-    from app.modules.temporadas.models import Temporada
+    from app.modules.p03_catalogo_estilismo_ia.temporadas.models import Temporada
     db.query(Temporada).filter(Temporada.codigo_campana == cod_temp).delete()
     db.commit()
     db.close()
@@ -411,9 +411,9 @@ def test_tc10_recalculo_matematico_cpp():
     headers = {"Authorization": f"Bearer {token}"}
 
     db = SessionLocal()
-    from app.modules.sucursales.models import Sucursal
-    from app.modules.productos.models import Producto
-    from app.modules.inventario.models import Inventario
+    from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
+    from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
+    from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario
     
     suc = db.query(Sucursal).first()
     prod = db.query(Producto).first()
@@ -468,7 +468,7 @@ def test_tc10_recalculo_matematico_cpp():
 
     # Limpieza de inventario y kardex de prueba
     db = SessionLocal()
-    from app.modules.inventario.models import KardexMovimiento
+    from app.modules.p05_inventario_costos_analitica.inventario.models import KardexMovimiento
     inv_t = db.query(Inventario).filter(
         Inventario.id_sucursal == id_sucursal,
         Inventario.id_producto == id_producto,

@@ -547,9 +547,9 @@ Se aplica con rigor la división en tres capas de robustez de Ivar Jacobson:
 
 | Paquete Contenedor | Casos de Uso del Ciclo 3 | Casos de Uso Previos Integrados | Módulos Backend FastAPI | Módulos Frontend / Móvil |
 |:---|:---:|:---:|:---|:---|
-| **Paquete 3:** Catálogo, Estilismo e IA | **CU19, CU20, CU22, CU23** | CU06, CU07, CU10 | `app.modules.catalogo`<br>`app.modules.productos`<br>`app.modules.ia_recomendaciones` | **Móvil:** `ar_viewer`, `ia_recomendaciones`, `catalogo`<br>**Web:** `catalogo`, `comparador` |
-| **Paquete 7:** Venta Digital y Fidelización CRM | **CU21** | CU13, CU14 | `app.modules.carrito`<br>`app.modules.ordenes`<br>`app.modules.gamificacion` | **Móvil:** `gamificacion/views/recompensas`<br>**Web:** `checkout`, `cuenta/recompensas` |
-| **Paquete 5:** Inventario, Costos y Analítica | **CU24** | CU09 | `app.modules.inventario`<br>`app.modules.dashboard` | **Web:** `dashboard.component.ts`<br>**Móvil:** `encargado-dashboard` |
+| **Paquete 3:** Catálogo, Estilismo e IA | **CU19, CU20, CU22, CU23** | CU06, CU07, CU10 | `app.modules.p03_catalogo_estilismo_ia.catalogo`<br>`app.modules.p03_catalogo_estilismo_ia.productos`<br>`app.modules.p03_catalogo_estilismo_ia.ia_recomendaciones` | **Móvil:** `ar_viewer`, `ia_recomendaciones`, `catalogo`<br>**Web:** `p03_catalogo_estilismo_ia/catalogo`, `p03_catalogo_estilismo_ia/comparador` |
+| **Paquete 7:** Venta Digital y Fidelización CRM | **CU21** | CU13, CU14 | `app.modules.p07_venta_digital_fidelizacion.carrito`<br>`app.modules.p07_venta_digital_fidelizacion.ordenes`<br>`app.modules.p07_venta_digital_fidelizacion.gamificacion` | **Móvil:** `gamificacion/views/recompensas`<br>**Web:** `p07_venta_digital_fidelizacion/checkout`, `p07_venta_digital_fidelizacion/recompensas` |
+| **Paquete 5:** Inventario, Costos y Analítica | **CU24** | CU09 | `app.modules.p05_inventario_costos_analitica.inventario`<br>`app.modules.p05_inventario_costos_analitica.dashboard` | **Web:** `p05_inventario_costos_analitica/dashboard`<br>**Móvil:** `p06_reservas_presenciales/encargado-dashboard` |
 
 ### 2.1.3 Vista de casos de uso (Paquetes desde su interior)
 

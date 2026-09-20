@@ -19,12 +19,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 
 from app.core.database import SessionLocal, Base, engine
 from app.core.security import get_password_hash
-from app.modules.sucursales.models import Ciudad, Sucursal
-from app.modules.auth.models import Usuario, TokenRecuperacion, BitacoraAcceso
-from app.modules.proveedores.models import Proveedor
-from app.modules.temporadas.models import Temporada
-from app.modules.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
-from app.modules.inventario.models import Inventario, KardexMovimiento
+from app.modules.p02_estructura_operativa.sucursales.models import Ciudad, Sucursal
+from app.modules.p01_seguridad_acceso.auth.models import Usuario, TokenRecuperacion, BitacoraAcceso
+from app.modules.p04_aprovisionamiento_proveedores.proveedores.models import Proveedor
+from app.modules.p03_catalogo_estilismo_ia.temporadas.models import Temporada
+from app.modules.p03_catalogo_estilismo_ia.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
+from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
 
 def reset_database(db):
     print("Limpiando datos y tablas para siembra limpia...")

@@ -19,13 +19,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Importar app para resolver modelos y mappers
 import app.main
 from app.core.database import SessionLocal
-from app.modules.auth.models import Usuario
-from app.modules.ordenes.models import OrdenVenta, OrdenDetalle
-from app.modules.productos.models import Producto
-from app.modules.sucursales.models import Sucursal
-from app.modules.logistica.geo import calcular_distancia_haversine, calcular_tarifa_delivery
-from app.modules.logistica.schemas import AsignarRepartidorRequest
-from app.modules.logistica.services import (
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta, OrdenDetalle
+from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
+from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
+from app.modules.p10_logistica_delivery.logistica.geo import calcular_distancia_haversine, calcular_tarifa_delivery
+from app.modules.p10_logistica_delivery.logistica.schemas import AsignarRepartidorRequest
+from app.modules.p10_logistica_delivery.logistica.services import (
     listar_ordenes_delivery,
     transicionar_estado_logistica,
     asignar_repartidor_a_orden,

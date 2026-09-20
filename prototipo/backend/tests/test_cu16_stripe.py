@@ -13,10 +13,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Importar app para resolver modelos y mappers
 import app.main
 from app.core.database import SessionLocal
-from app.modules.auth.models import Usuario
-from app.modules.ordenes.models import OrdenVenta
-from app.modules.pagos.models import TransaccionPago
-from app.modules.pagos.services import (
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta
+from app.modules.p09_procesamiento_pagos.pagos.models import TransaccionPago
+from app.modules.p09_procesamiento_pagos.pagos.services import (
     crear_intencion_pago,
     confirmar_transaccion_pago,
     procesar_webhook_stripe

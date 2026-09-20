@@ -14,38 +14,38 @@ import os
 from app.core.config import settings
 from app.core.database import Base, engine
 
-# Importar todos los modelos para registro en metadata
-import app.modules.auth.models
-import app.modules.sucursales.models
-import app.modules.proveedores.models
-import app.modules.temporadas.models
-import app.modules.productos.models
-import app.modules.inventario.models
-import app.modules.reservas.models
-import app.modules.carrito.models
-import app.modules.ordenes.models
-import app.modules.pagos.models
-import app.modules.gamificacion.models
+# Importar todos los modelos organizados en los 10 paquetes para registro en metadata
+import app.modules.p01_seguridad_acceso.auth.models
+import app.modules.p02_estructura_operativa.sucursales.models
+import app.modules.p03_catalogo_estilismo_ia.productos.models
+import app.modules.p03_catalogo_estilismo_ia.temporadas.models
+import app.modules.p04_aprovisionamiento_proveedores.proveedores.models
+import app.modules.p05_inventario_costos_analitica.inventario.models
+import app.modules.p06_reservas_presenciales.reservas.models
+import app.modules.p07_venta_digital_fidelizacion.carrito.models
+import app.modules.p07_venta_digital_fidelizacion.ordenes.models
+import app.modules.p07_venta_digital_fidelizacion.gamificacion.models
+import app.modules.p09_procesamiento_pagos.pagos.models
 
-# Importar enrutadores
-from app.modules.auth.router import router as auth_router
-from app.modules.usuarios.router import router as usuarios_router
-from app.modules.sucursales.router import router as sucursales_router, ciudades_router
-from app.modules.productos.router import router as productos_router
-from app.modules.temporadas.router import router as temporadas_router
-from app.modules.proveedores.router import router as proveedores_router
-from app.modules.inventario.router import router as inventario_router
-from app.modules.catalogo.router import router as catalogo_router
-from app.modules.reservas.router import router as reservas_router
-from app.modules.carrito.router import router as carrito_router
-from app.modules.ordenes.router import router as ordenes_router
-from app.modules.pos.router import router as pos_router
-from app.modules.pagos.router import router as pagos_router
-from app.modules.pagos.config_router import router as config_pagos_router
-from app.modules.logistica.router import router as logistica_router
-from app.modules.dashboard.router import router as dashboard_router
-from app.modules.gamificacion.router import router as gamificacion_router
-from app.modules.ia_recomendaciones.router import router as recomendaciones_router
+# Importar enrutadores desde la arquitectura de 10 paquetes
+from app.modules.p01_seguridad_acceso.auth.router import router as auth_router
+from app.modules.p01_seguridad_acceso.usuarios.router import router as usuarios_router
+from app.modules.p02_estructura_operativa.sucursales.router import router as sucursales_router, ciudades_router
+from app.modules.p03_catalogo_estilismo_ia.productos.router import router as productos_router
+from app.modules.p03_catalogo_estilismo_ia.temporadas.router import router as temporadas_router
+from app.modules.p03_catalogo_estilismo_ia.catalogo.router import router as catalogo_router
+from app.modules.p03_catalogo_estilismo_ia.ia_recomendaciones.router import router as recomendaciones_router
+from app.modules.p04_aprovisionamiento_proveedores.proveedores.router import router as proveedores_router
+from app.modules.p05_inventario_costos_analitica.inventario.router import router as inventario_router
+from app.modules.p05_inventario_costos_analitica.dashboard.router import router as dashboard_router
+from app.modules.p06_reservas_presenciales.reservas.router import router as reservas_router
+from app.modules.p07_venta_digital_fidelizacion.carrito.router import router as carrito_router
+from app.modules.p07_venta_digital_fidelizacion.ordenes.router import router as ordenes_router
+from app.modules.p07_venta_digital_fidelizacion.gamificacion.router import router as gamificacion_router
+from app.modules.p08_punto_venta_pos.pos.router import router as pos_router
+from app.modules.p09_procesamiento_pagos.pagos.router import router as pagos_router
+from app.modules.p09_procesamiento_pagos.pagos.config_router import router as config_pagos_router
+from app.modules.p10_logistica_delivery.logistica.router import router as logistica_router
 
 # Inicializar tablas de base de datos
 Base.metadata.create_all(bind=engine)
@@ -144,7 +144,7 @@ if target_dir:
 def startup_event():
     try:
         from app.core.database import SessionLocal
-        from app.modules.auth.models import Usuario
+        from app.modules.p01_seguridad_acceso.auth.models import Usuario
         from app.scripts.seed_data import seed_database
         db = SessionLocal()
         if not db.query(Usuario).first():
