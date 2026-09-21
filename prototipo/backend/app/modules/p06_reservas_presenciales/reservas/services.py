@@ -200,9 +200,49 @@ def actualizar_estado_reserva(db: Session, id_reserva: int, nuevo_estado: str, i
         )
     
     reserva.estado = nuevo_estado
+    if nuevo_estado in ["ATENDIDA", "CANCELADA"]:
+        motivo = "Atendida" if nuevo_estado == "ATENDIDA" else "Cancelada"
+        liberar_stock_reserva(db, reserva, motivo)
+
     db.commit()
     db.refresh(reserva)
     return reserva
+
+
+def liberar_stock_reserva(db: Session, reserva: Reserva, motivo: str = "Atendida"):
+    """
+    Libera las existencias apartadas de una reserva atendida o cancelada,
+    restituyendo el stock disponible de la sucursal y asentando el movimiento en Kardex.
+    """
+    from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+    for det in (reserva.detalles or []):
+        inv = db.query(Inventario).filter(
+            Inventario.id_sucursal == reserva.id_sucursal,
+            Inventario.id_producto == det.id_producto,
+            Inventario.talla == det.talla,
+            Inventario.color == det.color
+        ).first()
+        if not inv:
+            inv = db.query(Inventario).filter(
+                Inventario.id_producto == det.id_producto,
+                Inventario.talla == det.talla,
+                Inventario.color == det.color
+            ).first()
+        if inv and inv.stock_reservado > 0:
+            cant_a_liberar = min(inv.stock_reservado, det.cantidad)
+            inv.stock_reservado = max(0, inv.stock_reservado - cant_a_liberar)
+            inv.stock_disponible = max(0, inv.stock_fisico - inv.stock_reservado)
+            
+            kardex = KardexMovimiento(
+                id_inventario=inv.id_inventario,
+                tipo_movimiento="RESERVA_LIBERADA",
+                cantidad=cant_a_liberar,
+                costo_unitario_movimiento=inv.costo_promedio_ponderado,
+                saldo_cantidad_resultante=inv.stock_fisico,
+                saldo_cpp_resultante=inv.costo_promedio_ponderado,
+                referencia_documento=f"Reserva {motivo} Ticket #{reserva.qr_texto or reserva.id_reserva}"
+            )
+            db.add(kardex)
 
 
 def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int] = None, es_admin: bool = False) -> Reserva:
@@ -253,9 +293,11 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
         )
     
     reserva.estado = "ATENDIDA"
+    liberar_stock_reserva(db, reserva, "Atendida en Probador")
     db.commit()
     db.refresh(reserva)
     return enriquecer_reserva(reserva)
+
 
 
 def listar_mis_reservas(db: Session, id_usuario: int):

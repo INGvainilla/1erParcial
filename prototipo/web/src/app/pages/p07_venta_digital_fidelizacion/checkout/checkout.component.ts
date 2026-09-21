@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CarritoService } from '../../../core/services/carrito.service';
 import { CheckoutService, OrdenCreateRequest } from '../../../core/services/checkout.service';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
@@ -337,6 +337,7 @@ import { Sucursal } from '../../../core/models/fashion.models';
               <input
                 type="text"
                 [(ngModel)]="codigoCuponInput"
+                (keyup.enter)="aplicarCupon()"
                 placeholder="Ej: FS-DESC_50BS-XXXX"
                 [disabled]="cuponAplicado != null"
                 class="form-input coupon-text-input"
@@ -357,6 +358,21 @@ import { Sucursal } from '../../../core/models/fashion.models';
                 <i class="fas fa-times"></i>
               </button>
             </div>
+
+            <!-- Chips de cupones activos de la cuenta (CU21) para aplicar con 1 clic -->
+            <div *ngIf="!cuponAplicado && misCuponesDisponibles.length > 0" class="available-coupons-chips animate-fade">
+              <span class="chips-label"><i class="fas fa-sparkles"></i> Cupones en tu cuenta:</span>
+              <button
+                *ngFor="let c of misCuponesDisponibles"
+                type="button"
+                class="chip-coupon-quick"
+                (click)="seleccionarYAplicarCupon(c.codigo_cupon)"
+                title="Click para aplicar de inmediato">
+                <i class="fas fa-tag"></i> <strong>{{ c.codigo_cupon }}</strong> 
+                <span>(-Bs. {{ c.monto_descuento | number:'1.2-2' }})</span>
+              </button>
+            </div>
+
             <div *ngIf="cuponAplicado" class="coupon-valid-alert">
               <i class="fas fa-check-circle"></i> {{ cuponAplicado.mensaje }} 
               <strong *ngIf="montoDescuentoCupon > 0">(-Bs. {{ montoDescuentoCupon | number:'1.2-2' }})</strong>
@@ -1036,6 +1052,40 @@ import { Sucursal } from '../../../core/models/fashion.models';
       font-weight: 800;
     }
 
+    .available-coupons-chips {
+      margin-top: 0.65rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .chips-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .chip-coupon-quick {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px dashed rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.76rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    .chip-coupon-quick:hover {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: #f59e0b;
+      transform: translateY(-1px);
+    }
+
     .animate-fade {
       animation: fadeIn 0.25s ease-out;
     }
@@ -1059,7 +1109,9 @@ export class CheckoutComponent implements OnInit {
   auth = inject(AuthService);
   toast = inject(ToastService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
 
+  misCuponesDisponibles: any[] = [];
   currentStep = 1;
   submitting = false;
 
@@ -1166,6 +1218,27 @@ export class CheckoutComponent implements OnInit {
     if (u) {
       this.razonSocialFactura = `${u.nombres} ${u.apellidos}`.trim();
     }
+
+    // CU21: Cargar cupones de fidelización disponibles del cliente para selección rápida
+    this.api.getMisCupones().subscribe({
+      next: (cupones) => {
+        this.misCuponesDisponibles = (cupones || []).filter((c: any) => !c.utilizado && c.dias_restantes > 0);
+      },
+      error: () => {}
+    });
+
+    // CU21: Si viene con query param ?cupon=..., pre-cargar y aplicar automáticamente
+    this.route.queryParams.subscribe(params => {
+      if (params['cupon']) {
+        this.codigoCuponInput = params['cupon'].trim();
+        setTimeout(() => this.aplicarCupon(), 150);
+      }
+    });
+  }
+
+  seleccionarYAplicarCupon(codigo: string): void {
+    this.codigoCuponInput = codigo;
+    this.aplicarCupon();
   }
 
   goToStep(step: number): void {

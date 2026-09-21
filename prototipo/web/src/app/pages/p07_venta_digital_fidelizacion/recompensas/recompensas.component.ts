@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
@@ -1734,6 +1734,7 @@ export class RecompensasComponent implements OnInit {
   auth = inject(AuthService);
   toast = inject(ToastService);
   router = inject(Router);
+  cdr = inject(ChangeDetectorRef);
 
   tabActiva: 'CATALOGO' | 'MIS_CUPONES' = 'CATALOGO';
   isCanjeando = false;
@@ -1862,6 +1863,34 @@ export class RecompensasComponent implements OnInit {
   }
 
   cargarDatos(): void {
+    // Si aún no está autenticado en memoria, sincronizar desde storage por si es un refresh de página
+    if (!this.auth.isAuthenticated()) {
+      const raw = localStorage.getItem('fs_user') || sessionStorage.getItem('fs_user');
+      if (raw) {
+        try {
+          this.auth.currentUser.set(JSON.parse(raw));
+        } catch (e) {}
+      }
+    }
+
+    // Cargar caché local inmediato para evitar que se muestre el estado en 0 o 100 pts en el primer frame
+    const cached = localStorage.getItem('fs_gamificacion_perfil');
+    if (cached) {
+      try {
+        const c = JSON.parse(cached);
+        this.perfil = {
+          ...c,
+          progreso_siguiente_nivel_pct: c.progreso_nivel_pct ?? c.progreso_siguiente_nivel_pct ?? 0,
+          puntos_faltantes: c.puntos_siguiente_nivel ?? c.puntos_faltantes ?? 0,
+          descuento_permanente_pct: c.descuento_nivel_pct ?? c.descuento_permanente_pct ?? 0,
+          compras_equivalente_ascenso_bs: (c.puntos_siguiente_nivel ?? 0) * 10
+        };
+        if (c.insignias && c.insignias.length > 0) {
+          this.actualizarInsignias(c.insignias);
+        }
+      } catch (e) {}
+    }
+
     if (this.auth.isAuthenticated()) {
       this.api.getGamificacionPerfil().subscribe({
         next: (res: any) => {
@@ -1873,18 +1902,26 @@ export class RecompensasComponent implements OnInit {
               descuento_permanente_pct: res.descuento_nivel_pct ?? res.descuento_permanente_pct ?? 0,
               compras_equivalente_ascenso_bs: (res.puntos_siguiente_nivel ?? 0) * 10
             };
+            try {
+              localStorage.setItem('fs_gamificacion_perfil', JSON.stringify(res));
+            } catch (e) {}
+
             if (res.insignias && res.insignias.length > 0) {
               this.actualizarInsignias(res.insignias);
             }
+            this.cdr.detectChanges();
           }
         },
-        error: () => {}
+        error: (err) => {
+          console.error("Error al cargar perfil de fidelización:", err);
+        }
       });
 
       this.api.getRecompensas().subscribe({
         next: (recs: any[]) => {
           if (recs && recs.length > 0) {
             this.recompensas = recs;
+            this.cdr.detectChanges();
           }
         },
         error: () => {}
@@ -1899,6 +1936,7 @@ export class RecompensasComponent implements OnInit {
     this.api.getMisCupones().subscribe({
       next: (cupones: any[]) => {
         this.misCupones = cupones || [];
+        this.cdr.detectChanges();
       },
       error: () => {}
     });
@@ -2020,6 +2058,6 @@ export class RecompensasComponent implements OnInit {
 
   irAlCheckoutConCupon(codigo: string): void {
     this.copiarCodigo(codigo);
-    this.router.navigate(['/checkout']);
+    this.router.navigate(['/checkout'], { queryParams: { cupon: codigo } });
   }
 }

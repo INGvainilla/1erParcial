@@ -405,7 +405,7 @@ CU23 ..> UC_Resultados : <<include>>
 
 ---
 
-### 1.3.6 Caso de Uso CU24: Visualizar Cuadros de Mando y Dashboards
+### 1.3.24 Caso de Uso CU24: Visualizar Cuadros de Mando y Dashboards
 
 ![Diagrama de Caso de Uso UML 2.5 - CU24: Visualizar Cuadros de Mando y Dashboards](../diagramas/CU24_Dashboards_Analitica.png)
 
@@ -414,15 +414,17 @@ CU23 ..> UC_Resultados : <<include>>
 ```plantuml
 @startuml CU24_Dashboards_Analitica
 left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
 skinparam usecase {
-  BackgroundColor #E8F8F5
-  BorderColor #117A65
+  BackgroundColor #D6EAF8
+  BorderColor #2E86C1
 }
 
 actor "Administrador General" as Admin
 actor "Encargado de Sucursal" as Encargado
 
-rectangle "CU24: Dashboards y Analítica Empresarial (M18)" {
+package "uc CU24_Dashboards_Analitica" {
   usecase "CU24: Visualizar Cuadros de\nMando y Dashboards" as CU24
   usecase "Consultar KPIs Financieros\ny Ventas (Online vs POS)" as UC_KPIs
   usecase "Analizar Rotación y Valuación\nde Stock al Costo Promedio (CPP)" as UC_CPP
@@ -432,6 +434,7 @@ rectangle "CU24: Dashboards y Analítica Empresarial (M18)" {
 
 Admin --> CU24
 Encargado --> CU24
+
 CU24 ..> UC_KPIs : <<include>>
 CU24 ..> UC_CPP : <<include>>
 CU24 ..> UC_Conversion : <<include>>

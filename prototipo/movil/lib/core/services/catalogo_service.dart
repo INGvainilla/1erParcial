@@ -34,8 +34,18 @@ class CatalogoService {
     return [];
   }
 
-  Future<List<StockSucursalItem>> getDisponibilidadSucursales(int idProducto) async {
-    final url = ApiConstants.disponibilidadSucursales(idProducto);
+  Future<List<StockSucursalItem>> getDisponibilidadSucursales(
+    int idProducto, {
+    String? talla,
+    String? color,
+  }) async {
+    String url = ApiConstants.disponibilidadSucursales(idProducto);
+    final params = <String, String>{};
+    if (talla != null && talla.isNotEmpty) params['talla'] = talla;
+    if (color != null && color.isNotEmpty) params['color'] = color;
+    if (params.isNotEmpty) {
+      url = '$url?${Uri(queryParameters: params).query}';
+    }
     final response = await _api.get(url, requiresAuth: false);
     if (response is Map && response.containsKey('sucursales')) {
       final list = response['sucursales'] as List<dynamic>;

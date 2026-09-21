@@ -35,14 +35,28 @@ def get_clima_local(
 @router.get("/outfits", response_model=RecomendacionesContextualesResponse)
 def get_outfits_recomendados(
     ciudad: Optional[str] = Query(None, description="Ciudad para contexto de clima"),
-    ocasion: Optional[str] = Query("TODAS", description="Ocasión (Formal, Casual, Coctel, TODAS)"),
+    ocasion: Optional[str] = Query("TODAS", description="Ocasión (Formal, Casual, Cena / Gala, TODAS)"),
+    temporada: Optional[str] = Query("TODAS", description="Temporada o campaña"),
+    estilo: Optional[str] = Query("TODOS", description="Estilo de preferencia"),
+    presupuesto: Optional[str] = Query("TODOS", description="Rango de presupuesto"),
+    filtro_clima: Optional[str] = Query("AUTO", description="Filtro o rango de temperatura (AUTO, Cálido, Templado, Frío, Lluvioso)"),
+    prompt_ia: Optional[str] = Query(None, description="Instrucción libre o evento para el Asistente IA"),
     db: Session = Depends(get_db)
 ):
     """
-    Genera combinaciones completas de outfits considerando temperatura local, colorimetría,
-    estilo sartorial y compatibilidad textil.
+    Genera combinaciones completas de outfits considerando telemetría meteorológica en vivo,
+    filtros de estilo, colorimetría y existencias físicas de inventario.
     """
-    return generar_outfits_contextuales(db=db, ciudad_nombre=ciudad, ocasion=ocasion)
+    return generar_outfits_contextuales(
+        db=db,
+        ciudad_nombre=ciudad,
+        ocasion=ocasion,
+        temporada=temporada,
+        estilo=estilo,
+        presupuesto=presupuesto,
+        prompt_ia=prompt_ia,
+        filtro_clima=filtro_clima
+    )
 
 
 @router.post("/busqueda-voz", response_model=BusquedaVozResponse)

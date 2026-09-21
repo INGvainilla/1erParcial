@@ -220,7 +220,12 @@ class CatalogoControl:
         return catalogo_resultado
 
     @staticmethod
-    def obtener_disponibilidad_sucursales(db: Session, id_producto: int) -> DisponibilidadPrendaDetalle:
+    def obtener_disponibilidad_sucursales(
+        db: Session,
+        id_producto: int,
+        talla: str = None,
+        color: str = None
+    ) -> DisponibilidadPrendaDetalle:
         # Consulta dedicada de stock físico por sucursal para la ficha de producto
         producto = db.query(Producto).filter(Producto.id_producto == id_producto).first()
         if not producto:
@@ -228,10 +233,20 @@ class CatalogoControl:
 
         sucursales = db.query(Sucursal).options(joinedload(Sucursal.ciudad)).filter(Sucursal.estado == "OPERATIVA").all()
         
-        # Una sola consulta de inventario por lote para eliminar el problema N+1
-        items_inv_todos = db.query(Inventario).filter(
-            Inventario.id_producto == id_producto
-        ).all()
+        # Consulta base del inventario del producto
+        inv_query = db.query(Inventario).filter(Inventario.id_producto == id_producto)
+        
+        # Si se especifica talla, filtrar solo registros de esa talla
+        if talla:
+            inv_query = inv_query.filter(Inventario.talla == talla)
+        
+        # Si se especifica color, filtrar solo registros de ese color (búsqueda insensible a mayúsculas)
+        if color:
+            inv_query = inv_query.filter(
+                Inventario.color.ilike(f"%{color}%")
+            )
+        
+        items_inv_todos = inv_query.all()
         
         inv_por_sucursal = defaultdict(list)
         for it in items_inv_todos:

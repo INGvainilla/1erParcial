@@ -13,6 +13,10 @@ class ClimaLocalDTO(BaseModel):
     descripcion_clima: str
     icono_clima: str
     recomendacion_textil: str
+    humedad_pct: Optional[int] = Field(None, description="Porcentaje de humedad relativa actual")
+    viento_kmh: Optional[float] = Field(None, description="Velocidad del viento en km/h")
+    fuente_meteo: Optional[str] = Field("Open-Meteo Satelital en Vivo", description="Origen de la telemetría climática")
+    es_tiempo_real: Optional[bool] = Field(True, description="Indica si los datos fueron obtenidos en vivo")
 
 
 class PrendaOutfitDTO(BaseModel):
@@ -48,6 +52,12 @@ class RecomendacionesContextualesResponse(BaseModel):
     ciudad: str
     clima: ClimaLocalDTO
     ocasion_seleccionada: str
+    temporada_seleccionada: Optional[str] = "TODAS"
+    estilo_seleccionado: Optional[str] = "TODOS"
+    presupuesto_seleccionado: Optional[str] = "TODOS"
+    filtro_clima_seleccionado: Optional[str] = "AUTO"
+    prompt_ia: Optional[str] = None
+    razonamiento_ia: Optional[str] = None
     total_outfits: int
     outfits_recomendados: List[OutfitRecomendadoDTO]
 

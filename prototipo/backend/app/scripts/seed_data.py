@@ -555,6 +555,23 @@ def seed_database(force_reset: bool = False):
             referencia_documento="Ingreso Segundo Lote Fac-205 - Recálculo CPP"
         )
         db.add_all([k1, k2])
+        
+        # Asientos iniciales de recepción de lote para todas las demás variantes
+        k_otros = []
+        for inv_i in nuevos_invs:
+            k_otros.append(
+                KardexMovimiento(
+                    id_inventario=inv_i.id_inventario,
+                    tipo_movimiento="ENTRADA_COMPRA",
+                    cantidad=inv_i.stock_fisico,
+                    costo_unitario_movimiento=inv_i.costo_promedio_ponderado,
+                    saldo_cantidad_resultante=inv_i.stock_fisico,
+                    saldo_cpp_resultante=inv_i.costo_promedio_ponderado,
+                    referencia_documento=f"Ingreso Lote Inicial Fac-10{inv_i.id_inventario % 90 + 10} - Proveedor Oficial"
+                )
+            )
+        if k_otros:
+            db.add_all(k_otros)
         db.flush()
 
         # 11. Orden de Venta POS de Prueba para CU25 (Devolución dentro del plazo de 14 días)
@@ -587,6 +604,20 @@ def seed_database(force_reset: bool = False):
             subtotal=Decimal("180.00")
         )
         db.add(det_demo)
+
+        # Asiento Kardex por la venta demo
+        k_salida_demo = KardexMovimiento(
+            id_inventario=inv1.id_inventario,
+            tipo_movimiento="SALIDA_VENTA",
+            cantidad=1,
+            costo_unitario_movimiento=Decimal("107.14"),
+            saldo_cantidad_resultante=inv1.stock_fisico,
+            saldo_cpp_resultante=Decimal("107.14"),
+            referencia_documento=f"Factura Mostrador {orden_pos_demo.numero_factura}",
+            fecha_hora=fecha_hace_5_dias
+        )
+        db.add(k_salida_demo)
+
 
         db.commit()
         print("¡Siembra de datos semilla completada con éxito!")

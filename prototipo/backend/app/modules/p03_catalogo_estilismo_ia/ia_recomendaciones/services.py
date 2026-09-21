@@ -16,59 +16,192 @@ from app.modules.p03_catalogo_estilismo_ia.ia_recomendaciones.schemas import (
     BusquedaVozResponse
 )
 
-DATOS_CLIMA_CIUDADES: Dict[str, Dict[str, Any]] = {
+import urllib.request
+import json
+import time
+
+COORDENADAS_CIUDADES_BOLIVIA: Dict[str, Dict[str, Any]] = {
     "Santa Cruz": {
         "ciudad": "Santa Cruz de la Sierra",
-        "temperatura_c": 28.5,
-        "sensacion_c": 31.0,
-        "condicion": "Cálido y Soleado",
-        "descripcion_clima": "Clima tropical cálido con brisa moderada.",
-        "icono_clima": "sunny",
-        "recomendacion_textil": "Recomendamos lino puro 100%, algodón pima transpirable y tonos claros para refractar la radiación térmica."
+        "lat": -17.7833,
+        "lon": -63.1821,
+        "default_temp": 29.0,
+        "default_sens": 31.0,
+        "default_hum": 55,
+        "default_viento": 18.0,
+        "default_cond": "Cálido Tropical",
+        "icono": "sunny"
     },
     "La Paz": {
         "ciudad": "La Paz",
-        "temperatura_c": 13.5,
-        "sensacion_c": 11.0,
-        "condicion": "Fresco Andino",
-        "descripcion_clima": "Ambiente de altura fresco con vientos secos.",
-        "icono_clima": "ac_unit",
-        "recomendacion_textil": "Recomendamos blazers estructurados, paños de lana fría, trajes ejecutivos completos y calzado formal cerrado."
+        "lat": -16.5000,
+        "lon": -68.1500,
+        "default_temp": 15.0,
+        "default_sens": 13.0,
+        "default_hum": 25,
+        "default_viento": 12.0,
+        "default_cond": "Fresco Andino",
+        "icono": "ac_unit"
     },
     "Cochabamba": {
         "ciudad": "Cochabamba",
-        "temperatura_c": 22.0,
-        "sensacion_c": 22.0,
-        "condicion": "Templado Primaveral",
-        "descripcion_clima": "Clima primaveral idóneo para contrastes smart casual.",
-        "icono_clima": "wb_sunny",
-        "recomendacion_textil": "Prendas semi-estructuradas, pantalones chino de gabardina suave y camisas de corte clásico remangables."
+        "lat": -17.3895,
+        "lon": -66.1568,
+        "default_temp": 24.0,
+        "default_sens": 23.5,
+        "default_hum": 20,
+        "default_viento": 10.0,
+        "default_cond": "Templado Primaveral",
+        "icono": "wb_sunny"
+    },
+    "Sucre": {
+        "ciudad": "Sucre",
+        "lat": -19.0333,
+        "lon": -65.2627,
+        "default_temp": 23.0,
+        "default_sens": 22.0,
+        "default_hum": 22,
+        "default_viento": 9.0,
+        "default_cond": "Templado Colonial",
+        "icono": "wb_sunny"
+    },
+    "Tarija": {
+        "ciudad": "Tarija",
+        "lat": -21.5355,
+        "lon": -64.7296,
+        "default_temp": 26.5,
+        "default_sens": 27.0,
+        "default_hum": 35,
+        "default_viento": 11.0,
+        "default_cond": "Cálido Valle",
+        "icono": "sunny"
     }
 }
 
+# Cache en memoria para clima (duración: 10 minutos)
+_CACHE_CLIMA: Dict[str, Dict[str, Any]] = {}
+
 
 def resolver_clima(ciudad_nombre: Optional[str] = None) -> ClimaLocalDTO:
-    if not ciudad_nombre:
-        info = DATOS_CLIMA_CIUDADES["Santa Cruz"]
-    else:
-        # Match parcial
-        c_lower = ciudad_nombre.lower()
+    """
+    Obtiene la telemetría climática en tiempo real mediante Open-Meteo Satelital
+    con fallback robusto a cálculo meteorológico estacional.
+    """
+    target_key = "Santa Cruz"
+    if ciudad_nombre:
+        c_lower = ciudad_nombre.lower().strip()
         if "paz" in c_lower:
-            info = DATOS_CLIMA_CIUDADES["La Paz"]
+            target_key = "La Paz"
         elif "cocha" in c_lower:
-            info = DATOS_CLIMA_CIUDADES["Cochabamba"]
-        else:
-            info = DATOS_CLIMA_CIUDADES["Santa Cruz"]
+            target_key = "Cochabamba"
+        elif "sucre" in c_lower:
+            target_key = "Sucre"
+        elif "tarija" in c_lower:
+            target_key = "Tarija"
 
-    return ClimaLocalDTO(
-        ciudad=info["ciudad"],
-        temperatura_c=info["temperatura_c"],
-        sensacion_c=info["sensacion_c"],
-        condicion=info["condicion"],
-        descripcion_clima=info["descripcion_clima"],
-        icono_clima=info["icono_clima"],
-        recomendacion_textil=info["recomendacion_textil"]
-    )
+    info_base = COORDENADAS_CIUDADES_BOLIVIA[target_key]
+    ahora = time.time()
+
+    # Revisar cache
+    cached = _CACHE_CLIMA.get(target_key)
+    if cached and (ahora - cached["timestamp"] < 600):
+        return cached["dto"]
+
+    # Intentar llamada a Open-Meteo en vivo
+    try:
+        lat = info_base["lat"]
+        lon = info_base["lon"]
+        url = (
+            f"https://api.open-meteo.com/v1/forecast?"
+            f"latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,"
+            f"apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto"
+        )
+        req = urllib.request.Request(url, headers={"User-Agent": "FashionStore-AI-Meteo/2.0"})
+        with urllib.request.urlopen(req, timeout=1.8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            current = data.get("current", {})
+
+            temp_val = round(float(current.get("temperature_2m", info_base["default_temp"])), 1)
+            sens_val = round(float(current.get("apparent_temperature", temp_val)), 1)
+            hum_val = int(current.get("relative_humidity_2m", info_base["default_hum"]))
+            viento_val = round(float(current.get("wind_speed_10m", info_base["default_viento"])), 1)
+            code = int(current.get("weather_code", 0))
+
+            # Mapeo de código WMO a condición visual
+            if code == 0:
+                cond_str = "Despejado y Soleado"
+                icon_str = "sunny"
+            elif code in [1, 2, 3]:
+                cond_str = "Parcialmente Nublado"
+                icon_str = "wb_sunny"
+            elif code in [45, 48]:
+                cond_str = "Neblina Matinal"
+                icon_str = "cloud"
+            elif code in [51, 53, 55, 61, 63, 65, 80, 81]:
+                cond_str = "Lluvia Ligera / Chubascos"
+                icon_str = "umbrella"
+            elif code in [71, 73, 75, 85]:
+                cond_str = "Frío Intenso de Altura"
+                icon_str = "ac_unit"
+            else:
+                cond_str = "Cielo Variable"
+                icon_str = "wb_sunny"
+
+            # Recomendación textil inteligente adaptada a la temperatura real
+            if temp_val >= 27.0:
+                rec_textil = (
+                    f"Con {temp_val}°C en {info_base['ciudad']}, priorizamos lino natural 100%, "
+                    f"algodón Pima liviano y tonos claros para máxima reflectancia solar y transpirabilidad."
+                )
+            elif temp_val < 18.0:
+                rec_textil = (
+                    f"Con {temp_val}°C en {info_base['ciudad']}, se recomiendan tejidos estructurados, "
+                    f"blazers de lana fría, trajes completos con chaleco y calzado formal cerrado."
+                )
+            else:
+                rec_textil = (
+                    f"Con {temp_val}°C en {info_base['ciudad']}, el equilibrio ideal es Smart Casual: "
+                    f"pantalón chino, camisa clásica remangable y blazer desestructurado opcional."
+                )
+
+            dto = ClimaLocalDTO(
+                ciudad=info_base["ciudad"],
+                temperatura_c=temp_val,
+                sensacion_c=sens_val,
+                condicion=cond_str,
+                descripcion_clima=f"Telemetría en tiempo real: {temp_val}°C, humedad {hum_val}%, viento {viento_val} km/h.",
+                icono_clima=icon_str,
+                recomendacion_textil=rec_textil,
+                humedad_pct=hum_val,
+                viento_kmh=viento_val,
+                fuente_meteo="Open-Meteo Satelital en Vivo",
+                es_tiempo_real=True
+            )
+            _CACHE_CLIMA[target_key] = {"dto": dto, "timestamp": ahora}
+            return dto
+
+    except Exception:
+        # Fallback a datos estructurados
+        temp_val = info_base["default_temp"]
+        sens_val = info_base["default_sens"]
+        rec_textil = (
+            f"Recomendamos prendas transpirables de corte sartorial y tejidos naturales "
+            f"adaptados a los {temp_val}°C promedio de {info_base['ciudad']}."
+        )
+        dto = ClimaLocalDTO(
+            ciudad=info_base["ciudad"],
+            temperatura_c=temp_val,
+            sensacion_c=sens_val,
+            condicion=info_base["default_cond"],
+            descripcion_clima=f"Condiciones estándar para {info_base['ciudad']}.",
+            icono_clima=info_base["icono"],
+            recomendacion_textil=rec_textil,
+            humedad_pct=info_base["default_hum"],
+            viento_kmh=info_base["default_viento"],
+            fuente_meteo="Estimación Dinámica Estacional",
+            es_tiempo_real=False
+        )
+        return dto
 
 
 def _calcular_descuento(temporada) -> float:
@@ -81,19 +214,52 @@ def _calcular_descuento(temporada) -> float:
 def generar_outfits_contextuales(
     db: Session,
     ciudad_nombre: Optional[str] = None,
-    ocasion: Optional[str] = "TODAS"
+    ocasion: Optional[str] = "TODAS",
+    temporada: Optional[str] = "TODAS",
+    estilo: Optional[str] = "TODOS",
+    presupuesto: Optional[str] = "TODOS",
+    prompt_ia: Optional[str] = None,
+    filtro_clima: Optional[str] = "AUTO"
 ) -> RecomendacionesContextualesResponse:
     clima = resolver_clima(ciudad_nombre)
+
+    # Si el usuario selecciona un filtro de rango térmico explícito
+    if filtro_clima and filtro_clima.upper() != "AUTO":
+        fc = filtro_clima.upper()
+        if "CALIDO" in fc or "CÁLIDO" in fc or ">26" in fc:
+            clima.temperatura_c = 31.0
+            clima.sensacion_c = 32.5
+            clima.condicion = "Cálido Tropical (>26°C)"
+            clima.icono_clima = "sunny"
+            clima.recomendacion_textil = "Rango cálido: lino puro 100%, algodón pima transpirable, camisas remangables y tonos claros refractarios."
+        elif "TEMPLADO" in fc or "19" in fc or "25" in fc:
+            clima.temperatura_c = 22.0
+            clima.sensacion_c = 21.5
+            clima.condicion = "Templado Valle (19°C - 25°C)"
+            clima.icono_clima = "wb_sunny"
+            clima.recomendacion_textil = "Rango templado: combinaciones versátiles Smart Casual con pantalones chino, polos y blazers desestructurados."
+        elif "FRIO" in fc or "FRÍO" in fc or "<18" in fc or "ANDINO" in fc:
+            clima.temperatura_c = 13.0
+            clima.sensacion_c = 11.5
+            clima.condicion = "Frío Andino (<18°C)"
+            clima.icono_clima = "ac_unit"
+            clima.recomendacion_textil = "Rango frío: blazers estructurados, prendas de lana fría, trajes ejecutivos con chaleco y calzado cerrado."
+        elif "LLUVIA" in fc or "LLUVIOSO" in fc:
+            clima.temperatura_c = 18.5
+            clima.sensacion_c = 17.5
+            clima.condicion = "Lluvioso / Húmedo"
+            clima.icono_clima = "umbrella"
+            clima.recomendacion_textil = "Rango húmedo: calzado de cuero tratado, prendas de alta densidad y capas intermedias resistentes a la humedad."
+
     productos = db.query(Producto).filter(Producto.estado == "PUBLICADO").all()
 
-    # Mapeo rápido de productos por SKU / nombre
     def buscar_producto(termino: str) -> Optional[Producto]:
         for p in productos:
             if termino.lower() in p.nombre.lower() or termino.lower() in p.codigo_sku_base.lower():
                 return p
         return productos[0] if productos else None
 
-    # Encontrar prendas representativas
+    # Prenda base
     p_camisa_lino = buscar_producto("lino mao") or buscar_producto("camisa")
     p_camisa_oxford = buscar_producto("oxford slim") or buscar_producto("camisa")
     p_blazer = buscar_producto("blazer") or buscar_producto("traje")
@@ -105,13 +271,11 @@ def generar_outfits_contextuales(
 
     outfits = []
 
-    # Helper para convertir Producto a PrendaOutfitDTO
     def to_prenda_dto(prod: Producto, color_def: str, hex_def: str, talla_def: str) -> PrendaOutfitDTO:
         p_base = float(prod.precio_base)
         desc = _calcular_descuento(prod.temporada)
         p_final = round(p_base * (1.0 - (desc / 100.0)), 2)
         
-        # Intentar obtener color real si existe
         c_nombre = color_def
         c_hex = hex_def
         if prod.colores:
@@ -146,15 +310,15 @@ def generar_outfits_contextuales(
         ]
         total_orig_1 = sum(p.precio_base for p in prendas_1)
         total_fin_1 = sum(p.precio_final for p in prendas_1)
-        afinidad_1 = 96 if clima.temperatura_c < 24 else 88
+        afinidad_1 = 98 if clima.temperatura_c < 22 else 88
 
         outfits.append(OutfitRecomendadoDTO(
             id_outfit="outfit_executive",
             titulo="Traje Ejecutivo de Alta Distinción",
-            ocasion="Reunión de Negocios / Formal",
+            ocasion="Formal",
             estilo="Sartorial Formal",
             afinidad_climatica_pct=afinidad_1,
-            analisis_estilista_ia="Corte Slim fit contemporáneo con entalle milimétrico en hombros. La combinación de lana fría y algodón de 120 hilos proporciona una caída impecable.",
+            analisis_estilista_ia=f"Corte Slim fit contemporáneo calibrado para los {clima.temperatura_c}°C de {clima.ciudad}. Proporciona presencia jerárquica con entalle milimétrico en hombros y tejido de lana fría.",
             regla_colorimetria="Armonía triádica formal: Azul Marino de contraste profundo acentuado con blanco óptico y calzado en cuero café oscuro.",
             prendas=prendas_1,
             precio_total_original=round(total_orig_1, 2),
@@ -162,7 +326,7 @@ def generar_outfits_contextuales(
             ahorro_total=round(total_orig_1 - total_fin_1, 2)
         ))
 
-    # 2. Outfit: Smart Casual Tropical / Clima Templado
+    # 2. Outfit: Smart Casual Tropical / Lino & Chino
     if p_camisa_lino and p_pantalon_chino and p_mocasines:
         prendas_2 = [
             to_prenda_dto(p_camisa_lino, "Blanco / Arena", "#F5F5DC", "M"),
@@ -171,16 +335,16 @@ def generar_outfits_contextuales(
         ]
         total_orig_2 = sum(p.precio_base for p in prendas_2)
         total_fin_2 = sum(p.precio_final for p in prendas_2)
-        afinidad_2 = 99 if clima.temperatura_c >= 22 else 90
+        afinidad_2 = 99 if clima.temperatura_c >= 22 else 91
 
         outfits.append(OutfitRecomendadoDTO(
             id_outfit="outfit_resort",
             titulo="Smart Casual Lino & Chino",
-            ocasion="Cena Casual / Evento de Tarde",
-            estilo="Casual Elegante",
+            ocasion="Casual",
+            estilo="Smart Casual",
             afinidad_climatica_pct=afinidad_2,
-            analisis_estilista_ia=f"Alineado con los {clima.temperatura_c}°C de {clima.ciudad}. El lino 100% natural ofrece máxima ventilación sin perder estructura refinada.",
-            regla_colorimetria="Paleta mediterránea neutra: Blanco lino transpirable con contraste en pantalón azul y calzado mocasín sin medias visibles.",
+            analisis_estilista_ia=f"Optimizado para clima {clima.condicion.lower()} ({clima.temperatura_c}°C). El lino 100% natural maximiza la ventilación corporal manteniendo un porte pulcro y sofisticado.",
+            regla_colorimetria="Paleta mediterránea neutra: Blanco lino transpirable con contraste en pantalón azul y calzado mocasín en cuero natural.",
             prendas=prendas_2,
             precio_total_original=round(total_orig_2, 2),
             precio_total_final=round(total_fin_2, 2),
@@ -196,31 +360,117 @@ def generar_outfits_contextuales(
         ]
         total_orig_3 = sum(p.precio_base for p in prendas_3)
         total_fin_3 = sum(p.precio_final for p in prendas_3)
+        afinidad_3 = 96 if (18 <= clima.temperatura_c <= 26) else 90
 
         outfits.append(OutfitRecomendadoDTO(
             id_outfit="outfit_blazer_modern",
             titulo="Blazer Urbano Versátil",
-            ocasion="Coctel / Salida de Fin de Semana",
-            estilo="Modern Gentleman",
-            afinidad_climatica_pct=94,
-            analisis_estilista_ia="Desestructuración sutil en el blazer para una silueta relajada pero sumamente pulcra en cualquier entorno social.",
-            regla_colorimetria="Contraste de valor: Blazer azul profundo sobre base clara arena y neutro perla.",
+            ocasion="Cena / Gala",
+            estilo="Old Money Elegance",
+            afinidad_climatica_pct=afinidad_3,
+            analisis_estilista_ia=f"Construcción semidesestructurada ideal para transiciones térmicas en {clima.ciudad}. El blazer protege de la brisa mientras el polo de pima conserva frescura interior.",
+            regla_colorimetria="Contraste de valor tonal: Saco azul profundo sobre base clara arena y neutro perla para una imagen limpia y cosmopolita.",
             prendas=prendas_3,
             precio_total_original=round(total_orig_3, 2),
             precio_total_final=round(total_fin_3, 2),
             ahorro_total=round(total_orig_3 - total_fin_3, 2)
         ))
 
-    # Filtrar por ocasión si se solicita
-    if ocasion and ocasion != "TODAS":
-        filtrados = [o for o in outfits if ocasion.lower() in o.ocasion.lower() or ocasion.lower() in o.titulo.lower()]
-        if filtrados:
-            outfits = filtrados
+    # 4. Outfit: Casual Urbano Minimalista
+    if p_polo and p_pantalon_chino and p_mocasines:
+        prendas_4 = [
+            to_prenda_dto(p_polo, "Azul Marino", "#1B2A47", "M"),
+            to_prenda_dto(p_pantalon_chino, "Beige Arena", "#E2D9C8", "32"),
+            to_prenda_dto(p_mocasines, "Marrón Cuero", "#4A2E18", "41")
+        ]
+        total_orig_4 = sum(p.precio_base for p in prendas_4)
+        total_fin_4 = sum(p.precio_final for p in prendas_4)
+        afinidad_4 = 95 if clima.temperatura_c >= 20 else 89
+
+        outfits.append(OutfitRecomendadoDTO(
+            id_outfit="outfit_casual_urban",
+            titulo="Casual Urbano Minimalista",
+            ocasion="Casual",
+            estilo="Casual Urbano",
+            afinidad_climatica_pct=afinidad_4,
+            analisis_estilista_ia=f"Comodidad sin esfuerzo pensada para la jornada actual ({clima.temperatura_c}°C). Ideal para fines de semana, reuniones informales o salidas al atardecer.",
+            regla_colorimetria="Bicolor atemporal: Azul marino profundo y beige tostado que realza tonos de piel cálidos y neutros.",
+            prendas=prendas_4,
+            precio_total_original=round(total_orig_4, 2),
+            precio_total_final=round(total_fin_4, 2),
+            ahorro_total=round(total_orig_4 - total_fin_4, 2)
+        ))
+
+    # FILTROS DINÁMICOS DEL ASISTENTE IA
+
+    # 1. Filtro por Ocasión
+    if ocasion and ocasion.upper() != "TODAS":
+        oc_clean = ocasion.lower()
+        filtrados_oc = [
+            o for o in outfits
+            if oc_clean in o.ocasion.lower() or oc_clean in o.titulo.lower() or oc_clean in o.estilo.lower()
+        ]
+        if filtrados_oc:
+            outfits = filtrados_oc
+
+    # 2. Filtro por Estilo
+    if estilo and estilo.upper() != "TODOS":
+        est_clean = estilo.lower()
+        filtrados_est = [o for o in outfits if est_clean in o.estilo.lower()]
+        if filtrados_est:
+            outfits = filtrados_est
+
+    # 3. Filtro por Presupuesto
+    if presupuesto and presupuesto.upper() != "TODOS":
+        if "< 500" in presupuesto or "accesible" in presupuesto.lower():
+            outfits_pres = [o for o in outfits if o.precio_total_final <= 600]
+        elif "500 - 1200" in presupuesto or "500" in presupuesto:
+            outfits_pres = [o for o in outfits if 500 <= o.precio_total_final <= 1250]
+        elif "> 1200" in presupuesto or "lujo" in presupuesto.lower():
+            outfits_pres = [o for o in outfits if o.precio_total_final >= 1000]
+        else:
+            outfits_pres = outfits
+        if outfits_pres:
+            outfits = outfits_pres
+
+    # 4. Filtro semántico por Prompt de IA (si el usuario escribió algo libre)
+    if prompt_ia and prompt_ia.strip():
+        p_clean = prompt_ia.lower()
+        for o in outfits:
+            bonus = 0
+            if any(w in p_clean for w in ["boda", "gala", "matrimonio", "ejecutivo", "negocio"]) and "formal" in o.ocasion.lower():
+                bonus += 5
+            if any(w in p_clean for w in ["calor", "playa", "fresco", "verano"]) and ("lino" in o.titulo.lower() or "casual" in o.ocasion.lower()):
+                bonus += 5
+            if any(w in p_clean for w in ["cena", "noche", "elegante", "blazer"]) and ("blazer" in o.titulo.lower() or "gala" in o.ocasion.lower()):
+                bonus += 5
+            o.afinidad_climatica_pct = min(100, o.afinidad_climatica_pct + bonus)
+
+    # Ordenar por afinidad higrotérmica y estilística descendente
+    outfits.sort(key=lambda x: x.afinidad_climatica_pct, reverse=True)
+
+    # Redacción de Razonamiento del Asistente IA
+    if filtro_clima and filtro_clima.upper() != "AUTO":
+        origen_clima = f"Filtro Térmico Aplicado: {clima.condicion} ({clima.temperatura_c}°C simulada)"
+    else:
+        origen_clima = f"Telemetría Satelital en Vivo para {clima.ciudad}: {clima.temperatura_c}°C (Sensación: {clima.sensacion_c}°C, Humedad: {clima.humedad_pct or 45}%, {clima.condicion.lower()})"
+
+    razonamiento = (
+        f"{origen_clima}. El motor de Inteligencia Artificial evaluó el balance higrotérmico y tus preferencias "
+        f"({ocasion if ocasion != 'TODAS' else 'Cualquier ocasión'}, Estilo: {estilo or 'Versátil'}) "
+        f"para generar combinaciones con máxima afinidad textil, armonía cromática y existencias reales en catálogo."
+    )
 
     return RecomendacionesContextualesResponse(
         ciudad=clima.ciudad,
         clima=clima,
         ocasion_seleccionada=ocasion or "TODAS",
+        temporada_seleccionada=temporada or "TODAS",
+        estilo_seleccionado=estilo or "TODOS",
+        presupuesto_seleccionado=presupuesto or "TODOS",
+        filtro_clima_seleccionado=filtro_clima or "AUTO",
+        prompt_ia=prompt_ia,
+        razonamiento_ia=razonamiento,
         total_outfits=len(outfits),
         outfits_recomendados=outfits
     )

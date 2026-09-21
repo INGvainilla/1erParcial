@@ -48,9 +48,14 @@ def consultar_catalogo_endpoint(
 @router.get("/{id_producto}/disponibilidad-sucursales", response_model=DisponibilidadPrendaDetalle)
 def consultar_disponibilidad_sucursales_endpoint(
     id_producto: int,
+    talla: Optional[str] = Query(None, description="Filtrar stock por talla específica (S, M, L, XL)"),
+    color: Optional[str] = Query(None, description="Filtrar stock por color específico (nombre del color)"),
     db: Session = Depends(get_db)
 ):
     # CASO DE USO: CU10 - Disponibilidad por Sucursal en Detalle de Producto
     # Paso 1: El cliente hace clic en 'Ver disponibilidad en tiendas'
     # Paso 1.1: Invocación a CatalogoControl.obtener_disponibilidad_sucursales()
-    return CatalogoControl.obtener_disponibilidad_sucursales(db, id_producto=id_producto)
+    # Paso 1.2: Si se especifica talla y/o color, se filtra el stock por esa variante exacta
+    return CatalogoControl.obtener_disponibilidad_sucursales(
+        db, id_producto=id_producto, talla=talla, color=color
+    )

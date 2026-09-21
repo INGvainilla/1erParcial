@@ -206,8 +206,43 @@ def confirmar_transaccion_pago(
         detalles_raw=json.dumps({"id": pi.id, "status": pi.status, "currency": pi.currency})
     )
     db.add(tx)
+
+    # CU09: Descontar existencias y asentar SALIDA_VENTA en Kardex inmutable
+    try:
+        from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+        suc_id = orden.id_sucursal or 1
+        for d in (orden.detalles or []):
+            inv = db.query(Inventario).filter(
+                Inventario.id_sucursal == suc_id,
+                Inventario.id_producto == d.id_producto,
+                Inventario.talla == d.talla,
+                Inventario.color == d.color
+            ).first()
+            if not inv:
+                inv = db.query(Inventario).filter(
+                    Inventario.id_producto == d.id_producto,
+                    Inventario.talla == d.talla,
+                    Inventario.color == d.color
+                ).first()
+            if inv:
+                inv.stock_fisico = max(0, inv.stock_fisico - d.cantidad)
+                inv.stock_disponible = max(0, inv.stock_disponible - d.cantidad)
+                k_salida = KardexMovimiento(
+                    id_inventario=inv.id_inventario,
+                    tipo_movimiento="SALIDA_VENTA",
+                    cantidad=d.cantidad,
+                    costo_unitario_movimiento=inv.costo_promedio_ponderado,
+                    saldo_cantidad_resultante=inv.stock_fisico,
+                    saldo_cpp_resultante=inv.costo_promedio_ponderado,
+                    referencia_documento=f"Venta Online Factura {orden.numero_factura}"
+                )
+                db.add(k_salida)
+    except Exception as e:
+        print(f"[KARDEX ONLINE] Advertencia al asentar salida de venta: {e}")
+
     db.commit()
     db.refresh(tx)
+
 
     # CU21: Acreditar puntos de fidelización (1 pt por cada 10 Bs consumidos)
     if orden.id_usuario:

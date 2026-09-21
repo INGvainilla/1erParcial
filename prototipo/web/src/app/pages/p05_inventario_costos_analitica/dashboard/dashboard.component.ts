@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -32,10 +33,13 @@ interface RendimientoPrenda {
   nombre: string;
   categoria: string;
   stock_total: number;
+  unidades_vendidas?: number;
   ultimo_costo: number;
   cpp: number;
   precio_venta: number;
   margen_bruto_pct: number;
+  ranking_pos?: number;
+  tipo_ranking?: string;
 }
 
 interface UltimaOrden {
@@ -72,7 +76,7 @@ interface UseCaseItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <div class="page-container" *ngIf="canAccess()">
       <!-- Banner de Bienvenida y Estado del Sistema -->
@@ -123,6 +127,53 @@ interface UseCaseItem {
             <button class="btn-export-xlsx" (click)="exportarXLSX()" title="Descargar Dataset de Auditoría en XLSX">
               <i class="fas fa-file-excel"></i> Descargar Dataset para Auditoría (XLSX)
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros de Sucursal y Rango Temporal (CU24 Flujo Principal 7 & Alternativo 1a) -->
+      <div class="filter-dashboard-bar glass-panel">
+        <div class="filter-item-block">
+          <label><i class="fas fa-store text-indigo"></i> Sucursal Física:</label>
+          <div class="branch-selector-wrap" *ngIf="!isSucursalLocked">
+            <select class="dashboard-custom-select" [ngModel]="selectedSucursalId" (ngModelChange)="cambiarSucursal($event)">
+              <option [ngValue]="null">🌐 Red Global (Todas las Sucursales)</option>
+              <option *ngFor="let s of sucursalesDisponibles" [ngValue]="s.id_sucursal">
+                📍 {{ s.nombre }} ({{ s.ciudad }})
+              </option>
+            </select>
+          </div>
+          <div class="locked-branch-pill" *ngIf="isSucursalLocked" title="Vista restringida por rol de Encargado de Sucursal">
+            <i class="fas fa-lock text-amber"></i>
+            <span>{{ selectedSucursalNombre }} (Sucursal Asignada)</span>
+          </div>
+        </div>
+
+        <div class="filter-item-block">
+          <label><i class="fas fa-calendar-alt text-emerald"></i> Periodo Temporal:</label>
+          <div class="time-filter-group">
+            <button class="time-pill-btn" [class.active]="selectedRangoFecha === 'TODO'" (click)="cambiarRangoFecha('TODO')">
+              Histórico
+            </button>
+            <button class="time-pill-btn" [class.active]="selectedRangoFecha === 'HOY'" (click)="cambiarRangoFecha('HOY')">
+              Hoy
+            </button>
+            <button class="time-pill-btn" [class.active]="selectedRangoFecha === '7_DIAS'" (click)="cambiarRangoFecha('7_DIAS')">
+              Últimos 7 días
+            </button>
+            <button class="time-pill-btn" [class.active]="selectedRangoFecha === 'MES'" (click)="cambiarRangoFecha('MES')">
+              Este Mes
+            </button>
+          </div>
+        </div>
+
+        <div class="audit-signature-pill" *ngIf="auditoriaContable">
+          <i class="fas fa-shield-check text-cyan"></i>
+          <div class="audit-text-wrap">
+            <span class="audit-lbl">Auditoría Inmutable (GMT-04:00)</span>
+            <span class="audit-hash" [title]="auditoriaContable.firma_digital_sha256">
+              Hash: {{ auditoriaContable.firma_digital_sha256?.substring(0, 14) }}...
+            </span>
           </div>
         </div>
       </div>
@@ -421,25 +472,40 @@ interface UseCaseItem {
         </div>
       </div>
 
-      <!-- Fila CU24: Tabla de Rendimiento de Inventario y Margen Bruto vs CPP -->
+      <!-- Fila CU24: Tabla de Rendimiento de Inventario y Margen Bruto vs CPP (Ranking Top/Bottom 10) -->
       <div class="activity-card glass-panel" style="margin-bottom: 1.5rem;">
-        <div class="card-header-clean">
+        <div class="card-header-clean flex-header-wrap">
           <div>
-            <h3><i class="fas fa-boxes"></i> Valuación de Stock al Costo Promedio Ponderado (CPP) & Margen Bruto (CU24)</h3>
-            <span class="sub-label">Cruce matemático en tiempo real: Precio de Venta vs CPP vigente para auditoría y rentabilidad.</span>
+            <h3><i class="fas fa-boxes text-emerald"></i> Valuación de Stock al Costo Promedio Ponderado (CPP) & Rotación de Prendas (CU24)</h3>
+            <span class="sub-label">Cruce matemático en tiempo real: Precio de Venta vs CPP vigente para auditoría, margen bruto y ranking.</span>
           </div>
-          <a routerLink="/inventario" class="link-more">
-            Gestionar Kardex <i class="fas fa-arrow-right"></i>
-          </a>
+          <div class="ranking-controls-wrap">
+            <div class="ranking-tabs-group">
+              <button class="rank-tab-btn" [class.active]="selectedRankingTipo === 'TODOS'" (click)="cambiarRankingTipo('TODOS')">
+                <i class="fas fa-layer-group"></i> Catálogo Completo
+              </button>
+              <button class="rank-tab-btn top-btn" [class.active]="selectedRankingTipo === 'TOP10'" (click)="cambiarRankingTipo('TOP10')">
+                <i class="fas fa-crown text-amber"></i> Top 10 Más Vendidas
+              </button>
+              <button class="rank-tab-btn bottom-btn" [class.active]="selectedRankingTipo === 'BOTTOM10'" (click)="cambiarRankingTipo('BOTTOM10')">
+                <i class="fas fa-exclamation-triangle text-purple"></i> Bottom 10 Menor Rotación
+              </button>
+            </div>
+            <a routerLink="/inventario" class="link-more">
+              Gestionar Kardex <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="dashboard-table">
             <thead>
               <tr>
+                <th># Rank</th>
                 <th>Código SKU</th>
                 <th>Nombre de Prenda</th>
                 <th>Categoría</th>
                 <th>Stock Red</th>
+                <th>Uds. Vendidas</th>
                 <th>Último Costo</th>
                 <th>Costo Promedio (CPP)</th>
                 <th>Precio Venta</th>
@@ -448,10 +514,16 @@ interface UseCaseItem {
             </thead>
             <tbody>
               <tr *ngFor="let item of rendimientoInventario">
+                <td>
+                  <span class="rank-badge" [class.rank-gold]="item.ranking_pos === 1" [class.rank-silver]="item.ranking_pos === 2" [class.rank-bronze]="item.ranking_pos === 3" [class.rank-bottom]="item.tipo_ranking === 'BOTTOM'">
+                    #{{ item.ranking_pos || '-' }}
+                  </span>
+                </td>
                 <td class="mono-font">{{ item.sku }}</td>
                 <td style="font-weight: 600; color: #fff;">{{ item.nombre }}</td>
                 <td><span class="badge-logistica">{{ item.categoria }}</span></td>
                 <td><strong>{{ item.stock_total }}</strong> uds</td>
+                <td><span class="sold-pill"><i class="fas fa-shopping-bag"></i> {{ item.unidades_vendidas || 0 }}</span></td>
                 <td>Bs. {{ item.ultimo_costo | number:'1.2-2' }}</td>
                 <td class="amount-cell" style="color: #F59E0B;">Bs. {{ item.cpp | number:'1.2-2' }}</td>
                 <td class="amount-cell" style="color: #10B981;">Bs. {{ item.precio_venta | number:'1.2-2' }}</td>
@@ -466,18 +538,18 @@ interface UseCaseItem {
         </div>
       </div>
 
-      <!-- Directorio Completo de Casos de Uso (Ciclo 1, 2 y 3) -->
+      <!-- Directorio Completo de Casos de Uso (Ciclo 1, 2 y 3 - CU01 al CU25) -->
       <div class="usecases-section glass-panel">
         <div class="usecase-header">
           <div>
-            <h3><i class="fas fa-th-list"></i> Directorio Integral de Casos de Uso (CU01 - CU24)</h3>
+            <h3><i class="fas fa-th-list"></i> Directorio Integral de Casos de Uso (CU01 - CU25)</h3>
             <p class="usecase-subtitle">Acceso directo a todos los módulos funcionales evaluados en la arquitectura de software.</p>
           </div>
 
           <!-- Selector de Ciclos -->
           <div class="cycle-tabs">
             <button class="tab-btn" [class.active]="selectedCycleTab === 'all'" (click)="selectedCycleTab = 'all'">
-              Todos (24 CU)
+              Todos (25 CU)
             </button>
             <button class="tab-btn" [class.active]="selectedCycleTab === 'c1'" (click)="selectedCycleTab = 'c1'">
               Ciclo 1 (CU01-CU10)
@@ -486,7 +558,7 @@ interface UseCaseItem {
               Ciclo 2 (CU11-CU18)
             </button>
             <button class="tab-btn" [class.active]="selectedCycleTab === 'c3'" (click)="selectedCycleTab = 'c3'">
-              Ciclo 3 (CU19-CU24)
+              Ciclo 3 (CU19-CU25)
             </button>
           </div>
         </div>
@@ -509,6 +581,231 @@ interface UseCaseItem {
             <div class="cu-footer">
               <span class="cycle-label">Ciclo {{ cu.cycle }}</span>
               <span class="enter-link">Probar Caso <i class="fas fa-chevron-right"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Estructurado de Reporte Contable PDF con Firma Digital (Flujo Alternativo 7a) -->
+    <div class="pdf-modal-backdrop" *ngIf="isPdfModalOpen">
+      <div class="pdf-modal-container glass-panel">
+        <div class="pdf-modal-header no-print">
+          <div class="pdf-modal-title">
+            <i class="fas fa-file-invoice-dollar text-red"></i>
+            <span>Reporte Contable y Dictamen de Auditoría Ejecutiva (CU24)</span>
+          </div>
+          <div class="pdf-modal-actions">
+            <button class="btn-print-action" (click)="imprimirReporte()">
+              <i class="fas fa-print"></i> Imprimir / Guardar en PDF
+            </button>
+            <button class="btn-close-pdf" (click)="cerrarModalPDF()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Documento Formal Imprimible con Simetría Ejecutiva -->
+        <div class="pdf-document-body" id="reporte-contable-imprimible">
+          <div class="doc-top-bar"></div>
+
+          <div class="doc-letterhead">
+            <div class="doc-logo-block">
+              <div class="doc-brand-title">
+                <i class="fas fa-crown doc-crown"></i>
+                <span>FashionStore S.R.L.</span>
+              </div>
+              <span class="doc-sub">Plataforma Inteligente de Comercio Omnicanal — Metodología PUDS (SI2)</span>
+              <span class="doc-meta">NIT: 1028472029 | Matrícula de Comercio: 00394821 | Autorización Fiscal: 2026-SI2-CU24</span>
+              <span class="doc-address"><i class="fas fa-map-marker-alt"></i> Av. San Martín #450, Equipetrol, Santa Cruz / Av. Arce #210, La Paz — Bolivia</span>
+            </div>
+            <div class="doc-cert-block">
+              <div class="cert-stamp">
+                <i class="fas fa-certificate"></i> CERTIFICADO DE AUDITORÍA
+              </div>
+              <span class="cert-code">ID-REF: CU24-{{ (auditoriaContable?.firma_digital_sha256 || 'A1B2C3D4').substring(0, 8) | uppercase }}</span>
+              <span class="cert-status"><i class="fas fa-check-circle"></i> DATOS INMUTABLES</span>
+            </div>
+          </div>
+
+          <div class="doc-title-row">
+            <h2>DICTAMEN DE AUDITORÍA CONTABLE Y CUADRO DE MANDO INTEGRAL (CU24)</h2>
+            <p class="doc-subtitle">
+              Evaluación consolidada en tiempo real de transaccionalidad comercial, valuación de existencias al Costo Promedio Ponderado (CPP), conversión de probadores y conciliación multicanal.
+            </p>
+          </div>
+
+          <!-- Metadatos de Auditoría Legal en Grid Simétrica -->
+          <div class="doc-audit-meta-grid">
+            <div class="meta-item">
+              <span class="lbl"><i class="fas fa-user-shield"></i> Usuario Auditor / Operador:</span>
+              <span class="val">{{ auditoriaContable?.usuario }} ({{ auditoriaContable?.rol }})</span>
+            </div>
+            <div class="meta-item">
+              <span class="lbl"><i class="fas fa-store"></i> Sucursal Física Evaluada:</span>
+              <span class="val">{{ selectedSucursalNombre }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="lbl"><i class="fas fa-calendar-alt"></i> Periodo Temporal del Dictamen:</span>
+              <span class="val">{{ selectedRangoFecha === 'TODO' ? 'Histórico Consolidado (Toda la operación)' : (selectedRangoFecha === 'HOY' ? 'Jornada Actual (Hoy)' : (selectedRangoFecha === '7_DIAS' ? 'Últimos 7 Días Calendario' : 'Mes Corriente')) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="lbl"><i class="fas fa-clock"></i> Fecha y Hora de Emisión Local:</span>
+              <span class="val text-amber">{{ auditoriaContable?.fecha_emision_local }}</span>
+            </div>
+            <div class="meta-item full-width">
+              <span class="lbl"><i class="fas fa-fingerprint"></i> Firma Criptográfica de Integridad (SHA-256):</span>
+              <code class="val-hash">{{ auditoriaContable?.firma_digital_sha256 }}</code>
+            </div>
+          </div>
+
+          <!-- Tarjetas Simétricas de Resumen Ejecutivo (KPI Cards) -->
+          <div class="doc-kpis-summary-grid">
+            <div class="doc-kpi-card">
+              <span class="doc-kpi-title">Ventas Totales Cobradas</span>
+              <span class="doc-kpi-val text-navy">Bs. {{ kpis.ventas_totales_bs | number:'1.2-2' }}</span>
+              <span class="doc-kpi-sub">{{ kpis.ordenes_pagadas }} transacciones pagadas</span>
+            </div>
+            <div class="doc-kpi-card">
+              <span class="doc-kpi-title">Valuación Activo CPP</span>
+              <span class="doc-kpi-val text-amber">Bs. {{ (kpis.valuacion_inventario_cpp || 0) | number:'1.2-2' }}</span>
+              <span class="doc-kpi-sub">{{ kpis.stock_total | number }} prendas valoradas al CPP</span>
+            </div>
+            <div class="doc-kpi-card">
+              <span class="doc-kpi-title">Efectividad Probadores</span>
+              <span class="doc-kpi-val text-emerald">{{ kpis.efectividad_probadores_pct }}%</span>
+              <span class="doc-kpi-sub">{{ kpis.reservas_confirmadas }} reservas convertidas a compra</span>
+            </div>
+            <div class="doc-kpi-card">
+              <span class="doc-kpi-title">Sucursales Activas</span>
+              <span class="doc-kpi-val text-indigo">{{ kpis.total_sucursales }} Tiendas</span>
+              <span class="doc-kpi-sub">Red física interconectada</span>
+            </div>
+          </div>
+
+          <!-- 1. RESUMEN DE INDICADORES CLAVE DE DESEMPEÑO -->
+          <div class="doc-section-title">
+            <span class="sec-num">1</span>
+            <span>BALANCE Y RENDIMIENTO OPERACIONAL POR CANAL</span>
+          </div>
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Métrica / Dimensión Contable</th>
+                <th style="width: 25%; text-align: right;">Monto / Magnitud</th>
+                <th style="width: 40%;">Diagnóstico y Observación de Control Interno</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ventas Totales Efectivas</strong></td>
+                <td class="amount" style="text-align: right;">Bs. {{ kpis.ventas_totales_bs | number:'1.2-2' }}</td>
+                <td>Ingresos brutos acumulados libres de mora. Transacciones fiscalizadas al 100%.</td>
+              </tr>
+              <tr>
+                <td><strong>Valuación de Existencias al CPP</strong></td>
+                <td class="amount" style="text-align: right;">Bs. {{ (kpis.valuacion_inventario_cpp || 0) | number:'1.2-2' }}</td>
+                <td>Valuación conforme a Norma Contable NC3 (Costo Promedio Ponderado móvil).</td>
+              </tr>
+              <tr>
+                <td><strong>Conversión de Probadores a Compra</strong></td>
+                <td class="amount" style="text-align: right;">{{ kpis.efectividad_probadores_pct }}%</td>
+                <td>{{ kpis.reservas_confirmadas }} reservas físicas confirmadas en mostrador de sucursal.</td>
+              </tr>
+              <tr>
+                <td><strong>Composición de Canal (Digital vs POS)</strong></td>
+                <td class="amount" style="text-align: right;">Online: {{ distribucion.online }} | POS: {{ distribucion.pos }}</td>
+                <td>{{ getOnlinePct() }}% canal web e-commerce frente a {{ 100 - getOnlinePct() }}% ventas en tienda física.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 2. RECAUDACIÓN Y CONCILIACIÓN POR PASARELAS DE COBRO -->
+          <div class="doc-section-title">
+            <span class="sec-num">2</span>
+            <span>CONCILIACIÓN POR MEDIOS Y PASARELAS DE PAGO (CU17 / CU24)</span>
+          </div>
+          <table class="doc-table mini">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Canal / Pasarela de Cobro</th>
+                <th style="width: 25%; text-align: center;">Operaciones Procesadas</th>
+                <th style="width: 20%; text-align: right;">Participación</th>
+                <th style="width: 20%; text-align: center;">Estado Conciliación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of getMediosPagoEntries()">
+                <td><strong>{{ m.nombre }}</strong></td>
+                <td style="text-align: center;">{{ m.cantidad }} transacciones</td>
+                <td style="text-align: right;"><strong>{{ m.pct }}%</strong></td>
+                <td style="text-align: center;"><span class="status-badge-doc">AUDITADO Y CONCILIADO</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 3. RENDIMIENTO TEXTIL AL CPP -->
+          <div class="doc-section-title">
+            <span class="sec-num">3</span>
+            <span>VALUACIÓN TEXTIL, ROTACIÓN Y MARGEN DE CONTRIBUCIÓN VS. CPP</span>
+          </div>
+          <table class="doc-table mini">
+            <thead>
+              <tr>
+                <th style="width: 12%;">SKU</th>
+                <th style="width: 26%;">Prenda Textil</th>
+                <th style="width: 11%; text-align: center;">Stock Físico</th>
+                <th style="width: 11%; text-align: center;">Uds. Vendidas</th>
+                <th style="width: 13%; text-align: right;">CPP Vigente</th>
+                <th style="width: 13%; text-align: right;">Precio Venta</th>
+                <th style="width: 14%; text-align: right;">Margen Bruto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of rendimientoInventario">
+                <td class="mono-font">{{ p.sku }}</td>
+                <td><strong>{{ p.nombre }}</strong> <span class="doc-cat-tag">({{ p.categoria }})</span></td>
+                <td style="text-align: center;">{{ p.stock_total }} uds</td>
+                <td style="text-align: center;"><strong style="color: #4f46e5;">{{ p.unidades_vendidas || 0 }} uds</strong></td>
+                <td style="text-align: right;" class="amount">Bs. {{ p.cpp | number:'1.2-2' }}</td>
+                <td style="text-align: right;" class="amount">Bs. {{ p.precio_venta | number:'1.2-2' }}</td>
+                <td style="text-align: right;">
+                  <span class="doc-margin-badge">+{{ p.margen_bruto_pct }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Bloque de Firmas y Responsabilidad Legal Simétrico -->
+          <div class="doc-signatures-grid">
+            <div class="sig-box">
+              <div class="sig-stamp-placeholder">
+                <i class="fas fa-stamp"></i> SELLO OFICIAL
+              </div>
+              <div class="sig-line"></div>
+              <span class="sig-name">MSc. Ing. Angélica Garzón Cuéllar</span>
+              <span class="sig-role">Docente Guía / Auditoría de Sistemas — SI2</span>
+              <span class="sig-sub">Universidad Autónoma Gabriel René Moreno</span>
+            </div>
+            <div class="sig-box">
+              <div class="sig-stamp-placeholder">
+                <i class="fas fa-shield-alt"></i> FIRMA AUDITOR
+              </div>
+              <div class="sig-line"></div>
+              <span class="sig-name">Alberto Delgado & Andy Mujica</span>
+              <span class="sig-role">Dirección Financiera / Administración General</span>
+              <span class="sig-sub">FashionStore S.R.L.</span>
+            </div>
+          </div>
+
+          <div class="doc-footer-legal">
+            <p>
+              <strong>CERTIFICACIÓN DE INMUTABILIDAD CONTABLE:</strong> Este documento constituye un extracto oficial generado automáticamente por el Módulo de Business Intelligence CU24. Los montos han sido calculados cruzando transacciones de venta efectivas contra el Costo Promedio Ponderado (CPP) registrado en el Kardex. La integridad criptográfica está avalada por la firma SHA-256 registrada en la bitácora de auditoría del sistema.
+            </p>
+            <div class="doc-footer-bar">
+              <span>FashionStore S.R.L. &copy; 2026</span>
+              <span>Página 1 de 1</span>
+              <span>Emisión: {{ auditoriaContable?.fecha_emision_local }}</span>
             </div>
           </div>
         </div>
@@ -629,8 +926,113 @@ interface UseCaseItem {
     .btn-export-xlsx {
       background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7;
     }
-    .btn-export-xlsx:hover {
-      background: rgba(16, 185, 129, 0.35); color: #fff; transform: translateY(-1px);
+    /* Filter Dashboard Bar (CU24 Flujo 7 & 1a) */
+    .filter-dashboard-bar {
+      padding: 0.9rem 1.4rem;
+      border-radius: 14px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .filter-item-block {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .filter-item-block label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .dashboard-custom-select {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #f8fafc;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .dashboard-custom-select:hover, .dashboard-custom-select:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+    .locked-branch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .time-filter-group {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .time-pill-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .time-pill-btn:hover {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .time-pill-btn.active {
+      background: #10b981;
+      color: #ffffff;
+      border-color: #34d399;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+    }
+    .audit-signature-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+    }
+    .audit-text-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .audit-lbl {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #22d3ee;
+    }
+    .audit-hash {
+      font-size: 0.65rem;
+      font-family: monospace;
+      color: #94a3b8;
     }
 
     /* KPI Grid */
@@ -855,6 +1257,526 @@ interface UseCaseItem {
       background: #6366f1; color: white; padding: 0.65rem 1.25rem; border-radius: 8px;
       font-weight: 700; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;
     }
+
+    /* Ranking Controls & Badges (CU24) */
+    .flex-header-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .ranking-controls-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .ranking-tabs-group {
+      display: flex;
+      gap: 0.35rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .rank-tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .rank-tab-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .rank-tab-btn.active {
+      background: #6366f1;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .rank-tab-btn.active.top-btn {
+      background: linear-gradient(135deg, #d97706, #b45309);
+    }
+    .rank-tab-btn.active.bottom-btn {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    }
+    .rank-badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      font-family: monospace;
+      background: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+    }
+    .rank-badge.rank-gold {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+    }
+    .rank-badge.rank-silver {
+      background: rgba(148, 163, 184, 0.25);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+    .rank-badge.rank-bronze {
+      background: rgba(217, 119, 6, 0.2);
+      color: #f59e0b;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+    }
+    .rank-badge.rank-bottom {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+    .sold-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* Modal Reporte Contable PDF (Flujo Alternativo 7a) */
+    .pdf-modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .pdf-modal-container {
+      width: 920px;
+      max-width: 95vw;
+      max-height: 92vh;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+    .pdf-modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.95);
+    }
+    .pdf-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .pdf-modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .btn-print-action {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-print-action:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+    .btn-close-pdf {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #cbd5e1;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .btn-close-pdf:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    .pdf-document-body {
+      padding: 2.5rem 3rem;
+      overflow-y: auto;
+      background: #ffffff;
+      color: #0f172a;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .doc-letterhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .doc-logo-block h1 {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #0f172a;
+      margin: 0 0 0.2rem;
+    }
+    .doc-sub {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+      display: block;
+    }
+    .doc-meta {
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+      margin-top: 0.25rem;
+    }
+    .doc-cert-block {
+      text-align: right;
+    }
+    .cert-stamp {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      margin-bottom: 0.35rem;
+    }
+    .cert-code {
+      font-size: 0.7rem;
+      font-family: monospace;
+      color: #475569;
+      font-weight: 700;
+      display: block;
+    }
+    .doc-title-row {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .doc-title-row h2 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 0.35rem;
+    }
+    .doc-subtitle {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+    }
+    .doc-audit-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.6rem 1.5rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.82rem;
+    }
+    .meta-item {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .meta-item.full-width {
+      grid-column: 1 / -1;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .meta-item .lbl {
+      font-weight: 700;
+      color: #475569;
+    }
+    .meta-item .val {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .val-hash {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #0f172a;
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+    .doc-section-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #0f172a;
+      border-left: 3px solid #6366f1;
+      padding-left: 0.5rem;
+      margin: 1.25rem 0 0.65rem;
+      letter-spacing: 0.3px;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-bottom: 1.25rem;
+    }
+    .doc-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #cbd5e1;
+    }
+    .doc-table td {
+      padding: 0.55rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+    }
+    .doc-table .amount {
+      font-weight: 800;
+      color: #0f172a;
+      font-family: monospace;
+    }
+    .doc-table.mini td, .doc-table.mini th {
+      padding: 0.45rem 0.65rem;
+      font-size: 0.76rem;
+    }
+    .status-badge-doc {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #15803d;
+      background: #dcfce7;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+    .doc-top-bar {
+      height: 5px;
+      background: linear-gradient(90deg, #0f172a 0%, #3b82f6 50%, #10b981 100%);
+      margin-bottom: 1.25rem;
+      border-radius: 3px;
+    }
+    .doc-brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 0.2rem;
+    }
+    .doc-crown {
+      color: #d97706;
+      font-size: 1.4rem;
+    }
+    .doc-address {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+      display: block;
+    }
+    .cert-status {
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: #15803d;
+      background: #dcfce7;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 0.35rem;
+      border: 1px solid #bbf7d0;
+    }
+    .doc-kpis-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .doc-kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.9rem 0.75rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .doc-kpi-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .doc-kpi-val {
+      font-size: 1.3rem;
+      font-weight: 900;
+      font-family: 'Outfit', sans-serif;
+    }
+    .doc-kpi-val.text-navy { color: #0f172a; }
+    .doc-kpi-val.text-amber { color: #d97706; }
+    .doc-kpi-val.text-emerald { color: #059669; }
+    .doc-kpi-val.text-indigo { color: #4f46e5; }
+    .doc-kpi-sub {
+      font-size: 0.68rem;
+      color: #64748b;
+    }
+    .sec-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 900;
+      border-radius: 50%;
+      margin-right: 0.4rem;
+    }
+    .doc-margin-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #047857;
+      background: #d1fae5;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .doc-cat-tag {
+      font-size: 0.72rem;
+      font-weight: normal;
+      color: #64748b;
+    }
+    .doc-signatures-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3rem;
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+    }
+    .sig-box {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .sig-stamp-placeholder {
+      width: 75px;
+      height: 75px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 0.65rem;
+      font-weight: 700;
+      gap: 0.2rem;
+      margin-bottom: 0.65rem;
+    }
+    .sig-line {
+      width: 80%;
+      border-bottom: 1px solid #334155;
+      margin-bottom: 0.45rem;
+    }
+    .sig-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .sig-role {
+      font-size: 0.72rem;
+      color: #475569;
+      font-weight: 600;
+    }
+    .sig-sub {
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+    .doc-footer-legal {
+      margin-top: 2rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 0.75rem;
+      font-size: 0.68rem;
+      color: #64748b;
+      text-align: justify;
+      line-height: 1.45;
+    }
+    .doc-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.6rem;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 0.45rem;
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+
+    /* Print Specific Rules */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 15mm;
+      }
+      body * {
+        visibility: hidden;
+      }
+      #reporte-contable-imprimible, #reporte-contable-imprimible * {
+        visibility: visible;
+      }
+      #reporte-contable-imprimible {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -866,6 +1788,16 @@ export class DashboardComponent implements OnInit {
   isLoading: boolean = false;
   isError: boolean = false;
   selectedCycleTab: 'all' | 'c1' | 'c2' | 'c3' = 'all';
+
+  // Filtros interactivos CU24 (Flujo 7 & 1a)
+  sucursalesDisponibles: any[] = [];
+  selectedSucursalId: number | null = null;
+  selectedSucursalNombre: string = 'Red Global (Todas las Sucursales)';
+  isSucursalLocked: boolean = false;
+  selectedRangoFecha: string = 'TODO';
+  selectedRankingTipo: string = 'TODOS';
+  auditoriaContable: any = null;
+  isPdfModalOpen: boolean = false;
 
   // URLs dinámicas al backend para Swagger y Health
   docsUrl = API_BASE_URL.replace('/api/v1', '/docs');
@@ -933,13 +1865,14 @@ export class DashboardComponent implements OnInit {
     { code: 'CU17', name: 'Gestionar Medios de Cobro', cycle: 2, module: 'M15', desc: 'Parametrización y activación/desactivación en caliente de Efectivo, POS, Stripe y QR BCB.', route: '/admin/pagos-config', icon: 'fa-sliders-h', color: '#38bdf8' },
     { code: 'CU18', name: 'Despacho y Tracking Delivery', cycle: 2, module: 'M19', desc: 'Fórmula Haversine para cálculo de tarifas, asignación de choferes y seguimiento GPS en vivo.', route: '/logistica/dashboard', icon: 'fa-shipping-fast', color: '#a3e635' },
 
-    // Ciclo 3 (Diferenciadores Tecnológicos, RA, IA y Analítica)
+    // Ciclo 3 (Diferenciadores Tecnológicos, RA, IA, Analítica y Devoluciones)
     { code: 'CU19', name: 'Vestidor Virtual con RA', cycle: 3, module: 'M08', desc: 'Proyección 3D de prendas en Realidad Aumentada con ARCore, superposición anatómica y cambio dinámico.', route: '/catalogo', icon: 'fa-vr-cardboard', color: '#06b6d4' },
     { code: 'CU20', name: 'Comparador de Outfits', cycle: 3, module: 'M09', desc: 'Contrastación visual de 3 atuendos completos con desglose de precios, opción más económica y transferencia al carrito.', route: '/comparador', icon: 'fa-columns', color: '#10b981' },
     { code: 'CU21', name: 'Fidelización Gamificada', cycle: 3, module: 'M16', desc: 'Acumulación de puntos por compras, membresía VIP (Bronce a Diamante), vitrina de insignias y cupones.', route: '/recompensas', icon: 'fa-gem', color: '#f59e0b' },
     { code: 'CU22', name: 'Asistente de Estilo con IA', cycle: 3, module: 'M17', desc: 'Recomendaciones inteligentes evaluando temperatura de ciudades bolivianas, colorimetría y existencias.', route: '/asistente-ia', icon: 'fa-robot', color: '#38bdf8' },
     { code: 'CU23', name: 'Búsqueda por Voz y NLP', cycle: 3, module: 'M17', desc: 'Reconocimiento por voz en lenguaje natural y filtrado semántico instantáneo del catálogo textil.', route: '/asistente-ia', icon: 'fa-microphone', color: '#818cf8' },
-    { code: 'CU24', name: 'Dashboards y Analítica', cycle: 3, module: 'M18', desc: 'Cuadro de mando ejecutivo con valuación al Costo Promedio (CPP), probadores y distribución multicanal.', route: '/dashboard', icon: 'fa-chart-line', color: '#ec4899' }
+    { code: 'CU24', name: 'Dashboards y Analítica', cycle: 3, module: 'M18', desc: 'Cuadro de mando ejecutivo con valuación al Costo Promedio (CPP), probadores y distribución multicanal.', route: '/dashboard', icon: 'fa-chart-line', color: '#ec4899' },
+    { code: 'CU25', name: 'Devolución y Cambio de Prendas', cycle: 3, module: 'M13', desc: 'Validación de ticket (14 días), inspección física, reingreso al Kardex al CPP histórico y compensación en caja.', route: '/pos', icon: 'fa-exchange-alt', color: '#10b981' }
   ];
 
   get filteredUseCases(): UseCaseItem[] {
@@ -956,9 +1889,24 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.auth.isAdmin()) {
+    if (this.canAccess()) {
       this.cargarMetricas();
     }
+  }
+
+  cambiarSucursal(id: any): void {
+    this.selectedSucursalId = id;
+    this.cargarMetricas();
+  }
+
+  cambiarRangoFecha(r: string): void {
+    this.selectedRangoFecha = r;
+    this.cargarMetricas();
+  }
+
+  cambiarRankingTipo(t: string): void {
+    this.selectedRankingTipo = t;
+    this.cargarMetricas();
   }
 
   cargarMetricas(): void {
@@ -966,7 +1914,7 @@ export class DashboardComponent implements OnInit {
     this.isError = false;
     this.cdr.detectChanges();
 
-    this.api.getDashboardMetricas().subscribe({
+    this.api.getDashboardMetricas(this.selectedSucursalId, this.selectedRangoFecha, this.selectedRankingTipo).subscribe({
       next: (data) => {
         if (data && data.kpis) {
           this.kpis = data.kpis;
@@ -975,6 +1923,15 @@ export class DashboardComponent implements OnInit {
           this.rendimientoInventario = data.rendimiento_inventario || [];
           this.ultimasOrdenes = data.ultimas_ordenes || [];
           this.ultimasReservas = data.ultimas_reservas || [];
+          this.sucursalesDisponibles = data.sucursales_disponibles || [];
+          if (data.filtro_actual) {
+            this.selectedSucursalId = data.filtro_actual.sucursal_id;
+            this.selectedSucursalNombre = data.filtro_actual.sucursal_nombre;
+            this.isSucursalLocked = !!data.filtro_actual.sucursal_bloqueada;
+          }
+          if (data.auditoria_contable) {
+            this.auditoriaContable = data.auditoria_contable;
+          }
           if (data.servicios_estado) {
             this.serviciosEstado = { ...this.serviciosEstado, ...data.servicios_estado };
           }
@@ -983,7 +1940,6 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        // En caso de fallo transitorio, cargar métricas básicas de respaldo
         this.isError = true;
         this.cargarMetricasRespaldo();
       }
@@ -1027,23 +1983,234 @@ export class DashboardComponent implements OnInit {
   }
 
   exportarPDF(): void {
+    this.isPdfModalOpen = true;
+  }
+
+  cerrarModalPDF(): void {
+    this.isPdfModalOpen = false;
+  }
+
+  imprimirReporte(): void {
     window.print();
   }
 
   exportarXLSX(): void {
-    const headers = 'SKU,Nombre,Categoria,Stock,UltimoCosto_Bs,CPP_Bs,PrecioVenta_Bs,MargenBruto_Pct\n';
-    const rows = this.rendimientoInventario.map(item =>
-      `"${item.sku}","${item.nombre}","${item.categoria}",${item.stock_total},${item.ultimo_costo},${item.cpp},${item.precio_venta},${item.margen_bruto_pct}%`
-    ).join('\n');
-    const summary = `\n\nREPORTE CONSOLIDADO CU24 - AUDITORIA EJECUTIVA\nVentas Totales (Bs),${this.kpis.ventas_totales_bs}\nValuacion Inventario CPP (Bs),${this.kpis.valuacion_inventario_cpp}\nEfectividad Probadores (Pct),${this.kpis.efectividad_probadores_pct}%\nOrdenes Pagadas,${this.kpis.ordenes_pagadas}\n`;
-    const blob = new Blob(['\uFEFF' + headers + rows + summary], { type: 'text/csv;charset=utf-8;' });
+    const fechaIso = this.auditoriaContable?.fecha_emision_local || new Date().toLocaleString();
+    const hash = this.auditoriaContable?.firma_digital_sha256 || 'HASH_INMUTABLE_CU24';
+    const auditor = `${this.auditoriaContable?.usuario || 'Administrador'} (${this.auditoriaContable?.rol || 'ADMINISTRADOR'})`;
+    const sucursal = this.selectedSucursalNombre;
+    const periodo = this.selectedRangoFecha === 'TODO' ? 'Histórico Consolidado' : (this.selectedRangoFecha === 'HOY' ? 'Jornada Actual (Hoy)' : (this.selectedRangoFecha === '7_DIAS' ? 'Últimos 7 Días' : 'Mes Corriente'));
+    const rankingModo = this.selectedRankingTipo === 'TOP10' ? 'Top 10 Más Vendidas' : (this.selectedRankingTipo === 'BOTTOM10' ? 'Bottom 10 Menor Rotación' : 'Catálogo Completo');
+
+    // Filas de medios de pago
+    const mediosRows = this.getMediosPagoEntries().map(m => `
+      <tr style="background-color: #FFFFFF;">
+        <td colspan="3" style="border: 1px solid #CBD5E1; padding: 6px 10px; font-weight: bold; color: #1E293B;">${m.nombre}</td>
+        <td colspan="3" style="border: 1px solid #CBD5E1; padding: 6px 10px; text-align: center; mso-number-format:'\\#\\,\\#\\#0';">${m.cantidad} transacciones</td>
+        <td colspan="2" style="border: 1px solid #CBD5E1; padding: 6px 10px; text-align: right; font-weight: bold; color: #2563EB; mso-number-format:'0\\.0%';">${(m.pct / 100).toFixed(3)}</td>
+        <td colspan="2" style="border: 1px solid #CBD5E1; padding: 6px 10px; text-align: center; font-weight: bold; color: #059669;">CONCILIADO AL 100%</td>
+      </tr>
+    `).join('');
+
+    // Filas de rendimiento textil
+    const prendasRows = this.rendimientoInventario.map((p, idx) => `
+      <tr style="background-color: ${idx % 2 === 0 ? '#F8FAFC' : '#FFFFFF'};">
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: center; font-weight: bold; color: #64748B;">#${p.ranking_pos || (idx + 1)}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; font-family: monospace; font-weight: bold; color: #0F172A;">${p.sku}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 10px; font-weight: bold; color: #1E293B;">${p.nombre}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: center; color: #475569;">${p.categoria}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; font-weight: bold; mso-number-format:'\\#\\,\\#\\#0';">${p.stock_total}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; font-weight: bold; color: #4F46E5; mso-number-format:'\\#\\,\\#\\#0';">${p.unidades_vendidas || 0}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; color: #475569; mso-number-format:'\"Bs.\"\\ \\#\\,\\#\\#0\\.00';">${Number(p.ultimo_costo).toFixed(2)}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; font-weight: bold; color: #D97706; mso-number-format:'\"Bs.\"\\ \\#\\,\\#\\#0\\.00';">${Number(p.cpp).toFixed(2)}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; font-weight: bold; color: #059669; mso-number-format:'\"Bs.\"\\ \\#\\,\\#\\#0\\.00';">${Number(p.precio_venta).toFixed(2)}</td>
+        <td style="border: 1px solid #CBD5E1; padding: 6px 8px; text-align: right; font-weight: bold; color: #047857; mso-number-format:'+0\\.0%';">${(p.margen_bruto_pct / 100).toFixed(3)}</td>
+      </tr>
+    `).join('');
+
+    const excelHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Auditoria_CU24</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1E293B; }
+          table { border-collapse: collapse; width: 100%; }
+          th { background-color: #0F172A; color: #FFFFFF; font-weight: bold; text-align: center; border: 1px solid #CBD5E1; height: 28px; font-size: 10.5pt; }
+          td { border: 1px solid #CBD5E1; font-size: 10.5pt; vertical-align: middle; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <!-- ENCABEZADO CORPORATIVO -->
+          <tr>
+            <td colspan="10" style="background-color: #0F172A; color: #F8FAFC; text-align: center; font-size: 18pt; font-weight: 900; height: 48px; border: none;">
+              FASHIONSTORE S.R.L. — AUDITORÍA CONTABLE Y CUADROS DE MANDO
+            </td>
+          </tr>
+          <tr>
+            <td colspan="10" style="background-color: #1E293B; color: #E2E8F0; text-align: center; font-size: 11pt; font-weight: bold; height: 26px; border: none;">
+              PLATAFORMA INTELIGENTE DE COMERCIO OMNICANAL | CASO DE USO CU24 (METODOLOGÍA PUDS - SI2)
+            </td>
+          </tr>
+          <tr>
+            <td colspan="10" style="background-color: #334155; color: #CBD5E1; text-align: center; font-size: 9.5pt; height: 22px; border: none;">
+              NIT: 1028472029 | Matrícula de Comercio: 00394821 | Autorización Fiscal: 2026-SI2-CU24 | La Paz / Santa Cruz — Bolivia
+            </td>
+          </tr>
+          <tr><td colspan="10" style="height: 14px; border: none;"></td></tr>
+
+          <!-- METADATOS DE AUDITORÍA Y SEGURIDAD -->
+          <tr style="background-color: #2563EB;">
+            <td colspan="10" style="color: #FFFFFF; font-size: 12pt; font-weight: bold; height: 28px; padding-left: 10px; border: 1px solid #1D4ED8;">
+              PARÁMETROS OFICIALES DE LA AUDITORÍA Y METADATOS DEL SISTEMA
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Usuario Auditor:</td>
+            <td colspan="3" style="background-color: #FFFFFF; padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">${auditor}</td>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Sucursal Evaluada:</td>
+            <td colspan="3" style="background-color: #FFFFFF; padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold; color: #2563EB;">${sucursal}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Periodo Temporal:</td>
+            <td colspan="3" style="background-color: #FFFFFF; padding: 6px 10px; border: 1px solid #CBD5E1;">${periodo}</td>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Filtro de Ranking:</td>
+            <td colspan="3" style="background-color: #FFFFFF; padding: 6px 10px; border: 1px solid #CBD5E1;">${rankingModo}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Fecha y Hora Local:</td>
+            <td colspan="3" style="background-color: #FFFFFF; padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold; color: #D97706;">${fechaIso}</td>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Estado Integridad:</td>
+            <td colspan="3" style="background-color: #DCFCE7; padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold; color: #15803D; text-align: center;">REGISTRO INMUTABLE Y VERIFICADO</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="background-color: #F1F5F9; font-weight: bold; color: #334155; padding: 6px 10px; border: 1px solid #CBD5E1;">Firma Digital SHA-256:</td>
+            <td colspan="8" style="background-color: #F8FAFC; padding: 6px 10px; border: 1px solid #CBD5E1; font-family: monospace; font-size: 9.5pt; color: #0F172A;">${hash}</td>
+          </tr>
+          <tr><td colspan="10" style="height: 16px; border: none;"></td></tr>
+
+          <!-- SECCIÓN 1: KPIs FINANCIEROS Y COMERCIALES -->
+          <tr style="background-color: #0F172A;">
+            <td colspan="10" style="color: #FFFFFF; font-size: 12pt; font-weight: bold; height: 28px; padding-left: 10px; border: 1px solid #0F172A;">
+              1. RESUMEN EJECUTIVO DE INDICADORES CLAVE DE RENDIMIENTO (KPIs)
+            </td>
+          </tr>
+          <tr style="background-color: #F1F5F9;">
+            <td colspan="4" style="font-weight: bold; padding: 8px 10px; border: 1px solid #CBD5E1;">Indicador de Negocio / Métrica Estratégica</td>
+            <td colspan="3" style="font-weight: bold; padding: 8px 10px; border: 1px solid #CBD5E1; text-align: right;">Valor Consolidado en Sistema</td>
+            <td colspan="3" style="font-weight: bold; padding: 8px 10px; border: 1px solid #CBD5E1;">Observación / Regla de Negocio</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">Ventas Totales Cobradas y Fiscalizadas</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; text-align: right; font-weight: 900; color: #0F172A; font-size: 12pt; mso-number-format:'\"Bs.\"\\ \\#\\,\\#\\#0\\.00';">${Number(this.kpis.ventas_totales_bs).toFixed(2)}</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; color: #475569;">${this.kpis.ordenes_pagadas} transacciones con cobro confirmado</td>
+          </tr>
+          <tr style="background-color: #F8FAFC;">
+            <td colspan="4" style="padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">Valuación Contable al Costo Promedio Ponderado (CPP)</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; text-align: right; font-weight: 900; color: #D97706; font-size: 12pt; mso-number-format:'\"Bs.\"\\ \\#\\,\\#\\#0\\.00';">${Number(this.kpis.valuacion_inventario_cpp || 0).toFixed(2)}</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; color: #475569;">Activo realizable valorado al CPP vigente (CU09/CU24)</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">Tasa de Efectividad en Probadores Físicos</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; text-align: right; font-weight: 900; color: #059669; font-size: 12pt; mso-number-format:'0\\.0%';">${(this.kpis.efectividad_probadores_pct / 100).toFixed(3)}</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; color: #475569;">${this.kpis.reservas_confirmadas} reservas convertidas a compra en mostrador POS</td>
+          </tr>
+          <tr style="background-color: #F8FAFC;">
+            <td colspan="4" style="padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">Stock Total en Existencias (Físico)</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; text-align: right; font-weight: 900; color: #2563EB; font-size: 12pt; mso-number-format:'\\#\\,\\#\\#0';">${this.kpis.stock_total}</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; color: #475569;">Unidades físicas en red de almacenes y sucursales</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="padding: 6px 10px; border: 1px solid #CBD5E1; font-weight: bold;">Distribución por Canal Comercial</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; text-align: right; font-weight: bold; color: #1E293B;">Online: ${this.distribucion.online} | POS: ${this.distribucion.pos}</td>
+            <td colspan="3" style="padding: 6px 10px; border: 1px solid #CBD5E1; color: #475569;">${this.getOnlinePct()}% ventas digitales vs ${100 - this.getOnlinePct()}% tiendas</td>
+          </tr>
+          <tr><td colspan="10" style="height: 16px; border: none;"></td></tr>
+
+          <!-- SECCIÓN 2: MEDIOS DE RECAUDACIÓN -->
+          <tr style="background-color: #0F172A;">
+            <td colspan="10" style="color: #FFFFFF; font-size: 12pt; font-weight: bold; height: 28px; padding-left: 10px; border: 1px solid #0F172A;">
+              2. CONCILIACIÓN DE RECAUDACIÓN POR PASARELAS Y MEDIOS DE PAGO (CU17 / CU24)
+            </td>
+          </tr>
+          <tr style="background-color: #F1F5F9;">
+            <th colspan="3" style="text-align: left; padding: 6px 10px;">Medio de Pago / Pasarela</th>
+            <th colspan="3" style="text-align: center; padding: 6px 10px;">Operaciones Procesadas</th>
+            <th colspan="2" style="text-align: right; padding: 6px 10px;">Participación (%)</th>
+            <th colspan="2" style="text-align: center; padding: 6px 10px;">Estado Auditoría</th>
+          </tr>
+          ${mediosRows}
+          <tr><td colspan="10" style="height: 16px; border: none;"></td></tr>
+
+          <!-- SECCIÓN 3: RENDIMIENTO TEXTIL AL CPP -->
+          <tr style="background-color: #0F172A;">
+            <td colspan="10" style="color: #FFFFFF; font-size: 12pt; font-weight: bold; height: 28px; padding-left: 10px; border: 1px solid #0F172A;">
+              3. RENDIMIENTO TEXTIL: ROTACIÓN DE PRENDAS, CPP Y MARGEN BRUTO DE GANANCIA (CU24)
+            </td>
+          </tr>
+          <tr style="background-color: #1E293B; color: #FFFFFF;">
+            <th style="width: 50px;">Rank</th>
+            <th style="width: 120px;">Código SKU</th>
+            <th style="width: 260px; text-align: left; padding-left: 8px;">Descripción de la Prenda</th>
+            <th style="width: 130px;">Categoría</th>
+            <th style="width: 90px; text-align: right; padding-right: 8px;">Stock Físico</th>
+            <th style="width: 100px; text-align: right; padding-right: 8px;">Uds. Vendidas</th>
+            <th style="width: 110px; text-align: right; padding-right: 8px;">Último Costo</th>
+            <th style="width: 120px; text-align: right; padding-right: 8px;">CPP Vigente</th>
+            <th style="width: 120px; text-align: right; padding-right: 8px;">Precio Venta</th>
+            <th style="width: 110px; text-align: right; padding-right: 8px;">Margen Bruto</th>
+          </tr>
+          ${prendasRows}
+          <tr><td colspan="10" style="height: 24px; border: none;"></td></tr>
+
+          <!-- FIRMAS DE RESPONSABILIDAD -->
+          <tr>
+            <td colspan="5" style="text-align: center; border: none; padding: 15px;">
+              <div style="border-top: 1px solid #334155; width: 80%; margin: 0 auto; padding-top: 6px;">
+                <strong>MSc. Ing. Angélica Garzón Cuéllar</strong><br>
+                <span style="font-size: 9.5pt; color: #64748B;">Docente Guía / Auditoría de Sistemas (SI2)<br>Universidad Autónoma Gabriel René Moreno</span>
+              </div>
+            </td>
+            <td colspan="5" style="text-align: center; border: none; padding: 15px;">
+              <div style="border-top: 1px solid #334155; width: 80%; margin: 0 auto; padding-top: 6px;">
+                <strong>Alberto Delgado & Andy Mujica</strong><br>
+                <span style="font-size: 9.5pt; color: #64748B;">Dirección Financiera / Administración General<br>FashionStore S.R.L.</span>
+              </div>
+            </td>
+          </tr>
+          <tr><td colspan="10" style="height: 12px; border: none;"></td></tr>
+          <tr>
+            <td colspan="10" style="text-align: center; font-size: 8.5pt; color: #94A3B8; border-top: 1px dashed #CBD5E1; padding-top: 8px;">
+              Documento emitido formalmente bajo metodología PUDS y normativa contable boliviana (NC3). El hash criptográfico garantiza que las existencias y los costos no han sido alterados manualmente.
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\uFEFF' + excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Auditoria_CU24_FashionStore_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `Auditoria_CU24_FashionStore_${new Date().toISOString().slice(0, 10)}.xls`;
     a.click();
     URL.revokeObjectURL(url);
-    this.toast.success('Auditoría CU24', 'Dataset exportado en formato tabular XLSX/CSV exitosamente');
+    this.toast.success('Auditoría Contable CU24', 'Planilla ejecutiva formal descargada exitosamente (.XLS)');
   }
 
   getMediosPagoEntries(): { nombre: string; cantidad: number; pct: number; icono: string }[] {

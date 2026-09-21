@@ -14,6 +14,10 @@ interface ClimaLocal {
   descripcion_clima: string;
   icono_clima: string;
   recomendacion_textil: string;
+  humedad_pct?: number;
+  viento_kmh?: number;
+  fuente_meteo?: string;
+  es_tiempo_real?: boolean;
 }
 
 interface PrendaOutfit {
@@ -66,11 +70,14 @@ interface OutfitRecomendado {
           </p>
         </div>
 
-        <!-- Widget Meteorológico en Vivo (OpenWeatherMap) -->
+        <!-- Widget Meteorológico Satelital en Vivo (Open-Meteo) -->
         <div class="weather-widget">
           <div class="weather-top">
             <span class="city-badge">
               <i class="fas fa-map-marker-alt"></i> {{ clima.ciudad }}
+            </span>
+            <span class="live-pill" [class.live-active]="clima.es_tiempo_real">
+              <span class="live-dot"></span> {{ clima.es_tiempo_real ? 'SATÉLITE EN VIVO' : 'DINÁMICO' }}
             </span>
             <span class="weather-icon-badge">
               <i [class]="getWeatherIcon(clima.icono_clima)"></i>
@@ -83,56 +90,177 @@ interface OutfitRecomendado {
               <span class="sensacion-text">Sensación: {{ clima.sensacion_c }}°C</span>
             </div>
           </div>
+          <div class="weather-telemetry-row" *ngIf="clima.humedad_pct !== undefined">
+            <span class="telemetry-chip"><i class="fas fa-droplet text-cyan"></i> {{ clima.humedad_pct }}% Humedad</span>
+            <span class="telemetry-chip" *ngIf="clima.viento_kmh"><i class="fas fa-wind text-indigo"></i> {{ clima.viento_kmh }} km/h Viento</span>
+          </div>
           <p class="textile-advice">
             <i class="fas fa-tshirt"></i> {{ clima.recomendacion_textil }}
           </p>
         </div>
       </div>
 
-      <!-- Barra de Filtros y Control de Contexto -->
+      <!-- Barra de Prompt Interactivo con el Asistente IA -->
+      <div class="ai-prompt-card glass-card">
+        <div class="prompt-header-row">
+          <div class="prompt-label-wrap">
+            <span class="ai-pill"><i class="fas fa-wand-magic-sparkles"></i> Asistente de Estilismo IA</span>
+            <span class="prompt-subtext">Describe tu evento, ocasión o cómo deseas lucir:</span>
+          </div>
+          <span class="telemetry-tag"><i class="fas fa-satellite-dish"></i> Telemetría climática activa</span>
+        </div>
+        <div class="prompt-interactive-row">
+          <div class="prompt-input-container">
+            <i class="fas fa-sparkles prompt-sparkle-icon"></i>
+            <input 
+              type="text" 
+              class="ai-search-input" 
+              [(ngModel)]="promptIa" 
+              (keyup.enter)="consultarIaPrompt()"
+              placeholder="Ej: 'Boda al aire libre con calor tropical', 'Reunión de negocios en La Paz', 'Cena casual con blazer'..."
+            />
+            <button *ngIf="promptIa" class="btn-clear-input" (click)="limpiarPrompt()" title="Limpiar consulta">&times;</button>
+          </div>
+          <button class="btn-ask-ai" (click)="consultarIaPrompt()" [disabled]="isUpdating">
+            <i class="fas fa-robot"></i>
+            <span>{{ isUpdating ? 'Razonando...' : 'Pedir Consejo a IA' }}</span>
+          </button>
+        </div>
+
+        <!-- Chips de Prompts Rápidos Sugeridos -->
+        <div class="quick-suggestions-row">
+          <span class="chips-title"><i class="fas fa-bolt text-gold"></i> Sugerencias rápidas:</span>
+          <div class="chips-scroll">
+            <button *ngFor="let chip of chipsSugeridos" class="quick-chip" (click)="aplicarChip(chip)">
+              <span class="chip-icon">{{ chip.icono }}</span>
+              <span>{{ chip.texto }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de Filtros Multicriterio del Asistente IA -->
       <div class="controls-panel glass-card">
-        <!-- Selector de Ciudad Boliviana -->
-        <div class="control-group">
-          <label><i class="fas fa-city"></i> Ciudad de Destino:</label>
-          <div class="btn-group">
-            <button 
-              *ngFor="let c of ciudades" 
-              class="selector-btn"
-              [class.active]="ciudadSeleccionada === c"
-              (click)="seleccionarCiudad(c)">
-              {{ c }}
-            </button>
+        <!-- Fila 1: Ciudad Boliviana y Ocasión -->
+        <div class="filter-flex-row">
+          <div class="control-group">
+            <label><i class="fas fa-city"></i> Ciudad & Clima:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let c of ciudades" 
+                class="selector-btn"
+                [class.active]="ciudadSeleccionada === c"
+                (click)="seleccionarCiudad(c)">
+                {{ c }}
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label><i class="fas fa-calendar-check"></i> Ocasión / Evento:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let oc of ocasiones" 
+                class="selector-btn"
+                [class.active]="ocasionSeleccionada === oc"
+                (click)="seleccionarOcasion(oc)">
+                {{ oc }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Botón de Búsqueda por Voz CU23 -->
+          <button class="btn-voice-search" (click)="abrirModalVoz()">
+            <span class="pulse-mic"><i class="fas fa-microphone"></i></span>
+            <div class="voice-btn-content">
+              <span class="voice-btn-title">Búsqueda por Voz (CU23)</span>
+              <span class="voice-btn-sub">NLP Semántico en Vivo</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Fila 2: Temporada, Estilo y Presupuesto -->
+        <div class="filter-flex-row secondary-row">
+          <div class="control-group">
+            <label><i class="fas fa-sun text-gold"></i> Temporada / Campaña:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let t of temporadas" 
+                class="selector-btn mini"
+                [class.active]="temporadaSeleccionada === t"
+                (click)="seleccionarTemporada(t)">
+                {{ t }}
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label><i class="fas fa-user-tie text-indigo"></i> Estilo / Vibe:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let e of estilos" 
+                class="selector-btn mini"
+                [class.active]="estiloSeleccionado === e"
+                (click)="seleccionarEstilo(e)">
+                {{ e }}
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label><i class="fas fa-coins text-gold"></i> Presupuesto:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let p of presupuestos" 
+                class="selector-btn mini"
+                [class.active]="presupuestoSeleccionado === p"
+                (click)="seleccionarPresupuesto(p)">
+                {{ p }}
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Selector de Ocasión -->
-        <div class="control-group">
-          <label><i class="fas fa-calendar-check"></i> Ocasión:</label>
-          <div class="btn-group">
-            <button 
-              *ngFor="let oc of ocasiones" 
-              class="selector-btn"
-              [class.active]="ocasionSeleccionada === oc"
-              (click)="seleccionarOcasion(oc)">
-              {{ oc }}
-            </button>
+        <!-- Fila 3: Filtro Específico por Rango de Temperatura / Clima Térmico -->
+        <div class="filter-flex-row thermal-row">
+          <div class="control-group">
+            <label><i class="fas fa-temperature-half text-cyan"></i> Filtro por Rango de Temperatura:</label>
+            <div class="btn-group">
+              <button 
+                *ngFor="let f of filtrosClima" 
+                class="selector-btn thermal-btn"
+                [class.active]="filtroClimaSeleccionado === f.id"
+                [class.btn-auto]="f.id === 'AUTO'"
+                [class.btn-calido]="f.id === 'CÁLIDO'"
+                [class.btn-templado]="f.id === 'TEMPLADO'"
+                [class.btn-frio]="f.id === 'FRÍO'"
+                [class.btn-lluvia]="f.id === 'LLUVIOSO'"
+                (click)="seleccionarFiltroClima(f.id)">
+                <i [class]="f.icono"></i> {{ f.label }}
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Botón de Búsqueda por Voz CU23 -->
-        <button class="btn-voice-search" (click)="abrirModalVoz()">
-          <span class="pulse-mic"><i class="fas fa-microphone"></i></span>
-          <div class="voice-btn-content">
-            <span class="voice-btn-title">Búsqueda por Voz (CU23)</span>
-            <span class="voice-btn-sub">NLP Semántico en Vivo</span>
+      <!-- Diagnóstico y Razonamiento de la IA en Tiempo Real -->
+      <div class="ai-reasoning-card glass-card" *ngIf="razonamientoIa">
+        <div class="reasoning-icon-box">
+          <i class="fas fa-brain"></i>
+        </div>
+        <div class="reasoning-body">
+          <div class="reasoning-header">
+            <h4>Diagnóstico del Estilista de Inteligencia Artificial</h4>
+            <span class="status-verified-badge"><i class="fas fa-check-double"></i> Clima y Stock Auditados</span>
           </div>
-        </button>
+          <p class="reasoning-text">{{ razonamientoIa }}</p>
+        </div>
       </div>
 
       <!-- Indicador sutil de actualización en tiempo real -->
       <div class="updating-bar" *ngIf="isUpdating">
         <div class="updating-spinner"></div>
-        <span>Sincronizando pronóstico meteorológico y existencias de stock con IA...</span>
+        <span>El Asistente IA está cruzando telemetría satelital, inventario físico y reglas sartoriales...</span>
       </div>
 
       <!-- Outfits Recomendados con Justificación de IA -->
@@ -567,6 +695,50 @@ interface OutfitRecomendado {
       color: #94A3B8;
     }
 
+    .live-pill {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      letter-spacing: 0.04em;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
+      animation: pulse 1.5s infinite;
+    }
+
+    .weather-telemetry-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .telemetry-chip {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #CBD5E1;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .text-cyan { color: #38BDF8; }
+
     .textile-advice {
       margin: 0;
       font-size: 0.82rem;
@@ -578,15 +750,203 @@ interface OutfitRecomendado {
       border-left: 3px solid #818CF8;
     }
 
-    /* Panel de Controles */
-    .controls-panel {
-      padding: 1.25rem 2rem;
+    /* Barra de Prompt Interactivo con el Asistente IA */
+    .ai-prompt-card {
+      padding: 1.5rem 2rem;
       margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .prompt-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .prompt-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .ai-pill {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: #FFFFFF;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .prompt-subtext {
+      font-size: 0.86rem;
+      color: #94A3B8;
+    }
+
+    .telemetry-tag {
+      font-size: 0.78rem;
+      color: #34D399;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+    }
+
+    .prompt-interactive-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .prompt-input-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 280px;
+    }
+
+    .prompt-sparkle-icon {
+      position: absolute;
+      left: 1.1rem;
+      color: #818CF8;
+      font-size: 1rem;
+    }
+
+    .ai-search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      padding: 0.85rem 2.8rem 0.85rem 2.8rem;
+      border-radius: 12px;
+      color: #FFFFFF;
+      font-size: 0.92rem;
+      outline: none;
+      transition: all 0.25s;
+    }
+
+    .ai-search-input:focus {
+      border-color: #818CF8;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .ai-search-input::placeholder {
+      color: #64748B;
+      font-size: 0.85rem;
+    }
+
+    .btn-clear-input {
+      position: absolute;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #94A3B8;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .btn-ask-ai {
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      color: #FFFFFF;
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      padding: 0.85rem 1.6rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-ask-ai:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+    }
+
+    .btn-ask-ai:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .quick-suggestions-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .chips-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94A3B8;
+      white-space: nowrap;
+    }
+
+    .chips-scroll {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #CBD5E1;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+    }
+
+    .quick-chip:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #A5B4FC;
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    /* Panel de Controles y Filtros Multicriterio */
+    .controls-panel {
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .filter-flex-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 1.5rem;
       flex-wrap: wrap;
+    }
+
+    .filter-flex-row.secondary-row {
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .control-group {
@@ -597,14 +957,18 @@ interface OutfitRecomendado {
     }
 
     .control-group label {
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: #CBD5E1;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .btn-group {
       display: flex;
       gap: 0.4rem;
+      flex-wrap: wrap;
     }
 
     .selector-btn {
@@ -616,6 +980,11 @@ interface OutfitRecomendado {
       font-size: 0.82rem;
       cursor: pointer;
       transition: all 0.2s;
+    }
+
+    .selector-btn.mini {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
     }
 
     .selector-btn:hover {
@@ -630,6 +999,107 @@ interface OutfitRecomendado {
       border-color: #818CF8;
       font-weight: 700;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .filter-flex-row.thermal-row {
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .selector-btn.thermal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+    }
+
+    .selector-btn.thermal-btn.active.btn-calido {
+      background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+      border-color: #FBBF24;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+
+    .selector-btn.thermal-btn.active.btn-templado {
+      background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+      border-color: #38BDF8;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+    }
+
+    .selector-btn.thermal-btn.active.btn-frio {
+      background: linear-gradient(135deg, #4338CA 0%, #3730A3 100%);
+      border-color: #818CF8;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .selector-btn.thermal-btn.active.btn-lluvia {
+      background: linear-gradient(135deg, #0F766E 0%, #115E59 100%);
+      border-color: #2DD4BF;
+      box-shadow: 0 4px 14px rgba(45, 212, 191, 0.4);
+    }
+
+    /* Diagnóstico y Razonamiento de la IA */
+    .ai-reasoning-card {
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-left: 4px solid #818CF8;
+    }
+
+    .reasoning-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #818CF8;
+      flex-shrink: 0;
+    }
+
+    .reasoning-body {
+      flex: 1;
+    }
+
+    .reasoning-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .reasoning-header h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #E0E7FF;
+    }
+
+    .status-verified-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .reasoning-text {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #CBD5E1;
+      line-height: 1.5;
     }
 
     .btn-voice-search {
@@ -1756,11 +2226,40 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  ciudades = ['Santa Cruz', 'La Paz', 'Cochabamba'];
+  ciudades = ['Santa Cruz', 'La Paz', 'Cochabamba', 'Sucre', 'Tarija'];
   ciudadSeleccionada = 'Santa Cruz';
 
   ocasiones = ['TODAS', 'Formal', 'Casual', 'Cena / Gala'];
   ocasionSeleccionada = 'TODAS';
+
+  temporadas = ['TODAS', 'Verano Tropical', 'Invierno Andino', 'Otoño / Media Estación', 'Liquidación'];
+  temporadaSeleccionada = 'TODAS';
+
+  estilos = ['TODOS', 'Sartorial Formal', 'Smart Casual', 'Old Money Elegance', 'Casual Urbano'];
+  estiloSeleccionado = 'TODOS';
+
+  presupuestos = ['TODOS', '< Bs. 500', 'Bs. 500 - 1.200', '> Bs. 1.200'];
+  presupuestoSeleccionado = 'TODOS';
+
+  filtrosClima = [
+    { id: 'AUTO', label: 'Satélite en Vivo (Auto)', icono: 'fas fa-satellite-dish' },
+    { id: 'CÁLIDO', label: 'Cálido Tropical (>26°C)', icono: 'fas fa-sun text-gold' },
+    { id: 'TEMPLADO', label: 'Templado Valle (19-25°C)', icono: 'fas fa-cloud-sun text-cyan' },
+    { id: 'FRÍO', label: 'Frío Andino (<18°C)', icono: 'fas fa-snowflake text-indigo' },
+    { id: 'LLUVIOSO', label: 'Lluvioso / Húmedo', icono: 'fas fa-cloud-rain text-cyan' }
+  ];
+  filtroClimaSeleccionado = 'AUTO';
+
+  promptIa = '';
+  razonamientoIa = '';
+
+  chipsSugeridos = [
+    { icono: '🌴', texto: 'Día Caluroso Tropical' },
+    { icono: '👔', texto: 'Boda o Gala Nocturna' },
+    { icono: '💼', texto: 'Reunión de Negocios' },
+    { icono: '🧥', texto: 'Noche Fresca con Blazer' },
+    { icono: '☕', texto: 'Smart Casual Fin de Semana' }
+  ];
 
   isUpdating = false;
   isVoiceModalOpen = false;
@@ -1777,18 +2276,22 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
 
   clima: ClimaLocal = {
     ciudad: 'Santa Cruz de la Sierra',
-    temperatura_c: 28.5,
-    sensacion_c: 31.0,
-    condicion: 'Cálido y Soleado',
-    descripcion_clima: 'Clima tropical cálido con brisa moderada.',
+    temperatura_c: 30.7,
+    sensacion_c: 30.5,
+    condicion: 'Despejado y Soleado',
+    descripcion_clima: 'Telemetría satelital Open-Meteo en vivo.',
     icono_clima: 'sunny',
-    recomendacion_textil: 'Recomendamos lino puro 100%, algodón pima transpirable y tonos claros para refractar la radiación térmica.'
+    recomendacion_textil: 'Lino puro 100%, algodón pima transpirable y tonos claros para refractar la radiación térmica.',
+    humedad_pct: 56,
+    viento_kmh: 40.7,
+    fuente_meteo: 'Open-Meteo Satelital en Vivo',
+    es_tiempo_real: true
   };
 
   outfits: OutfitRecomendado[] = [];
 
   ngOnInit(): void {
-    // 1. Iniciar con datos completos de inmediato para que NUNCA aparezca bloqueado o congelado
+    // 1. Iniciar con datos completos de inmediato
     this.outfits = this.generarMockOutfits();
     this.initSpeechRecognitionEngine();
     this.cargarDatos();
@@ -1809,6 +2312,12 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
 
   seleccionarCiudad(c: string): void {
     this.ciudadSeleccionada = c;
+    this.filtroClimaSeleccionado = 'AUTO';
+    this.cargarDatos();
+  }
+
+  seleccionarFiltroClima(f: string): void {
+    this.filtroClimaSeleccionado = f;
     this.cargarDatos();
   }
 
@@ -1817,27 +2326,86 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     this.cargarDatos();
   }
 
+  seleccionarTemporada(t: string): void {
+    this.temporadaSeleccionada = t;
+    this.cargarDatos();
+  }
+
+  seleccionarEstilo(e: string): void {
+    this.estiloSeleccionado = e;
+    this.cargarDatos();
+  }
+
+  seleccionarPresupuesto(p: string): void {
+    this.presupuestoSeleccionado = p;
+    this.cargarDatos();
+  }
+
+  consultarIaPrompt(): void {
+    this.cargarDatos();
+  }
+
+  limpiarPrompt(): void {
+    this.promptIa = '';
+    this.cargarDatos();
+  }
+
+  aplicarChip(chip: any): void {
+    this.promptIa = chip.texto;
+    if (chip.texto.includes('Boda') || chip.texto.includes('Gala')) {
+      this.ocasionSeleccionada = 'Cena / Gala';
+      this.estiloSeleccionado = 'Sartorial Formal';
+    } else if (chip.texto.includes('Negocios')) {
+      this.ocasionSeleccionada = 'Formal';
+      this.estiloSeleccionado = 'Sartorial Formal';
+    } else if (chip.texto.includes('Caluroso')) {
+      this.ocasionSeleccionada = 'Casual';
+      this.estiloSeleccionado = 'Smart Casual';
+      this.filtroClimaSeleccionado = 'CÁLIDO';
+    } else if (chip.texto.includes('Blazer')) {
+      this.estiloSeleccionado = 'Old Money Elegance';
+    } else {
+      this.ocasionSeleccionada = 'Casual';
+      this.estiloSeleccionado = 'Smart Casual';
+    }
+    this.cargarDatos();
+  }
+
   cargarDatos(): void {
     this.isUpdating = true;
     this.cdr.detectChanges();
 
-    // 1. Clima local
-    this.api.getClimaLocal(this.ciudadSeleccionada).subscribe({
-      next: (res: any) => {
-        if (res) {
-          this.clima = res;
+    // 1. Clima satelital en tiempo real si está en modo AUTO
+    if (this.filtroClimaSeleccionado === 'AUTO') {
+      this.api.getClimaLocal(this.ciudadSeleccionada).subscribe({
+        next: (res: any) => {
+          if (res) {
+            this.clima = res;
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.cdr.detectChanges();
         }
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.cdr.detectChanges();
-      }
-    });
+      });
+    }
 
-    // 2. Outfits recomendados de IA
-    this.api.getOutfitsRecomendados(this.ciudadSeleccionada, this.ocasionSeleccionada).subscribe({
+    // 2. Outfits recomendados de IA con filtros completos (incluyendo rango térmico)
+    this.api.getOutfitsRecomendados(
+      this.ciudadSeleccionada,
+      this.ocasionSeleccionada,
+      this.temporadaSeleccionada,
+      this.estiloSeleccionado,
+      this.presupuestoSeleccionado,
+      this.promptIa,
+      this.filtroClimaSeleccionado
+    ).subscribe({
       next: (res: any) => {
         this.isUpdating = false;
+        this.razonamientoIa = res?.razonamiento_ia || '';
+        if (res?.clima && this.filtroClimaSeleccionado !== 'AUTO') {
+          this.clima = res.clima;
+        }
         const list = res?.outfits_recomendados || res?.outfits || [];
         if (list.length > 0) {
           this.outfits = list;

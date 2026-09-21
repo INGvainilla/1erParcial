@@ -47,12 +47,20 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
         ? p.tallas.first
         : PrendaTalla(idTalla: 0, talla: 'M', orden: 1);
 
-    _cargarDisponibilidad();
+    _cargarDisponibilidad(
+      talla: _selectedTalla.talla,
+      color: _selectedColor.nombre,
+    );
   }
 
-  Future<void> _cargarDisponibilidad() async {
+  Future<void> _cargarDisponibilidad({String? talla, String? color}) async {
+    setState(() => _cargandoSucursales = true);
     try {
-      final sucs = await _catalogoService.getDisponibilidadSucursales(widget.prenda.idProducto);
+      final sucs = await _catalogoService.getDisponibilidadSucursales(
+        widget.prenda.idProducto,
+        talla: talla,
+        color: color,
+      );
       if (!mounted) return;
       setState(() {
         _sucursales = sucs;
@@ -118,12 +126,30 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
       return;
     }
 
+    // Verificar que haya stock para la variante seleccionada
+    final stockVariante = _sucursales.fold<int>(
+      0, (sum, s) => sum + s.stockDisponible
+    );
+    if (stockVariante == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sin stock disponible para talla ${_selectedTalla.talla} / ${_selectedColor.nombre}. Prueba otra variante.',
+          ),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => CrearReservaScreen(
           prendaPreseleccionada: widget.prenda,
-          colorPreseleccionado: _selectedColor.nombre,
+          colorPreseleccionado: _selectedColor.nombre.isNotEmpty
+              ? _selectedColor.nombre
+              : 'Estándar',
           tallaPreseleccionada: _selectedTalla.talla,
           onSwitchTab: widget.onSwitchTab,
         ),
@@ -344,7 +370,13 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
 
                             return InkWell(
                               borderRadius: BorderRadius.circular(20),
-                              onTap: () => setState(() => _selectedColor = c),
+                              onTap: () {
+                                setState(() => _selectedColor = c);
+                                _cargarDisponibilidad(
+                                  talla: _selectedTalla.talla,
+                                  color: c.nombre,
+                                );
+                              },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
@@ -399,7 +431,13 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
                             return ChoiceChip(
                               label: Text(t.talla),
                               selected: isSelected,
-                              onSelected: (_) => setState(() => _selectedTalla = t),
+                              onSelected: (_) {
+                                setState(() => _selectedTalla = t);
+                                _cargarDisponibilidad(
+                                  talla: t.talla,
+                                  color: _selectedColor.nombre,
+                                );
+                              },
                             );
                           }).toList(),
                         ),

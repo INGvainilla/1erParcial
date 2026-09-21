@@ -328,3 +328,218 @@ def test_cu25_bloqueo_devolucion_ticket_vencido(db, cajero_usuario, sucursal_act
 
     assert exc_info.value.status_code == 400
     assert "Plazo de devolución vencido" in exc_info.value.detail
+
+
+def test_cu25_reembolso_efectivo_reingreso_inventario(db, cajero_usuario, sucursal_activa):
+    """
+    CU25: Valida que en un REEMBOLSO_EFECTIVO de prenda APTO_VENTA:
+    1. Se reintegre el dinero (total_devuelto == precio de compra, diferencia_cobrada == 0)
+    2. La prenda vuelva al inventario incrementando tanto stock_fisico como stock_disponible
+    3. Se asiente en Kardex el reingreso DEVOLUCION_VENTA al CPP histórico inmutable
+    """
+    prod = db.query(Producto).first()
+    talla_test = "S"
+    color_test = "Blanco Puro"
+    nro_ticket = f"POS-REEMB-{int(utc_now().timestamp())}"
+
+    # Obtener inventario antes de la devolución
+    inv = db.query(Inventario).filter(
+        Inventario.id_sucursal == sucursal_activa.id_sucursal,
+        Inventario.id_producto == prod.id_producto,
+        Inventario.talla == talla_test,
+        Inventario.color == color_test
+    ).first()
+
+    if not inv:
+        inv = Inventario(
+            id_sucursal=sucursal_activa.id_sucursal,
+            id_producto=prod.id_producto,
+            talla=talla_test,
+            color=color_test,
+            stock_fisico=10,
+            stock_reservado=0,
+            stock_disponible=10,
+            stock_minimo=3,
+            ultimo_costo_compra=Decimal("110.00"),
+            costo_promedio_ponderado=Decimal("110.00")
+        )
+        db.add(inv)
+        db.commit()
+
+    stock_fisico_antes = inv.stock_fisico
+    stock_disponible_antes = inv.stock_disponible
+
+    # Crear la venta previa válida (dentro de los 14 días)
+    orden = OrdenVenta(
+        id_usuario=cajero_usuario.id_usuario,
+        id_sucursal=sucursal_activa.id_sucursal,
+        numero_factura=nro_ticket,
+        canal_venta="POS",
+        modalidad_entrega="COMPRA_FISICA",
+        nit_factura="4499112",
+        razon_social_factura="Juan Reembolso",
+        subtotal=Decimal("250.00"),
+        total=Decimal("250.00"),
+        estado_pago="PAGADO",
+        estado_logistica="ENTREGADA",
+        creado_en=utc_now() - timedelta(days=1)
+    )
+    db.add(orden)
+    db.flush()
+
+    det = OrdenDetalle(
+        id_orden=orden.id_orden,
+        id_producto=prod.id_producto,
+        talla=talla_test,
+        color=color_test,
+        cantidad=1,
+        precio_unitario=Decimal("250.00"),
+        subtotal=Decimal("250.00")
+    )
+    db.add(det)
+    db.commit()
+
+    # Cajero procesa devolución con REEMBOLSO_EFECTIVO
+    payload = DevolucionCreate(
+        nro_ticket_original=nro_ticket,
+        motivo="Cliente desistió de la compra, solicita dinero en efectivo",
+        tipo_resolucion="REEMBOLSO_EFECTIVO",
+        items=[
+            DevolucionItemInput(
+                id_producto=prod.id_producto,
+                talla=talla_test,
+                color=color_test,
+                cantidad=1,
+                estado_fisico="APTO_VENTA"
+            )
+        ]
+    )
+
+    ticket_resp = procesar_devolucion_pos(
+        db=db,
+        id_cajero=cajero_usuario.id_usuario,
+        id_sucursal=sucursal_activa.id_sucursal,
+        cajero_nombre="Alberto Delgado",
+        dev_in=payload
+    )
+
+    # 1. Comprobante de reembolso en efectivo
+    assert ticket_resp.tipo_resolucion == "REEMBOLSO_EFECTIVO"
+    assert ticket_resp.total_devuelto == 250.00
+    assert ticket_resp.diferencia_cobrada == 0.00
+    assert ticket_resp.nro_devolucion.startswith("DEV-")
+
+    # 2. Verificar que la prenda volvió al inventario
+    db.refresh(inv)
+    assert inv.stock_fisico == stock_fisico_antes + 1
+    assert inv.stock_disponible == stock_disponible_antes + 1
+
+    # 3. Asiento Kardex inmutable
+    kardex_reingreso = db.query(KardexMovimiento).filter(
+        KardexMovimiento.referencia_documento.ilike(f"%{ticket_resp.nro_devolucion}%"),
+        KardexMovimiento.tipo_movimiento == "DEVOLUCION_VENTA"
+    ).first()
+    assert kardex_reingreso is not None
+    assert kardex_reingreso.cantidad == 1
+    assert kardex_reingreso.costo_unitario_movimiento == inv.costo_promedio_ponderado
+
+
+def test_cu25_reembolso_merma_no_disponible_para_venta(db, cajero_usuario, sucursal_activa):
+    """
+    CU25: Valida que si la prenda está DEFECTUOSA / MERMA:
+    - Incrementa el stock_fisico para auditoría de almacén
+    - NO incrementa el stock_disponible (protección contra ventas de ropa rota/con fallas)
+    """
+    prod = db.query(Producto).first()
+    talla_test = "L"
+    color_test = "Azul Noche"
+    nro_ticket = f"POS-MERMA-{int(utc_now().timestamp())}"
+
+    inv = db.query(Inventario).filter(
+        Inventario.id_sucursal == sucursal_activa.id_sucursal,
+        Inventario.id_producto == prod.id_producto,
+        Inventario.talla == talla_test,
+        Inventario.color == color_test
+    ).first()
+
+    if not inv:
+        inv = Inventario(
+            id_sucursal=sucursal_activa.id_sucursal,
+            id_producto=prod.id_producto,
+            talla=talla_test,
+            color=color_test,
+            stock_fisico=5,
+            stock_reservado=0,
+            stock_disponible=5,
+            stock_minimo=2,
+            ultimo_costo_compra=Decimal("95.00"),
+            costo_promedio_ponderado=Decimal("95.00")
+        )
+        db.add(inv)
+        db.commit()
+
+    stock_fisico_antes = inv.stock_fisico
+    stock_disponible_antes = inv.stock_disponible
+
+    orden = OrdenVenta(
+        id_usuario=cajero_usuario.id_usuario,
+        id_sucursal=sucursal_activa.id_sucursal,
+        numero_factura=nro_ticket,
+        canal_venta="POS",
+        modalidad_entrega="COMPRA_FISICA",
+        nit_factura="0",
+        razon_social_factura="Cliente Falla Confeccion",
+        subtotal=Decimal("190.00"),
+        total=Decimal("190.00"),
+        estado_pago="PAGADO",
+        estado_logistica="ENTREGADA",
+        creado_en=utc_now() - timedelta(days=3)
+    )
+    db.add(orden)
+    db.flush()
+
+    det = OrdenDetalle(
+        id_orden=orden.id_orden,
+        id_producto=prod.id_producto,
+        talla=talla_test,
+        color=color_test,
+        cantidad=1,
+        precio_unitario=Decimal("190.00"),
+        subtotal=Decimal("190.00")
+    )
+    db.add(det)
+    db.commit()
+
+    payload = DevolucionCreate(
+        nro_ticket_original=nro_ticket,
+        motivo="Costura descosida de fábrica (Merma)",
+        tipo_resolucion="REEMBOLSO_EFECTIVO",
+        items=[
+            DevolucionItemInput(
+                id_producto=prod.id_producto,
+                talla=talla_test,
+                color=color_test,
+                cantidad=1,
+                estado_fisico="DEFECTUOSO_MERMA"
+            )
+        ]
+    )
+
+    ticket_resp = procesar_devolucion_pos(
+        db=db,
+        id_cajero=cajero_usuario.id_usuario,
+        id_sucursal=sucursal_activa.id_sucursal,
+        cajero_nombre="Alberto Delgado",
+        dev_in=payload
+    )
+
+    # 1. Total devuelto
+    assert ticket_resp.total_devuelto == 190.00
+
+    # 2. Stock físico sube para inventario de merma
+    db.refresh(inv)
+    assert inv.stock_fisico == stock_fisico_antes + 1
+
+    # 3. Stock disponible NO debe subir porque la prenda está rota
+    assert inv.stock_disponible == stock_disponible_antes
+

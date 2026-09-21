@@ -7,7 +7,7 @@ export const getApiBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isLocalhost && window.location.port === '4200') {
-      return `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+      return 'http://127.0.0.1:8000/api/v1';
     }
   }
   return '/api/v1';

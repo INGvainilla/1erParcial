@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/app.css"],
+  "sourcesContent": [".app-layout {\r\n  display: flex;\r\n  min-height: 100vh;\r\n  background-color: var(--bg-main);\r\n  background-image: \r\n    radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),\r\n    radial-gradient(at 90% 80%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);\r\n  background-attachment: fixed;\r\n}\r\n\r\n.main-content {\r\n  flex: 1;\r\n  overflow-y: auto;\r\n  min-height: 100vh;\r\n  padding-bottom: 2rem;\r\n  min-width: 0;\r\n}\r\n\r\n@media (max-width: 1024px) {\r\n  .app-layout {\r\n    flex-direction: column;\r\n    width: 100%;\r\n    overflow-x: hidden;\r\n  }\r\n\r\n  .main-content {\r\n    width: 100%;\r\n    overflow-x: hidden;\r\n    padding-bottom: 5.5rem;\r\n  }\r\n}\r\n"],
+  "mappings": ";AAAA,CAAC;AACC,WAAS;AACT,cAAY;AACZ,oBAAkB,IAAI;AACtB;AAAA,IACE;AAAA,MAAgB,GAAG,IAAI,GAAG;AAAA,MAAE,KAAK,EAAE,EAAE,GAAG,EAAE,GAAG,EAAE,MAAM,GAAG;AAAA,MAAE,YAAY,IAAI;AAAA,IAC1E;AAAA,MAAgB,GAAG,IAAI,GAAG;AAAA,MAAE,KAAK,GAAG,EAAE,EAAE,EAAE,GAAG,EAAE,MAAM,GAAG;AAAA,MAAE,YAAY;AACxE,yBAAuB;AACzB;AAEA,CAAC;AACC,QAAM;AACN,cAAY;AACZ,cAAY;AACZ,kBAAgB;AAChB,aAAW;AACb;AAEA,QAAO,WAAY;AACjB,GAnBD;AAoBG,oBAAgB;AAChB,WAAO;AACP,gBAAY;AACd;AAEA,GAfD;AAgBG,WAAO;AACP,gBAAY;AACZ,oBAAgB;AAClB;AACF;",
+  "names": []
+}

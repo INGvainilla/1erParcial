@@ -199,23 +199,27 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
               decoration: InputDecoration(
                 hintText: 'Buscar trajes, camisas, pantalones...',
                 prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted, size: 20),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_searchController.text.isNotEmpty)
+                suffixIcon: SizedBox(
+                  width: _searchController.text.isNotEmpty ? 88 : 48,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (_searchController.text.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 18, color: AppTheme.textMuted),
+                          onPressed: () {
+                            _searchController.clear();
+                            _recargarCatalogo();
+                          },
+                        ),
                       IconButton(
-                        icon: const Icon(Icons.clear, size: 18, color: AppTheme.textMuted),
-                        onPressed: () {
-                          _searchController.clear();
-                          _recargarCatalogo();
-                        },
+                        icon: const Icon(Icons.mic, color: AppTheme.accentGold, size: 20),
+                        tooltip: 'Búsqueda por Voz',
+                        onPressed: _abrirBusquedaVoz,
                       ),
-                    IconButton(
-                      icon: const Icon(Icons.mic, color: AppTheme.accentGold, size: 20),
-                      tooltip: 'Búsqueda por Voz',
-                      onPressed: _abrirBusquedaVoz,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -461,18 +465,25 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Bs. ${p.precioFinal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                      Flexible(
+                        child: Text(
+                          'Bs. ${p.precioFinal.toStringAsFixed(2)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
                       if (hayStock)
-                        Text(
-                          '${p.stockTotalDisponible} disp.',
-                          style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(
+                            '${p.stockTotalDisponible}u',
+                            style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                          ),
                         ),
                     ],
                   ),

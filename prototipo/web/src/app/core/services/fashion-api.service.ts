@@ -239,9 +239,15 @@ export class FashionApiService {
   // ==========================================
   // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU24)
   // ==========================================
-  getDashboardMetricas(): Observable<any> {
+  getDashboardMetricas(sucursalId?: number | null, rangoFecha?: string, rankingTipo?: string): Observable<any> {
+    let params = new HttpParams();
+    if (sucursalId) params = params.set('sucursal_id', sucursalId.toString());
+    if (rangoFecha && rangoFecha !== 'TODO') params = params.set('rango_fecha', rangoFecha);
+    if (rankingTipo && rankingTipo !== 'TODOS') params = params.set('ranking_tipo', rankingTipo);
+
     return this.http.get<any>(`${this.apiUrl}/dashboard/metricas`, {
-      headers: this.auth.getAuthHeaders()
+      headers: this.auth.getAuthHeaders(),
+      params
     });
   }
 
@@ -301,14 +307,23 @@ export class FashionApiService {
     return this.http.get<any>(`${this.apiUrl}/recomendaciones/clima`, { params });
   }
 
-  getOutfitsRecomendados(ciudad?: string, ocasion?: string): Observable<any> {
+  getOutfitsRecomendados(
+    ciudad?: string,
+    ocasion?: string,
+    temporada?: string,
+    estilo?: string,
+    presupuesto?: string,
+    promptIa?: string,
+    filtroClima?: string
+  ): Observable<any> {
     let params = new HttpParams();
-    if (ciudad) {
-      params = params.set('ciudad', ciudad);
-    }
-    if (ocasion) {
-      params = params.set('ocasion', ocasion);
-    }
+    if (ciudad) params = params.set('ciudad', ciudad);
+    if (ocasion) params = params.set('ocasion', ocasion);
+    if (temporada && temporada !== 'TODAS') params = params.set('temporada', temporada);
+    if (estilo && estilo !== 'TODOS') params = params.set('estilo', estilo);
+    if (presupuesto && presupuesto !== 'TODOS') params = params.set('presupuesto', presupuesto);
+    if (promptIa && promptIa.trim()) params = params.set('prompt_ia', promptIa.trim());
+    if (filtroClima && filtroClima !== 'AUTO') params = params.set('filtro_clima', filtroClima);
     return this.http.get<any>(`${this.apiUrl}/recomendaciones/outfits`, { params });
   }
 

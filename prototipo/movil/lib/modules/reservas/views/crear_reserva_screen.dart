@@ -125,17 +125,16 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
       detalles.add({
         'id_producto': widget.prendaPreseleccionada!.idProducto,
         'talla': widget.tallaPreseleccionada ?? 'M',
-        'color': widget.colorPreseleccionado ?? 'Estándar',
+        'color': (widget.colorPreseleccionado != null && widget.colorPreseleccionado!.isNotEmpty)
+            ? widget.colorPreseleccionado!
+            : 'Estándar',
         'cantidad': 1,
       });
     } else {
-      // Reserva general de probador
-      detalles.add({
-        'id_producto': 1,
-        'talla': 'M',
-        'color': 'Azul Marino',
-        'cantidad': 1,
-      });
+      // Sin prenda preseleccionada: reserva de probador sin prenda específica
+      setState(() => _errorMessage = 'Selecciona una prenda desde el catálogo para reservar el probador.');
+      setState(() => _isSubmitting = false);
+      return;
     }
 
     setState(() {
@@ -273,10 +272,15 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
                   prefixIcon: Icon(Icons.storefront_outlined, color: AppTheme.accentGold),
                 ),
                 dropdownColor: AppTheme.bgSurface,
+                isExpanded: true,
                 items: _sucursales.map((s) {
                   return DropdownMenuItem<int>(
                     value: s['id_sucursal'] as int,
-                    child: Text("${s['nombre_sucursal']} (${s['nombre_ciudad']})"),
+                    child: Text(
+                      "${s['nombre_sucursal']} (${s['nombre_ciudad']})",
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   );
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedSucursalId = val),

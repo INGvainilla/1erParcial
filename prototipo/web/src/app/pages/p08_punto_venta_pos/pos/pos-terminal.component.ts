@@ -596,25 +596,27 @@ interface TicketItem extends PosItemInput {
         <div class="pos-modal-box dev-modal-box glass-panel">
           <div class="modal-header">
             <div class="modal-title-wrap">
-              <i class="fas fa-exchange-alt text-warning"></i>
+              <div class="modal-icon-badge">
+                <i class="fas fa-exchange-alt"></i>
+              </div>
               <div>
                 <h3>Devolución y Cambio de Prendas (CU25)</h3>
-                <span class="modal-subtitle">Inspección física, plazo fiscal de 14 días y reingreso a Kardex al CPP histórico</span>
+                <span class="modal-subtitle">Inspección física en mostrador, plazo fiscal de 14 días y reingreso a Kardex al CPP histórico</span>
               </div>
             </div>
-            <button class="modal-close" (click)="cerrarDevolucionModal()">&times;</button>
+            <button class="modal-close" (click)="cerrarDevolucionModal()" title="Cerrar ventana"><i class="fas fa-times"></i></button>
           </div>
 
           <div class="modal-body dev-modal-body">
             <!-- 1. Búsqueda de Ticket Fiscal Original -->
             <div class="dev-search-bar">
               <div class="search-input-wrap">
-                <i class="fas fa-receipt search-icon"></i>
+                <i class="fas fa-barcode search-icon"></i>
                 <input
                   type="text"
                   [(ngModel)]="ticketDevSearchTerm"
                   (keyup.enter)="consultarTicketDevolucion()"
-                  placeholder="Escanear QR o digitar N° Factura (ej: POS-2026-0042)..."
+                  placeholder="Escanear QR o digitar N° Factura / Ticket (ej: RES-xxx, POS-xxx, FAC-xxx)..."
                   class="pos-scanner-input"
                 />
               </div>
@@ -627,13 +629,28 @@ interface TicketItem extends PosItemInput {
             <!-- 2. Tarjeta Informativa del Ticket Consultado -->
             <div *ngIf="ticketDevData" class="ticket-info-card">
               <div class="ticket-info-header">
-                <div>
-                  <span class="ticket-chip"><i class="fas fa-file-invoice"></i> {{ ticketDevData.numero_factura }}</span>
-                  <span class="client-name">Cliente: <strong>{{ ticketDevData.nombre_cliente }}</strong> (NIT/CI: {{ ticketDevData.nit_cliente }})</span>
+                <div class="ticket-meta-primary">
+                  <div class="ticket-chip-box">
+                    <span class="ticket-chip"><i class="fas fa-receipt"></i> {{ ticketDevData.numero_factura }}</span>
+                  </div>
+                  <div class="status-badge" [class.valid-badge]="ticketDevData.es_valido_14_dias" [class.expired-badge]="!ticketDevData.es_valido_14_dias">
+                    <i class="fas" [class.fa-check-circle]="ticketDevData.es_valido_14_dias" [class.fa-exclamation-triangle]="!ticketDevData.es_valido_14_dias"></i>
+                    <span>{{ ticketDevData.mensaje_plazo }}</span>
+                  </div>
                 </div>
-                <div class="status-badge" [class.valid-badge]="ticketDevData.es_valido_14_dias" [class.expired-badge]="!ticketDevData.es_valido_14_dias">
-                  <i class="fas" [class.fa-check-circle]="ticketDevData.es_valido_14_dias" [class.fa-exclamation-triangle]="!ticketDevData.es_valido_14_dias"></i>
-                  <span>{{ ticketDevData.mensaje_plazo }}</span>
+                <div class="ticket-meta-secondary">
+                  <div class="client-meta-group">
+                    <span class="client-name">
+                      <i class="fas fa-user-check client-ico"></i> Cliente: <strong>{{ ticketDevData.nombre_cliente }}</strong>
+                    </span>
+                    <span class="client-nit-tag">
+                      <i class="fas fa-id-card"></i> NIT/CI: <strong>{{ ticketDevData.nit_cliente }}</strong>
+                    </span>
+                  </div>
+                  <div class="ticket-total-pill">
+                    <span class="total-lbl">Total Ticket:</span>
+                    <span class="total-val">Bs. {{ ticketDevData.total | number:'1.2-2' }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -642,12 +659,22 @@ interface TicketItem extends PosItemInput {
                 <h4><i class="fas fa-tshirt"></i> Seleccionar Prenda Objeto de Devolución</h4>
                 <div class="dev-item-card" *ngFor="let item of ticketDevData.items" [class.selected]="selectedDevItem?.id_producto === item.id_producto" (click)="selectItemDevolucion(item)">
                   <div class="dev-item-details">
-                    <strong>{{ item.nombre_producto }}</strong>
-                    <span class="item-meta">SKU: {{ item.codigo_sku_base }} | Talla original: <strong>{{ item.talla }}</strong> | Color: {{ item.color }}</span>
-                    <span class="item-price">Precio cobrado: <strong>Bs. {{ item.precio_unitario | number:'1.2-2' }}</strong> | CPP Histórico: Bs. {{ item.costo_historico_cpp | number:'1.2-2' }}</span>
+                    <div class="item-title-row">
+                      <strong class="item-name">{{ item.nombre_producto }}</strong>
+                      <span class="sku-badge">{{ item.codigo_sku_base }}</span>
+                    </div>
+                    <div class="item-specs-row">
+                      <span class="spec-pill"><i class="fas fa-ruler-combined"></i> Talla: <strong>{{ item.talla }}</strong></span>
+                      <span class="spec-pill"><i class="fas fa-tint"></i> Color: <strong>{{ item.color }}</strong></span>
+                      <span class="spec-pill"><i class="fas fa-layer-group"></i> Cantidad: <strong>{{ item.cantidad }} ud(s)</strong></span>
+                    </div>
+                    <div class="item-pricing-row">
+                      <span class="item-price-tag">Precio Cobrado: <strong>Bs. {{ item.precio_unitario | number:'1.2-2' }}</strong></span>
+                      <span class="item-cpp-tag"><i class="fas fa-archive"></i> CPP Histórico: <strong>Bs. {{ item.costo_historico_cpp | number:'1.2-2' }}</strong></span>
+                    </div>
                   </div>
-                  <div class="dev-select-indicator">
-                    <input type="radio" name="devItemSelect" [checked]="selectedDevItem?.id_producto === item.id_producto" />
+                  <div class="dev-select-indicator" [class.checked]="selectedDevItem?.id_producto === item.id_producto">
+                    <i class="fas" [class.fa-check-circle]="selectedDevItem?.id_producto === item.id_producto" [class.fa-circle]="selectedDevItem?.id_producto !== item.id_producto"></i>
                   </div>
                 </div>
               </div>
@@ -991,38 +1018,48 @@ interface TicketItem extends PosItemInput {
     .btn-scan {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.55rem;
       background: linear-gradient(135deg, #4f46e5, #6366f1);
       color: white;
       border: none;
-      padding: 0 1.25rem;
+      padding: 0 1.35rem;
+      height: 46px;
       border-radius: 10px;
       font-weight: 700;
       font-size: 0.85rem;
       cursor: pointer;
-      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
     .btn-scan:hover:not(:disabled) {
-      filter: brightness(1.1);
+      filter: brightness(1.12);
       transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45);
     }
     .btn-load-rsv {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      background: rgba(168, 85, 247, 0.15);
-      border: 1.5px solid rgba(168, 85, 247, 0.4);
-      color: #c084fc;
-      padding: 0 1.15rem;
+      gap: 0.55rem;
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(126, 34, 206, 0.25));
+      border: 1px solid rgba(192, 132, 252, 0.35);
+      color: #e9d5ff;
+      padding: 0 1.25rem;
+      height: 46px;
       border-radius: 10px;
       font-weight: 700;
       font-size: 0.85rem;
       cursor: pointer;
-      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
       white-space: nowrap;
     }
     .btn-load-rsv:hover {
-      background: rgba(168, 85, 247, 0.25);
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(126, 34, 206, 0.38));
+      border-color: #c084fc;
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
     }
 
     /* Banner de Reserva Vinculada */
@@ -2066,233 +2103,566 @@ interface TicketItem extends PosItemInput {
 
     /* CU25: Devoluciones y Cambios */
     .btn-load-dev {
-      background: linear-gradient(135deg, rgba(217, 119, 6, 0.25), rgba(180, 83, 9, 0.4));
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.25));
+      border: 1px solid rgba(245, 158, 11, 0.45);
       color: #fbbf24;
-      padding: 0.65rem 1.1rem;
+      padding: 0 1.25rem;
+      height: 46px;
       border-radius: 10px;
       font-weight: 700;
       font-size: 0.85rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.25s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
     .btn-load-dev:hover {
-      background: rgba(245, 158, 11, 0.35);
-      border-color: #fbbf24;
-      color: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(217, 119, 6, 0.38));
+      border-color: #fde047;
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
     }
+
+    /* Modal CU25 General Structure */
     .dev-modal-box {
-      max-width: 760px;
+      max-width: 800px;
       width: 95%;
-      max-height: 90vh;
+      max-height: 92vh;
       overflow-y: auto;
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      border-radius: 18px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 35px rgba(245, 158, 11, 0.1);
+      padding: 1.5rem;
+      backdrop-filter: blur(25px);
     }
+    .modal-icon-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.35));
+      border: 1.5px solid rgba(245, 158, 11, 0.45);
+      color: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
+    }
+    .modal-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      transform: rotate(90deg) scale(1.05);
+    }
+
+    /* Modal Search Bar */
     .dev-search-bar {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.85rem;
       margin-bottom: 1.25rem;
     }
+    .search-icon {
+      position: absolute;
+      left: 1.15rem;
+      color: #818cf8;
+      font-size: 1.1rem;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Tarjeta Informativa del Ticket Consultado */
     .ticket-info-card {
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
       padding: 1.25rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     }
     .ticket-info-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.15rem;
+      padding-bottom: 0.95rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
+    .ticket-meta-primary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .ticket-chip-box {
+      display: flex;
+      align-items: center;
+    }
     .ticket-chip {
-      background: #3b82f6;
-      color: #fff;
-      font-size: 0.75rem;
-      font-weight: 800;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      margin-right: 0.65rem;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(59, 130, 246, 0.4));
+      border: 1.5px solid rgba(59, 130, 246, 0.55);
+      color: #bfdbfe;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
     }
     .status-badge {
       font-size: 0.78rem;
       font-weight: 700;
-      padding: 0.35rem 0.75rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 20px;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.45rem;
+      letter-spacing: 0.01em;
     }
     .status-badge.valid-badge {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgba(16, 185, 129, 0.16);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      border: 1.5px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
     }
     .status-badge.expired-badge {
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(239, 68, 68, 0.16);
       color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.4);
+      border: 1.5px solid rgba(239, 68, 68, 0.45);
+      box-shadow: 0 2px 10px rgba(239, 68, 68, 0.2);
     }
-    .dev-items-section h4 {
-      font-size: 0.9rem;
-      color: #cbd5e1;
-      margin-bottom: 0.75rem;
+    .ticket-meta-secondary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .client-meta-group {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .client-name {
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .client-ico {
+      color: #818cf8;
+      font-size: 0.95rem;
+    }
+    .client-name strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .client-nit-tag {
+      font-size: 0.76rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: #94a3b8;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .client-nit-tag strong {
+      color: #cbd5e1;
+    }
+    .ticket-total-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 0.25rem 0.75rem;
+      border-radius: 8px;
+    }
+    .total-lbl {
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .total-val {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #fbbf24;
+    }
+
+    /* Lista de Prendas Adquiridas */
+    .dev-items-section h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      letter-spacing: 0.02em;
     }
     .dev-item-card {
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 0.85rem 1rem;
-      margin-bottom: 0.65rem;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.22s ease;
     }
     .dev-item-card:hover {
-      border-color: rgba(99, 102, 241, 0.5);
-      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(99, 102, 241, 0.45);
+      background: rgba(30, 41, 59, 0.85);
+      transform: translateY(-1px);
     }
     .dev-item-card.selected {
       border-color: #6366f1;
-      background: rgba(99, 102, 241, 0.15);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(124, 58, 237, 0.2));
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.22);
     }
     .dev-item-details {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.4rem;
+      flex: 1;
     }
-    .item-meta {
-      font-size: 0.8rem;
+    .item-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .item-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .sku-badge {
+      background: rgba(129, 140, 248, 0.15);
+      border: 1px solid rgba(129, 140, 248, 0.35);
+      color: #818cf8;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 5px;
+      letter-spacing: 0.02em;
+    }
+    .item-specs-row {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .spec-pill {
+      font-size: 0.76rem;
       color: #94a3b8;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
-    .item-price {
-      font-size: 0.8rem;
+    .spec-pill strong {
+      color: #e2e8f0;
+    }
+    .item-pricing-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+      margin-top: 0.2rem;
+    }
+    .item-price-tag {
+      font-size: 0.82rem;
       color: #38bdf8;
     }
+    .item-price-tag strong {
+      font-weight: 800;
+      font-size: 0.88rem;
+    }
+    .item-cpp-tag {
+      font-size: 0.74rem;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.15rem 0.5rem;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .item-cpp-tag strong {
+      color: #cbd5e1;
+    }
+    .dev-select-indicator {
+      font-size: 1.35rem;
+      color: #475569;
+      margin-left: 1rem;
+      transition: all 0.2s ease;
+    }
+    .dev-select-indicator.checked {
+      color: #818cf8;
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+      transform: scale(1.1);
+    }
+
+    /* Panel de Configuración Devolución */
     .dev-config-panel {
-      margin-top: 1.25rem;
+      margin-top: 1.35rem;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 1rem;
+      padding-top: 1.25rem;
     }
     .config-label {
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: #e2e8f0;
-      margin-bottom: 0.5rem;
-      display: block;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .radio-options-row {
       display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
     }
     .radio-pill {
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 0.55rem 0.85rem;
-      font-size: 0.8rem;
+      flex: 1;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1.5px solid rgba(255, 255, 255, 0.09);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
-      color: #cbd5e1;
-      transition: all 0.2s;
+      justify-content: center;
+      gap: 0.55rem;
+      color: #94a3b8;
+      transition: all 0.22s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .radio-pill:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      background: rgba(30, 41, 59, 0.85);
     }
     .radio-pill.active {
-      background: rgba(16, 185, 129, 0.2);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.3));
       border-color: #10b981;
       color: #6ee7b7;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
     }
     .radio-pill.warn.active {
-      background: rgba(239, 68, 68, 0.2);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.3));
       border-color: #ef4444;
       color: #fca5a5;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
     }
+
+    /* Modalidad de Compensación (Tabs) */
     .resolution-tabs {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+      gap: 0.4rem;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 5px;
+      margin-bottom: 1.25rem;
     }
     .res-tab {
       flex: 1;
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 0.6rem;
+      background: transparent;
+      border: none;
+      border-radius: 9px;
+      padding: 0.7rem 0.6rem;
       color: #94a3b8;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.22s ease;
+    }
+    .res-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
     }
     .res-tab.active {
-      background: #6366f1;
-      border-color: #818cf8;
-      color: #fff;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
     }
+
+    /* Subpanel de Cambio por Variante */
     .variant-change-subpanel {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(99, 102, 241, 0.28);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
     .variant-form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: 1.15rem;
+      margin-bottom: 1.15rem;
+    }
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 0.45rem;
+      display: block;
     }
     .dev-select {
       width: 100%;
+      height: 44px;
       background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 6px;
-      color: #fff;
-      padding: 0.55rem;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 9px;
+      color: #ffffff;
+      padding: 0 0.85rem;
       font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s;
     }
+    .dev-select:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Recálculo de Diferencias */
     .difference-calc-box {
-      background: rgba(30, 41, 59, 0.5);
-      border-radius: 6px;
-      padding: 0.75rem 1rem;
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.5rem;
     }
     .calc-row {
       display: flex;
       justify-content: space-between;
-      font-size: 0.82rem;
+      align-items: center;
+      font-size: 0.84rem;
       color: #cbd5e1;
     }
     .diff-highlight {
-      font-size: 0.95rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 0.4rem;
-      margin-top: 0.25rem;
-    }
-    .audit-note {
-      font-size: 0.74rem;
-      color: #94a3b8;
-      font-style: italic;
+      font-size: 0.98rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding-top: 0.6rem;
       margin-top: 0.35rem;
     }
+    .diff-highlight strong {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .audit-note {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      font-style: italic;
+      margin-top: 0.45rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .audit-note i {
+      color: #818cf8;
+    }
     .motivo-group {
-      margin-top: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0.85rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 0.5rem;
+    }
+    .btn-secondary {
+      height: 44px;
+      padding: 0 1.35rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+    .btn-primary {
+      height: 44px;
+      padding: 0 1.65rem;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.55);
+    }
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+      transform: none;
+      box-shadow: none;
     }
   `]
 })
@@ -2347,7 +2717,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
   // Modal Devolución / Cambio (CU25)
   showDevolucionModal: boolean = false;
-  ticketDevSearchTerm: string = 'POS-2026-0042';
+  ticketDevSearchTerm: string = '';
   isLoadingTicketDev: boolean = false;
   isProcessingDev: boolean = false;
   ticketDevData?: TicketConsultaResponse;
@@ -2722,7 +3092,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   // ========================================================================
   openDevolucionModal() {
     this.showDevolucionModal = true;
-    if (!this.ticketDevData) {
+    if (this.ticketDevSearchTerm.trim() && !this.ticketDevData) {
       this.consultarTicketDevolucion();
     }
   }
