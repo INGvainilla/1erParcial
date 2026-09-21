@@ -59,6 +59,12 @@ export class FashionApiService {
     });
   }
 
+  bloquearUsuario(idUsuario: number, minutos: number = 30): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}/bloquear?minutos=${minutos}`, {}, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
   cambiarRolUsuario(idUsuario: number, nuevoRol: string): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}`, { rol: nuevoRol }, {
       headers: this.auth.getAuthHeaders()
@@ -78,6 +84,12 @@ export class FashionApiService {
 
   createSucursal(sucursal: any): Observable<Sucursal> {
     return this.http.post<Sucursal>(`${this.apiUrl}/sucursales`, sucursal, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  updateSucursal(idSucursal: number, data: any): Observable<Sucursal> {
+    return this.http.put<Sucursal>(`${this.apiUrl}/sucursales/${idSucursal}`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }
@@ -116,6 +128,12 @@ export class FashionApiService {
     });
   }
 
+  updateTemporada(idTemporada: number, data: any): Observable<Temporada> {
+    return this.http.put<Temporada>(`${this.apiUrl}/temporadas/${idTemporada}`, data, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
   // ==========================================
   // CU08: PROVEEDORES TEXTILES (NIT ÚNICO)
   // ==========================================
@@ -127,6 +145,12 @@ export class FashionApiService {
 
   createProveedor(data: any): Observable<Proveedor> {
     return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, data, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  updateProveedor(idProveedor: number, data: any): Observable<Proveedor> {
+    return this.http.put<Proveedor>(`${this.apiUrl}/proveedores/${idProveedor}`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }
@@ -213,11 +237,84 @@ export class FashionApiService {
   }
 
   // ==========================================
-  // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU18)
+  // DASHBOARD Y MÉTRICAS GLOBALES (CU01 - CU24)
   // ==========================================
   getDashboardMetricas(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/dashboard/metricas`, {
       headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  // ==========================================
+  // CU21: FIDELIZACIÓN GAMIFICADA (M16)
+  // ==========================================
+  getGamificacionPerfil(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/gamificacion/perfil`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getRecompensas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/gamificacion/recompensas`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  canjearRecompensa(codigoRecompensa: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/canjear`, {
+      codigo_recompensa: codigoRecompensa
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  otorgarBonoAccion(accion: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/bono-accion`, {
+      accion: accion
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getMisCupones(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/gamificacion/mis-cupones`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  validarCupon(codigoCupon: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/gamificacion/validar-cupon`, {
+      codigo_cupon: codigoCupon
+    }, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  // ==========================================
+  // CU22 & CU23: ASISTENTE IA, CLIMA Y VOZ (M17)
+  // ==========================================
+  getClimaLocal(ciudad?: string): Observable<any> {
+    let params = new HttpParams();
+    if (ciudad) {
+      params = params.set('ciudad', ciudad);
+    }
+    return this.http.get<any>(`${this.apiUrl}/recomendaciones/clima`, { params });
+  }
+
+  getOutfitsRecomendados(ciudad?: string, ocasion?: string): Observable<any> {
+    let params = new HttpParams();
+    if (ciudad) {
+      params = params.set('ciudad', ciudad);
+    }
+    if (ocasion) {
+      params = params.set('ocasion', ocasion);
+    }
+    return this.http.get<any>(`${this.apiUrl}/recomendaciones/outfits`, { params });
+  }
+
+  buscarPorVoz(consultaVoz: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/recomendaciones/busqueda-voz`, {
+      consulta_voz: consultaVoz
     });
   }
 }

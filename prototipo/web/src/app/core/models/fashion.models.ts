@@ -76,6 +76,8 @@ export interface ColorVariante {
 export interface TallaVariante {
   id_talla: number;
   talla: string;
+  precio?: number;
+  factor?: number;
 }
 
 export interface Producto {
@@ -206,6 +208,12 @@ export interface CatalogoItem {
   selectedColor?: string;
   selectedTalla?: string;
   selectedCantidad?: number;
+  _stock?: number;
+  _cpp?: number;
+  _precioFinal?: number;
+  _precioBase?: number;
+  _img?: string | null;
+  _catIcon?: string;
 }
 
 

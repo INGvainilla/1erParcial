@@ -17,28 +17,43 @@ def utc_now():
 # Asegurar path de importación
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
+from sqlalchemy import text
 from app.core.database import SessionLocal, Base, engine
 from app.core.security import get_password_hash
-from app.modules.sucursales.models import Ciudad, Sucursal
-from app.modules.auth.models import Usuario, TokenRecuperacion, BitacoraAcceso
-from app.modules.proveedores.models import Proveedor
-from app.modules.temporadas.models import Temporada
-from app.modules.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
-from app.modules.inventario.models import Inventario, KardexMovimiento
+from app.modules.p02_estructura_operativa.sucursales.models import Ciudad, Sucursal
+from app.modules.p01_seguridad_acceso.auth.models import Usuario, TokenRecuperacion, BitacoraAcceso
+from app.modules.p04_aprovisionamiento_proveedores.proveedores.models import Proveedor
+from app.modules.p03_catalogo_estilismo_ia.temporadas.models import Temporada
+from app.modules.p03_catalogo_estilismo_ia.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
+from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta, OrdenDetalle
+from app.modules.p08_punto_venta_pos.pos.models import Devolucion, DevolucionDetalle
 
 def reset_database(db):
     print("Limpiando datos y tablas para siembra limpia...")
     for model in [
+        DevolucionDetalle, Devolucion, OrdenDetalle, OrdenVenta,
         KardexMovimiento, Inventario, ProductoColor, ProductoTalla, Producto,
         Marca, Categoria, Temporada, Proveedor, TokenRecuperacion,
         BitacoraAcceso, Usuario, Sucursal, Ciudad
     ]:
-        db.query(model).delete()
+        try:
+            db.query(model).delete()
+        except Exception:
+            db.rollback()
     db.commit()
     print("Tablas limpiadas exitosamente.")
 
 def seed_database(force_reset: bool = False):
     print("Iniciando creación de tablas y siembra de datos semilla...")
+    # Autocorrección y migración preventiva si la tabla ya existía sin la columna precio
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS precio NUMERIC(10, 2);"))
+            conn.commit()
+    except Exception:
+        pass
+
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
@@ -540,6 +555,38 @@ def seed_database(force_reset: bool = False):
             referencia_documento="Ingreso Segundo Lote Fac-205 - Recálculo CPP"
         )
         db.add_all([k1, k2])
+        db.flush()
+
+        # 11. Orden de Venta POS de Prueba para CU25 (Devolución dentro del plazo de 14 días)
+        fecha_hace_5_dias = utc_now() - timedelta(days=5)
+        orden_pos_demo = OrdenVenta(
+            id_usuario=u_javier.id_usuario,
+            id_sucursal=s_equi.id_sucursal,
+            numero_factura="POS-2026-0042",
+            canal_venta="POS",
+            modalidad_entrega="COMPRA_FISICA",
+            nit_factura="4912044019",
+            razon_social_factura="Carlos Mendoza",
+            subtotal=Decimal("180.00"),
+            costo_envio=Decimal("0.00"),
+            total=Decimal("180.00"),
+            estado_pago="PAGADO",
+            estado_logistica="ENTREGADA",
+            creado_en=fecha_hace_5_dias
+        )
+        db.add(orden_pos_demo)
+        db.flush()
+
+        det_demo = OrdenDetalle(
+            id_orden=orden_pos_demo.id_orden,
+            id_producto=prod_camisa.id_producto,
+            talla="M",
+            color="Azul Marino",
+            cantidad=1,
+            precio_unitario=Decimal("180.00"),
+            subtotal=Decimal("180.00")
+        )
+        db.add(det_demo)
 
         db.commit()
         print("¡Siembra de datos semilla completada con éxito!")

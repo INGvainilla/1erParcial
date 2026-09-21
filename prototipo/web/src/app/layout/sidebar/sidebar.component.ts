@@ -71,6 +71,21 @@ import { CarritoService } from '../../core/services/carrito.service';
           <span>Catálogo de Ropa (CU10)</span>
         </a>
 
+        <a routerLink="/asistente-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+          <i class="fas fa-robot"></i>
+          <span>Asistente de Estilo IA (CU22/CU23)</span>
+        </a>
+
+        <a routerLink="/comparador" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+          <i class="fas fa-columns"></i>
+          <span>Comparador de Outfits (CU20)</span>
+        </a>
+
+        <a routerLink="/recompensas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+          <i class="fas fa-gem"></i>
+          <span>Club VIP & Puntos (CU21)</span>
+        </a>
+
         <a routerLink="/reservas/crear" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-calendar-check"></i>
           <span>Reservar Prendas (CU11)</span>
@@ -100,7 +115,7 @@ import { CarritoService } from '../../core/services/carrito.service';
 
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-chart-line"></i>
-            <span>Panel de Control (Métricas)</span>
+            <span>Cuadros de Mando & Dashboards (CU24)</span>
           </a>
 
           <a routerLink="/usuarios" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -162,6 +177,11 @@ import { CarritoService } from '../../core/services/carrito.service';
         <!-- MÓDULOS DE ENCARGADO DE SUCURSAL -->
         <ng-container *ngIf="auth.isManager()">
           <div class="nav-section-title">Operaciones de Tienda</div>
+
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard Ejecutivo (CU24)</span>
+          </a>
 
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
@@ -394,6 +414,14 @@ import { CarritoService } from '../../core/services/carrito.service';
       flex-direction: column;
       gap: 0.25rem;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .nav-section-title {

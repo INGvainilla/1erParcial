@@ -13,10 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Importar app para resolver modelos y mappers
 import app.main
 from app.core.database import SessionLocal
-from app.modules.auth.models import Usuario
-from app.modules.ordenes.models import OrdenVenta
-from app.modules.pagos.models import TransaccionPago
-from app.modules.pagos.services import (
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
+from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta
+from app.modules.p09_procesamiento_pagos.pagos.models import TransaccionPago
+from app.modules.p09_procesamiento_pagos.pagos.services import (
     crear_intencion_pago,
     confirmar_transaccion_pago,
     procesar_webhook_stripe
@@ -28,18 +29,20 @@ def run_tests():
     try:
         print("=== INICIANDO TEST CU16: PROCESAR PAGO CON PASARELA STRIPE ===")
 
-        # 1. Obtener usuario cliente para la prueba
+        # 1. Obtener usuario cliente y sucursal
         cliente = db.query(Usuario).filter(Usuario.rol == "CLIENTE").first()
         if not cliente:
             cliente = db.query(Usuario).first()
         assert cliente is not None, "Debe existir al menos un usuario"
-        print(f"[OK] Cliente de prueba: {cliente.email} (ID: {cliente.id_usuario})")
+        sucursal = db.query(Sucursal).first()
+        id_suc = sucursal.id_sucursal if sucursal else 1
+        print(f"[OK] Cliente de prueba: {cliente.email} (ID: {cliente.id_usuario}) en Sucursal #{id_suc}")
 
         # 2. Crear una orden de prueba en estado PENDIENTE
         correlativo = f"TEST-STRIPE-{datetime.now().microsecond}"
         orden = OrdenVenta(
             id_usuario=cliente.id_usuario,
-            id_sucursal=1,
+            id_sucursal=id_suc,
             numero_factura=correlativo,
             canal_venta="WEB",
             modalidad_entrega="DELIVERY",

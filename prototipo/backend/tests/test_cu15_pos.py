@@ -12,13 +12,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Importar app y Base para resolver mappers
 import app.main
 from app.core.database import SessionLocal
-from app.modules.pos.services import buscar_producto_por_sku, cargar_reserva_para_pos, procesar_venta_pos
-from app.modules.pos.schemas import PosVentaCreate, PosItemInput
-from app.modules.auth.models import Usuario
-from app.modules.productos.models import Producto
-from app.modules.inventario.models import Inventario, KardexMovimiento
-from app.modules.reservas.models import Reserva, ReservaDetalle
-from app.modules.ordenes.models import OrdenVenta
+from app.modules.p08_punto_venta_pos.pos.services import buscar_producto_por_sku, cargar_reserva_para_pos, procesar_venta_pos
+from app.modules.p08_punto_venta_pos.pos.schemas import PosVentaCreate, PosItemInput
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
+from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+from app.modules.p06_reservas_presenciales.reservas.models import Reserva, ReservaDetalle
+from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta
 
 def run_tests():
     db = SessionLocal()

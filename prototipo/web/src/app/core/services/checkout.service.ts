@@ -12,7 +12,9 @@ export interface OrdenCreateRequest {
   nit_factura: string;
   razon_social_factura: string;
   notas_entrega?: string | null;
+  codigo_cupon?: string | null;
 }
+
 
 export interface OrdenDetalleItem {
   id_detalle_orden: number;

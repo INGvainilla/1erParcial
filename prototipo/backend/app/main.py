@@ -14,60 +14,69 @@ import os
 from app.core.config import settings
 from app.core.database import Base, engine
 
-# Importar todos los modelos para registro en metadata
-import app.modules.auth.models
-import app.modules.sucursales.models
-import app.modules.proveedores.models
-import app.modules.temporadas.models
-import app.modules.productos.models
-import app.modules.inventario.models
-import app.modules.reservas.models
-import app.modules.carrito.models
-import app.modules.ordenes.models
-import app.modules.pagos.models
-import app.modules.gamificacion.models
+# Importar todos los modelos organizados en los 10 paquetes para registro en metadata
+import app.modules.p01_seguridad_acceso.auth.models
+import app.modules.p02_estructura_operativa.sucursales.models
+import app.modules.p03_catalogo_estilismo_ia.productos.models
+import app.modules.p03_catalogo_estilismo_ia.temporadas.models
+import app.modules.p04_aprovisionamiento_proveedores.proveedores.models
+import app.modules.p05_inventario_costos_analitica.inventario.models
+import app.modules.p06_reservas_presenciales.reservas.models
+import app.modules.p07_venta_digital_fidelizacion.carrito.models
+import app.modules.p07_venta_digital_fidelizacion.ordenes.models
+import app.modules.p07_venta_digital_fidelizacion.gamificacion.models
+import app.modules.p08_punto_venta_pos.pos.models
+import app.modules.p09_procesamiento_pagos.pagos.models
 
-# Importar enrutadores
-from app.modules.auth.router import router as auth_router
-from app.modules.usuarios.router import router as usuarios_router
-from app.modules.sucursales.router import router as sucursales_router, ciudades_router
-from app.modules.productos.router import router as productos_router
-from app.modules.temporadas.router import router as temporadas_router
-from app.modules.proveedores.router import router as proveedores_router
-from app.modules.inventario.router import router as inventario_router
-from app.modules.catalogo.router import router as catalogo_router
-from app.modules.reservas.router import router as reservas_router
-from app.modules.carrito.router import router as carrito_router
-from app.modules.ordenes.router import router as ordenes_router
-from app.modules.pos.router import router as pos_router
-from app.modules.pagos.router import router as pagos_router
-from app.modules.pagos.config_router import router as config_pagos_router
-from app.modules.logistica.router import router as logistica_router
-from app.modules.dashboard.router import router as dashboard_router
-from app.modules.gamificacion.router import router as gamificacion_router
-from app.modules.ia_recomendaciones.router import router as recomendaciones_router
+# Importar enrutadores desde la arquitectura de 10 paquetes
+from app.modules.p01_seguridad_acceso.auth.router import router as auth_router
+from app.modules.p01_seguridad_acceso.usuarios.router import router as usuarios_router
+from app.modules.p02_estructura_operativa.sucursales.router import router as sucursales_router, ciudades_router
+from app.modules.p03_catalogo_estilismo_ia.productos.router import router as productos_router
+from app.modules.p03_catalogo_estilismo_ia.temporadas.router import router as temporadas_router
+from app.modules.p03_catalogo_estilismo_ia.catalogo.router import router as catalogo_router
+from app.modules.p03_catalogo_estilismo_ia.ia_recomendaciones.router import router as recomendaciones_router
+from app.modules.p04_aprovisionamiento_proveedores.proveedores.router import router as proveedores_router
+from app.modules.p05_inventario_costos_analitica.inventario.router import router as inventario_router
+from app.modules.p05_inventario_costos_analitica.dashboard.router import router as dashboard_router
+from app.modules.p06_reservas_presenciales.reservas.router import router as reservas_router
+from app.modules.p07_venta_digital_fidelizacion.carrito.router import router as carrito_router
+from app.modules.p07_venta_digital_fidelizacion.ordenes.router import router as ordenes_router
+from app.modules.p07_venta_digital_fidelizacion.gamificacion.router import router as gamificacion_router
+from app.modules.p08_punto_venta_pos.pos.router import router as pos_router
+from app.modules.p09_procesamiento_pagos.pagos.router import router as pagos_router
+from app.modules.p09_procesamiento_pagos.pagos.config_router import router as config_pagos_router
+from app.modules.p10_logistica_delivery.logistica.router import router as logistica_router
 
-# Inicializar tablas de base de datos
+# Inicializar tablas de base de datos y migraciones preventivas DDL
+try:
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS precio NUMERIC(10, 2);"))
+        conn.commit()
+except Exception:
+    pass
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="""
-    ## FashionStore - API Backend Oficial (Ciclo 1)
-    Plataforma inteligente de comercio electrónico omnicanal para ropa masculina con vestidores virtuales y RA.
+    ## FashionStore - API Backend Oficial (Ciclo 3: Innovación, RA, IA, Fidelización y Post-Venta)
+    Plataforma inteligente de comercio electrónico omnicanal para ropa masculina con vestidores virtuales, IA y POS.
     
-    ### Casos de Uso Implementados (Ciclo 1):
-    * **CU01**: Autenticar Usuario y Control de Acceso (RBAC)
-    * **CU02**: Registrar Cliente (Auto-registro de clientes)
-    * **CU03**: Recuperar Contraseña (Token OTP de 6 dígitos con ventana de 15 min)
-    * **CU04**: Gestionar Usuarios y Roles (RBAC y Desbloqueo administrativo)
-    * **CU05**: Gestionar Ciudades y Sucursales Físicas (GPS y Capacidad de probadores)
-    * **CU06**: Gestionar Catálogo de Productos y Atributos de Moda (SKU, Colores HEX, Tallas, Modelo 3D)
-    * **CU07**: Gestionar Temporadas y Colecciones (SS/FW y Descuentos de Liquidación)
-    * **CU08**: Gestionar Proveedores Textiles (NIT único y Términos Comerciales)
-    * **CU09**: Gestionar Inventario Multi-Sucursal y Costos Ponderados (Recálculo matemático de CPP y Kardex)
-    * **CU10**: Consultar Catálogo y Disponibilidad por Sucursal (Omnicanal)
+    ### 25 Casos de Uso Implementados (Ciclos 1, 2 y 3):
+    * **P01 Seguridad:** CU01 (Auth RBAC), CU02 (Registro), CU03 (OTP Password), CU04 (Gestión Usuarios).
+    * **P02 Operativa:** CU05 (Sucursales GPS y Probadores).
+    * **P03 Catálogo & IA:** CU06 (Catálogo Moda), CU07 (Temporadas), CU10 (Catálogo Omnicanal), CU19 (Vestidor Virtual RA 3D), CU20 (Comparador Outfits), CU22 (Recomendaciones IA Clima/Ocasión), CU23 (Búsqueda por Voz Semántica).
+    * **P04 Proveedores:** CU08 (Proveedores Textiles y NIT).
+    * **P05 Inventario & Analítica:** CU09 (Inventario Kardex CPP), CU24 (Dashboards Ejecutivos y Cuadros de Mando).
+    * **P06 Reservas:** CU11 (Crear Reserva Probador), CU12 (Preparar y Atender Reserva QR), CU13 (Cancelar Reserva).
+    * **P07 Venta & Fidelización:** CU14 (Checkout Digital), CU21 (Fidelización Gamificada, Puntos e Insignias).
+    * **P08 POS & Devoluciones:** CU15 (Venta en Caja Mostrador), CU25 (Gestionar Devolución y Cambio de Prendas con Kardex CPP).
+    * **P09 Pagos:** CU16 (Pasarela Stripe & QR), CU17 (Configuración Medios de Pago).
+    * **P10 Logística:** CU18 (Despacho, Asignación Repartidor y Tracking Delivery).
     """
 )
 
@@ -144,12 +153,14 @@ if target_dir:
 def startup_event():
     try:
         from app.core.database import SessionLocal
-        from app.modules.auth.models import Usuario
+        from app.modules.p01_seguridad_acceso.auth.models import Usuario
         from app.scripts.seed_data import seed_database
+        import os
+        force_seed = os.getenv("FORCE_SEED", "false").lower() in ("true", "1")
         db = SessionLocal()
-        if not db.query(Usuario).first():
-            print(" [STARTUP] Base de datos vacia detectada. Ejecutando siembra inicial de datos semilla...")
-            seed_database()
+        if not db.query(Usuario).first() or force_seed:
+            print(f" [STARTUP] Inicializando siembra de datos semilla (force_reset={force_seed})...")
+            seed_database(force_reset=force_seed)
         db.close()
     except Exception as e:
         print(f" [STARTUP] Advertencia en inicializacion automatica: {e}")
@@ -161,7 +172,8 @@ def health_check():
         "status": "ONLINE",
         "sistema": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "ciclo": "Ciclo 1: Fundamentos y Módulos Base",
+        "ciclo": "Ciclo 3: Innovación, Realidad Aumentada, IA, Gamificación y Devoluciones (CU25)",
+        "casos_de_uso_activos": 25,
         "desarrolladores": ["Alberto Delgado", "Andy Mujica"],
         "materia": "Sistemas de Información II (SI2) - 2-2026"
     }

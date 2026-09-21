@@ -1,7 +1,8 @@
 # ==============================================================================
-# Dockerfile: FashionStore Omnicanal (Ciclos 1 y 2: SI2 - 2-2026)
-# Backend: FastAPI + Uvicorn + SQLAlchemy + SQLite/PostgreSQL
-# Frontend: Angular 19 SPA (Pre-compilado en web_dist para despliegue ultra-rápido y sin OOM)
+# Dockerfile: FashionStore Omnicanal (Ciclos 1, 2 y 3: SI2 - 2-2026)
+# Backend: FastAPI + Uvicorn + SQLAlchemy + SQLite/PostgreSQL (10 Paquetes PUDS)
+# Frontend: Angular 19 SPA con CU25 Devoluciones y Asistente IA (web_dist)
+# Optimizado para Render: Pre-compilado para evitar OOM (Out-of-Memory) en tier gratuito
 # ==============================================================================
 FROM python:3.11-slim
 

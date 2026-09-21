@@ -1980,34 +1980,52 @@ A partir del mapeo de responsabilidades de los actores descritos con los proceso
 
 ### 1.2 Priorización de Casos de Uso
 
-En consonancia con los principios del PUDS (mitigación temprana de riesgos arquitectónicos y entrega incremental de valor funcional), se establece la matriz de priorización multidimensional que define la asignación de Casos de Uso por cada ciclo de desarrollo:
+En consonancia con los principios del PUDS (mitigación temprana de riesgos arquitectónicos y entrega incremental de valor funcional), se establece la matriz de priorización multidimensional que define la asignación de Casos de Uso por cada ciclo de desarrollo, especificando la **Plataforma de Despliegue e Interfaz** (**Web**, **Móvil** o **Ambos**):
 
-| Código CU | Nombre del Caso de Uso | Valor de Negocio | Riesgo Técnico | Complejidad | Dependencias Previas | Asignación Iterativa |
-|:---:|:---|:---:|:---:|:---:|:---|:---:|
-| **CU01** | Autenticar Usuario y Control de Acceso (RBAC) | Muy Alto | Alto | Media | Ninguna | **Iteración 1 (Ciclo 1)** |
-| **CU02** | Registrar Cliente (Auto-registro de Clientes) | Muy Alto | Medio | Media | Ninguna | **Iteración 1 (Ciclo 1)** |
-| **CU03** | Recuperar Contraseña (Token OTP de 6 Dígitos) | Muy Alto | Alto | Media | CU01, CU02 | **Iteración 1 (Ciclo 1)** |
-| **CU04** | Gestionar Usuarios y Roles (RBAC y Desbloqueo) | Alto | Medio | Media | CU01 | **Iteración 1 (Ciclo 1)** |
-| **CU05** | Gestionar Ciudades y Sucursales | Muy Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
-| **CU06** | Gestionar Productos y Atributos de Moda | Muy Alto | Medio | Media | CU01 | **Iteración 1 (Ciclo 1)** |
-| **CU07** | Gestionar Temporadas y Colecciones | Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
-| **CU08** | Gestionar Proveedores Textiles | Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
-| **CU09** | Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP) | Crítico | Muy Alto | Alta | CU05, CU06, CU08 | **Iteración 1 (Ciclo 1)** |
-| **CU10** | Consultar Catálogo y Disponibilidad por Sucursal | Muy Alto | Medio | Media | CU05, CU06, CU09 | **Iteración 1 (Ciclo 1)** |
-| **CU11** | Solicitar Reserva de Prendas en Sucursal | Alto | Medio | Media | CU09, CU10 | Iteración 2 (Ciclo 2) |
-| **CU12** | Preparar y Atender Reserva Presencial | Alto | Medio | Media | CU11 | Iteración 2 (Ciclo 2) |
-| **CU13** | Administrar Carrito de Compras Omnicanal | Alto | Medio | Media | CU09, CU10 | Iteración 2 (Ciclo 2) |
-| **CU14** | Procesar Compra Digital y Checkout | Crítico | Alto | Alta | CU13, CU16 | Iteración 2 (Ciclo 2) |
-| **CU15** | Registrar Venta Presencial en Caja (POS) | Crítico | Alto | Alta | CU09, CU10, CU17 | Iteración 2 (Ciclo 2) |
-| **CU16** | Procesar Pago con Pasarela Electrónica | Crítico | Muy Alto | Alta | CU14 | Iteración 2 (Ciclo 2) |
-| **CU17** | Gestionar Tipos y Medios de Cobro | Alto | Medio | Media | CU15 | Iteración 2 (Ciclo 2) |
-| **CU18** | Gestionar Despacho y Logística de Delivery | Medio | Medio | Media | CU14 | Iteración 2 (Ciclo 2) |
-| **CU19** | Visualizar Prenda en Vestidor Virtual con RA | Alto | Muy Alto | Alta | CU06, CU10 | Iteración 3 (Ciclo 3) |
-| **CU20** | Comparar Outfits Lado a Lado | Medio | Medio | Media | CU10 | Iteración 3 (Ciclo 3) |
-| **CU21** | Gestionar Fidelización Gamificada | Alto | Medio | Media | CU14, CU15 | Iteración 3 (Ciclo 3) |
-| **CU22** | Solicitar Recomendación Contextual de IA | Alto | Muy Alto | Alta | CU10 | Iteración 3 (Ciclo 3) |
-| **CU23** | Buscar Productos por Comandos de Voz | Medio | Alto | Media | CU10, CU22 | Iteración 3 (Ciclo 3) |
-| **CU24** | Visualizar Cuadros de Mando y Dashboards | Alto | Medio | Media | CU09, CU14, CU15 | Iteración 3 (Ciclo 3) |
+| Código CU | Nombre del Caso de Uso | Plataforma | Valor de Negocio | Riesgo Técnico | Complejidad | Dependencias Previas | Asignación Iterativa |
+|:---:|:---|:---:|:---:|:---:|:---:|:---|:---:|
+| **CU01** | Autenticar Usuario y Control de Acceso (RBAC) | **Ambos (Web / Móvil)** | Muy Alto | Alto | Media | Ninguna | **Iteración 1 (Ciclo 1)** |
+| **CU02** | Registrar Cliente (Auto-registro de Clientes) | **Ambos (Web / Móvil)** | Muy Alto | Medio | Media | Ninguna | **Iteración 1 (Ciclo 1)** |
+| **CU03** | Recuperar Contraseña (Token OTP de 6 Dígitos) | **Ambos (Web / Móvil)** | Muy Alto | Alto | Media | CU01, CU02 | **Iteración 1 (Ciclo 1)** |
+| **CU04** | Gestionar Usuarios y Roles (RBAC y Desbloqueo) | **Web** | Alto | Medio | Media | CU01 | **Iteración 1 (Ciclo 1)** |
+| **CU05** | Gestionar Ciudades y Sucursales | **Web** | Muy Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
+| **CU06** | Gestionar Productos y Atributos de Moda | **Web** | Muy Alto | Medio | Media | CU01 | **Iteración 1 (Ciclo 1)** |
+| **CU07** | Gestionar Temporadas y Colecciones | **Web** | Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
+| **CU08** | Gestionar Proveedores Textiles | **Web** | Alto | Bajo | Baja | CU01 | **Iteración 1 (Ciclo 1)** |
+| **CU09** | Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP) | **Web** | Crítico | Muy Alto | Alta | CU05, CU06, CU08 | **Iteración 1 (Ciclo 1)** |
+| **CU10** | Consultar Catálogo y Disponibilidad por Sucursal | **Ambos (Web / Móvil)** | Muy Alto | Medio | Media | CU05, CU06, CU09 | **Iteración 1 (Ciclo 1)** |
+| **CU11** | Solicitar Reserva de Prendas en Sucursal | **Ambos (Web / Móvil)** | Alto | Medio | Media | CU09, CU10 | Iteración 2 (Ciclo 2) |
+| **CU12** | Preparar y Atender Reserva Presencial | **Web** | Alto | Medio | Media | CU11 | Iteración 2 (Ciclo 2) |
+| **CU13** | Administrar Carrito de Compras Omnicanal | **Ambos (Web / Móvil)** | Alto | Medio | Media | CU09, CU10 | Iteración 2 (Ciclo 2) |
+| **CU14** | Procesar Compra Digital y Checkout | **Ambos (Web / Móvil)** | Crítico | Alto | Alta | CU13, CU16 | Iteración 2 (Ciclo 2) |
+| **CU15** | Registrar Venta Presencial en Caja (POS) | **Web** | Crítico | Alto | Alta | CU09, CU10, CU17 | Iteración 2 (Ciclo 2) |
+| **CU16** | Procesar Pago con Pasarela Electrónica | **Ambos (Web / Móvil)** | Crítico | Muy Alto | Alta | CU14 | Iteración 2 (Ciclo 2) |
+| **CU17** | Gestionar Tipos y Medios de Cobro | **Web** | Alto | Medio | Media | CU15 | Iteración 2 (Ciclo 2) |
+| **CU18** | Gestionar Despacho y Logística de Delivery | **Ambos (Web / Móvil)** | Medio | Medio | Media | CU14 | Iteración 2 (Ciclo 2) |
+| **CU19** | Visualizar Prenda en Vestidor Virtual con RA | **Móvil** | Alto | Muy Alto | Alta | CU06, CU10 | Iteración 3 (Ciclo 3) |
+| **CU20** | Comparar Outfits Lado a Lado | **Ambos (Web / Móvil)** | Medio | Medio | Media | CU10 | Iteración 3 (Ciclo 3) |
+| **CU21** | Gestionar Fidelización Gamificada | **Ambos (Web / Móvil)** | Alto | Medio | Media | CU14, CU15 | Iteración 3 (Ciclo 3) |
+| **CU22** | Solicitar Recomendación Contextual de IA | **Ambos (Web / Móvil)** | Alto | Muy Alto | Alta | CU10 | Iteración 3 (Ciclo 3) |
+| **CU23** | Buscar Productos por Comandos de Voz | **Móvil** | Medio | Alto | Media | CU10, CU22 | Iteración 3 (Ciclo 3) |
+| **CU24** | Visualizar Cuadros de Mando y Dashboards | **Web** | Alto | Medio | Media | CU09, CU14, CU15 | Iteración 3 (Ciclo 3) |
+
+#### Justificación y Criterio Arquitectónico de Asignación de Plataformas:
+
+1. **Exclusivos Plataforma Web (Angular 19) — 10 Casos de Uso:**
+   - **CU04, CU05, CU06, CU07, CU08, CU17:** Paneles administrativos y de configuración gerencial (usuarios, roles, sucursales, atributos de catálogo, proveedores y medios de cobro) diseñados para monitores de escritorio con tablas de datos densas y formularios complejos.
+   - **CU09:** Asientos de recepción de mercancía y control de inventario con recálculo matemático de Costo Promedio Ponderado ($CPP$) en el centro logístico.
+   - **CU12:** Consola operativa en sucursal física para que el encargado organice los probadores y verifique las reservas presenciales.
+   - **CU15:** Terminal Punto de Venta (POS) en mostrador para cajeros con lector óptico de códigos de barra SKU y emisión de tickets fiscales.
+   - **CU24:** Cuadros de mando y tableros analíticos de inteligencia de negocios (BI) con renderizado vectorial de gráficos (Chart.js) para gerencia.
+
+2. **Exclusivos Plataforma Móvil (Flutter) — 2 Casos de Uso:**
+   - **CU19 (Vestidor Virtual con Realidad Aumentada):** Exige hardware y sensores nativos de smartphone (cámara frontal, giroscopio y Google ARCore SDK) para el rastreo corporal de 6 grados de libertad (6-DoF) y superposición de mallas 3D `.glb`.
+   - **CU23 (Búsqueda por Comandos de Voz):** Exige captura de audio en tiempo real mediante el micrófono del teléfono con reducción de ruido y transcripción NLP fonética directa.
+
+3. **Plataforma Híbrida / Omnicanal (Ambos: Web y Móvil) — 12 Casos de Uso:**
+   - **CU01, CU02, CU03:** Módulos de autenticación, auto-registro de clientes y recuperación por OTP de 6 dígitos disponibles uniformemente en ambos canales.
+   - **CU10, CU11, CU13, CU14, CU16, CU20, CU21, CU22:** El núcleo de autoservicio del cliente final (navegación del catálogo, solicitud de reservas presenciales, bolsa de compras sincronizada, checkout wizard, pago seguro con tarjeta/Stripe, comparador de hasta 3 outfits, portal de gamificación y recomendaciones de estilista IA con clima meteorológico de Santa Cruz / Bolivia).
+   - **CU18:** Consola administrativa de despacho para el personal de logística (Web) y seguimiento satelital GPS en vivo del repartidor para el cliente (Web y Móvil).
 
 > [!IMPORTANT]
 > **Casos de Uso Seleccionados para el Ciclo 1 (10 Casos de Uso Fundamentales):**  

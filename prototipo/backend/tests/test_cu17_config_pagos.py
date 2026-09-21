@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Importar app para resolver modelos y mappers
 import app.main
 from app.core.database import SessionLocal
-from app.modules.pagos.models import MetodoPagoConfig
-from app.modules.pagos.schemas import MetodoPagoUpdate
-from app.modules.pagos.services import (
+from app.modules.p09_procesamiento_pagos.pagos.models import MetodoPagoConfig
+from app.modules.p09_procesamiento_pagos.pagos.schemas import MetodoPagoUpdate
+from app.modules.p09_procesamiento_pagos.pagos.services import (
     asegurar_metodos_pago_semilla,
     listar_metodos_pago,
     listar_metodos_pago_publicos,

@@ -23,6 +23,8 @@ services:
         sync: false
       - key: STRIPE_CURRENCY
         value: bob
+      - key: FORCE_SEED
+        value: "false"
       # Si se vincula una base de datos PostgreSQL en Render, descomentar:
       # - key: DATABASE_URL
       #   fromDatabase:

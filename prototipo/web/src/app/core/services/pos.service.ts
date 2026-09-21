@@ -105,4 +105,90 @@ export class PosService {
       { headers: this.auth.getAuthHeaders() }
     );
   }
+
+  // ==========================================================================
+  // CU25: Gestionar Devolución y Cambio de Prendas
+  // ==========================================================================
+  consultarTicketDevolucion(nroTicket: string): Observable<TicketConsultaResponse> {
+    return this.http.get<TicketConsultaResponse>(
+      `${this.apiUrl}/devoluciones/ticket/${encodeURIComponent(nroTicket.trim())}`,
+      { headers: this.auth.getAuthHeaders() }
+    );
+  }
+
+  procesarDevolucion(payload: DevolucionCreate, idSucursal?: number): Observable<DevolucionTicketResponse> {
+    const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
+    return this.http.post<DevolucionTicketResponse>(
+      `${this.apiUrl}/devoluciones${query}`,
+      payload,
+      { headers: this.auth.getAuthHeaders() }
+    );
+  }
+}
+
+export interface TicketItemLookup {
+  id_producto: number;
+  nombre_producto: string;
+  codigo_sku_base: string;
+  talla: string;
+  color: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  costo_historico_cpp: number;
+  imagen_principal?: string;
+}
+
+export interface TicketConsultaResponse {
+  id_orden: number;
+  numero_factura: string;
+  fecha_emision: string;
+  nombre_cliente: string;
+  nit_cliente: string;
+  total: number;
+  dias_transcurridos: number;
+  es_valido_14_dias: boolean;
+  mensaje_plazo: string;
+  items: TicketItemLookup[];
+}
+
+export interface DevolucionItemInput {
+  id_producto: number;
+  talla: string;
+  color: string;
+  cantidad: number;
+  estado_fisico: 'APTO_VENTA' | 'DEFECTUOSO_MERMA';
+}
+
+export interface CambioVarianteInput {
+  nuevo_producto_id: number;
+  nueva_talla: string;
+  nuevo_color: string;
+  nueva_cantidad: number;
+}
+
+export interface DevolucionCreate {
+  nro_ticket_original: string;
+  motivo: string;
+  tipo_resolucion: 'CAMBIO_VARIANTE' | 'VALE_CREDITO' | 'REEMBOLSO_EFECTIVO' | 'REEMBOLSO_STRIPE';
+  items: DevolucionItemInput[];
+  cambio_info?: CambioVarianteInput;
+}
+
+export interface DevolucionTicketResponse {
+  id_devolucion: number;
+  nro_devolucion: string;
+  nro_ticket_original: string;
+  fecha_hora: string;
+  sucursal_nombre: string;
+  cajero_nombre: string;
+  cliente_nombre: string;
+  motivo: string;
+  tipo_resolucion: string;
+  total_devuelto: number;
+  diferencia_cobrada: number;
+  codigo_vale?: string;
+  mensaje_kardex: string;
+  items_devueltos: any[];
+  item_nuevo_entregado?: any;
 }
