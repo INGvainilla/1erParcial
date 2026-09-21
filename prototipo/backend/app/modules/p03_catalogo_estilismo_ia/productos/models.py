@@ -80,12 +80,13 @@ class ProductoColor(Base):
 class ProductoTalla(Base):
     """
     Entidad Talla (TallaEntity):
-    Manejo normalizado de tallas disponibles (CU06).
+    Manejo normalizado de tallas disponibles con precio diferenciado (CU06).
     """
     __tablename__ = "producto_tallas"
 
     id_talla = Column(Integer, primary_key=True, index=True, autoincrement=True)
     id_producto = Column(Integer, ForeignKey("productos.id_producto", ondelete="CASCADE"), nullable=False)
     talla = Column(String(20), nullable=False)  # S, M, L, XL, 38, 40, 42
+    precio = Column(Numeric(10, 2), nullable=True)  # Precio diferenciado por talla (CU06)
 
     producto = relationship("Producto", back_populates="tallas")

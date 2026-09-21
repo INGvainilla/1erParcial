@@ -88,3 +88,21 @@ def desbloquear_cuenta_endpoint(
         admin_id=current_user.id_usuario,
         ip_origen=client_ip
     )
+
+@router.put("/{id_usuario}/bloquear", response_model=DesbloquearUsuarioResponse)
+def bloquear_cuenta_endpoint(
+    id_usuario: int,
+    request: Request,
+    minutos: int = Query(30, description="Minutos de bloqueo temporal"),
+    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    db: Session = Depends(get_db)
+):
+    # CASO DE USO: CU04 - Bloqueo Preventivo / Temporal de Cuenta
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    return UsuarioAdminControl.bloquear_cuenta(
+        db=db,
+        id_usuario=id_usuario,
+        admin_id=current_user.id_usuario,
+        minutos=minutos,
+        ip_origen=client_ip
+    )

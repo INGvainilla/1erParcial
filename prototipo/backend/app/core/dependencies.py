@@ -30,8 +30,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     usuario = db.query(Usuario).filter(Usuario.id_usuario == int(user_id)).first()
     if not usuario:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
-    if usuario.estado_cuenta != "ACTIVO":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Cuenta no activa: {usuario.estado_cuenta}")
+    if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
+        from datetime import datetime, timezone
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        if usuario.bloqueado_hasta and now_utc > usuario.bloqueado_hasta:
+            usuario.estado_cuenta = "ACTIVO"
+            usuario.intentos_fallidos = 0
+            usuario.bloqueado_hasta = None
+            db.commit()
+            db.refresh(usuario)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Su cuenta se encuentra bloqueada temporalmente por seguridad. Contacte al Administrador."
+            )
+    elif usuario.estado_cuenta != "ACTIVO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Cuenta no activa ({usuario.estado_cuenta}). Contacte al Administrador.")
     return usuario
 
 def require_roles(allowed_roles: list):

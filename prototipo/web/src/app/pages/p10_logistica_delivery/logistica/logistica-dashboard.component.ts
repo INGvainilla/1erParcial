@@ -298,13 +298,13 @@ import { ToastService } from '../../../core/services/toast.service';
       </div>
 
       <!-- MODAL ASIGNAR REPARTIDOR -->
-      <div class="modal-backdrop" *ngIf="mostrarModalAsignar">
-        <div class="modal-card">
+      <div class="modal-backdrop" *ngIf="mostrarModalAsignar" (click)="cerrarModalAsignar()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div class="modal-title">
-              <i class="fas fa-motorcycle"></i> Asignar Repartidor o Courier
+              <i class="fas fa-motorcycle text-sky"></i> Asignar Repartidor o Courier
             </div>
-            <button class="btn-close" (click)="cerrarModalAsignar()">&times;</button>
+            <button class="btn-close" (click)="cerrarModalAsignar()" aria-label="Cerrar modal">&times;</button>
           </div>
 
           <div class="modal-body" *ngIf="ordenSeleccionada">
@@ -385,24 +385,42 @@ import { ToastService } from '../../../core/services/toast.service';
       margin: 0;
     }
 
-    .btn-refresh {
-      background: rgba(255,255,255,0.06);
-      color: #e2e8f0;
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 0.6rem 1.25rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
+      gap: 0.85rem;
+      flex-wrap: nowrap;
+      white-space: nowrap;
     }
 
-    .btn-refresh:hover {
-      background: rgba(255,255,255,0.12);
-      border-color: #38bdf8;
+    .btn-refresh {
+      background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 0 1.15rem;
+      height: 38px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-refresh:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.35);
       color: #38bdf8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn-refresh:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     /* METRICS */
@@ -813,22 +831,36 @@ import { ToastService } from '../../../core/services/toast.service';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(4px);
+      background: rgba(10, 15, 29, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 2000;
+      padding: 1.25rem;
+      animation: modalFadeIn 0.2s ease-out;
     }
 
     .modal-card {
       background: #0f172a;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 16px;
       width: 100%;
-      max-width: 480px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      max-width: 500px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(56, 189, 248, 0.12);
       overflow: hidden;
+      animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.95) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .modal-header {
@@ -962,33 +994,42 @@ import { ToastService } from '../../../core/services/toast.service';
     }
 
     .filter-pills {
-      display: flex;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: inline-flex;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       padding: 3px;
       gap: 3px;
+      height: 38px;
+      box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .pill-btn {
       background: transparent;
       border: none;
       color: #94a3b8;
-      padding: 0.4rem 0.8rem;
+      padding: 0 0.95rem;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      transition: all 0.2s;
+      gap: 0.45rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 100%;
+    }
+
+    .pill-btn:hover:not(.active) {
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .pill-btn.active {
       background: #0284c7;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
     }
 
     .modality-tag {
@@ -1094,6 +1135,7 @@ export class LogisticaDashboardComponent implements OnInit {
     } else {
       this.expandedCards.add(idOrden);
     }
+    this.cdr.detectChanges();
   }
 
   isExpanded(idOrden: number): boolean {
@@ -1103,6 +1145,7 @@ export class LogisticaDashboardComponent implements OnInit {
   // Acciones de avance
   marcarListo(ord: OrdenLogistica): void {
     this.procesandoId = ord.id_orden;
+    this.cdr.detectChanges();
 
     // Si estaba en CREADA, primero avanzar a PREPARACION y luego LISTO_DESPACHO
     if (ord.estado_logistica === 'CREADA') {
@@ -1113,16 +1156,19 @@ export class LogisticaDashboardComponent implements OnInit {
               this.procesandoId = null;
               this.toast.success('Orden Empacada', `La orden #${ord.id_orden} está lista para asignación de courier`);
               this.actualizarOrdenEnLista(actualizada);
+              this.cdr.detectChanges();
             },
             error: (err) => {
               this.procesandoId = null;
               this.toast.error('Conflicto Logístico', err.error?.detail || 'No se pudo avanzar el estado');
+              this.cdr.detectChanges();
             }
           });
         },
         error: (err) => {
           this.procesandoId = null;
           this.toast.error('Error', err.error?.detail || 'No se pudo iniciar el empaque');
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -1131,21 +1177,27 @@ export class LogisticaDashboardComponent implements OnInit {
           this.procesandoId = null;
           this.toast.success('Orden Empacada', `La orden #${ord.id_orden} está lista para asignación de courier`);
           this.actualizarOrdenEnLista(actualizada);
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.procesandoId = null;
           this.toast.error('Conflicto Logístico', err.error?.detail || 'No se pudo avanzar el estado');
+          this.cdr.detectChanges();
         }
       });
     }
   }
 
   abrirModalAsignar(ord: OrdenLogistica): void {
+    if (!this.repartidores || this.repartidores.length === 0) {
+      this.cargarRepartidores();
+    }
     this.ordenSeleccionada = ord;
     this.nombreRepartidorInput = ord.nombre_repartidor || '';
     this.telefonoRepartidorInput = ord.telefono_repartidor || '';
     this.idRepartidorSeleccionado = ord.id_repartidor;
     this.mostrarModalAsignar = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModalAsignar(): void {
@@ -1153,12 +1205,15 @@ export class LogisticaDashboardComponent implements OnInit {
     this.ordenSeleccionada = null;
     this.nombreRepartidorInput = '';
     this.telefonoRepartidorInput = '';
+    this.idRepartidorSeleccionado = undefined;
+    this.cdr.detectChanges();
   }
 
   seleccionarRepartidorFlota(event: any): void {
     const id = Number(event.target.value);
     if (!id) {
       this.idRepartidorSeleccionado = undefined;
+      this.cdr.detectChanges();
       return;
     }
     const rep = this.repartidores.find(r => r.id_usuario === id);
@@ -1166,6 +1221,7 @@ export class LogisticaDashboardComponent implements OnInit {
       this.idRepartidorSeleccionado = rep.id_usuario;
       this.nombreRepartidorInput = rep.nombre_completo;
       this.telefonoRepartidorInput = rep.telefono;
+      this.cdr.detectChanges();
     }
   }
 
@@ -1173,6 +1229,7 @@ export class LogisticaDashboardComponent implements OnInit {
     if (!this.ordenSeleccionada || !this.nombreRepartidorInput.trim()) return;
 
     this.procesandoId = this.ordenSeleccionada.id_orden;
+    this.cdr.detectChanges();
     this.logisticaService.asignarRepartidor(this.ordenSeleccionada.id_orden, {
       id_repartidor: this.idRepartidorSeleccionado,
       nombre_repartidor: this.nombreRepartidorInput.trim(),
@@ -1183,10 +1240,12 @@ export class LogisticaDashboardComponent implements OnInit {
         this.toast.success('Despacho Iniciado', `Courier asignado a la orden #${actualizada.id_orden}. Pedido en tránsito.`);
         this.actualizarOrdenEnLista(actualizada);
         this.cerrarModalAsignar();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.procesandoId = null;
         this.toast.error('Error de Asignación', err.error?.detail || 'No se pudo asignar el repartidor');
+        this.cdr.detectChanges();
       }
     });
   }

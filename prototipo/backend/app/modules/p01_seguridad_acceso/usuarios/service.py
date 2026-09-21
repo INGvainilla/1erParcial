@@ -4,17 +4,21 @@ Clase Control: Lógica de Administración de Usuarios y Roles (CU04)
 Conforme a B4.txt (línea 40), las clases de control contienen exclusivamente métodos de negocio
 y NO poseen atributos propios. Cada método documenta sus pasos correlativos de ejecución.
 """
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import settings
 from app.core.security import get_password_hash
 from app.modules.p01_seguridad_acceso.auth.models import Usuario, BitacoraAcceso
 from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
 from app.modules.p01_seguridad_acceso.usuarios.schemas import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse, DesbloquearUsuarioResponse
 )
+
+def utc_now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 class UsuarioAdminControl:
     """
@@ -210,7 +214,16 @@ class UsuarioAdminControl:
         if request.telefono is not None:
             usuario.telefono = request.telefono
         if request.estado_cuenta:
-            usuario.estado_cuenta = request.estado_cuenta.upper()
+            nuevo_estado = request.estado_cuenta.upper()
+            usuario.estado_cuenta = nuevo_estado
+            if nuevo_estado == "BLOQUEADO_POR_INTENTOS":
+                usuario.intentos_fallidos = max(usuario.intentos_fallidos, settings.MAX_LOGIN_ATTEMPTS)
+                usuario.bloqueado_hasta = utc_now() + timedelta(minutes=settings.ACCOUNT_LOCK_MINUTES)
+            elif nuevo_estado == "ACTIVO":
+                usuario.intentos_fallidos = 0
+                usuario.bloqueado_hasta = None
+            elif nuevo_estado == "INACTIVO":
+                usuario.bloqueado_hasta = None
 
         # Paso 1.4: UsuarioAdminControl persiste los cambios en UsuarioEntity
         db.commit()
@@ -288,5 +301,51 @@ class UsuarioAdminControl:
             email=usuario.email,
             estado_cuenta=usuario.estado_cuenta,
             intentos_fallidos=usuario.intentos_fallidos,
+            bloqueado_hasta=usuario.bloqueado_hasta,
             mensaje=f"La cuenta del usuario {usuario.email} ha sido desbloqueada exitosamente y restaurada a estado ACTIVO."
+        )
+
+    @staticmethod
+    def bloquear_cuenta(
+        db: Session,
+        id_usuario: int,
+        admin_id: int,
+        minutos: int = 30,
+        ip_origen: str = "127.0.0.1"
+    ) -> DesbloquearUsuarioResponse:
+        usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+        if not usuario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Usuario con ID {id_usuario} no existe en el sistema."
+            )
+        if usuario.id_usuario == admin_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No puede bloquear su propia cuenta de Administrador."
+            )
+
+        usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
+        usuario.intentos_fallidos = max(usuario.intentos_fallidos, settings.MAX_LOGIN_ATTEMPTS)
+        usuario.bloqueado_hasta = utc_now() + timedelta(minutes=minutos)
+
+        db.commit()
+        db.refresh(usuario)
+
+        bitacora = BitacoraAcceso(
+            id_usuario=admin_id,
+            ip_origen=ip_origen,
+            exitoso=True,
+            motivo=f"BLOQUEO_ADMIN: Administrador ID {admin_id} bloqueó temporalmente la cuenta de {usuario.email} por {minutos} min"
+        )
+        db.add(bitacora)
+        db.commit()
+
+        return DesbloquearUsuarioResponse(
+            id_usuario=usuario.id_usuario,
+            email=usuario.email,
+            estado_cuenta=usuario.estado_cuenta,
+            intentos_fallidos=usuario.intentos_fallidos,
+            bloqueado_hasta=usuario.bloqueado_hasta,
+            mensaje=f"La cuenta del usuario {usuario.email} ha sido bloqueada temporalmente por {minutos} minutos."
         )

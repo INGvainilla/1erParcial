@@ -414,6 +414,14 @@ import { CarritoService } from '../../core/services/carrito.service';
       flex-direction: column;
       gap: 0.25rem;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
     }
 
     .nav-section-title {

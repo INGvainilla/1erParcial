@@ -59,6 +59,12 @@ export class FashionApiService {
     });
   }
 
+  bloquearUsuario(idUsuario: number, minutos: number = 30): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}/bloquear?minutos=${minutos}`, {}, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
   cambiarRolUsuario(idUsuario: number, nuevoRol: string): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}`, { rol: nuevoRol }, {
       headers: this.auth.getAuthHeaders()
@@ -78,6 +84,12 @@ export class FashionApiService {
 
   createSucursal(sucursal: any): Observable<Sucursal> {
     return this.http.post<Sucursal>(`${this.apiUrl}/sucursales`, sucursal, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  updateSucursal(idSucursal: number, data: any): Observable<Sucursal> {
+    return this.http.put<Sucursal>(`${this.apiUrl}/sucursales/${idSucursal}`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }
@@ -116,6 +128,12 @@ export class FashionApiService {
     });
   }
 
+  updateTemporada(idTemporada: number, data: any): Observable<Temporada> {
+    return this.http.put<Temporada>(`${this.apiUrl}/temporadas/${idTemporada}`, data, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
   // ==========================================
   // CU08: PROVEEDORES TEXTILES (NIT ÚNICO)
   // ==========================================
@@ -127,6 +145,12 @@ export class FashionApiService {
 
   createProveedor(data: any): Observable<Proveedor> {
     return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, data, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  updateProveedor(idProveedor: number, data: any): Observable<Proveedor> {
+    return this.http.put<Proveedor>(`${this.apiUrl}/proveedores/${idProveedor}`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }

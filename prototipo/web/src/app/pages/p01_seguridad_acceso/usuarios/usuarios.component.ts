@@ -20,10 +20,10 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
           <p class="subtitle">Alta de Personal, Matriz RBAC, Asignación de Sucursal y Desbloqueo de Seguridad</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin()">
-          <button class="btn btn-primary" (click)="openCreateModal()">
+          <button type="button" class="btn btn-primary" (click)="openCreateModal()">
             <i class="fas fa-user-plus"></i> + Registrar Colaborador (CU04)
           </button>
-          <button class="btn btn-secondary" (click)="loadUsuarios()" [disabled]="loading">
+          <button type="button" class="btn btn-secondary" (click)="loadUsuarios()" [disabled]="loading">
             <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Actualizar
           </button>
         </div>
@@ -80,25 +80,25 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
         <!-- Barra de Filtros -->
         <div class="filters-bar">
           <div class="role-chips">
-            <button class="chip" [class.active]="filterRole === 'TODOS'" (click)="filterRole = 'TODOS'">
+            <button type="button" class="chip" [class.active]="filterRole === 'TODOS'" (click)="setFilterRole('TODOS')">
               Todos ({{ usuarios.length }})
             </button>
-            <button class="chip" [class.active]="filterRole === 'ADMINISTRADOR'" (click)="filterRole = 'ADMINISTRADOR'">
+            <button type="button" class="chip" [class.active]="filterRole === 'ADMINISTRADOR'" (click)="setFilterRole('ADMINISTRADOR')">
               Administradores
             </button>
-            <button class="chip" [class.active]="filterRole === 'ENCARGADO_SUCURSAL'" (click)="filterRole = 'ENCARGADO_SUCURSAL'">
+            <button type="button" class="chip" [class.active]="filterRole === 'ENCARGADO_SUCURSAL'" (click)="setFilterRole('ENCARGADO_SUCURSAL')">
               Encargados
             </button>
-            <button class="chip" [class.active]="filterRole === 'CAJERO'" (click)="filterRole = 'CAJERO'">
+            <button type="button" class="chip" [class.active]="filterRole === 'CAJERO'" (click)="setFilterRole('CAJERO')">
               Cajeros
             </button>
-            <button class="chip" [class.active]="filterRole === 'LOGISTICA'" (click)="filterRole = 'LOGISTICA'">
+            <button type="button" class="chip" [class.active]="filterRole === 'LOGISTICA'" (click)="setFilterRole('LOGISTICA')">
               Logística
             </button>
-            <button class="chip" [class.active]="filterRole === 'CLIENTE'" (click)="filterRole = 'CLIENTE'">
+            <button type="button" class="chip" [class.active]="filterRole === 'CLIENTE'" (click)="setFilterRole('CLIENTE')">
               Clientes
             </button>
-            <button class="chip locked-chip" [class.active]="filterRole === 'BLOQUEADOS'" (click)="filterRole = 'BLOQUEADOS'">
+            <button type="button" class="chip locked-chip" [class.active]="filterRole === 'BLOQUEADOS'" (click)="setFilterRole('BLOQUEADOS')">
               ⚠️ Bloqueados (5 intentos)
             </button>
           </div>
@@ -107,6 +107,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
             <input
               type="text"
               [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange()"
               placeholder="Buscar por nombre o correo..."
               class="form-control"
             />
@@ -131,7 +132,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let u of filteredUsuarios">
+                <tr *ngFor="let u of filteredUsuarios; trackBy: trackByUserId">
                   <td>#{{ u.id_usuario }}</td>
                   <td>
                     <div class="user-cell">
@@ -176,6 +177,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
                     <div class="action-buttons">
                       <!-- Botón Desbloquear (CU04) -->
                       <button
+                        type="button"
                         *ngIf="u.estado_cuenta === 'BLOQUEADO_POR_INTENTOS' || u.intentos_fallidos > 0"
                         class="btn btn-sm btn-warning"
                         (click)="desbloquear(u)"
@@ -183,8 +185,19 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
                         <i class="fas fa-unlock"></i> Desbloquear
                       </button>
 
+                      <!-- Botón Bloquear Temporalmente (CU04) -->
+                      <button
+                        type="button"
+                        *ngIf="u.estado_cuenta === 'ACTIVO' && u.id_usuario !== auth.currentUser()?.id_usuario"
+                        class="btn btn-sm btn-danger-soft"
+                        (click)="bloquear(u)"
+                        title="Bloquear temporalmente por 30 minutos">
+                        <i class="fas fa-user-lock"></i> Bloquear
+                      </button>
+
                       <!-- Botón Editar Datos y Rol -->
                       <button
+                        type="button"
                         class="btn btn-sm btn-outline-edit"
                         (click)="openEditModal(u)"
                         title="Editar rol, sucursal o datos del colaborador">
@@ -212,11 +225,11 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
       <!-- ==============================================
            MODAL CU04: ALTA DE PERSONAL / COLABORADOR
            ============================================== -->
-      <div *ngIf="showCreateModal" class="modal-overlay">
-        <div class="modal-card glass-panel">
+      <div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+        <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h3><i class="fas fa-user-plus"></i> Registrar Nuevo Colaborador (CU04)</h3>
-            <button class="close-btn" (click)="showCreateModal = false">&times;</button>
+            <button type="button" class="close-btn" (click)="closeCreateModal()">&times;</button>
           </div>
           <form (ngSubmit)="onCreateUser()" #createForm="ngForm" class="modal-body">
             <div class="form-group">
@@ -291,7 +304,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
             </div>
 
             <div class="modal-actions">
-              <button type="button" class="btn btn-secondary" (click)="showCreateModal = false">Cancelar</button>
+              <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
               <button type="submit" [disabled]="loading || !createForm.valid" class="btn btn-primary">
                 <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
                 <i class="fas fa-save" *ngIf="!loading"></i> Registrar Colaborador
@@ -304,11 +317,11 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
       <!-- ==============================================
            MODAL CU04: MODIFICAR USUARIO / ROLES
            ============================================== -->
-      <div *ngIf="showEditModal && editingUser" class="modal-overlay">
-        <div class="modal-card glass-panel">
+      <div *ngIf="showEditModal && editingUser" class="modal-overlay" (click)="closeEditModal()">
+        <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h3><i class="fas fa-user-edit"></i> Modificar Datos y Rol de Usuario (CU04)</h3>
-            <button class="close-btn" (click)="showEditModal = false">&times;</button>
+            <button type="button" class="close-btn" (click)="closeEditModal()">&times;</button>
           </div>
           <form (ngSubmit)="onUpdateUser()" class="modal-body">
             <div class="form-group">
@@ -370,7 +383,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
             </div>
 
             <div class="modal-actions">
-              <button type="button" class="btn btn-secondary" (click)="showEditModal = false">Cancelar</button>
+              <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
               <button type="submit" [disabled]="loading" class="btn btn-primary">
                 <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
                 <i class="fas fa-check" *ngIf="!loading"></i> Guardar Cambios
@@ -611,6 +624,16 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
     .btn-warning:hover {
       background: #b45309;
     }
+    .btn-danger-soft {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+    .btn-danger-soft:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #ef4444;
+      color: #ffffff;
+    }
 
     /* Modales */
     .modal-overlay {
@@ -770,7 +793,10 @@ export class UsuariosComponent implements OnInit {
 
   loadSucursales(): void {
     this.api.getSucursales().subscribe({
-      next: (data) => this.sucursales = data,
+      next: (data) => {
+        this.sucursales = data;
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Error cargando sucursales', err)
     });
   }
@@ -801,6 +827,19 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
+  setFilterRole(role: string): void {
+    this.filterRole = role;
+    this.cdr.detectChanges();
+  }
+
+  onSearchChange(): void {
+    this.cdr.detectChanges();
+  }
+
+  trackByUserId(index: number, u: Usuario): number {
+    return u.id_usuario;
+  }
+
   get filteredUsuarios(): Usuario[] {
     return this.usuarios.filter(u => {
       // Filtro de rol
@@ -822,7 +861,9 @@ export class UsuariosComponent implements OnInit {
   }
 
   openCreateModal(): void {
-    this.loadSucursales();
+    if (!this.sucursales || this.sucursales.length === 0) {
+      this.loadSucursales();
+    }
     this.newUser = {
       nombre_completo: '',
       email: '',
@@ -832,6 +873,12 @@ export class UsuariosComponent implements OnInit {
       id_sucursal: null
     };
     this.showCreateModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+    this.cdr.detectChanges();
   }
 
   onCreateUser(): void {
@@ -849,6 +896,7 @@ export class UsuariosComponent implements OnInit {
       : null;
 
     this.loading = true;
+    this.cdr.detectChanges();
     this.api.crearUsuario({
       email: this.newUser.email.trim(),
       password: this.newUser.password,
@@ -862,9 +910,11 @@ export class UsuariosComponent implements OnInit {
         this.showCreateModal = false;
         this.toast.success('Colaborador Registrado (CU04)', `Usuario ${res.email} creado con rol ${res.rol}.`);
         this.loadUsuarios();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
+        this.cdr.detectChanges();
         const msg = err.error?.detail || 'No se pudo crear el usuario.';
         this.toast.error('Error al Registrar', msg);
       }
@@ -872,21 +922,32 @@ export class UsuariosComponent implements OnInit {
   }
 
   openEditModal(u: Usuario): void {
-    this.editingUser = u;
+    if (!this.sucursales || this.sucursales.length === 0) {
+      this.loadSucursales();
+    }
+    this.editingUser = { ...u };
     this.editFormData = {
-      nombre_completo: u.nombre_completo,
+      nombre_completo: u.nombre_completo || '',
       telefono: u.telefono || '',
       rol: u.rol,
       id_sucursal: u.id_sucursal || null,
       estado_cuenta: u.estado_cuenta
     };
     this.showEditModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editingUser = null;
+    this.cdr.detectChanges();
   }
 
   onUpdateUser(): void {
     if (!this.editingUser) return;
 
     this.loading = true;
+    this.cdr.detectChanges();
     this.api.modificarUsuario(this.editingUser.id_usuario, {
       nombre_completo: this.editFormData.nombre_completo.trim(),
       telefono: this.editFormData.telefono?.trim() || undefined,
@@ -897,11 +958,14 @@ export class UsuariosComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.showEditModal = false;
+        this.editingUser = null;
         this.toast.success('Usuario Modificado (CU04)', `Datos actualizados para ${res.email}.`);
         this.loadUsuarios();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
+        this.cdr.detectChanges();
         this.toast.error('Error al Modificar', err.error?.detail || 'No se pudieron guardar los cambios.');
       }
     });
@@ -914,9 +978,27 @@ export class UsuariosComponent implements OnInit {
         u.estado_cuenta = 'ACTIVO';
         u.intentos_fallidos = 0;
         u.bloqueado_hasta = null;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.toast.error('Error', err.error?.detail || 'No se pudo desbloquear la cuenta.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  bloquear(u: Usuario): void {
+    this.api.bloquearUsuario(u.id_usuario, 30).subscribe({
+      next: (res) => {
+        this.toast.warning('Cuenta Bloqueada (CU04)', `Usuario ${u.email} bloqueado temporalmente por 30 minutos.`);
+        u.estado_cuenta = 'BLOQUEADO_POR_INTENTOS';
+        u.intentos_fallidos = res.intentos_fallidos || 5;
+        u.bloqueado_hasta = res.bloqueado_hasta;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.toast.error('Error al Bloquear', err.error?.detail || 'No se pudo bloquear la cuenta.');
+        this.cdr.detectChanges();
       }
     });
   }

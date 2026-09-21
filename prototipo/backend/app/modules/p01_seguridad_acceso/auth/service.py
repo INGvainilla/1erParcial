@@ -18,7 +18,7 @@ from app.modules.p01_seguridad_acceso.auth.models import Usuario, TokenRecuperac
 from app.modules.p01_seguridad_acceso.auth.schemas import (
     LoginRequest, TokenResponse, RegistroRequest, SolicitarOtpRequest, ResetPasswordOtpRequest
 )
-from app.core.email import enviar_correo_otp
+from app.core.email import enviar_correo_otp, enviar_correo_bienvenida, enviar_correo_password_cambiada
 
 class AuthService:
     """
@@ -55,12 +55,6 @@ class AuthService:
             )
 
         # Paso 1.4: Verificar si la cuenta se encuentra bloqueada preventivamente
-        if usuario.email == "rodrigo.cliente@gmail.com" and usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
-            usuario.estado_cuenta = "ACTIVO"
-            usuario.intentos_fallidos = 0
-            usuario.bloqueado_hasta = None
-            db.commit()
-
         if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
             # Verificar si expiró el tiempo de castigo preventivo (30 min)
             if usuario.bloqueado_hasta and utc_now() > usuario.bloqueado_hasta:
@@ -72,10 +66,10 @@ class AuthService:
                 tiempo_restante = "30 minutos"
                 if usuario.bloqueado_hasta:
                     minutos = max(1, int((usuario.bloqueado_hasta - utc_now()).total_seconds() / 60))
-                    tiempo_restante = f"{minutos} minutos"
+                    tiempo_restante = f"{minutos} minuto(s)"
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Cuenta bloqueada preventivamente tras superar 5 intentos fallidos. Intente nuevamente en {tiempo_restante} o utilice la opción 'Recuperar Contraseña'."
+                    detail=f"Cuenta bloqueada preventivamente tras registrar 5 intentos fallidos (o por política de seguridad). Intente nuevamente en {tiempo_restante} o contacte al Administrador."
                 )
 
         if usuario.estado_cuenta == "INACTIVO":
@@ -92,15 +86,15 @@ class AuthService:
         if not clave_valida:
             # Incrementar contador de intentos fallidos
             usuario.intentos_fallidos += 1
-            restantes = settings.MAX_LOGIN_ATTEMPTS - usuario.intentos_fallidos
+            restantes = max(0, settings.MAX_LOGIN_ATTEMPTS - usuario.intentos_fallidos)
 
             # Si supera 5 intentos consecutivos, bloquear la cuenta por 30 min
             if usuario.intentos_fallidos >= settings.MAX_LOGIN_ATTEMPTS:
                 usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
                 usuario.bloqueado_hasta = utc_now() + timedelta(minutes=settings.ACCOUNT_LOCK_MINUTES)
-                motivo = "Bloqueo automático por 5to intento fallido"
+                motivo = f"Bloqueo automático por {usuario.intentos_fallidos}to intento fallido"
             else:
-                motivo = f"Contraseña errónea (Intento {usuario.intentos_fallidos})"
+                motivo = f"Contraseña errónea (Intento {usuario.intentos_fallidos} de {settings.MAX_LOGIN_ATTEMPTS})"
 
             bitacora = BitacoraAcceso(
                 id_usuario=usuario.id_usuario, ip_origen=ip_origen, user_agent=user_agent, exitoso=False, motivo=motivo
@@ -111,12 +105,12 @@ class AuthService:
             if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Cuenta bloqueada preventivamente por 30 minutos al registrar {settings.MAX_LOGIN_ATTEMPTS} intentos fallidos consecutivos."
+                    detail=f"Cuenta bloqueada preventivamente por {settings.ACCOUNT_LOCK_MINUTES} minutos al registrar {usuario.intentos_fallidos} intentos fallidos consecutivos."
                 )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=f"Contraseña incorrecta. Le quedan {restantes} intento(s) antes del bloqueo preventivo."
+                    detail=f"Contraseña incorrecta (Intento fallido {usuario.intentos_fallidos} de {settings.MAX_LOGIN_ATTEMPTS}). Le quedan {restantes} intento(s) antes del bloqueo preventivo."
                 )
 
         # Paso 1.6: Autenticación exitosa -> resetear intentos fallidos y actualizar último acceso
@@ -198,8 +192,8 @@ class RegistroService:
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # Paso 1.5: Despachar notificación de bienvenida (simulado o SMTP)
-        # EmailService.despacharBienvenida(email, request.nombres)
+        # Paso 1.5: Despachar notificación de bienvenida (CU02) vía SMTP Gmail
+        enviar_correo_bienvenida(email, request.nombres)
 
         # Paso 1.6: Emitir token de sesión automático para ingreso directo
         token_jwt = create_access_token(
@@ -334,5 +328,8 @@ class RecuperacionService:
         token_record.utilizado = True
 
         db.commit()
+
+        # Paso 2.6: Despachar correo de confirmación al usuario
+        enviar_correo_password_cambiada(email, usuario.nombre_completo or "Cliente")
 
         return {"mensaje": "¡Contraseña restablecida exitosamente! Ahora puede iniciar sesión con sus nuevas credenciales."}

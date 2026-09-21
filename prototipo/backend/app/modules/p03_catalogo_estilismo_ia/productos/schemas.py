@@ -48,6 +48,8 @@ class ColorResponse(BaseModel):
 class TallaResponse(BaseModel):
     id_talla: int
     talla: str
+    precio: Optional[Decimal] = None
+    factor: Optional[float] = None
 
     class Config:
         from_attributes = True

@@ -43,4 +43,5 @@ class DesbloquearUsuarioResponse(BaseModel):
     email: str
     estado_cuenta: str
     intentos_fallidos: int
+    bloqueado_hasta: Optional[datetime] = None
     mensaje: str

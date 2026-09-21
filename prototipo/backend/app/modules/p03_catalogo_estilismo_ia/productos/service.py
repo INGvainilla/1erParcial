@@ -16,6 +16,18 @@ from app.modules.p03_catalogo_estilismo_ia.productos.schemas import (
     ProductoCreate, ProductoUpdate, ProductoResponse, ColorResponse, TallaResponse
 )
 
+FACTORES_TALLA = {
+    'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
+    '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
+    '38': 0.95, '40': 1.00, '42': 1.05, '44': 1.10,
+    '39': 0.95, '40': 1.00, '41': 1.05, '42': 1.10
+}
+
+def calcular_precio_talla(precio_base: Decimal, talla: str) -> Decimal:
+    t = (talla or '').strip().upper()
+    factor = FACTORES_TALLA.get(t, 1.00)
+    return round(Decimal(str(precio_base)) * Decimal(str(factor)), 2)
+
 class ProductoControl:
     """
     Controlador de Gestión de Productos y Atributos de Moda (ProductoControl - CU06)
@@ -81,7 +93,15 @@ class ProductoControl:
         resultado = []
         for p in productos:
             colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
-            tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla) for t in p.tallas]
+            tallas_resp = [
+                TallaResponse(
+                    id_talla=t.id_talla,
+                    talla=t.talla,
+                    precio=t.precio if getattr(t, 'precio', None) is not None else calcular_precio_talla(p.precio_base, t.talla),
+                    factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00)
+                )
+                for t in p.tallas
+            ]
             resultado.append(ProductoResponse(
                 id_producto=p.id_producto,
                 codigo_sku_base=p.codigo_sku_base,
@@ -109,7 +129,15 @@ class ProductoControl:
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Producto con ID {id_producto} no encontrado.")
         colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
-        tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla) for t in p.tallas]
+        tallas_resp = [
+            TallaResponse(
+                id_talla=t.id_talla,
+                talla=t.talla,
+                precio=t.precio if getattr(t, 'precio', None) is not None else calcular_precio_talla(p.precio_base, t.talla),
+                factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00)
+            )
+            for t in p.tallas
+        ]
         return ProductoResponse(
             id_producto=p.id_producto,
             codigo_sku_base=p.codigo_sku_base,
@@ -194,9 +222,11 @@ class ProductoControl:
         for t in request.tallas:
             talla_norm = t.strip().upper()
             if talla_norm not in tallas_set:
+                talla_precio = calcular_precio_talla(nuevo_producto.precio_base, talla_norm)
                 talla_obj = ProductoTalla(
                     id_producto=producto_id,
-                    talla=talla_norm
+                    talla=talla_norm,
+                    precio=talla_precio
                 )
                 db.add(talla_obj)
                 tallas_creadas.append(talla_obj)
@@ -271,8 +301,12 @@ class ProductoControl:
             for t in request.tallas:
                 talla_norm = t.strip().upper()
                 if talla_norm not in tallas_set:
-                    db.add(ProductoTalla(id_producto=id_producto, talla=talla_norm))
+                    talla_precio = calcular_precio_talla(p.precio_base, talla_norm)
+                    db.add(ProductoTalla(id_producto=id_producto, talla=talla_norm, precio=talla_precio))
                     tallas_set.add(talla_norm)
+        elif request.precio_base is not None:
+            for t in p.tallas:
+                t.precio = calcular_precio_talla(p.precio_base, t.talla)
 
         db.commit()
         db.refresh(p)

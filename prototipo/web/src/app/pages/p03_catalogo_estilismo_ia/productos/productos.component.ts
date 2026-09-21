@@ -33,8 +33,8 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
                 <th>Prenda / Categoría</th>
                 <th>Marca</th>
                 <th>Colores (HEX)</th>
-                <th>Tallas</th>
-                <th>Precio Base</th>
+                <th>Tallas y Precios (CU06)</th>
+                <th>Precio Base / Rango</th>
                 <th>Modelo 3D</th>
                 <th>Estado</th>
               </tr>
@@ -60,11 +60,23 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
                   </div>
                 </td>
                 <td>
-                  <div class="tallas-wrap">
-                    <span class="talla-chip" *ngFor="let t of p.tallas">{{ t.talla }}</span>
+                  <div class="tallas-price-wrap">
+                    <div
+                      class="talla-tag"
+                      *ngFor="let t of p.tallas"
+                      [title]="'Talla ' + t.talla + ': Bs. ' + (getPrecioTalla(p, t) | number:'1.2-2')"
+                    >
+                      <span class="t-badge">{{ t.talla }}</span>
+                      <span class="t-val">Bs. {{ getPrecioTalla(p, t) | number:'1.2-2' }}</span>
+                    </div>
                   </div>
                 </td>
-                <td class="bold">Bs. {{ p.precio_base | number:'1.2-2' }}</td>
+                <td>
+                  <div class="price-summary">
+                    <span class="price-range">Bs. {{ getPrecioMin(p) | number:'1.2-2' }} - {{ getPrecioMax(p) | number:'1.2-2' }}</span>
+                    <span class="price-base-hint">Base (M): Bs. {{ p.precio_base | number:'1.2-2' }}</span>
+                  </div>
+                </td>
                 <td>
                   <span *ngIf="p.modelo_3d_glb" class="badge-3d">
                     <i class="fas fa-cube"></i> 3D
@@ -80,12 +92,11 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
         </div>
       </div>
 
-      <!-- MODAL NUEVO PRODUCTO (CU06) -->
-      <div *ngIf="showModal" class="modal-overlay">
-        <div class="modal-card wide glass-panel">
+      <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+        <div class="modal-card wide glass-panel" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <h3><i class="fas fa-tag"></i> Registrar Producto con Atributos de Moda (CU06)</h3>
-            <button class="close-btn" (click)="showModal = false">&times;</button>
+            <button type="button" class="close-btn" (click)="closeModal()">&times;</button>
           </div>
           <form (ngSubmit)="submitProducto()" class="modal-form">
             <div class="form-row">
@@ -139,11 +150,23 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
             <!-- Tallas -->
             <div class="form-group">
               <label><i class="fas fa-ruler"></i> Tallas (Separadas por coma):</label>
-              <input type="text" [(ngModel)]="rawTallas" name="tallas" class="form-control" placeholder="38R, 40R, 42R, 44R" />
+              <input type="text" [(ngModel)]="rawTallas" name="tallas" class="form-control" placeholder="S, M, L, XL" />
+            </div>
+
+            <!-- Previsualización de Precios según Talla (CU06) -->
+            <div class="pricing-matrix-box" *ngIf="parsedTallasPreview.length > 0">
+              <span class="matrix-title"><i class="fas fa-tags"></i> Precios Diferenciados por Talla (Matriz Omnicanal CU06):</span>
+              <div class="matrix-grid">
+                <div class="matrix-card" *ngFor="let item of parsedTallasPreview">
+                  <span class="mc-talla">{{ item.talla }}</span>
+                  <span class="mc-pct">{{ item.factorLabel }}</span>
+                  <strong class="mc-price">Bs. {{ item.precio | number:'1.2-2' }}</strong>
+                </div>
+              </div>
             </div>
 
             <div class="modal-actions">
-              <button type="button" class="btn btn-secondary" (click)="showModal = false">Cancelar</button>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
               <button type="submit" [disabled]="submitting" class="btn btn-success">
                 <i class="fas fa-check"></i> {{ submitting ? 'Guardando...' : 'Crear Producto' }}
               </button>
@@ -173,6 +196,32 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
     .color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); display: inline-block; }
     .tallas-wrap { display: flex; gap: 0.25rem; flex-wrap: wrap; }
     .talla-chip { background: rgba(255, 255, 255, 0.06); padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.72rem; }
+    .tallas-price-wrap { display: flex; flex-wrap: wrap; gap: 0.35rem; max-width: 330px; }
+    .talla-tag {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.2rem 0.5rem; border-radius: var(--radius-sm, 6px); font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+    .talla-tag:hover { border-color: #818cf8; background: rgba(99, 102, 241, 0.2); }
+    .t-badge { font-weight: 700; color: #38bdf8; }
+    .t-val { font-weight: 600; color: #f1f5f9; }
+    .price-summary { display: flex; flex-direction: column; gap: 0.15rem; }
+    .price-range { font-weight: 700; color: #34d399; font-size: 0.88rem; }
+    .price-base-hint { font-size: 0.72rem; color: var(--text-muted); }
+    .pricing-matrix-box {
+      background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-md, 8px); padding: 0.75rem 1rem; margin-top: -0.25rem; margin-bottom: 1rem;
+    }
+    .matrix-title { font-size: 0.8rem; color: #a5b4fc; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; font-weight: 500; }
+    .matrix-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .matrix-card {
+      background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px; padding: 0.35rem 0.6rem; display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem;
+    }
+    .mc-talla { font-weight: 700; color: #38bdf8; }
+    .mc-pct { font-size: 0.7rem; color: var(--text-muted); }
+    .mc-price { color: #34d399; }
     .bold { font-weight: 700; color: #f8fafc; }
     .badge-3d { background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; padding: 0.15rem 0.45rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; }
     .status-active { background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; }
@@ -246,6 +295,58 @@ export class ProductosComponent implements OnInit {
     this.showModal = true;
     if (this.categorias.length > 0) this.newProd.id_categoria = this.categorias[0].id_categoria;
     if (this.marcas.length > 0) this.newProd.id_marca = this.marcas[0].id_marca;
+    this.cdr.detectChanges();
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.cdr.detectChanges();
+  }
+
+  getFactorTalla(talla: string): number {
+    const t = (talla || '').trim().toUpperCase();
+    const factores: { [k: string]: number } = {
+      'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
+      '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
+      '38': 0.95, '40': 1.00, '42': 1.05, '44': 1.10,
+      '39': 0.95, '41': 1.05
+    };
+    return factores[t] !== undefined ? factores[t] : 1.00;
+  }
+
+  getPrecioTalla(p: Producto, t: any): number {
+    if (t && t.precio && Number(t.precio) > 0) {
+      return Number(t.precio);
+    }
+    const factor = this.getFactorTalla(t?.talla || '');
+    return Math.round(Number(p.precio_base) * factor * 100) / 100;
+  }
+
+  getPrecioMin(p: Producto): number {
+    if (!p.tallas || p.tallas.length === 0) return Number(p.precio_base);
+    const precios = p.tallas.map(t => this.getPrecioTalla(p, t));
+    return Math.min(...precios);
+  }
+
+  getPrecioMax(p: Producto): number {
+    if (!p.tallas || p.tallas.length === 0) return Number(p.precio_base);
+    const precios = p.tallas.map(t => this.getPrecioTalla(p, t));
+    return Math.max(...precios);
+  }
+
+  get parsedTallasPreview(): { talla: string; factorLabel: string; precio: number }[] {
+    if (!this.rawTallas || !this.newProd.precio_base) return [];
+    const base = Number(this.newProd.precio_base) || 0;
+    return this.rawTallas.split(',')
+      .map(t => t.trim().toUpperCase())
+      .filter(t => t.length > 0)
+      .map(t => {
+        const f = this.getFactorTalla(t);
+        const p = Math.round(base * f * 100) / 100;
+        const pctDiff = Math.round((f - 1) * 100);
+        const factorLabel = pctDiff === 0 ? 'Base (100%)' : (pctDiff > 0 ? `+${pctDiff}%` : `${pctDiff}%`);
+        return { talla: t, factorLabel, precio: p };
+      });
   }
 
   submitProducto(): void {
