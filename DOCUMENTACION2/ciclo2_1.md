@@ -615,11 +615,11 @@ El análisis arquitectónico del Ciclo 2 extiende la base establecida en el Cicl
 
 | Paquete de Análisis             | Casos de Uso Contenidos | Actores Asociados                       | Módulo Backend                               | Módulo Frontend                                       |
 | ------------------------------- | ----------------------- | --------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
-| **P6: Reservas Presenciales**   | CU11, CU12              | Cliente, Encargado de Sucursal          | `app.modules.reservas`                       | `app/pages/reservas`, `app/pages/encargado-dashboard` |
-| **P7: Venta Digital y Carrito** | CU13, CU14              | Cliente Final                           | `app.modules.carrito`, `app.modules.ordenes` | `app/shared/carrito-sidebar`, `app/pages/checkout`    |
-| **P8: Punto de Venta POS**      | CU15                    | Cajero, Administrador                   | `app.modules.pos`                            | `app/pages/pos`                                       |
-| **P9: Pagos y Finanzas**        | CU16, CU17              | Cliente, Pasarela Stripe, Administrador | `app.modules.pagos`                          | `app/pages/pagos`, `app/pages/admin-pagos`            |
-| **P10: Logística y Delivery**   | CU18                    | Personal Logística, Repartidor, Cliente | `app.modules.logistica`                      | `app/pages/logistica`, `app/pages/tracking`           |
+| **P6: Reservas Presenciales**   | CU11, CU12              | Cliente, Encargado de Sucursal          | `app.modules.p06_reservas_presenciales.reservas` | `app/pages/p06_reservas_presenciales/reservas`, `app/pages/p06_reservas_presenciales/encargado-dashboard` |
+| **P7: Venta Digital y Carrito** | CU13, CU14              | Cliente Final                           | `app.modules.p07_venta_digital_fidelizacion.carrito`, `app.modules.p07_venta_digital_fidelizacion.ordenes` | `app/shared/carrito-sidebar`, `app/pages/p07_venta_digital_fidelizacion/checkout`    |
+| **P8: Punto de Venta POS**      | CU15                    | Cajero, Administrador                   | `app.modules.p08_punto_venta_pos.pos`        | `app/pages/p08_punto_venta_pos/pos`                   |
+| **P9: Pagos y Finanzas**        | CU16, CU17              | Cliente, Pasarela Stripe, Administrador | `app.modules.p09_procesamiento_pagos.pagos`  | `app/pages/p09_procesamiento_pagos/pagos`, `app/pages/p09_procesamiento_pagos/admin-pagos` |
+| **P10: Logística y Delivery**   | CU18                    | Personal Logística, Repartidor, Cliente | `app.modules.p10_logistica_delivery.logistica` | `app/pages/p10_logistica_delivery/logistica`, `app/pages/p10_logistica_delivery/tracking` |
 
 ![Relacionar Paquetes y Casos de Uso - Ciclo 2](../diagramas/2.1.2_Relacionar_Paquetes_y_Casos_de_Uso_Ciclo2.png)
 
