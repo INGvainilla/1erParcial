@@ -8,11 +8,13 @@ class GamificacionProvider extends ChangeNotifier {
 
   GamificacionPerfil? _perfil;
   List<RecompensaItem> _recompensas = [];
+  List<CuponUsuarioItem> _misCupones = [];
   bool _cargando = false;
   String? _error;
 
   GamificacionPerfil? get perfil => _perfil;
   List<RecompensaItem> get recompensas => List.unmodifiable(_recompensas);
+  List<CuponUsuarioItem> get misCupones => List.unmodifiable(_misCupones);
   bool get cargando => _cargando;
   String? get error => _error;
 
@@ -55,11 +57,49 @@ class GamificacionProvider extends ChangeNotifier {
       if (res is Map<String, dynamic>) {
         await cargarPerfil();
         await cargarRecompensas();
+        await cargarMisCupones();
         return res;
       }
       return {'exito': false, 'mensaje': 'Respuesta inesperada del servidor.'};
     } catch (e) {
       return {'exito': false, 'mensaje': e.toString()};
+    }
+  }
+
+  Future<void> cargarMisCupones() async {
+    try {
+      final res = await _api.get(ApiConstants.gamificacionMisCupones);
+      if (res is List) {
+        _misCupones = res.map((c) => CuponUsuarioItem.fromJson(c as Map<String, dynamic>)).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error cargando mis cupones: $e');
+    }
+  }
+
+  Future<ValidarCuponResult> validarCupon(String codigoCupon) async {
+    try {
+      final res = await _api.post(
+        ApiConstants.gamificacionValidarCupon,
+        body: {'codigo_cupon': codigoCupon.trim().toUpperCase()},
+      );
+      if (res is Map<String, dynamic>) {
+        return ValidarCuponResult.fromJson(res);
+      }
+      return ValidarCuponResult(
+        valido: false,
+        mensaje: 'Error de formato en la respuesta del servidor.',
+        montoDescuento: 0.0,
+        tipoBeneficio: 'DESCUENTO_MONTO',
+      );
+    } catch (e) {
+      return ValidarCuponResult(
+        valido: false,
+        mensaje: e.toString().replaceAll('Exception: ', ''),
+        montoDescuento: 0.0,
+        tipoBeneficio: 'DESCUENTO_MONTO',
+      );
     }
   }
 

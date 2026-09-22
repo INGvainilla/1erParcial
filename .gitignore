@@ -36,7 +36,9 @@ htmlcov/
 # Bases de datos locales y temporales
 *.db
 *.sqlite3
-fashionstore_local.db
+# Permitir la base de datos SQLite semilla oficial para clonado en otros entornos
+!prototipo/backend/app/fashionstore_local.db
+!app/fashionstore_local.db
 
 # Flutter & Dart
 .dart_tool/

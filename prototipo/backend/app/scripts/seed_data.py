@@ -17,7 +17,9 @@ def utc_now():
 # Asegurar path de importación
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
+import json
 from sqlalchemy import text
+from app.core.config import settings
 from app.core.database import SessionLocal, Base, engine
 from app.core.security import get_password_hash
 from app.modules.p02_estructura_operativa.sucursales.models import Ciudad, Sucursal
@@ -26,16 +28,21 @@ from app.modules.p04_aprovisionamiento_proveedores.proveedores.models import Pro
 from app.modules.p03_catalogo_estilismo_ia.temporadas.models import Temporada
 from app.modules.p03_catalogo_estilismo_ia.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
 from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+from app.modules.p06_reservas_presenciales.reservas.models import Reserva, ReservaDetalle
 from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta, OrdenDetalle
+from app.modules.p07_venta_digital_fidelizacion.gamificacion.models import GamificacionPerfil, RecompensaCatalogo, CuponFidelizacion
 from app.modules.p08_punto_venta_pos.pos.models import Devolucion, DevolucionDetalle
+from app.modules.p09_procesamiento_pagos.pagos.models import MetodoPagoConfig
 
 def reset_database(db):
     print("Limpiando datos y tablas para siembra limpia...")
     for model in [
-        DevolucionDetalle, Devolucion, OrdenDetalle, OrdenVenta,
-        KardexMovimiento, Inventario, ProductoColor, ProductoTalla, Producto,
-        Marca, Categoria, Temporada, Proveedor, TokenRecuperacion,
-        BitacoraAcceso, Usuario, Sucursal, Ciudad
+        DevolucionDetalle, Devolucion, CuponFidelizacion, RecompensaCatalogo,
+        GamificacionPerfil, ReservaDetalle, Reserva, MetodoPagoConfig,
+        OrdenDetalle, OrdenVenta, KardexMovimiento, Inventario,
+        ProductoColor, ProductoTalla, Producto, Marca, Categoria,
+        Temporada, Proveedor, TokenRecuperacion, BitacoraAcceso,
+        Usuario, Sucursal, Ciudad
     ]:
         try:
             db.query(model).delete()
@@ -46,6 +53,7 @@ def reset_database(db):
 
 def seed_database(force_reset: bool = False):
     print("Iniciando creación de tablas y siembra de datos semilla...")
+
     # Autocorrección y migración preventiva si la tabla ya existía sin la columna precio
     try:
         with engine.connect() as conn:
@@ -55,11 +63,41 @@ def seed_database(force_reset: bool = False):
         pass
 
     Base.metadata.create_all(bind=engine)
+
+    # 0. Comprobar si existe el volcado SQL oficial y estamos usando SQLite (Restauración Instantánea Idéntica)
+    sql_dump_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "fashionstore_seed.sql"))
+    is_sqlite = "sqlite" in str(engine.url)
+
+    db_check = SessionLocal()
+    has_data = False
+    try:
+        has_data = db_check.query(Usuario).first() is not None
+    except Exception:
+        has_data = False
+    finally:
+        db_check.close()
+
+    is_requested_reset = force_reset or "--reset" in sys.argv or "-r" in sys.argv
+
+    if (is_requested_reset or not has_data) and os.path.exists(sql_dump_path) and is_sqlite:
+        try:
+            print(f" [SEED] Restaurando base de datos oficial completa desde {sql_dump_path}...")
+            raw_conn = engine.raw_connection()
+            driver_conn = raw_conn.driver_connection
+            with open(sql_dump_path, "r", encoding="utf-8") as f:
+                driver_conn.executescript(f.read())
+            raw_conn.commit()
+            raw_conn.close()
+            print(" [SEED] ¡Base de datos oficial (28 tablas, 25 CU) restaurada con éxito desde volcado oficial!")
+            return
+        except Exception as e_sql:
+            print(f" [SEED] Advertencia al restaurar volcado SQL ({e_sql}). Continuando con siembra procedural...")
+
     db = SessionLocal()
 
     try:
         # Si se solicita reset o se pasa el argumento --reset
-        if force_reset or "--reset" in sys.argv or "-r" in sys.argv:
+        if is_requested_reset:
             reset_database(db)
         elif db.query(Usuario).first():
             print("La base de datos ya contiene datos. Usa '--reset' si deseas forzar la siembra limpia.")
@@ -390,20 +428,46 @@ def seed_database(force_reset: bool = False):
         for p_id, col_nom, hex_code in colores_data:
             db.add(ProductoColor(id_producto=p_id, color_nombre=col_nom, codigo_hex=hex_code))
 
-        # 9. Tallas Normalizadas
-        print("Insertando Tallas normalizadas...")
+        # 9. Tallas Normalizadas con Precios por Talla (CU06 / CU10 / CU20)
+        print("Insertando Tallas normalizadas con precios individuales...")
         tallas_data = [
-            (prod_camisa.id_producto, ["S", "M", "L", "XL"]),
-            (prod_pant.id_producto, ["30", "32", "34", "36"]),
-            (prod_blazer.id_producto, ["38", "40", "42"]),
-            (prod_zapato.id_producto, ["39", "40", "41", "42"]),
-            (prod_traje.id_producto, ["38", "40", "42", "44"]),
-            (prod_mocasines.id_producto, ["39", "40", "41", "42"]),
-            (prod_camisa_lino.id_producto, ["S", "M", "L", "XL"])
+            # Camisa Oxford Slim Fit (Base 280.00)
+            (prod_camisa.id_producto, "S", Decimal("266.00")),
+            (prod_camisa.id_producto, "M", Decimal("280.00")),
+            (prod_camisa.id_producto, "L", Decimal("294.00")),
+            (prod_camisa.id_producto, "XL", Decimal("308.00")),
+            # Pantalón Chino Gabardina (Base 320.00)
+            (prod_pant.id_producto, "30", Decimal("304.00")),
+            (prod_pant.id_producto, "32", Decimal("320.00")),
+            (prod_pant.id_producto, "34", Decimal("336.00")),
+            (prod_pant.id_producto, "36", Decimal("352.00")),
+            # Blazer de Lino Casual (Base 650.00)
+            (prod_blazer.id_producto, "38", Decimal("617.50")),
+            (prod_blazer.id_producto, "40", Decimal("650.00")),
+            (prod_blazer.id_producto, "42", Decimal("682.50")),
+            # Zapato Oxford Cap-Toe Cuero (Base 540.00)
+            (prod_zapato.id_producto, "39", Decimal("513.00")),
+            (prod_zapato.id_producto, "40", Decimal("540.00")),
+            (prod_zapato.id_producto, "41", Decimal("567.00")),
+            (prod_zapato.id_producto, "42", Decimal("567.00")),
+            # Traje Ejecutivo Slim Fit 2 Piezas (Base 980.00)
+            (prod_traje.id_producto, "38", Decimal("931.00")),
+            (prod_traje.id_producto, "40", Decimal("980.00")),
+            (prod_traje.id_producto, "42", Decimal("1029.00")),
+            (prod_traje.id_producto, "44", Decimal("1078.00")),
+            # Mocasín Náutico Confort (Base 460.00)
+            (prod_mocasines.id_producto, "39", Decimal("437.00")),
+            (prod_mocasines.id_producto, "40", Decimal("460.00")),
+            (prod_mocasines.id_producto, "41", Decimal("483.00")),
+            (prod_mocasines.id_producto, "42", Decimal("483.00")),
+            # Camisa de Lino Cuello Mao Italiana (Base 310.00)
+            (prod_camisa_lino.id_producto, "S", Decimal("294.50")),
+            (prod_camisa_lino.id_producto, "M", Decimal("310.00")),
+            (prod_camisa_lino.id_producto, "L", Decimal("325.50")),
+            (prod_camisa_lino.id_producto, "XL", Decimal("341.00")),
         ]
-        for p_id, tallas_list in tallas_data:
-            for t in tallas_list:
-                db.add(ProductoTalla(id_producto=p_id, talla=t))
+        for p_id, t, p_val in tallas_data:
+            db.add(ProductoTalla(id_producto=p_id, talla=t, precio=p_val))
 
         db.flush()
 
@@ -617,7 +681,295 @@ def seed_database(force_reset: bool = False):
             fecha_hora=fecha_hace_5_dias
         )
         db.add(k_salida_demo)
+        db.flush()
 
+        # 12. Métodos de Pago Omnicanal (CU16 / CU17)
+        print("Insertando Métodos de Pago Omnicanal...")
+        m_efectivo = MetodoPagoConfig(
+            codigo="EFECTIVO",
+            nombre="Efectivo en Caja Mostrador",
+            tipo="FISICO",
+            descripcion="Cobro presencial en billetes y monedas con cálculo automático de vuelto en sucursales.",
+            icono="fa-money-bill-wave",
+            activo=True,
+            requiere_credenciales=False,
+            credenciales_json="{}"
+        )
+        m_pos = MetodoPagoConfig(
+            codigo="TARJETA_POS",
+            nombre="Terminal POS / Tarjeta Física",
+            tipo="FISICO",
+            descripcion="Cobro presencial con tarjetas Visa/Mastercard mediante datafast / terminal PinPad inalámbrico.",
+            icono="fa-credit-card",
+            activo=True,
+            requiere_credenciales=True,
+            credenciales_json=json.dumps({
+                "terminal_id": "POS-DATAFAST-001",
+                "banco_adquirente": "Banco Mercantil Santa Cruz"
+            })
+        )
+        m_stripe = MetodoPagoConfig(
+            codigo="STRIPE",
+            nombre="Pasarela Digital Stripe (Online)",
+            tipo="DIGITAL",
+            descripcion="Cobro internacional en línea con tarjetas de crédito/débito, 3D Secure y tokenización PCI-DSS.",
+            icono="fa-stripe",
+            activo=True,
+            requiere_credenciales=True,
+            credenciales_json=json.dumps({
+                "publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+                "secret_key": settings.STRIPE_SECRET_KEY,
+                "webhook_secret": settings.STRIPE_WEBHOOK_SECRET
+            })
+        )
+        m_qr = MetodoPagoConfig(
+            codigo="QR_BCB",
+            nombre="Código QR Simple BCB Interoperable",
+            tipo="OMNICANAL",
+            descripcion="Cobros instantáneos mediante códigos QR bajo el estándar interoperable del Banco Central de Bolivia.",
+            icono="fa-qrcode",
+            activo=True,
+            requiere_credenciales=True,
+            credenciales_json=json.dumps({
+                "banco_origen": "Banco Central de Bolivia",
+                "cuenta_recaudacion": "1000004928190",
+                "comercio_id": "FASHIONSTORE-BO"
+            })
+        )
+        db.add_all([m_efectivo, m_pos, m_stripe, m_qr])
+        db.flush()
+
+        # 13. Gamificación y Fidelización (CU21)
+        print("Insertando Catálogo de Recompensas y Perfil VIP de Fidelización...")
+        recompensas = [
+            RecompensaCatalogo(
+                codigo="ENVIO_FREE",
+                titulo="Cupón Envío Gratis a Domicilio",
+                descripcion="Cubre el costo de entrega express en Santa Cruz, La Paz y Cochabamba.",
+                costo_puntos=150,
+                descuento_monto=Decimal("25.00"),
+                categoria="DELIVERY",
+                icono="local_shipping",
+                activo=True
+            ),
+            RecompensaCatalogo(
+                codigo="CUPON_25BS",
+                titulo="Bono Descuento Bs. 25 en Catálogo",
+                descripcion="Válido para compras mayores a Bs. 150 en toda la colección.",
+                costo_puntos=200,
+                descuento_monto=Decimal("25.00"),
+                categoria="CUPON",
+                icono="confirmation_number",
+                activo=True
+            ),
+            RecompensaCatalogo(
+                codigo="DESC_50BS",
+                titulo="Vale de Compra Bs. 50 Colección 2026",
+                descripcion="Aplicable en prendas seleccionadas de las temporadas SS y FW.",
+                costo_puntos=300,
+                descuento_monto=Decimal("50.00"),
+                categoria="CUPON",
+                icono="stars",
+                activo=True
+            ),
+            RecompensaCatalogo(
+                codigo="ACCESO_VIP_SHOWROOM",
+                titulo="Pase Exclusivo Lanzamiento Gala",
+                descripcion="Acceso prioritario a desfiles de temporada y preventa privada.",
+                costo_puntos=500,
+                descuento_monto=Decimal("0.00"),
+                categoria="EXPERIENCIA",
+                icono="workspace_premium",
+                activo=True
+            ),
+            RecompensaCatalogo(
+                codigo="DESCUENTO_100BS",
+                titulo="Vale Élite Bs. 100 en Trajes Ejecutivos",
+                descripcion="Exclusivo para blazers y trajes completos de alta sastrería.",
+                costo_puntos=600,
+                descuento_monto=Decimal("100.00"),
+                categoria="CUPON",
+                icono="military_tech",
+                activo=True
+            )
+        ]
+        db.add_all(recompensas)
+        db.flush()
+
+        perfil_rodrigo = GamificacionPerfil(
+            id_usuario=u_rodrigo.id_usuario,
+            tenant_id="fashionstore_scz",
+            puntos_actuales=2970,
+            puntos_historicos=6620,
+            nivel="DIAMANTE",
+            insignias_json=json.dumps([
+                "vestidor_3d", "cliente_distinguido", "explorador_voz",
+                "coleccionista_elite", "reserva_boutique", "primer_pedido"
+            ]),
+            beneficios_canjeados_json=json.dumps([
+                {"codigo_recompensa": "ENVIO_FREE", "cupon": "FS-ENVIO_FREE-C92D9C", "costo": 150, "descuento_monto": 25.0},
+                {"codigo_recompensa": "CUPON_25BS", "cupon": "FS-CUPON_25BS-420119", "costo": 200, "descuento_monto": 25.0},
+                {"codigo_recompensa": "DESC_50BS", "cupon": "FS-DESC_50BS-7806B4", "costo": 300, "descuento_monto": 50.0}
+            ])
+        )
+        db.add(perfil_rodrigo)
+        db.flush()
+
+        cupon1 = CuponFidelizacion(
+            id_usuario=u_rodrigo.id_usuario,
+            codigo_cupon="FS-ENVIO_FREE-C92D9C",
+            monto_descuento=Decimal("25.00"),
+            tipo_beneficio="ENVIO_GRATIS",
+            utilizado=False,
+            fecha_emision=utc_now() - timedelta(days=2),
+            fecha_expiracion=utc_now() + timedelta(days=28)
+        )
+        cupon2 = CuponFidelizacion(
+            id_usuario=u_rodrigo.id_usuario,
+            codigo_cupon="FS-ENVIO_FREE-61EC39",
+            monto_descuento=Decimal("25.00"),
+            tipo_beneficio="ENVIO_GRATIS",
+            utilizado=False,
+            fecha_emision=utc_now() - timedelta(days=2),
+            fecha_expiracion=utc_now() + timedelta(days=28)
+        )
+        cupon3 = CuponFidelizacion(
+            id_usuario=u_rodrigo.id_usuario,
+            codigo_cupon="FS-DESC_50BS-7806B4",
+            monto_descuento=Decimal("50.00"),
+            tipo_beneficio="DESCUENTO_MONTO",
+            utilizado=False,
+            fecha_emision=utc_now() - timedelta(days=1),
+            fecha_expiracion=utc_now() + timedelta(days=29)
+        )
+        db.add_all([cupon1, cupon2, cupon3])
+        db.flush()
+
+        # 14. Reservas de Probador Inteligente (CU11 / CU12 / CU13)
+        print("Insertando Reservas de Probador con Códigos QR...")
+        res1 = Reserva(
+            id_usuario=u_rodrigo.id_usuario,
+            id_sucursal=s_equi.id_sucursal,
+            codigo_qr="data:image/png;base64,RES-2026-EQUI-101",
+            qr_texto="RES-2026-EQUI-101",
+            fecha_visita=utc_now() + timedelta(days=1, hours=2),
+            estado="CONFIRMADA"
+        )
+        db.add(res1)
+        db.flush()
+        db.add(ReservaDetalle(
+            id_reserva=res1.id_reserva,
+            id_producto=prod_camisa.id_producto,
+            talla="M",
+            color="Azul Marino",
+            cantidad=1
+        ))
+
+        res2 = Reserva(
+            id_usuario=u_rodrigo.id_usuario,
+            id_sucursal=s_equi.id_sucursal,
+            codigo_qr="data:image/png;base64,RES-2026-EQUI-201",
+            qr_texto="RES-2026-EQUI-201",
+            fecha_visita=utc_now() - timedelta(days=1),
+            estado="ATENDIDA"
+        )
+        db.add(res2)
+        db.flush()
+        db.add(ReservaDetalle(
+            id_reserva=res2.id_reserva,
+            id_producto=prod_pant.id_producto,
+            talla="32",
+            color="Beige Arena",
+            cantidad=1
+        ))
+        db.flush()
+
+        # 15. Órdenes Digitales y Tracking Delivery (CU14 / CU18)
+        print("Insertando Órdenes Digitales con Tracking...")
+        orden_web1 = OrdenVenta(
+            id_usuario=u_rodrigo.id_usuario,
+            id_sucursal=s_equi.id_sucursal,
+            numero_factura="FAC-2026-0081",
+            canal_venta="WEB",
+            modalidad_entrega="DELIVERY",
+            nit_factura="1028394015",
+            razon_social_factura="Rodrigo Paz",
+            subtotal=Decimal("280.00"),
+            costo_envio=Decimal("20.00"),
+            total=Decimal("300.00"),
+            estado_pago="PAGADO",
+            estado_logistica="EN_CAMINO",
+            creado_en=utc_now() - timedelta(hours=3)
+        )
+        db.add(orden_web1)
+        db.flush()
+        db.add(OrdenDetalle(
+            id_orden=orden_web1.id_orden,
+            id_producto=prod_camisa.id_producto,
+            talla="M",
+            color="Azul Marino",
+            cantidad=1,
+            precio_unitario=Decimal("280.00"),
+            subtotal=Decimal("280.00")
+        ))
+
+        orden_web2 = OrdenVenta(
+            id_usuario=u_rodrigo.id_usuario,
+            id_sucursal=s_equi.id_sucursal,
+            numero_factura="FAC-2026-0095",
+            canal_venta="APP",
+            modalidad_entrega="DELIVERY",
+            nit_factura="1028394015",
+            razon_social_factura="Rodrigo Paz",
+            subtotal=Decimal("980.00"),
+            costo_envio=Decimal("0.00"),
+            total=Decimal("980.00"),
+            estado_pago="PAGADO",
+            estado_logistica="ENTREGADA",
+            creado_en=utc_now() - timedelta(days=2)
+        )
+        db.add(orden_web2)
+        db.flush()
+        db.add(OrdenDetalle(
+            id_orden=orden_web2.id_orden,
+            id_producto=prod_traje.id_producto,
+            talla="40",
+            color="Azul Noche",
+            cantidad=1,
+            precio_unitario=Decimal("980.00"),
+            subtotal=Decimal("980.00")
+        ))
+        db.flush()
+
+        # 16. Devoluciones y Cambios de Prenda (CU25)
+        print("Insertando Devoluciones y Cambios de Prenda...")
+        dev1 = Devolucion(
+            tenant_id="fashionstore_scz",
+            id_orden=orden_pos_demo.id_orden,
+            id_sucursal=s_equi.id_sucursal,
+            id_usuario=u_javier.id_usuario,
+            nro_ticket_original=orden_pos_demo.numero_factura,
+            nro_devolucion="DEV-2026-0012",
+            fecha_devolucion=utc_now() - timedelta(days=1),
+            motivo="Talla no adecuada",
+            tipo_resolucion="REEMBOLSO_EFECTIVO",
+            total_devuelto=Decimal("180.00"),
+            diferencia_cobrada=Decimal("0.00"),
+            estado="APROBADA"
+        )
+        db.add(dev1)
+        db.flush()
+        db.add(DevolucionDetalle(
+            id_devolucion=dev1.id_devolucion,
+            id_producto=prod_camisa.id_producto,
+            talla="M",
+            color="Azul Marino",
+            cantidad=1,
+            costo_historico_cpp=Decimal("107.14"),
+            precio_unitario_original=Decimal("180.00"),
+            estado_fisico="APTO_VENTA"
+        ))
+        db.flush()
 
         db.commit()
         print("¡Siembra de datos semilla completada con éxito!")

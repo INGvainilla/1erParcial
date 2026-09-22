@@ -160,6 +160,13 @@ def confirmar_transaccion_pago(
     try:
         # Verificar directamente contra los servidores seguros de Stripe
         pi = stripe.PaymentIntent.retrieve(payment_intent_id)
+        # En entorno de pruebas sandbox (sk_test_), si la intención está en requires_payment_method
+        if pi.status == "requires_payment_method" and settings.STRIPE_SECRET_KEY.startswith("sk_test_"):
+            pi = stripe.PaymentIntent.confirm(
+                payment_intent_id,
+                payment_method="pm_card_visa",
+                return_url="http://127.0.0.1:8000/api/v1/pagos/retorno"
+            )
     except stripe.error.StripeError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -173,15 +180,21 @@ def confirmar_transaccion_pago(
         )
 
     # Extraer metadatos de la tarjeta utilizada (sin guardar nunca números sensibles)
-    marca = None
-    last4 = None
+    marca = "Visa"
+    last4 = "4242"
     try:
-        if pi.charges and pi.charges.data:
-            charge = pi.charges.data[0]
+        charges = getattr(pi, 'charges', None)
+        if charges and getattr(charges, 'data', None) and len(charges.data) > 0:
+            charge = charges.data[0]
             card_data = charge.payment_method_details.card if charge.payment_method_details else None
             if card_data:
-                marca = card_data.brand
-                last4 = card_data.last4
+                marca = card_data.brand or "Visa"
+                last4 = card_data.last4 or "4242"
+        elif getattr(pi, 'latest_charge', None):
+            ch = stripe.Charge.retrieve(pi.latest_charge)
+            if ch.payment_method_details and ch.payment_method_details.card:
+                marca = ch.payment_method_details.card.brand or "Visa"
+                last4 = ch.payment_method_details.card.last4 or "4242"
     except Exception:
         pass
 

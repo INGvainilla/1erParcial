@@ -13,6 +13,7 @@ class OrdenesService {
     required String nitFactura,
     required String razonSocialFactura,
     String? notasEntrega,
+    String? codigoCupon,
   }) async {
     final body = {
       'modalidad_entrega': modalidadEntrega,
@@ -22,6 +23,7 @@ class OrdenesService {
       'nit_factura': nitFactura,
       'razon_social_factura': razonSocialFactura,
       if (notasEntrega != null && notasEntrega.isNotEmpty) 'notas_entrega': notasEntrega,
+      if (codigoCupon != null && codigoCupon.trim().isNotEmpty) 'codigo_cupon': codigoCupon.trim().toUpperCase(),
       'canal_venta': 'APP',
     };
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/carrito_provider.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../catalogo/views/catalogo_screen.dart';
-import '../../reservas/views/mis_tickets_screen.dart';
-import '../../carrito/views/carrito_screen.dart';
-import '../../cuenta/views/cuenta_screen.dart';
+import 'package:fashionstore_mobile/core/providers/carrito_provider.dart';
+import 'package:fashionstore_mobile/core/theme/app_theme.dart';
+import 'package:fashionstore_mobile/modules/p03_catalogo_estilismo_ia/catalogo/views/catalogo_screen.dart';
+import 'package:fashionstore_mobile/modules/p06_reservas_presenciales/reservas/views/mis_tickets_screen.dart';
+import 'package:fashionstore_mobile/modules/p07_venta_digital_fidelizacion/carrito/views/carrito_screen.dart';
+import 'package:fashionstore_mobile/modules/p01_seguridad_acceso/cuenta/views/cuenta_screen.dart';
 
 class MainShell extends StatefulWidget {
   final int initialTab;
@@ -35,7 +35,7 @@ class _MainShellState extends State<MainShell> {
 
     final List<Widget> screens = [
       CatalogoScreen(onSwitchTab: _switchTab),
-      MisTicketsScreen(onSwitchTab: _switchTab),
+      MisTicketsScreen(onSwitchTab: _switchTab, isActive: _currentIndex == 1),
       CarritoScreen(onSwitchTab: _switchTab),
       CuentaScreen(onIrAReservas: () => _switchTab(1)),
     ];

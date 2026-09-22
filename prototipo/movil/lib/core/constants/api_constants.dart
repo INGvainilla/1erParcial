@@ -8,7 +8,7 @@ class ApiConstants {
       return 'http://$_envHost:8000/api/v1';
     }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      // Soporte para USB conectado con adb reverse tcp:8000 tcp:8000
+      // USB conectado: ejecutar 'adb reverse tcp:8000 tcp:8000' antes de correr
       return 'http://127.0.0.1:8000/api/v1';
     }
     return 'http://localhost:8000/api/v1';
@@ -60,6 +60,8 @@ class ApiConstants {
   static String get gamificacionRecompensas => '$baseUrl/gamificacion/recompensas';
   static String get gamificacionCanjear => '$baseUrl/gamificacion/canjear';
   static String get gamificacionBonoAccion => '$baseUrl/gamificacion/bono-accion';
+  static String get gamificacionMisCupones => '$baseUrl/gamificacion/mis-cupones';
+  static String get gamificacionValidarCupon => '$baseUrl/gamificacion/validar-cupon';
 
   // Recomendaciones Contextuales de IA (CU22)
   static String recomendacionesClima([String? ciudad]) =>
@@ -73,5 +75,9 @@ class ApiConstants {
 
   // Búsqueda por Voz y Semántica (CU23)
   static String get busquedaVoz => '$baseUrl/recomendaciones/busqueda-voz';
+
+  // Devoluciones y Cambios de Prendas (CU25)
+  static String devolucionTicket(String nroTicket) => '$baseUrl/pos/devoluciones/ticket/${Uri.encodeComponent(nroTicket)}';
+  static String get procesarDevolucion => '$baseUrl/pos/devoluciones';
 }
 

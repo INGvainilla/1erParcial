@@ -27,18 +27,15 @@ router = APIRouter(prefix="/pos", tags=["Punto de Venta POS y Devoluciones (CU15
 
 
 def resolver_sucursal_usuario(current_user: Usuario, db: Session, id_sucursal_param: Optional[int] = None) -> int:
-    """Resuelve la sucursal activa del cajero o encargado (o sucursal por defecto para Admin)"""
+    """Resuelve la sucursal activa del cajero o encargado (o sucursal por defecto para Admin y Clientes)"""
     id_suc = current_user.id_sucursal or id_sucursal_param
-    if not id_suc and current_user.rol == "ADMINISTRADOR":
+    if not id_suc:
         primera = db.query(Sucursal).filter(Sucursal.estado == "OPERATIVA").first()
         if primera:
             id_suc = primera.id_sucursal
+        else:
+            id_suc = 1
 
-    if not id_suc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tu usuario no tiene una sucursal física asignada para operar la caja."
-        )
     return id_suc
 
 
@@ -100,7 +97,7 @@ def procesar_venta_endpoint(
 @router.get("/devoluciones/ticket/{nro_ticket}", response_model=TicketConsultaResponse)
 def consultar_ticket_devolucion_endpoint(
     nro_ticket: str,
-    current_user: Usuario = Depends(require_roles(["CAJERO", "ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["CAJERO", "ENCARGADO_SUCURSAL", "ADMINISTRADOR", "CLIENTE"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -114,11 +111,11 @@ def consultar_ticket_devolucion_endpoint(
 def procesar_devolucion_endpoint(
     dev_in: DevolucionCreate,
     id_sucursal: Optional[int] = Query(None, description="Sucursal de la caja"),
-    current_user: Usuario = Depends(require_roles(["CAJERO", "ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["CAJERO", "ENCARGADO_SUCURSAL", "ADMINISTRADOR", "CLIENTE"])),
     db: Session = Depends(get_db)
 ):
     """
-    CU25: Procesa la devolución o cambio de prenda en mostrador:
+    CU25: Procesa la devolución o cambio de prenda en mostrador o app móvil:
     - Valida ventana de 14 días calendario.
     - Inspección física (Apto para venta vs Defectuoso).
     - Asienta reingreso inmutable al Kardex valorado al CPP histórico.

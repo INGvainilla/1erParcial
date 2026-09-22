@@ -6,16 +6,16 @@ import 'core/providers/comparador_provider.dart';
 import 'core/providers/gamificacion_provider.dart';
 import 'core/providers/recomendaciones_ia_provider.dart';
 import 'core/theme/app_theme.dart';
-import 'modules/auth/views/login_screen.dart';
-import 'modules/auth/views/registro_screen.dart';
-import 'modules/checkout/views/checkout_screen.dart';
-import 'modules/ordenes/views/mis_pedidos_screen.dart';
-import 'modules/reservas/views/crear_reserva_screen.dart';
-import 'modules/reservas/views/mis_tickets_screen.dart';
+import 'modules/p01_seguridad_acceso/auth/views/login_screen.dart';
+import 'modules/p01_seguridad_acceso/auth/views/registro_screen.dart';
+import 'modules/p07_venta_digital_fidelizacion/checkout/views/checkout_screen.dart';
+import 'modules/p07_venta_digital_fidelizacion/ordenes/views/mis_pedidos_screen.dart';
+import 'modules/p06_reservas_presenciales/reservas/views/crear_reserva_screen.dart';
+import 'modules/p06_reservas_presenciales/reservas/views/mis_tickets_screen.dart';
 import 'modules/shell/views/main_shell.dart';
-import 'modules/gamificacion/views/recompensas_screen.dart';
-import 'modules/ia_recomendaciones/views/recomendaciones_ia_screen.dart';
-import 'modules/catalogo/views/comparador_outfits_screen.dart';
+import 'modules/p07_venta_digital_fidelizacion/gamificacion/views/recompensas_screen.dart';
+import 'modules/p03_catalogo_estilismo_ia/ia_recomendaciones/views/recomendaciones_ia_screen.dart';
+import 'modules/p03_catalogo_estilismo_ia/catalogo/views/comparador_outfits_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

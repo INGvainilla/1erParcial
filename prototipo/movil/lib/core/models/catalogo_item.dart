@@ -12,7 +12,7 @@ class PrendaColor {
   factory PrendaColor.fromJson(Map<String, dynamic> json) {
     return PrendaColor(
       idColor: json['id_color'] ?? 0,
-      nombre: json['nombre'] ?? '',
+      nombre: json['nombre'] ?? json['color_nombre'] ?? '',
       codigoHex: json['codigo_hex'] ?? '#000000',
     );
   }
@@ -22,11 +22,15 @@ class PrendaTalla {
   final int idTalla;
   final String talla;
   final int orden;
+  final double? precio;
+  final double? factor;
 
   PrendaTalla({
     required this.idTalla,
     required this.talla,
     required this.orden,
+    this.precio,
+    this.factor,
   });
 
   factory PrendaTalla.fromJson(Map<String, dynamic> json) {
@@ -34,6 +38,8 @@ class PrendaTalla {
       idTalla: json['id_talla'] ?? 0,
       talla: json['talla'] ?? '',
       orden: json['orden'] ?? 0,
+      precio: json['precio'] != null ? double.tryParse(json['precio'].toString()) : null,
+      factor: json['factor'] != null ? double.tryParse(json['factor'].toString()) : null,
     );
   }
 }
@@ -139,5 +145,29 @@ class PrendaCatalogo {
       stockTotalDisponible: json['stock_total_disponible'] ?? 0,
       disponibilidadSucursales: rawSucursales.map((s) => StockSucursalItem.fromJson(s)).toList(),
     );
+  }
+
+  static String _fmt(double v) => (v % 1 == 0) ? v.toInt().toString() : v.toStringAsFixed(2);
+
+  String get rangoPreciosTexto {
+    final precios = tallas
+        .map((t) => t.precio)
+        .where((p) => p != null && p > 0)
+        .cast<double>()
+        .toList();
+
+    if (precios.isEmpty) {
+      return 'Bs. ${_fmt(precioFinal)}';
+    }
+
+    precios.sort();
+    final min = precios.first;
+    final max = precios.last;
+
+    if ((max - min).abs() < 0.01) {
+      return 'Bs. ${_fmt(min)}';
+    }
+
+    return 'Bs. ${_fmt(min)} - ${_fmt(max)}';
   }
 }

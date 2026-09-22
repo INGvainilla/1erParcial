@@ -116,18 +116,25 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
     
     carrito = obtener_o_crear_carrito_activo(db, id_usuario)
 
-    # Factores de talla y descuento estacional consistentes con el catálogo
+    # Factores de talla y precio diferenciado en base de datos (CU06 / CU10 / CU13)
+    talla_norm = item_in.talla.strip().upper()
     factores_talla = {
         'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
         '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
         '38': 0.95, '40': 1.00, '42': 1.05, '44': 1.10,
         '39': 0.95, '41': 1.05
     }
-    factor = factores_talla.get(item_in.talla.strip().upper(), 1.00)
+    talla_db = [t for t in producto.tallas if t.talla and t.talla.strip().upper() == talla_norm]
+    if talla_db and getattr(talla_db[0], 'precio', None) is not None:
+        precio_base_talla = float(talla_db[0].precio)
+    else:
+        factor = factores_talla.get(talla_norm, 1.00)
+        precio_base_talla = float(producto.precio_base) * factor
+
     descuento_pct = 0.0
     if producto.temporada and producto.temporada.estado == "LIQUIDACION" and producto.temporada.descuento_liquidacion > 0:
         descuento_pct = float(producto.temporada.descuento_liquidacion)
-    precio_unit = round(float(producto.precio_base) * factor * (1.0 - descuento_pct / 100.0), 2)
+    precio_unit = round(precio_base_talla * (1.0 - descuento_pct / 100.0), 2)
 
     # Verificar si ya existe el ítem en el carrito con misma talla y color
     item_existente = db.query(CarritoItem).filter(

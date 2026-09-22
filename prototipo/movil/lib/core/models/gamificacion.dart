@@ -118,3 +118,64 @@ class GamificacionPerfil {
     );
   }
 }
+
+class CuponUsuarioItem {
+  final int idCupon;
+  final String codigoCupon;
+  final double montoDescuento;
+  final String tipoBeneficio;
+  final bool utilizado;
+  final String fechaEmision;
+  final String fechaExpiracion;
+  final int diasRestantes;
+
+  CuponUsuarioItem({
+    required this.idCupon,
+    required this.codigoCupon,
+    required this.montoDescuento,
+    required this.tipoBeneficio,
+    required this.utilizado,
+    required this.fechaEmision,
+    required this.fechaExpiracion,
+    required this.diasRestantes,
+  });
+
+  factory CuponUsuarioItem.fromJson(Map<String, dynamic> json) {
+    return CuponUsuarioItem(
+      idCupon: json['id_cupon'] ?? 0,
+      codigoCupon: json['codigo_cupon'] ?? '',
+      montoDescuento: (json['monto_descuento'] != null) ? double.parse(json['monto_descuento'].toString()) : 0.0,
+      tipoBeneficio: json['tipo_beneficio'] ?? 'DESCUENTO_MONTO',
+      utilizado: json['utilizado'] ?? false,
+      fechaEmision: json['fecha_emision'] ?? '',
+      fechaExpiracion: json['fecha_expiracion'] ?? '',
+      diasRestantes: json['dias_restantes'] ?? 0,
+    );
+  }
+}
+
+class ValidarCuponResult {
+  final bool valido;
+  final String mensaje;
+  final String? codigoCupon;
+  final double montoDescuento;
+  final String tipoBeneficio;
+
+  ValidarCuponResult({
+    required this.valido,
+    required this.mensaje,
+    this.codigoCupon,
+    required this.montoDescuento,
+    required this.tipoBeneficio,
+  });
+
+  factory ValidarCuponResult.fromJson(Map<String, dynamic> json) {
+    return ValidarCuponResult(
+      valido: json['valido'] ?? false,
+      mensaje: json['mensaje'] ?? '',
+      codigoCupon: json['codigo_cupon'],
+      montoDescuento: (json['monto_descuento'] != null) ? double.parse(json['monto_descuento'].toString()) : 0.0,
+      tipoBeneficio: json['tipo_beneficio'] ?? 'DESCUENTO_MONTO',
+    );
+  }
+}

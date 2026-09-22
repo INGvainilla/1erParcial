@@ -17,4 +17,5 @@ venv/
 # Base de datos local
 *.db
 *.sqlite3
-fashionstore_local.db
+# Permitir la base de datos semilla oficial de FashionStore
+!app/fashionstore_local.db

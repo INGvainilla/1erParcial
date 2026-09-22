@@ -15,6 +15,7 @@ from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto, Pro
 from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario
 from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
 from app.modules.p03_catalogo_estilismo_ia.productos.schemas import ColorResponse, TallaResponse
+from app.modules.p03_catalogo_estilismo_ia.productos.service import FACTORES_TALLA, calcular_precio_talla
 from app.modules.p03_catalogo_estilismo_ia.catalogo.schemas import (
     PrendaCatalogoResponse, StockSucursalItem, DisponibilidadPrendaDetalle,
     InventarioVarianteResponse
@@ -166,7 +167,19 @@ class CatalogoControl:
                 ))
 
             colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
-            tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla) for t in p.tallas]
+            tallas_resp = []
+            for t in p.tallas:
+                base_precio = t.precio if getattr(t, 'precio', None) is not None else calcular_precio_talla(p.precio_base, t.talla)
+                if descuento_pct > Decimal("0.00"):
+                    final_precio = (base_precio * (Decimal("1.00") - (descuento_pct / Decimal("100.00")))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                else:
+                    final_precio = Decimal(str(base_precio)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                tallas_resp.append(TallaResponse(
+                    id_talla=t.id_talla,
+                    talla=t.talla,
+                    precio=final_precio,
+                    factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00)
+                ))
 
             # Mapear variantes de inventario y calcular CPP promedio (CU09 -> CU10)
             lista_variantes = []
