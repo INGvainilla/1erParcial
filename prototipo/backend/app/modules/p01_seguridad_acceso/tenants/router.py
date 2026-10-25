@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_super_admin, require_roles
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p01_seguridad_acceso.tenants.schemas import (
-    EmpresaCreate, EmpresaUpdate, EmpresaResponse,
+    EmpresaCreate, EmpresaUpdate, EmpresaEstadoUpdate, EmpresaResponse,
     PlanCreate, PlanUpdate, PlanResponse,
     SuscripcionCreate, SuscripcionResponse
 )
@@ -105,7 +105,26 @@ def actualizar_empresa(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No cuenta con privilegios para modificar esta empresa."
         )
+
+    if current_user.rol != "SUPER_ADMIN":
+        if datos.estado is not None or datos.presupuesto_disponible is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Solo el Super Administrador puede modificar el estado operativo o el presupuesto disponible de la empresa."
+            )
+
     return services.actualizar_empresa(db, id_empresa, datos)
+
+
+@router.patch("/empresas/{id_empresa}/estado", response_model=EmpresaResponse, summary="CU01: Cambiar Estado Operativo de Empresa")
+def cambiar_estado_empresa(
+    id_empresa: int,
+    datos: EmpresaEstadoUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_super_admin)
+):
+    return services.cambiar_estado_empresa(db, id_empresa, datos.estado)
+
 
 
 # ==============================================================================

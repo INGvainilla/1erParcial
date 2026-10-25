@@ -9,6 +9,8 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.tenancy import exigir_mismo_tenant
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p03_catalogo_estilismo_ia.productos.models import Categoria, Marca, Producto, ProductoColor, ProductoTalla
 from app.modules.p03_catalogo_estilismo_ia.temporadas.models import Temporada
 from app.modules.p03_catalogo_estilismo_ia.productos.schemas import (
@@ -77,9 +79,20 @@ class ProductoControl:
         id_categoria: Optional[int] = None,
         id_marca: Optional[int] = None,
         id_temporada: Optional[int] = None,
-        estado: Optional[str] = None
+        estado: Optional[str] = None,
+        id_empresa: Optional[int] = None,
+        current_user: Optional[Usuario] = None
     ) -> List[ProductoResponse]:
         query = db.query(Producto)
+        if current_user:
+            if current_user.rol == "SUPER_ADMIN":
+                if id_empresa:
+                    query = query.filter(Producto.id_empresa == id_empresa)
+            else:
+                query = query.filter(Producto.id_empresa == current_user.id_empresa)
+        elif id_empresa:
+            query = query.filter(Producto.id_empresa == id_empresa)
+
         if id_categoria:
             query = query.filter(Producto.id_categoria == id_categoria)
         if id_marca:
@@ -135,11 +148,23 @@ class ProductoControl:
         return resultado
 
     @staticmethod
-    def obtener_producto(db: Session, id_producto: int) -> ProductoResponse:
+    def obtener_producto(
+        db: Session,
+        id_producto: int,
+        current_user: Optional[Usuario] = None
+    ) -> ProductoResponse:
         # CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.2: Ctrl invoca ProdEnt.obtenerDatosPrenda(id_producto)
         p = db.query(Producto).filter(Producto.id_producto == id_producto).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Producto con ID {id_producto} no encontrado.")
+
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                p.id_empresa,
+                "Acceso denegado: El producto pertenece a otra empresa."
+            )
+
         colores_resp = [
             ColorResponse(
                 id_color=c.id_color,
@@ -182,7 +207,11 @@ class ProductoControl:
         )
 
     @staticmethod
-    def guardar_producto(db: Session, request: ProductoCreate) -> ProductoResponse:
+    def guardar_producto(
+        db: Session,
+        request: ProductoCreate,
+        current_user: Optional[Usuario] = None
+    ) -> ProductoResponse:
         sku_base = request.codigo_sku_base.strip().upper()
 
         sku_existente = db.query(Producto).filter(Producto.codigo_sku_base == sku_base).first()
@@ -199,8 +228,15 @@ class ProductoControl:
         if not mrc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Marca no encontrada.")
 
+        empresa_id = request.id_empresa
+        if current_user:
+            if current_user.rol != "SUPER_ADMIN":
+                empresa_id = current_user.id_empresa
+            elif not empresa_id:
+                empresa_id = current_user.id_empresa or 1
+
         nuevo_producto = Producto(
-            id_empresa=request.id_empresa,
+            id_empresa=empresa_id,
             id_categoria=request.id_categoria,
             id_marca=request.id_marca,
             id_temporada=request.id_temporada,
@@ -283,12 +319,22 @@ class ProductoControl:
         )
 
     @staticmethod
-    def modificar_producto(db: Session, id_producto: int, request: ProductoUpdate) -> ProductoResponse:
-        # CU06: Gestionar Productos y Atributos de Moda, Paso 2: Administrador actualiza especificaciones de la prenda
-        # CU06: Gestionar Productos y Atributos de Moda, Paso 2.1: Recuperar prenda en ProductoEntity y actualizar atributos
+    def modificar_producto(
+        db: Session,
+        id_producto: int,
+        request: ProductoUpdate,
+        current_user: Optional[Usuario] = None
+    ) -> ProductoResponse:
         p = db.query(Producto).filter(Producto.id_producto == id_producto).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Producto {id_producto} no encontrado.")
+
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                p.id_empresa,
+                "Acceso denegado: No puede modificar un producto de otra empresa."
+            )
 
         if request.nombre:
             p.nombre = request.nombre.strip()

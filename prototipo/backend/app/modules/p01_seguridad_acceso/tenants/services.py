@@ -126,6 +126,15 @@ def actualizar_empresa(db: Session, id_empresa: int, datos: EmpresaUpdate) -> Em
     return empresa
 
 
+def cambiar_estado_empresa(db: Session, id_empresa: int, nuevo_estado: str) -> Empresa:
+    empresa = obtener_empresa_por_id(db, id_empresa)
+    empresa.estado = nuevo_estado
+    db.commit()
+    db.refresh(empresa)
+    return empresa
+
+
+
 # ==============================================================================
 # CU03: GESTIONAR SUSCRIPCIÓN DE EMPRESA
 # ==============================================================================

@@ -315,7 +315,7 @@ def test_cu07_gestionar_inventario_kardex_cpp():
     headers_t1 = {"Authorization": f"Bearer {tenant1_token}"}
 
     # 1. Consultar inventario multi-sucursal filtrado por tenant
-    resp_inv = client.get("/api/v1/inventario/stock?id_empresa=1")
+    resp_inv = client.get("/api/v1/inventario/stock?id_empresa=1", headers=headers_t1)
     assert resp_inv.status_code == 200
     items = resp_inv.json()
     assert len(items) > 0

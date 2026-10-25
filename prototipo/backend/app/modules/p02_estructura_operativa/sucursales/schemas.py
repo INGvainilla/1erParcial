@@ -22,6 +22,7 @@ class CiudadResponse(CiudadBase):
 
 
 class SucursalBase(BaseModel):
+    id_empresa: Optional[int] = Field(None, description="ID del tenant / empresa")
     id_ciudad: int = Field(..., description="ID de la ciudad a la que pertenece")
     nombre_sucursal: str = Field(..., min_length=3, max_length=100)
     direccion: str = Field(..., min_length=5, max_length=200)

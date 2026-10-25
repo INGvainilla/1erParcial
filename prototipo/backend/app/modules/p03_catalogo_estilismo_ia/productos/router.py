@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_roles
+from app.core.dependencies import get_current_user, get_current_user_optional, require_roles
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p03_catalogo_estilismo_ia.productos.schemas import (
     CategoriaCreate, CategoriaResponse, MarcaCreate, MarcaResponse,
@@ -28,7 +28,7 @@ def listar_categorias_endpoint(db: Session = Depends(get_db)):
 @router.post("/categorias", response_model=CategoriaResponse, status_code=status.HTTP_201_CREATED)
 def crear_categoria_endpoint(
     request: CategoriaCreate,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
     # CU06: Gestionar Productos y Atributos de Moda, Paso 2: Administrador da de alta nueva categoría de indumentaria
@@ -45,7 +45,7 @@ def listar_marcas_endpoint(db: Session = Depends(get_db)):
 @router.post("/marcas", response_model=MarcaResponse, status_code=status.HTTP_201_CREATED)
 def crear_marca_endpoint(
     request: MarcaCreate,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
     # CU06: Gestionar Productos y Atributos de Moda, Paso 4: Administrador registra nueva marca
@@ -59,37 +59,48 @@ def listar_productos_endpoint(
     id_marca: Optional[int] = Query(None, description="Filtrar por marca"),
     id_temporada: Optional[int] = Query(None, description="Filtrar por temporada"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
+    id_empresa: Optional[int] = Query(None, description="Filtrar por empresa (Tenant)"),
+    current_user: Optional[Usuario] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 5: Consultar prendas del catálogo con filtros taxonómicos
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 5.1: Invocación a ProductoControl.listar_productos()
+    # CU06: Consultar prendas del catálogo con filtros taxonómicos y de empresa
     return ProductoControl.listar_productos(
-        db, id_categoria=id_categoria, id_marca=id_marca, id_temporada=id_temporada, estado=estado
+        db,
+        id_categoria=id_categoria,
+        id_marca=id_marca,
+        id_temporada=id_temporada,
+        estado=estado,
+        id_empresa=id_empresa,
+        current_user=current_user
     )
 
 @router.get("/{id_producto}", response_model=ProductoResponse)
-def obtener_producto_endpoint(id_producto: int, db: Session = Depends(get_db)):
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 5.2: Obtener ficha técnica detallada con colores Hex y tallas
-    # CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.2: Ctrl invoca obtenerDatosPrenda(id_producto)
-    return ProductoControl.obtener_producto(db, id_producto=id_producto)
+def obtener_producto_endpoint(
+    id_producto: int,
+    current_user: Optional[Usuario] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    # CU06: Obtener ficha técnica detallada con colores Hex, tallas y aislamiento tenant
+    return ProductoControl.obtener_producto(db, id_producto=id_producto, current_user=current_user)
 
 @router.post("", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED)
 def guardar_producto_endpoint(
     request: ProductoCreate,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 6: Administrador envía ficha técnica de prenda con tallas y colores HEX
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 6.1: Invocación a ProductoControl.guardar_producto()
-    return ProductoControl.guardar_producto(db, request)
+    # CU06: Administrador envía ficha técnica de prenda; id_empresa proviene del usuario autenticado
+    return ProductoControl.guardar_producto(db, request, current_user=current_user)
 
 @router.put("/{id_producto}", response_model=ProductoResponse)
 def modificar_producto_endpoint(
     id_producto: int,
     request: ProductoUpdate,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 7: Administrador actualiza especificaciones técnicas o atributos
-    # CU06: Gestionar Productos y Atributos de Moda, Paso 7.1: Invocación a ProductoControl.modificar_producto()
-    return ProductoControl.modificar_producto(db, id_producto=id_producto, request=request)
+    # CU06: Administrador actualiza especificaciones técnicas con verificación estricta de tenant
+    return ProductoControl.modificar_producto(
+        db, id_producto=id_producto, request=request, current_user=current_user
+    )
+

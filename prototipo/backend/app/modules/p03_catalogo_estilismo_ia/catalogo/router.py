@@ -27,10 +27,10 @@ def consultar_catalogo_endpoint(
     precio_max: Optional[Decimal] = Query(None, description="Precio máximo en Bs."),
     id_sucursal: Optional[int] = Query(None, description="Filtrar productos con stock en una sucursal específica"),
     busqueda: Optional[str] = Query(None, description="Término de búsqueda por nombre o SKU"),
+    empresa: Optional[str] = Query(None, description="Filtrar por slug o NIT de empresa (Tenant)"),
     db: Session = Depends(get_db)
 ):
-    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros de búsqueda
-    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
+    # CU10: Consultar Catálogo y Disponibilidad Omnicanal con filtro opcional de empresa
     return CatalogoControl.consultar_prendas(
         db=db,
         id_categoria=id_categoria,
@@ -41,7 +41,8 @@ def consultar_catalogo_endpoint(
         precio_min=precio_min,
         precio_max=precio_max,
         id_sucursal=id_sucursal,
-        busqueda=busqueda
+        busqueda=busqueda,
+        empresa=empresa
     )
 
 @router.get("/{id_producto}/disponibilidad-sucursales", response_model=DisponibilidadPrendaDetalle)

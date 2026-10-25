@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_roles
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.core.tenancy import resolver_empresa
 from app.modules.p05_inventario_costos_analitica.inventario.schemas import (
     EntradaLoteCreate, KardexResponse, InventarioResponse
 )
@@ -23,19 +24,22 @@ def registrar_entrada_lote_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
-    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1: Enviar datos lote (sucursal, SKU, cant, costo_unit)
-    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
-    return InventarioControl.procesar_entrada_mercaderia(db, request)
+    # CU07/CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP)
+    return InventarioControl.procesar_entrada_mercaderia(db, request, current_user=current_user)
 
 @router.get("/stock", response_model=List[InventarioResponse])
 def consultar_stock_endpoint(
     id_sucursal: Optional[int] = Query(None, description="Filtrar por sucursal"),
     id_producto: Optional[int] = Query(None, description="Filtrar por producto"),
     id_empresa: Optional[int] = Query(None, description="Filtrar por empresa (Tenant)"),
+    current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # CU07: Gestionar Inventario Multi-Sucursal, Kardex Físico-Valorado y Costo Promedio Ponderado (CPP)
-    return InventarioControl.consultar_stock(db, id_sucursal=id_sucursal, id_producto=id_producto, id_empresa=id_empresa)
+    # CU07: Gestionar Inventario Multi-Sucursal con Aislamiento Multitenant
+    empresa_id = resolver_empresa(current_user, id_empresa)
+    return InventarioControl.consultar_stock(
+        db, id_sucursal=id_sucursal, id_producto=id_producto, id_empresa=empresa_id
+    )
 
 @router.get("/kardex", response_model=List[KardexResponse])
 def consultar_kardex_endpoint(
@@ -45,7 +49,12 @@ def consultar_kardex_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
-    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.8: mostrar comprobante de kardex con nuevo CPP
+    # CU07/CU09: Comprobante de kardex físico-valorado con nuevo CPP
     return InventarioControl.consultar_kardex(
-        db, id_inventario=id_inventario, id_sucursal=id_sucursal, id_producto=id_producto
+        db,
+        id_inventario=id_inventario,
+        id_sucursal=id_sucursal,
+        id_producto=id_producto,
+        current_user=current_user
     )
+

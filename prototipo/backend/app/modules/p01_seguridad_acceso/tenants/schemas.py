@@ -80,7 +80,11 @@ class EmpresaUpdate(BaseModel):
     direccion: Optional[str] = None
     logo_url: Optional[str] = None
     presupuesto_disponible: Optional[Decimal] = None
-    estado: Optional[str] = None
+    estado: Optional[str] = Field(None, pattern="^(ACTIVA|SUSPENDIDA|INACTIVA)$")
+
+
+class EmpresaEstadoUpdate(BaseModel):
+    estado: str = Field(..., pattern="^(ACTIVA|SUSPENDIDA|INACTIVA)$", example="ACTIVA")
 
 
 class EmpresaResponse(EmpresaBase):

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.core.security import get_password_hash
+from app.core.tenancy import exigir_mismo_tenant
 from app.modules.p01_seguridad_acceso.auth.models import Usuario, BitacoraAcceso
 from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
 from app.modules.p01_seguridad_acceso.usuarios.schemas import (
@@ -172,7 +173,8 @@ class UsuarioAdminControl:
         id_usuario: int,
         request: UsuarioUpdate,
         admin_id: int,
-        ip_origen: str = "127.0.0.1"
+        ip_origen: str = "127.0.0.1",
+        current_user: Optional[Usuario] = None
     ) -> UsuarioResponse:
         # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador edita campos del usuario y envía la petición
         # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.1: Recuperar usuario a modificar en UsuarioEntity
@@ -181,6 +183,13 @@ class UsuarioAdminControl:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario con ID {id_usuario} no encontrado."
+            )
+
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                usuario.id_empresa,
+                "Acceso denegado: No puede modificar un usuario de otra empresa."
             )
 
         # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.2: Validar sucursal asignada si fue actualizada
@@ -254,10 +263,9 @@ class UsuarioAdminControl:
         db: Session,
         id_usuario: int,
         admin_id: int,
-        ip_origen: str = "127.0.0.1"
+        ip_origen: str = "127.0.0.1",
+        current_user: Optional[Usuario] = None
     ) -> DesbloquearUsuarioResponse:
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Administrador pulsa 'Desbloquear Cuenta' en IGestionUsuariosBoundary
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.1: IGestionUsuariosBoundary invoca desbloquear_cuenta(usuario_id)
         usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         if not usuario:
             raise HTTPException(
@@ -265,16 +273,20 @@ class UsuarioAdminControl:
                 detail=f"Usuario con ID {id_usuario} no existe en el sistema."
             )
 
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.2: Resetear intentos fallidos a 0, limpiar bloqueo y fijar estado ACTIVO
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                usuario.id_empresa,
+                "Acceso denegado: No puede desbloquear un usuario de otra empresa."
+            )
+
         usuario.estado_cuenta = "ACTIVO"
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
 
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.3: UsuarioEntity confirma actualización exitosa en base de datos
         db.commit()
         db.refresh(usuario)
 
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.4: Registrar auditoría de desbloqueo administrativo en BitacoraEntity
         bitacora = BitacoraAcceso(
             id_usuario=admin_id,
             ip_origen=ip_origen,
@@ -284,7 +296,6 @@ class UsuarioAdminControl:
         db.add(bitacora)
         db.commit()
 
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.5: Retornar confirmación de reactivación a IGestionUsuariosBoundary
         return DesbloquearUsuarioResponse(
             id_usuario=usuario.id_usuario,
             email=usuario.email,
@@ -300,9 +311,9 @@ class UsuarioAdminControl:
         id_usuario: int,
         admin_id: int,
         minutos: int = 30,
-        ip_origen: str = "127.0.0.1"
+        ip_origen: str = "127.0.0.1",
+        current_user: Optional[Usuario] = None
     ) -> DesbloquearUsuarioResponse:
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Administrador solicita bloqueo preventivo de cuenta
         usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         if not usuario:
             raise HTTPException(
@@ -315,7 +326,13 @@ class UsuarioAdminControl:
                 detail="No puede bloquear su propia cuenta de Administrador."
             )
 
-        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.1: Establecer estado BLOQUEADO_POR_INTENTOS y ventana de tiempo
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                usuario.id_empresa,
+                "Acceso denegado: No puede bloquear un usuario de otra empresa."
+            )
+
         usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
         usuario.intentos_fallidos = max(usuario.intentos_fallidos, settings.MAX_LOGIN_ATTEMPTS)
         usuario.bloqueado_hasta = utc_now() + timedelta(minutes=minutos)

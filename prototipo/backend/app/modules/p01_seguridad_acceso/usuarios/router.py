@@ -57,35 +57,35 @@ def modificar_usuario_endpoint(
     id_usuario: int,
     request_data: UsuarioUpdate,
     request: Request,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador envía datos actualizados de rol o sucursal
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.1: IUsuariosBoundary invoca modificar_usuario() en UsuarioAdminControl
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador envía datos actualizados
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.modificar_usuario(
         db=db,
         id_usuario=id_usuario,
         request=request_data,
         admin_id=current_user.id_usuario,
-        ip_origen=client_ip
+        ip_origen=client_ip,
+        current_user=current_user
     )
 
 @router.put("/{id_usuario}/desbloquear", response_model=DesbloquearUsuarioResponse)
 def desbloquear_cuenta_endpoint(
     id_usuario: int,
     request: Request,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Administrador presiona botón 'Desbloquear Cuenta'
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.1: IUsuariosBoundary invoca desbloquear_cuenta() en UsuarioAdminControl
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Desbloqueo administrativo
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.desbloquear_cuenta(
         db=db,
         id_usuario=id_usuario,
         admin_id=current_user.id_usuario,
-        ip_origen=client_ip
+        ip_origen=client_ip,
+        current_user=current_user
     )
 
 @router.put("/{id_usuario}/bloquear", response_model=DesbloquearUsuarioResponse)
@@ -93,16 +93,16 @@ def bloquear_cuenta_endpoint(
     id_usuario: int,
     request: Request,
     minutos: int = Query(30, description="Minutos de bloqueo temporal"),
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Administrador aplica bloqueo preventivo o administrativo
-    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.1: IUsuariosBoundary invoca bloquear_cuenta() en UsuarioAdminControl
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Bloqueo preventivo o administrativo
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.bloquear_cuenta(
         db=db,
         id_usuario=id_usuario,
         admin_id=current_user.id_usuario,
         minutos=minutos,
-        ip_origen=client_ip
+        ip_origen=client_ip,
+        current_user=current_user
     )

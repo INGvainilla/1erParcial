@@ -8,7 +8,8 @@ from typing import List, Optional
 from decimal import Decimal, ROUND_HALF_UP
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-
+from app.core.tenancy import exigir_mismo_tenant
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
 from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
 from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
@@ -24,14 +25,15 @@ class InventarioControl:
     """
 
     @staticmethod
-    def procesar_entrada_mercaderia(db: Session, request: EntradaLoteCreate) -> KardexResponse:
+    def procesar_entrada_mercaderia(
+        db: Session,
+        request: EntradaLoteCreate,
+        current_user: Optional[Usuario] = None
+    ) -> KardexResponse:
         # =========================================================================
         # CASO DE USO: CU09 - Gestionar Inventario Multi-Sucursal y Costos (CPP)
         # Diagrama de Comunicación: Com_CU09_Gestionar_Inventario
         # =========================================================================
-        # Paso 1: El Personal de Logística registra la entrada de un lote en IInventarioBoundary:
-        # (sucursal_id, producto_id, talla, color, cantidad_recibida, costo_unitario_compra, numero_factura)
-        
         # Validar existencia de sucursal física
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == request.id_sucursal).first()
         if not sucursal:
@@ -46,6 +48,19 @@ class InventarioControl:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Producto con ID {request.id_producto} no existe en el catálogo."
+            )
+
+        # Validar pertenencia de recursos a la empresa del usuario
+        if current_user:
+            exigir_mismo_tenant(
+                current_user,
+                sucursal.id_empresa,
+                f"Acceso denegado: La sucursal #{request.id_sucursal} no pertenece a su empresa."
+            )
+            exigir_mismo_tenant(
+                current_user,
+                producto.id_empresa,
+                f"Acceso denegado: El producto #{request.id_producto} no pertenece a su empresa."
             )
 
         cant_lote = request.cantidad_recibida
@@ -65,23 +80,26 @@ class InventarioControl:
         talla_norm = request.talla.strip().upper()
         color_norm = request.color.strip()
 
-        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
-
-        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
+        # Bloqueo de fila para evitar condiciones de carrera en recálculo concurrente de CPP
         item_inv = db.query(Inventario).filter(
             Inventario.id_sucursal == request.id_sucursal,
             Inventario.id_producto == request.id_producto,
             Inventario.talla == talla_norm,
             Inventario.color == color_norm
-        ).first()
+        ).with_for_update().first()
 
-        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.3: retorna existencias actuales (stock_ant, cpp_ant)
+        if item_inv and current_user:
+            exigir_mismo_tenant(
+                current_user,
+                item_inv.id_empresa,
+                "Acceso denegado: El ítem de inventario pertenece a otra empresa."
+            )
+
         if item_inv:
             stock_anterior = item_inv.stock_fisico
             cpp_anterior = Decimal(str(item_inv.costo_promedio_ponderado))
 
-            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.4: calcularCppNuevo(stock_ant, cpp_ant, cant, costo_unit)
-            # Fórmula formal: CPP = [(Stock_ant * CPP_ant) + (Cant_lote * Costo_lote)] / (Stock_ant + Cant_lote)
+            # CU09: Fórmula formal: CPP = [(Stock_ant * CPP_ant) + (Cant_lote * Costo_lote)] / (Stock_ant + Cant_lote)
             inversion_anterior = Decimal(str(stock_anterior)) * cpp_anterior
             inversion_nueva = Decimal(str(cant_lote)) * costo_lote
             nuevo_stock_total = stock_anterior + cant_lote
@@ -89,17 +107,17 @@ class InventarioControl:
             nuevo_cpp_raw = (inversion_anterior + inversion_nueva) / Decimal(str(nuevo_stock_total))
             nuevo_cpp = nuevo_cpp_raw.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.5: actualizarStockYCostos(nuevo_stock, costo_unit, nuevo_cpp)
             item_inv.stock_fisico = nuevo_stock_total
             item_inv.stock_disponible = nuevo_stock_total - item_inv.stock_reservado
             item_inv.ultimo_costo_compra = costo_lote
             item_inv.costo_promedio_ponderado = nuevo_cpp
+            if not item_inv.id_empresa:
+                item_inv.id_empresa = sucursal.id_empresa or producto.id_empresa or (current_user.id_empresa if current_user else None)
         else:
-            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.5: crearRegistroInventario(sucursalId, SKU, talla, color, cantLote, costoUnit)
             nuevo_stock_total = cant_lote
             nuevo_cpp = costo_lote.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             item_inv = Inventario(
-                id_empresa=sucursal.id_empresa or producto.id_empresa,
+                id_empresa=sucursal.id_empresa or producto.id_empresa or (current_user.id_empresa if current_user else None),
                 id_sucursal=request.id_sucursal,
                 id_producto=request.id_producto,
                 talla=talla_norm,
@@ -114,7 +132,6 @@ class InventarioControl:
             db.add(item_inv)
             db.flush()
 
-        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.6: asentarMovimientoKardex(tipo="COMPRA", cant, costo_unit, nuevo_stock, nuevo_cpp)
         referencia = f"Factura: {request.numero_factura.strip()}" if request.numero_factura else "Recepción Lote Proveedor"
         asiento = KardexMovimiento(
             id_inventario=item_inv.id_inventario,
@@ -189,17 +206,40 @@ class InventarioControl:
         db: Session,
         id_inventario: Optional[int] = None,
         id_sucursal: Optional[int] = None,
-        id_producto: Optional[int] = None
+        id_producto: Optional[int] = None,
+        current_user: Optional[Usuario] = None
     ) -> List[KardexResponse]:
         query = db.query(KardexMovimiento)
-        if id_inventario:
-            query = query.filter(KardexMovimiento.id_inventario == id_inventario)
-        elif id_sucursal or id_producto:
-            query = query.join(Inventario)
-            if id_sucursal:
-                query = query.filter(Inventario.id_sucursal == id_sucursal)
-            if id_producto:
-                query = query.filter(Inventario.id_producto == id_producto)
+
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            if id_inventario:
+                inv = db.query(Inventario).filter(Inventario.id_inventario == id_inventario).first()
+                if not inv:
+                    return []
+                exigir_mismo_tenant(
+                    current_user,
+                    inv.id_empresa,
+                    "Acceso denegado: El registro de kardex solicitado pertenece a otra empresa."
+                )
+                query = query.filter(KardexMovimiento.id_inventario == id_inventario)
+            else:
+                query = query.join(Inventario, KardexMovimiento.id_inventario == Inventario.id_inventario).filter(
+                    Inventario.id_empresa == current_user.id_empresa
+                )
+                if id_sucursal:
+                    query = query.filter(Inventario.id_sucursal == id_sucursal)
+                if id_producto:
+                    query = query.filter(Inventario.id_producto == id_producto)
+        else:
+            if id_inventario:
+                query = query.filter(KardexMovimiento.id_inventario == id_inventario)
+            elif id_sucursal or id_producto:
+                query = query.join(Inventario, KardexMovimiento.id_inventario == Inventario.id_inventario)
+                if id_sucursal:
+                    query = query.filter(Inventario.id_sucursal == id_sucursal)
+                if id_producto:
+                    query = query.filter(Inventario.id_producto == id_producto)
 
         movimientos = query.order_by(KardexMovimiento.id_movimiento.desc()).all()
         return [KardexResponse.from_orm(m) for m in movimientos]
+

@@ -9,6 +9,8 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.tenancy import exigir_mismo_tenant
+from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p02_estructura_operativa.sucursales.models import Ciudad, Sucursal
 from app.modules.p02_estructura_operativa.sucursales.schemas import (
     CiudadCreate, CiudadResponse, SucursalCreate, SucursalUpdate, SucursalResponse
@@ -58,10 +60,21 @@ class SucursalControl:
     def listar_sucursales(
         db: Session,
         id_ciudad: Optional[int] = None,
-        estado: Optional[str] = None
+        estado: Optional[str] = None,
+        id_empresa: Optional[int] = None,
+        current_user: Optional[Usuario] = None
     ) -> List[SucursalResponse]:
-        # CU05: Gestionar Ciudades y Sucursales, Paso 3: Consultar sucursales con filtros geográficos u operativos
+        # CU05: Gestionar Ciudades y Sucursales con aislamiento multitenant
         query = db.query(Sucursal)
+        if current_user:
+            if current_user.rol == "SUPER_ADMIN":
+                if id_empresa:
+                    query = query.filter(Sucursal.id_empresa == id_empresa)
+            else:
+                query = query.filter(Sucursal.id_empresa == current_user.id_empresa)
+        elif id_empresa:
+            query = query.filter(Sucursal.id_empresa == id_empresa)
+
         if id_ciudad:
             query = query.filter(Sucursal.id_ciudad == id_ciudad)
         if estado:
@@ -72,6 +85,7 @@ class SucursalControl:
         for s in sucursales:
             resultado.append(SucursalResponse(
                 id_sucursal=s.id_sucursal,
+                id_empresa=s.id_empresa,
                 id_ciudad=s.id_ciudad,
                 nombre_ciudad=s.ciudad.nombre_ciudad if s.ciudad else None,
                 departamento=s.ciudad.departamento if s.ciudad else None,
@@ -88,16 +102,28 @@ class SucursalControl:
         return resultado
 
     @staticmethod
-    def obtener_sucursal(db: Session, id_sucursal: int) -> SucursalResponse:
-        # CU05: Gestionar Ciudades y Sucursales, Paso 3.1: Obtener detalle individual de sucursal física
+    def obtener_sucursal(
+        db: Session,
+        id_sucursal: int,
+        current_user: Optional[Usuario] = None
+    ) -> SucursalResponse:
+        # CU05: Obtener detalle individual de sucursal física
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()
         if not sucursal:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Sucursal con ID {id_sucursal} no encontrada."
             )
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                sucursal.id_empresa,
+                "Acceso denegado: La sucursal pertenece a otra empresa."
+            )
+
         return SucursalResponse(
             id_sucursal=sucursal.id_sucursal,
+            id_empresa=sucursal.id_empresa,
             id_ciudad=sucursal.id_ciudad,
             nombre_ciudad=sucursal.ciudad.nombre_ciudad if sucursal.ciudad else None,
             departamento=sucursal.ciudad.departamento if sucursal.ciudad else None,
@@ -113,9 +139,11 @@ class SucursalControl:
         )
 
     @staticmethod
-    def registrar_sucursal(db: Session, request: SucursalCreate) -> SucursalResponse:
-        # CU05: Gestionar Ciudades y Sucursales, Paso 4: Administrador ingresa datos de la sucursal (GPS, probadores, horarios)
-        # CU05: Gestionar Ciudades y Sucursales, Paso 4.1: SucursalControl verifica la existencia de la ciudad en CiudadEntity
+    def registrar_sucursal(
+        db: Session,
+        request: SucursalCreate,
+        current_user: Optional[Usuario] = None
+    ) -> SucursalResponse:
         ciudad = db.query(Ciudad).filter(Ciudad.id_ciudad == request.id_ciudad).first()
         if not ciudad:
             raise HTTPException(
@@ -123,7 +151,6 @@ class SucursalControl:
                 detail=f"La ciudad con ID {request.id_ciudad} no existe en el sistema."
             )
 
-        # CU05: Gestionar Ciudades y Sucursales, Paso 4.2: Validar coordenadas geodésicas GPS y capacidad mínima de probadores
         lat = Decimal(str(request.latitud))
         lon = Decimal(str(request.longitud))
         if lat < Decimal("-90.0") or lat > Decimal("90.0"):
@@ -133,8 +160,15 @@ class SucursalControl:
         if request.capacidad_probadores < 1:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La capacidad de probadores debe ser al menos 1.")
 
-        # CU05: Gestionar Ciudades y Sucursales, Paso 4.3: Persistir sucursal física en SucursalEntity
+        empresa_id = request.id_empresa
+        if current_user:
+            if current_user.rol != "SUPER_ADMIN":
+                empresa_id = current_user.id_empresa
+            elif not empresa_id:
+                empresa_id = current_user.id_empresa or 1
+
         nueva_sucursal = Sucursal(
+            id_empresa=empresa_id,
             id_ciudad=request.id_ciudad,
             nombre_sucursal=request.nombre_sucursal.strip(),
             direccion=request.direccion.strip(),
@@ -150,9 +184,9 @@ class SucursalControl:
         db.commit()
         db.refresh(nueva_sucursal)
 
-        # CU05: Gestionar Ciudades y Sucursales, Paso 4.4: Confirmar persistencia y retornar SucursalResponse al Boundary
         return SucursalResponse(
             id_sucursal=nueva_sucursal.id_sucursal,
+            id_empresa=nueva_sucursal.id_empresa,
             id_ciudad=nueva_sucursal.id_ciudad,
             nombre_ciudad=ciudad.nombre_ciudad,
             departamento=ciudad.departamento,
@@ -168,14 +202,23 @@ class SucursalControl:
         )
 
     @staticmethod
-    def modificar_sucursal(db: Session, id_sucursal: int, request: SucursalUpdate) -> SucursalResponse:
-        # CU05: Gestionar Ciudades y Sucursales, Paso 5: Administrador actualiza parámetros operativos de la sucursal
-        # CU05: Gestionar Ciudades y Sucursales, Paso 5.1: Recuperar sucursal en SucursalEntity
+    def modificar_sucursal(
+        db: Session,
+        id_sucursal: int,
+        request: SucursalUpdate,
+        current_user: Optional[Usuario] = None
+    ) -> SucursalResponse:
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()
         if not sucursal:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Sucursal con ID {id_sucursal} no encontrada."
+            )
+        if current_user and current_user.rol != "SUPER_ADMIN":
+            exigir_mismo_tenant(
+                current_user,
+                sucursal.id_empresa,
+                "Acceso denegado: No puede modificar una sucursal de otra empresa."
             )
 
         if request.nombre_sucursal:
@@ -205,11 +248,11 @@ class SucursalControl:
         if request.estado:
             sucursal.estado = request.estado.upper()
 
-        # CU05: Gestionar Ciudades y Sucursales, Paso 5.2: Persistir cambios en SucursalEntity y retornar confirmación
         db.commit()
         db.refresh(sucursal)
         return SucursalResponse(
             id_sucursal=sucursal.id_sucursal,
+            id_empresa=sucursal.id_empresa,
             id_ciudad=sucursal.id_ciudad,
             nombre_ciudad=sucursal.ciudad.nombre_ciudad if sucursal.ciudad else None,
             departamento=sucursal.ciudad.departamento if sucursal.ciudad else None,
@@ -223,3 +266,4 @@ class SucursalControl:
             horario_cierre=sucursal.horario_cierre,
             estado=sucursal.estado
         )
+

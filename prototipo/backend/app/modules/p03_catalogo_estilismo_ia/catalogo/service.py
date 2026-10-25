@@ -39,19 +39,13 @@ class CatalogoControl:
         precio_min: Optional[Decimal] = None,
         precio_max: Optional[Decimal] = None,
         id_sucursal: Optional[int] = None,
-        busqueda: Optional[str] = None
+        busqueda: Optional[str] = None,
+        empresa: Optional[str] = None
     ) -> List[PrendaCatalogoResponse]:
         # =========================================================================
         # CASO DE USO: CU10 - Consultar Catálogo y Disponibilidad por Sucursal
         # Diagrama de Comunicación: Com_CU10_Consultar_Catalogo
         # =========================================================================
-        # Paso 1: El Cliente o usuario selecciona criterios de filtro en ICatalogoBoundary:
-        # (categoría, marca, temporada, talla, color, rango de precios, sucursal física de interés)
-
-        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros (categoría, talla, color, sucursal, búsqueda)
-        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
-
-        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.2: buscarPrendasPorFiltro(criterios)
         query = db.query(Producto).options(
             selectinload(Producto.colores),
             selectinload(Producto.tallas),
@@ -59,6 +53,14 @@ class CatalogoControl:
             joinedload(Producto.marca),
             joinedload(Producto.temporada)
         ).filter(Producto.estado == "PUBLICADO")
+
+        if empresa:
+            from app.modules.p01_seguridad_acceso.tenants.models import Empresa
+            empresa_obj = db.query(Empresa).filter(
+                (Empresa.dominio_slug == empresa) | (Empresa.nit == empresa)
+            ).first()
+            if empresa_obj:
+                query = query.filter(Producto.id_empresa == empresa_obj.id_empresa)
 
         if id_categoria:
             query = query.filter(Producto.id_categoria == id_categoria)
