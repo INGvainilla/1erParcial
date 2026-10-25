@@ -259,12 +259,41 @@ export interface CatalogoItem {
   selectedColor?: string;
   selectedTalla?: string;
   selectedCantidad?: number;
+  composicion_textil?: string | null;
+  medidas_antropometricas?: string | null;
   _stock?: number;
   _cpp?: number;
   _precioFinal?: number;
   _precioBase?: number;
   _img?: string | null;
   _catIcon?: string;
+  _showGuia?: boolean;
+}
+
+export interface CapacidadesEmpresa {
+  id_empresa: number;
+  nombre_comercial: string;
+  vigente: boolean;
+  dias_restantes: number;
+  plan: {
+    id_plan: number;
+    nombre: string;
+    codigo: string;
+    precio_mensual: number;
+  };
+  sucursales: {
+    usadas: number;
+    max: number;
+    disponibles: number;
+  };
+  usuarios_staff: {
+    usadas: number;
+    max: number;
+    disponibles: number;
+  };
+  permite_reportes_ia: boolean;
+  permite_ml_dashboard: boolean;
+  soporta_offline: boolean;
 }
 
 

@@ -32,6 +32,7 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
                 <th>SKU Base</th>
                 <th>Prenda / Categoría</th>
                 <th>Marca</th>
+                <th>Composición & Medidas (cm)</th>
                 <th>Colores (HEX)</th>
                 <th>Tallas y Precios (CU06)</th>
                 <th>Precio Base / Rango</th>
@@ -50,12 +51,23 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
                 </td>
                 <td>{{ p.nombre_marca || 'Marca #' + p.id_marca }}</td>
                 <td>
+                  <div class="textile-cell">
+                    <span class="comp-badge" *ngIf="p.composicion_textil" [title]="p.composicion_textil">
+                      <i class="fas fa-feather-alt"></i> {{ p.composicion_textil }}
+                    </span>
+                    <span class="medidas-badge" *ngIf="p.medidas_antropometricas" [title]="p.medidas_antropometricas">
+                      <i class="fas fa-ruler-combined"></i> Medidas en cm
+                    </span>
+                    <span *ngIf="!p.composicion_textil && !p.medidas_antropometricas" class="text-muted">—</span>
+                  </div>
+                </td>
+                <td>
                   <div class="swatches-wrap">
                     <span
                       *ngFor="let col of p.colores"
                       class="color-dot"
-                      [style.background-color]="col.codigo_hex"
-                      [title]="col.color_nombre + ' (' + col.codigo_hex + ')'"
+                      [style.background]="col.codigo_hex_secundario ? ('linear-gradient(135deg, ' + col.codigo_hex + ' 50%, ' + col.codigo_hex_secundario + ' 50%)') : col.codigo_hex"
+                      [title]="col.color_nombre + ' (' + col.codigo_hex + (col.codigo_hex_secundario ? ' / ' + col.codigo_hex_secundario : '') + ')'"
                     ></span>
                   </div>
                 </td>
@@ -141,10 +153,21 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
               <textarea [(ngModel)]="newProd.descripcion" name="desc" rows="2" class="form-control" placeholder="Descripción de materiales y corte..."></textarea>
             </div>
 
-            <!-- Variantes de Colores HEX -->
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label><i class="fas fa-feather-alt"></i> Composición Textil:</label>
+                <input type="text" [(ngModel)]="newProd.composicion_textil" name="comp" class="form-control" placeholder="100% Algodón Pima Peruano" />
+              </div>
+              <div class="form-group col-half">
+                <label><i class="fas fa-palette"></i> Colores HEX (Nombre : #Primario [: #Secundario]):</label>
+                <input type="text" [(ngModel)]="rawColores" name="colores" class="form-control" placeholder="Azul Marino:#0F1E36:#000000, Gris:#2C3E50" />
+              </div>
+            </div>
+
+            <!-- Medidas Antropométricas en cm -->
             <div class="form-group">
-              <label><i class="fas fa-palette"></i> Colores HEX (Nombre : #HEX separados por coma):</label>
-              <input type="text" [(ngModel)]="rawColores" name="colores" class="form-control" placeholder="Azul Marino:#0F1E36, Gris Carbón:#2C3E50" />
+              <label><i class="fas fa-ruler-combined"></i> Guía de Medidas en cm (JSON por Talla):</label>
+              <textarea [(ngModel)]="newProd.medidas_antropometricas" name="medidas" rows="2" class="form-control font-mono" placeholder='{"S":{"pecho_cm":96,"cintura_cm":80,"largo_cm":70},"M":{"pecho_cm":102,"cintura_cm":86,"largo_cm":72}}'></textarea>
             </div>
 
             <!-- Tallas -->
@@ -194,6 +217,10 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
     .cat-text { font-size: 0.75rem; color: var(--text-muted); }
     .swatches-wrap { display: flex; gap: 0.3rem; }
     .color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4); display: inline-block; }
+    .textile-cell { display: flex; flex-direction: column; gap: 0.25rem; max-width: 220px; }
+    .comp-badge { font-size: 0.73rem; color: #a7f3d0; background: rgba(16, 185, 129, 0.12); padding: 0.15rem 0.4rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .medidas-badge { font-size: 0.7rem; color: #93c5fd; background: rgba(59, 130, 246, 0.12); padding: 0.12rem 0.35rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.25rem; }
+    .font-mono { font-family: var(--font-mono, monospace); font-size: 0.78rem; }
     .tallas-wrap { display: flex; gap: 0.25rem; flex-wrap: wrap; }
     .talla-chip { background: rgba(255, 255, 255, 0.06); padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); font-size: 0.72rem; }
     .tallas-price-wrap { display: flex; flex-wrap: wrap; gap: 0.35rem; max-width: 330px; }
@@ -247,7 +274,7 @@ export class ProductosComponent implements OnInit {
   showModal = false;
   submitting = false;
 
-  rawColores = 'Azul Marino:#0F1E36, Gris Carbón:#2C3E50';
+  rawColores = 'Azul Marino:#0F1E36:#000000, Gris Carbón:#2C3E50';
   rawTallas = '38R, 40R, 42R';
 
   newProd = {
@@ -257,7 +284,9 @@ export class ProductosComponent implements OnInit {
     precio_base: 950.00,
     modelo_3d_glb: 'assets/models3d/traje.glb',
     id_categoria: 1,
-    id_marca: 1
+    id_marca: 1,
+    composicion_textil: '100% Algodón Pima Peruano',
+    medidas_antropometricas: '{"38R":{"pecho_cm":96,"cintura_cm":82,"largo_cm":74},"40R":{"pecho_cm":102,"cintura_cm":88,"largo_cm":76},"42R":{"pecho_cm":108,"cintura_cm":94,"largo_cm":78}}'
   };
 
   constructor(
@@ -356,12 +385,13 @@ export class ProductosComponent implements OnInit {
   submitProducto(): void {
     this.submitting = true;
 
-    // CU06: Gestionar Productos y Atributos de Moda, Paso 4.1: Parsear paleta multivaluada de colores (nombre y código HEX)
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 4.1: Parsear paleta multivaluada de colores (nombre, código HEX y opcional secundario)
     const parsedColores = this.rawColores.split(',').map(c => {
       const parts = c.split(':');
       return {
         color_nombre: parts[0]?.trim() || 'Negro',
-        codigo_hex: parts[1]?.trim() || '#000000'
+        codigo_hex: parts[1]?.trim() || '#000000',
+        codigo_hex_secundario: parts[2]?.trim() || null
       };
     });
 

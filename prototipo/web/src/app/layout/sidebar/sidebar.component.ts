@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -6,6 +6,8 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CarritoService } from '../../core/services/carrito.service';
+import { TenantService } from '../../core/services/tenant.service';
+import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
 @Component({
   selector: 'app-sidebar',
@@ -58,6 +60,26 @@ import { CarritoService } from '../../core/services/carrito.service';
           <button class="btn-close-drawer" (click)="closeSidebar()" title="Cerrar menú">
             <i class="fas fa-times"></i>
           </button>
+        </div>
+
+        <!-- Tarjeta de Contexto de Tenant y Plan (CU01-03) -->
+        <div class="tenant-context-card" *ngIf="capacidades() as cap">
+          <div class="tenant-header-line">
+            <span class="tenant-name" [title]="cap.nombre_comercial">
+              <i class="fas fa-store"></i> {{ cap.nombre_comercial }}
+            </span>
+            <span class="plan-pill">{{ cap.plan.nombre }}</span>
+          </div>
+          <div class="tenant-status-line">
+            <span class="status-indicator" [class.status-expired]="!cap.vigente" [class.status-warning]="cap.vigente && cap.dias_restantes <= 5">
+              <i class="fas" [ngClass]="cap.vigente ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+              {{ cap.vigente ? (cap.dias_restantes + ' d vigencia') : 'Suscripción Vencida' }}
+            </span>
+          </div>
+          <div class="tenant-quota-micro">
+            <span>Sucursales: {{ cap.sucursales.usadas }}/{{ cap.sucursales.max }}</span>
+            <span>Staff: {{ cap.usuarios_staff.usadas }}/{{ cap.usuarios_staff.max }}</span>
+          </div>
         </div>
       </div>
 
@@ -409,6 +431,71 @@ import { CarritoService } from '../../core/services/carrito.service';
       background: rgba(239, 68, 68, 0.2);
       color: #fca5a5;
       border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .tenant-context-card {
+      margin-top: 0.85rem;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .tenant-header-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tenant-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tenant-name i { color: #38bdf8; }
+    .plan-pill {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      text-transform: uppercase;
+    }
+    .tenant-status-line {
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: #34d399;
+      font-weight: 600;
+    }
+    .status-indicator.status-warning {
+      color: #fbbf24;
+    }
+    .status-indicator.status-expired {
+      color: #f87171;
+    }
+    .tenant-quota-micro {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: #94a3b8;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-top: 0.25rem;
     }
 
     .sidebar-nav {
@@ -867,22 +954,39 @@ import { CarritoService } from '../../core/services/carrito.service';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   isMobileOpen = false;
+  capacidades = signal<CapacidadesEmpresa | null>(null);
   private routeSub?: Subscription;
 
   constructor(
     public auth: AuthService,
     public carritoService: CarritoService,
+    private tenantService: TenantService,
     private toast: ToastService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Cerrar automáticamente el drawer móvil al cambiar de ruta
+    this.loadCapacidades();
+
+    // Cerrar automáticamente el drawer móvil y refrescar capacidades al cambiar de ruta
     this.routeSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.closeSidebar();
+      this.loadCapacidades();
     });
+  }
+
+  loadCapacidades(): void {
+    const user = this.auth.currentUser();
+    if (user && user.id_empresa) {
+      this.tenantService.obtenerCapacidades(user.id_empresa).subscribe({
+        next: (cap) => this.capacidades.set(cap),
+        error: () => this.capacidades.set(null)
+      });
+    } else {
+      this.capacidades.set(null);
+    }
   }
 
   ngOnDestroy(): void {

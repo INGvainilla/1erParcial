@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../constants/api.constants';
 import { AuthService } from './auth.service';
-import { Empresa, PlanSuscripcion, SuscripcionEmpresa } from '../models/fashion.models';
+import { Empresa, PlanSuscripcion, SuscripcionEmpresa, CapacidadesEmpresa } from '../models/fashion.models';
 
 @Injectable({
   providedIn: 'root'
@@ -66,6 +66,20 @@ export class TenantService {
   // CU03: Contratar o Renovar Suscripción
   contratarSuscripcion(data: { id_empresa: number; id_plan: number; auto_renovar?: boolean }): Observable<SuscripcionEmpresa> {
     return this.http.post<SuscripcionEmpresa>(`${this.apiUrl}/suscripciones`, data, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // CU03: Consultar Capacidades y Cuotas del Plan (CU01-03 / UI Contexto)
+  obtenerCapacidades(idEmpresa: number): Observable<CapacidadesEmpresa> {
+    return this.http.get<CapacidadesEmpresa>(`${this.apiUrl}/empresas/${idEmpresa}/capacidades`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // CU03: Cambiar de Plan (Upgrade / Downgrade con validación)
+  cambiarPlan(data: { id_empresa: number; id_nuevo_plan: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/suscripciones/cambiar-plan`, data, {
       headers: this.authService.getAuthHeaders()
     });
   }

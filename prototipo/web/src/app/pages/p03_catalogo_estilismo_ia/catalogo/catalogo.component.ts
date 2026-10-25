@@ -170,6 +170,9 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
           <div class="product-info">
             <div class="brand-row">
               <span class="brand-name">{{ item.nombre_marca || 'FashionStore' }}</span>
+              <span class="eco-badge" *ngIf="item.composicion_textil" [title]="item.composicion_textil">
+                <i class="fas fa-feather-alt"></i> {{ item.composicion_textil }}
+              </span>
             </div>
 
             <h3 class="product-title" [title]="item.nombre">{{ item.nombre }}</h3>
@@ -187,9 +190,9 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
                   *ngFor="let col of item.colores"
                   class="color-dot"
                   [class.active-dot]="(item.selectedColor || item.colores[0]?.color_nombre) === col.color_nombre"
-                  [style.background-color]="col.codigo_hex"
+                  [style.background]="col.codigo_hex_secundario ? ('linear-gradient(135deg, ' + col.codigo_hex + ' 50%, ' + col.codigo_hex_secundario + ' 50%)') : col.codigo_hex"
                   (click)="$event.stopPropagation(); setColor(item, col.color_nombre)"
-                  [title]="col.color_nombre + ' (' + col.codigo_hex + ')'"
+                  [title]="col.color_nombre + ' (' + col.codigo_hex + (col.codigo_hex_secundario ? ' / ' + col.codigo_hex_secundario : '') + ')'"
                   [attr.aria-label]="col.color_nombre"
                   role="radio"
                   [attr.aria-checked]="(item.selectedColor || item.colores[0]?.color_nombre) === col.color_nombre"
@@ -197,11 +200,20 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
               </div>
             </div>
 
-            <!-- Tallas Disponibles Interactivas -->
+            <!-- Tallas Disponibles Interactivas con Guía de Medidas (CU06 / CU10) -->
             <div class="size-section" *ngIf="item.tallas?.length">
               <div class="swatch-header">
                 <span class="swatch-label">Talla:</span>
                 <strong class="swatch-selected-name">{{ item.selectedTalla || (item.tallas[0]?.talla) }}</strong>
+                <button
+                  type="button"
+                  class="btn-guia-medidas"
+                  *ngIf="item.medidas_antropometricas"
+                  (click)="$event.stopPropagation(); toggleGuiaMedidas(item)"
+                  title="Consultar medidas antropométricas en cm"
+                >
+                  <i class="fas fa-ruler-combined"></i> Guía cm
+                </button>
               </div>
               <div class="chips-row" role="radiogroup" [attr.aria-label]="'Opciones de talla para ' + item.nombre">
                 <button
@@ -216,6 +228,22 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
                 >
                   {{ t.talla }}
                 </button>
+              </div>
+
+              <!-- Guía Desplegable de Medidas Antropométricas en cm (CU06 / CU10) -->
+              <div class="guia-medidas-box glass-panel" *ngIf="item._showGuia" (click)="$event.stopPropagation()">
+                <div class="guia-header">
+                  <span><i class="fas fa-tape"></i> Medidas Anatómicas (cm)</span>
+                  <button type="button" class="btn-close-guia" (click)="item._showGuia = false">&times;</button>
+                </div>
+                <div class="guia-grid">
+                  <div class="guia-item" *ngFor="let m of getMedidasEntries(item)">
+                    <span class="g-talla">{{ m.talla }}</span>
+                    <span class="g-dim" *ngIf="m.pecho_cm">Pecho: {{ m.pecho_cm }}cm</span>
+                    <span class="g-dim" *ngIf="m.cintura_cm">Cintura: {{ m.cintura_cm }}cm</span>
+                    <span class="g-dim" *ngIf="m.cadera_cm || m.largo_cm">{{ m.cadera_cm ? 'Cadera: ' + m.cadera_cm : 'Largo: ' + m.largo_cm }}cm</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -790,6 +818,99 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
 
     .brand-row {
       margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .eco-badge {
+      font-size: 0.68rem;
+      color: #a7f3d0;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .btn-guia-medidas {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-guia-medidas:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #ffffff;
+    }
+
+    .guia-medidas-box {
+      margin-top: 0.45rem;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 6px;
+      padding: 0.5rem 0.65rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .guia-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: #93c5fd;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .btn-close-guia {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.95rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .guia-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .guia-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      background: rgba(30, 41, 59, 0.6);
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    .g-talla {
+      font-weight: 700;
+      color: #38bdf8;
+      min-width: 22px;
+    }
+
+    .g-dim {
+      color: #cbd5e1;
+      font-family: var(--font-mono, monospace);
     }
 
     .brand-name {
@@ -1583,6 +1704,26 @@ export class CatalogoComponent implements OnInit {
       item.selectedCantidad = 1;
     } else if (actual > maxStock) {
       item.selectedCantidad = maxStock;
+    }
+  }
+
+  toggleGuiaMedidas(item: any): void {
+    item._showGuia = !item._showGuia;
+    this.cdr.detectChanges();
+  }
+
+  getMedidasEntries(item: any): { talla: string; pecho_cm?: number; cintura_cm?: number; cadera_cm?: number; largo_cm?: number }[] {
+    if (!item.medidas_antropometricas) return [];
+    try {
+      const obj = typeof item.medidas_antropometricas === 'string'
+        ? JSON.parse(item.medidas_antropometricas)
+        : item.medidas_antropometricas;
+      return Object.keys(obj).map(t => ({
+        talla: t,
+        ...obj[t]
+      }));
+    } catch {
+      return [];
     }
   }
 
