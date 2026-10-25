@@ -51,28 +51,9 @@ from app.modules.p09_procesamiento_pagos.pagos.config_router import router as co
 from app.modules.p10_logistica_delivery.logistica.router import router as logistica_router
 
 # Inicializar tablas de base de datos y migraciones preventivas DDL para 2do Parcial
-try:
-    from sqlalchemy import text
-    with engine.connect() as conn:
-        ddls = [
-            "ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS precio NUMERIC(10, 2);",
-            "ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS medidas_cm VARCHAR(150);",
-            "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
-            "ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
-            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
-            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS medidas_antropometricas TEXT;",
-            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS composicion_textil VARCHAR(150);",
-            "ALTER TABLE producto_colores ADD COLUMN IF NOT EXISTS codigo_hex_secundario VARCHAR(10);",
-            "ALTER TABLE inventario ADD COLUMN IF NOT EXISTS id_empresa INTEGER;"
-        ]
-        for ddl in ddls:
-            try:
-                conn.execute(text(ddl))
-            except Exception:
-                pass
-        conn.commit()
-except Exception:
-    pass
+# (portable PostgreSQL/SQLite, idempotente y sin ocultar errores; ver app/core/migrations.py)
+from app.core.migrations import ensure_columns
+ensure_columns(engine)
 
 Base.metadata.create_all(bind=engine)
 
@@ -182,6 +163,15 @@ def startup_event():
         db.close()
     except Exception as e:
         print(f" [STARTUP] Advertencia en inicializacion automatica: {e}")
+
+    # Bootstrap multitenant idempotente (planes, empresas, suscripciones, superadmin).
+    # Se ejecuta SIEMPRE, independientemente de si ya existían usuarios.
+    try:
+        from app.scripts.bootstrap_tenants import bootstrap_tenants
+        resumen = bootstrap_tenants()
+        print(f" [STARTUP] Bootstrap multitenant OK: {resumen}")
+    except Exception as e:
+        print(f" [STARTUP] ERROR en bootstrap multitenant: {e}")
 
 
 @app.get("/health", tags=["Estado del Sistema"])

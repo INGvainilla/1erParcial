@@ -20,9 +20,20 @@ if not os.getenv("DATABASE_URL") and not os.getenv("FASHIONSTORE_SQLITE_PATH"):
     os.environ["FASHIONSTORE_SQLITE_PATH"] = _destino
 
 import pytest
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, engine, Base
+from app.core.migrations import ensure_columns
+from app.scripts.bootstrap_tenants import bootstrap_tenants
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.core.security import get_password_hash, create_access_token
+
+
+@pytest.fixture(scope="session", autouse=True)
+def preparar_base_datos_pruebas():
+    """Asegura que la BD de pruebas tenga esquema migrado y datos multitenant sembrados"""
+    ensure_columns(engine)
+    Base.metadata.create_all(bind=engine)
+    bootstrap_tenants(vincular_huerfanos=True)
+    yield
 
 
 @pytest.fixture
