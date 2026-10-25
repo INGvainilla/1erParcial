@@ -53,6 +53,7 @@ class ComparadorOutfitsScreen extends StatelessWidget {
           ? _buildEmptyState(context)
           : Column(
               children: [
+                // CU20: Comparar Outfits Lado a Lado, Paso 1.8: muestra tabla lado a lado con desglose y resumen financiero
                 // Resumen Financiero Consolidado del Outfit
                 _buildSummaryBar(context, comparador),
 
@@ -384,8 +385,10 @@ class ComparadorOutfitsScreen extends StatelessWidget {
                   'COMPRAR OUTFIT COMPLETO (${comp.cantidad} PRENDAS)',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
+                // CU20: Comparar Outfits Lado a Lado, Paso 2: Pulsa "Comprar Outfit Ganador"
                 onPressed: () {
                   final carrito = context.read<CarritoProvider>();
+                  // CU20: Comparar Outfits Lado a Lado, Paso 2.1: transferir_outfit_a_carrito(id_outfit, id_usuario)
                   for (final p in comp.prendas) {
                     final color = p.colores.isNotEmpty ? p.colores.first : null;
                     final talla = p.tallas.isNotEmpty ? p.tallas.first.talla : 'M';
@@ -396,6 +399,7 @@ class ComparadorOutfitsScreen extends StatelessWidget {
                       cantidad: 1,
                     );
                   }
+                  // CU20: Comparar Outfits Lado a Lado, Paso 2.4: notifica transferencia exitosa
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('¡${comp.cantidad} prendas del outfit añadidas a tu bolsa de compras!'),

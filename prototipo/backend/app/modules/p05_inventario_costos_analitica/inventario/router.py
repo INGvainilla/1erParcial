@@ -23,20 +23,19 @@ def registrar_entrada_lote_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU09 - Registrar Entrada de Lote y Recalcular CPP
-    # Paso 1: Personal de logística envía lote recepcionado con costo unitario de compra
-    # Paso 1.1: Invocación a InventarioControl.procesar_entrada_mercaderia()
+    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1: Enviar datos lote (sucursal, SKU, cant, costo_unit)
+    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
     return InventarioControl.procesar_entrada_mercaderia(db, request)
 
 @router.get("/stock", response_model=List[InventarioResponse])
 def consultar_stock_endpoint(
     id_sucursal: Optional[int] = Query(None, description="Filtrar por sucursal"),
     id_producto: Optional[int] = Query(None, description="Filtrar por producto"),
+    id_empresa: Optional[int] = Query(None, description="Filtrar por empresa (Tenant)"),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU09 - Consulta de Existencias Multi-Sucursal
-    # Paso 1: Consulta de stock físico, reservado y disponible con CPP valuado
-    return InventarioControl.consultar_stock(db, id_sucursal=id_sucursal, id_producto=id_producto)
+    # CU07: Gestionar Inventario Multi-Sucursal, Kardex Físico-Valorado y Costo Promedio Ponderado (CPP)
+    return InventarioControl.consultar_stock(db, id_sucursal=id_sucursal, id_producto=id_producto, id_empresa=id_empresa)
 
 @router.get("/kardex", response_model=List[KardexResponse])
 def consultar_kardex_endpoint(
@@ -46,8 +45,7 @@ def consultar_kardex_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA", "ENCARGADO_SUCURSAL"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU09 - Consulta de Asientos de Kardex Inmutable
-    # Paso 1: Auditoría de movimientos con saldos físicos y valuación por CPP
+    # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.8: mostrar comprobante de kardex con nuevo CPP
     return InventarioControl.consultar_kardex(
         db, id_inventario=id_inventario, id_sucursal=id_sucursal, id_producto=id_producto
     )

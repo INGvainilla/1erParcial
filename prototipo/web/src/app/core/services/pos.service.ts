@@ -81,6 +81,7 @@ export class PosService {
   private auth = inject(AuthService);
   private apiUrl = `${API_BASE_URL}/pos`;
 
+  // CU15: Registrar Venta Presencial en Caja (POS), Paso 1.1: buscar_producto_por_sku(sku, sucursal_id)
   lookupProducto(sku: string, idSucursal?: number): Observable<PosProductoLookupResponse> {
     const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.get<PosProductoLookupResponse>(
@@ -97,6 +98,7 @@ export class PosService {
     );
   }
 
+  // CU15: Registrar Venta Presencial en Caja (POS), Paso 2.1: procesar_venta_pos(dtoVentaPOS)
   procesarVenta(venta: PosVentaCreate, idSucursal?: number): Observable<PosTicketResponse> {
     const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.post<PosTicketResponse>(
@@ -109,6 +111,7 @@ export class PosService {
   // ==========================================================================
   // CU25: Gestionar Devolución y Cambio de Prendas
   // ==========================================================================
+  // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1: Cajero -> UI : Ingresa código de ticket y prenda ("POS-2026-0042")
   consultarTicketDevolucion(nroTicket: string): Observable<TicketConsultaResponse> {
     return this.http.get<TicketConsultaResponse>(
       `${this.apiUrl}/devoluciones/ticket/${encodeURIComponent(nroTicket.trim())}`,
@@ -116,6 +119,7 @@ export class PosService {
     );
   }
 
+  // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.1: UI -> Ctrl : procesar_devolucion(id_venta, id_variante, cantidad, motivo, resolucion)
   procesarDevolucion(payload: DevolucionCreate, idSucursal?: number): Observable<DevolucionTicketResponse> {
     const query = idSucursal ? `?id_sucursal=${idSucursal}` : '';
     return this.http.post<DevolucionTicketResponse>(

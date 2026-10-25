@@ -80,6 +80,7 @@ def listar_ordenes_delivery(db: Session, estado_filtro: Optional[str] = None, mo
     Retorna todas las órdenes pagadas (CU16).
     Opcionalmente filtra por modalidad (DELIVERY / RETIRO_TIENDA) y por estado_logistica.
     """
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 1.2: filtrarOrdenesDeliveryPagadas(estado_logistica)
     query = (
         db.query(OrdenVenta)
         .options(
@@ -98,6 +99,7 @@ def listar_ordenes_delivery(db: Session, estado_filtro: Optional[str] = None, mo
     if estado_filtro:
         query = query.filter(OrdenVenta.estado_logistica == estado_filtro)
 
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 1.3: retorna coleccion de ordenes con prendas
     ordenes = query.order_by(OrdenVenta.id_orden.desc()).all()
     return [formatear_orden_logistica(o) for o in ordenes]
 
@@ -131,6 +133,7 @@ def transicionar_estado_logistica(db: Session, id_orden: int, nuevo_estado: str)
         # Idempotente
         return formatear_orden_logistica(orden)
 
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 2.2: validarTransicionFSM(estado_actual, nuevo_estado)
     permitidos = TRANSICIONES_PERMITIDAS.get(estado_actual, [])
 
     if nuevo_estado_clean not in permitidos:
@@ -151,7 +154,9 @@ def transicionar_estado_logistica(db: Session, id_orden: int, nuevo_estado: str)
                 detail="No se puede poner la orden 'EN_TRANSITO' sin haber asignado previamente un repartidor o courier."
             )
 
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 2.3: actualizarEstadoLogisticaYChofer(id_orden, datos)
     orden.estado_logistica = nuevo_estado_clean
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 2.4: confirma persistencia
     db.commit()
     db.refresh(orden)
     return formatear_orden_logistica(orden)
@@ -205,6 +210,7 @@ def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
     Incluye los pasos del Stepper y el porcentaje de progreso adaptado a la modalidad
     (DELIVERY o RETIRO_TIENDA).
     """
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.2: obtenerDatosTrackingYDestino(id_orden)
     orden = (
         db.query(OrdenVenta)
         .options(
@@ -222,8 +228,11 @@ def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
             detail=f"No se encontró información de tracking para la orden #{id_orden}."
         )
 
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.3: retorna estado, repartidor y coordenadas
     estado = orden.estado_logistica or "CREADA"
     modalidad = orden.modalidad_entrega or "DELIVERY"
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.4: obtenerCoordenadasSucursalOrigen(sucursal_id)
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.5: retorna lat_origen, lon_origen
     nombre_suc = orden.sucursal.nombre_sucursal if orden.sucursal else "Sucursal Equipetrol"
     dir_suc = orden.sucursal.direccion if orden.sucursal else "Av. San Martín #450, Santa Cruz"
 
@@ -341,6 +350,7 @@ def obtener_tracking_cliente(db: Session, id_orden: int) -> TrackingResponse:
     elif orden.razon_social_factura:
         nombre_cliente = orden.razon_social_factura
 
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.7: retorna datos completos de tracking (stepper, km, chofer)
     return TrackingResponse(
         id_orden=orden.id_orden,
         numero_factura=orden.numero_factura,

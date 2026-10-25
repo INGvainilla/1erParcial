@@ -56,18 +56,21 @@ export class ReservaService {
   private auth = inject(AuthService);
   private apiUrl = `${API_BASE_URL}/reservas`;
 
+  // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
   crearReserva(reserva: ReservaCreate): Observable<ReservaResponse> {
     return this.http.post<ReservaResponse>(this.apiUrl, reserva, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.13: renderiza ticket QR y agrega a Mis Tickets
   getMisReservas(): Observable<ReservaResponse[]> {
     return this.http.get<ReservaResponse[]>(`${this.apiUrl}/mis-reservas`, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.12: retorna reserva con ticket QR generado
   getReserva(idReserva: number): Observable<ReservaResponse> {
     return this.http.get<ReservaResponse>(`${this.apiUrl}/${idReserva}`, {
       headers: this.auth.getAuthHeaders()

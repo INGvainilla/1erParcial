@@ -101,6 +101,7 @@ export class CarritoService {
   /**
    * CU13: Añadir producto al carrito con validación atómica y apertura reactiva
    */
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 1: Clic 'Agregar al Carrito' (producto, talla, color, cant)
   agregarItem(id_producto: number, talla: string, color: string, cantidad: number = 1): void {
     if (!this.auth.currentUser()) {
       this.toast.info('Sesión requerida', 'Debes iniciar sesión para agregar productos a tu carrito.');
@@ -110,6 +111,7 @@ export class CarritoService {
     this.loading.set(true);
     const body = { id_producto, talla, color, cantidad };
 
+    // CU13: Administrar Carrito de Compras Omnicanal, Paso 1.1: agregar_item(id_usuario, datos_item)
     this.http.post<CarritoData>(`${this.apiUrl}/items`, body, {
       headers: this.auth.getAuthHeaders()
     }).pipe(
@@ -117,6 +119,7 @@ export class CarritoService {
         this.cart.set(data);
         this.loading.set(false);
         this.toast.success('¡Prenda agregada!', `Se añadió al carrito (${talla} - ${color}).`);
+        // CU13: Administrar Carrito de Compras Omnicanal, Paso 1.10: despliega gaveta lateral con items y badge actualizado
         this.openCart();
       }),
       catchError(err => {
@@ -131,6 +134,7 @@ export class CarritoService {
   /**
    * CU13: Modificar cantidad de un ítem existente
    */
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 2: Modificar cantidad (+ / -) o eliminar ítem
   actualizarCantidad(id_item: number, nuevaCantidad: number): void {
     if (nuevaCantidad < 1) {
       this.eliminarItem(id_item);
@@ -138,6 +142,7 @@ export class CarritoService {
     }
 
     this.actionLoadingId.set(id_item);
+    // CU13: Administrar Carrito de Compras Omnicanal, Paso 2.1: actualizar_cantidad(id_item, nueva_cant)
     this.http.patch<CarritoData>(`${this.apiUrl}/items/${id_item}`, { cantidad: nuevaCantidad }, {
       headers: this.auth.getAuthHeaders()
     }).pipe(
@@ -157,6 +162,7 @@ export class CarritoService {
   /**
    * CU13: Quitar ítem del carrito
    */
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 2.3: actualizarOCantidadCeroEliminar(id_item, 0)
   eliminarItem(id_item: number): void {
     this.actionLoadingId.set(id_item);
     this.http.delete<CarritoData>(`${this.apiUrl}/items/${id_item}`, {

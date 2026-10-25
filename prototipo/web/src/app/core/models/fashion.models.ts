@@ -1,11 +1,12 @@
 export interface Usuario {
   id_usuario: number;
+  id_empresa?: number | null;
   email: string;
   nombre_completo: string;
   nombres?: string;
   apellidos?: string;
   telefono?: string | null;
-  rol: string; // 'ADMINISTRADOR' | 'ENCARGADO_SUCURSAL' | 'CAJERO' | 'LOGISTICA' | 'CLIENTE' | 'PROVEEDOR'
+  rol: string; // 'SUPER_ADMIN' | 'ADMINISTRADOR' | 'ENCARGADO_SUCURSAL' | 'CAJERO' | 'LOGISTICA' | 'CLIENTE' | 'PROVEEDOR'
   estado_cuenta: string; // 'ACTIVO' | 'INACTIVO' | 'BLOQUEADO_POR_INTENTOS'
   intentos_fallidos: number;
   bloqueado_hasta?: string | null;
@@ -14,10 +15,54 @@ export interface Usuario {
   creado_en?: string;
 }
 
+export interface PlanSuscripcion {
+  id_plan: number;
+  nombre: string;
+  codigo: string;
+  max_sucursales: number;
+  max_usuarios: number;
+  permite_reportes_ia: boolean;
+  permite_ml_dashboard: boolean;
+  soporta_offline: boolean;
+  precio_mensual: number;
+  estado: string;
+  descripcion?: string | null;
+}
+
+export interface Empresa {
+  id_empresa: number;
+  nit: string;
+  razon_social: string;
+  nombre_comercial: string;
+  dominio_slug: string;
+  schema_name?: string | null;
+  email_contacto: string;
+  telefono?: string | null;
+  direccion?: string | null;
+  logo_url?: string | null;
+  presupuesto_disponible: number;
+  estado: string;
+  creado_en?: string;
+}
+
+export interface SuscripcionEmpresa {
+  id_suscripcion: number;
+  id_empresa: number;
+  id_plan: number;
+  fecha_inicio: string;
+  fecha_vencimiento?: string | null;
+  estado: string;
+  auto_renovar: boolean;
+  plan?: PlanSuscripcion | null;
+}
+
 export interface LoginResponse {
   access_token: string;
   token_type: string;
   id_usuario: number;
+  id_empresa?: number | null;
+  nombre_empresa?: string | null;
+  dominio_slug_empresa?: string | null;
   nombres: string;
   apellidos?: string;
   nombre_completo?: string;
@@ -71,6 +116,7 @@ export interface ColorVariante {
   id_color: number;
   color_nombre: string;
   codigo_hex: string;
+  codigo_hex_secundario?: string | null;
 }
 
 export interface TallaVariante {
@@ -78,14 +124,18 @@ export interface TallaVariante {
   talla: string;
   precio?: number;
   factor?: number;
+  medidas_cm?: string | null;
 }
 
 export interface Producto {
   id_producto: number;
+  id_empresa?: number | null;
   codigo_sku_base: string;
   nombre: string;
   descripcion?: string | null;
   precio_base: number;
+  composicion_textil?: string | null;
+  medidas_antropometricas?: string | null;
   id_categoria: number;
   nombre_categoria?: string | null;
   id_marca: number;
@@ -132,6 +182,7 @@ export interface Proveedor {
 
 export interface InventarioItem {
   id_inventario: number;
+  id_empresa?: number | null;
   id_sucursal: number;
   nombre_sucursal?: string | null;
   id_producto: number;

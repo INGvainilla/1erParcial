@@ -2,11 +2,13 @@ class PrendaColor {
   final int idColor;
   final String nombre;
   final String codigoHex;
+  final String? codigoHexSecundario;
 
   PrendaColor({
     required this.idColor,
     required this.nombre,
     required this.codigoHex,
+    this.codigoHexSecundario,
   });
 
   factory PrendaColor.fromJson(Map<String, dynamic> json) {
@@ -14,6 +16,7 @@ class PrendaColor {
       idColor: json['id_color'] ?? 0,
       nombre: json['nombre'] ?? json['color_nombre'] ?? '',
       codigoHex: json['codigo_hex'] ?? '#000000',
+      codigoHexSecundario: json['codigo_hex_secundario'],
     );
   }
 }
@@ -24,6 +27,7 @@ class PrendaTalla {
   final int orden;
   final double? precio;
   final double? factor;
+  final String? medidasCm;
 
   PrendaTalla({
     required this.idTalla,
@@ -31,6 +35,7 @@ class PrendaTalla {
     required this.orden,
     this.precio,
     this.factor,
+    this.medidasCm,
   });
 
   factory PrendaTalla.fromJson(Map<String, dynamic> json) {
@@ -40,6 +45,7 @@ class PrendaTalla {
       orden: json['orden'] ?? 0,
       precio: json['precio'] != null ? double.tryParse(json['precio'].toString()) : null,
       factor: json['factor'] != null ? double.tryParse(json['factor'].toString()) : null,
+      medidasCm: json['medidas_cm'],
     );
   }
 }
@@ -78,9 +84,12 @@ class StockSucursalItem {
 
 class PrendaCatalogo {
   final int idProducto;
+  final int? idEmpresa;
   final String codigoSkuBase;
   final String nombre;
   final String? descripcion;
+  final String? composicionTextil;
+  final String? medidasAntropometricas;
   final double precioBase;
   final double descuentoPct;
   final double precioFinal;
@@ -99,9 +108,12 @@ class PrendaCatalogo {
 
   PrendaCatalogo({
     required this.idProducto,
+    this.idEmpresa,
     required this.codigoSkuBase,
     required this.nombre,
     this.descripcion,
+    this.composicionTextil,
+    this.medidasAntropometricas,
     required this.precioBase,
     required this.descuentoPct,
     required this.precioFinal,
@@ -126,9 +138,12 @@ class PrendaCatalogo {
 
     return PrendaCatalogo(
       idProducto: json['id_producto'] ?? 0,
+      idEmpresa: json['id_empresa'],
       codigoSkuBase: json['codigo_sku_base'] ?? '',
       nombre: json['nombre'] ?? '',
       descripcion: json['descripcion'],
+      composicionTextil: json['composicion_textil'],
+      medidasAntropometricas: json['medidas_antropometricas'],
       precioBase: (json['precio_base'] != null) ? double.parse(json['precio_base'].toString()) : 0.0,
       descuentoPct: (json['descuento_aplicable_pct'] != null) ? double.parse(json['descuento_aplicable_pct'].toString()) : 0.0,
       precioFinal: (json['precio_final'] != null) ? double.parse(json['precio_final'].toString()) : 0.0,

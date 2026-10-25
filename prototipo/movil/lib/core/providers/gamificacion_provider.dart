@@ -18,6 +18,7 @@ class GamificacionProvider extends ChangeNotifier {
   bool get cargando => _cargando;
   String? get error => _error;
 
+  // CU21: Gestionar Fidelización Gamificada, Paso Consulta: UI -> Ctrl : getPerfilGamificacion(id_usuario)
   Future<void> cargarPerfil() async {
     _cargando = true;
     _error = null;
@@ -26,6 +27,7 @@ class GamificacionProvider extends ChangeNotifier {
     try {
       final res = await _api.get(ApiConstants.gamificacionPerfil);
       if (res is Map<String, dynamic>) {
+        // CU21: Gestionar Fidelización Gamificada, Paso Consulta 1.2: retorna puntos_actuales y nivel
         _perfil = GamificacionPerfil.fromJson(res);
       }
     } catch (e) {
@@ -48,6 +50,8 @@ class GamificacionProvider extends ChangeNotifier {
     }
   }
 
+  // CU21: Gestionar Fidelización Gamificada, Paso 2: Selecciona recompensa y solicita canje
+  // CU21: Gestionar Fidelización Gamificada, Paso 2.1: canjear_recompensa(id_usuario, codigo_recompensa)
   Future<Map<String, dynamic>> canjearRecompensa(String codigoRecompensa) async {
     try {
       final res = await _api.post(
@@ -55,6 +59,7 @@ class GamificacionProvider extends ChangeNotifier {
         body: {'codigo_recompensa': codigoRecompensa},
       );
       if (res is Map<String, dynamic>) {
+        // CU21: Gestionar Fidelización Gamificada, Paso 2.8: devuelve cupón listo para usar en checkout
         await cargarPerfil();
         await cargarRecompensas();
         await cargarMisCupones();

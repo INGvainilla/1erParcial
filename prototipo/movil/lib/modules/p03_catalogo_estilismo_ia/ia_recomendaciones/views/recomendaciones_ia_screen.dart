@@ -23,6 +23,7 @@ class _RecomendacionesIaScreenState extends State<RecomendacionesIaScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // CU22: Solicitar Recomendación Contextual de IA, Paso 1: Cliente -> UI : Elige ocasión de uso y confirma ciudad
       context.read<RecomendacionesIaProvider>().cargarContexto();
     });
   }
@@ -52,6 +53,7 @@ class _RecomendacionesIaScreenState extends State<RecomendacionesIaScreen> {
       builder: (ctx) => ModalBusquedaVozReal(
         titulo: 'Asistente de Estilo por Voz (CU23)',
         onTextoConfirmado: (texto) async {
+          // CU23: Buscar Productos por Comandos de Voz, Paso 1.1: UI -> Ctrl : procesar_busqueda_voz(audio_buffer / consulta_voz)
           await iaProvider.procesarComandoVoz(texto);
           try {
             gamProvider.registrarBonoAccion('BUSQUEDA_VOZ');
@@ -101,6 +103,7 @@ class _RecomendacionesIaScreenState extends State<RecomendacionesIaScreen> {
 
                     // Si hay resultado de búsqueda por voz reciente, mostrarlo destacado
                     if (resultadoVoz != null) ...[
+                      // CU23: Buscar Productos por Comandos de Voz, Paso 1.9: UI --> Cliente : renderiza catálogo filtrado automáticamente
                       _buildResultadoVozCard(context, resultadoVoz, iaProvider),
                       const SizedBox(height: 20),
                     ],
@@ -149,6 +152,7 @@ class _RecomendacionesIaScreenState extends State<RecomendacionesIaScreen> {
                         ),
                       )
                     else
+                      // CU22: Solicitar Recomendación Contextual de IA, Paso 1.11: UI --> Cliente : despliega sugerencias con widget de clima
                       ...outfits.map((o) => _buildOutfitCard(context, o)).toList(),
                   ],
                 ),

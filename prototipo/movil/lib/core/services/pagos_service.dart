@@ -5,6 +5,7 @@ import 'api_service.dart';
 class PagosService {
   final ApiService _api = ApiService();
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
   Future<IntencionPago> crearIntencionPago(int idOrden) async {
     final response = await _api.post(
       ApiConstants.pagoIntencion,
@@ -14,6 +15,7 @@ class PagosService {
     return IntencionPago.fromJson(response);
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.3: confirmar_transaccion_pago(payment_intent_id, id_orden)
   Future<TransaccionPago> confirmarPagoDirecto(int idOrden, String paymentIntentId) async {
     final response = await _api.post(
       ApiConstants.pagoConfirmar,

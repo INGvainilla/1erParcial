@@ -89,6 +89,7 @@ class _VestidorArScreenState extends State<VestidorArScreen>
     'Noche & Gala',
   ];
 
+  // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.1: inicializar_sesion_ra(id_producto, talla, color)
   @override
   void initState() {
     super.initState();
@@ -173,6 +174,7 @@ class _VestidorArScreenState extends State<VestidorArScreen>
     }
   }
 
+  // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.8: Transfiere payload de calibración 3D y stream de cámara
   void _iniciarImageStream() {
     final controller = _cameraController;
     if (controller == null || !controller.value.isInitialized || _isStreamingFrames) return;
@@ -225,6 +227,7 @@ class _VestidorArScreenState extends State<VestidorArScreen>
     _garmentPoseNotifier.value = _currentPose;
   }
 
+  // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.4: obtenerRecurso3D(id_producto) y textura_url
   /// Carga asíncrona del modelo wearable con canal alfa en formato ui.Image
   Future<void> _cargarImagenWearable() async {
     if (_cargandoImagen) return;
@@ -759,6 +762,7 @@ class _VestidorArScreenState extends State<VestidorArScreen>
                 });
                 _actualizarTargetPose(_skeleton, screenSize);
               },
+              // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.9: renderiza prenda sobre silueta en tiempo real (calibrarSensoresCamaraYAnclajes y superponerMalla3D)
               child: CustomPaint(
                 size: Size.infinite,
                 painter: GarmentArPainter(
@@ -1151,6 +1155,7 @@ class _VestidorArScreenState extends State<VestidorArScreen>
                       itemBuilder: (context, idx) {
                         final c = widget.prenda.colores[idx];
                         final isSel = c.idColor == _colorSeleccionado.idColor;
+                        // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso Alternativo: seleccionarColorHex(nuevo_color) y actualizarTexturaShader
                         return GestureDetector(
                           onTap: () => setState(() => _colorSeleccionado = c),
                           child: Container(

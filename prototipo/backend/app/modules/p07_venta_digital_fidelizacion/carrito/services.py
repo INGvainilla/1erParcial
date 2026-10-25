@@ -15,6 +15,7 @@ from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
 from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario
 
 
+# CU13: Administrar Carrito de Compras Omnicanal, Paso 1.2: verificarStockDisponible(variante_id, cant)
 def consultar_stock_disponible_global(db: Session, id_producto: int, talla: str, color: str) -> int:
     """
     CU13 - Validación Atómica:
@@ -25,9 +26,11 @@ def consultar_stock_disponible_global(db: Session, id_producto: int, talla: str,
         Inventario.talla == talla,
         Inventario.color == color
     ).scalar()
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.3: confirma stock fisico disponible
     return int(resultado or 0)
 
 
+# CU13: Administrar Carrito de Compras Omnicanal, Paso 1.4: obtenerOCrearCarrito(id_usuario)
 def obtener_o_crear_carrito_activo(db: Session, id_usuario: int) -> Carrito:
     """
     Obtiene el carrito activo del cliente o crea uno nuevo de inmediato.
@@ -45,9 +48,11 @@ def obtener_o_crear_carrito_activo(db: Session, id_usuario: int) -> Carrito:
         db.commit()
         db.refresh(carrito)
 
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.5: retorna id_carrito activo
     return carrito
 
 
+# CU13: Administrar Carrito de Compras Omnicanal, Paso 1.8: recalcularSubtotalesYTotal(id_carrito)
 def construir_carrito_response(db: Session, carrito: Carrito) -> CarritoResponse:
     """
     Calcula subtotales, totales generales y existencias máximas para cada ítem.
@@ -80,6 +85,7 @@ def construir_carrito_response(db: Session, carrito: Carrito) -> CarritoResponse
             )
         )
 
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.9: retorna estado consolidado del carrito
     return CarritoResponse(
         id_carrito=carrito.id_carrito,
         id_usuario=carrito.id_usuario,
@@ -98,6 +104,7 @@ def obtener_carrito_usuario(db: Session, id_usuario: int) -> CarritoResponse:
     return construir_carrito_response(db, carrito)
 
 
+# CU13: Administrar Carrito de Compras Omnicanal, Paso 1.1: agregar_item(id_usuario, datos_item)
 def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) -> CarritoResponse:
     """
     CU13: Añade un producto al carrito previa validación atómica de existencias.
@@ -112,8 +119,10 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
         )
 
     # 2. Validación atómica de existencias
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.2: verificarStockDisponible(variante_id, cant)
     stock_disponible = consultar_stock_disponible_global(db, item_in.id_producto, item_in.talla, item_in.color)
     
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.4: obtenerOCrearCarrito(id_usuario)
     carrito = obtener_o_crear_carrito_activo(db, id_usuario)
 
     # Factores de talla y precio diferenciado en base de datos (CU06 / CU10 / CU13)
@@ -136,7 +145,7 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
         descuento_pct = float(producto.temporada.descuento_liquidacion)
     precio_unit = round(precio_base_talla * (1.0 - descuento_pct / 100.0), 2)
 
-    # Verificar si ya existe el ítem en el carrito con misma talla y color
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.6: upsertItem(id_carrito, variante_id, cant)
     item_existente = db.query(CarritoItem).filter(
         CarritoItem.id_carrito == carrito.id_carrito,
         CarritoItem.id_producto == item_in.id_producto,
@@ -169,11 +178,14 @@ def agregar_item_carrito(db: Session, id_usuario: int, item_in: CarritoItemAdd) 
         )
         db.add(nuevo_item)
 
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.7: item guardado o incrementado
     db.commit()
     db.refresh(carrito)
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.8: recalcularSubtotalesYTotal(id_carrito)
     return construir_carrito_response(db, carrito)
 
 
+# CU13: Administrar Carrito de Compras Omnicanal, Paso 2.1: actualizar_cantidad(id_item, nueva_cant)
 def actualizar_cantidad_item(db: Session, id_usuario: int, id_item: int, nueva_cantidad: int) -> CarritoResponse:
     """
     CU13: Actualiza la cantidad de un ítem existente con validación de stock.
@@ -192,6 +204,7 @@ def actualizar_cantidad_item(db: Session, id_usuario: int, id_item: int, nueva_c
         )
 
     # Validar existencias
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 2.2: validarLimiteStock(variante_id, nueva_cant)
     stock_disponible = consultar_stock_disponible_global(db, item.id_producto, item.talla, item.color)
     if nueva_cantidad > stock_disponible:
         raise HTTPException(
@@ -199,9 +212,15 @@ def actualizar_cantidad_item(db: Session, id_usuario: int, id_item: int, nueva_c
             detail=f"Stock máximo alcanzado. Solo disponemos de {stock_disponible} unidades en existencia."
         )
 
-    item.cantidad = nueva_cantidad
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 2.3: actualizarOCantidadCeroEliminar(id_item, nueva_cant)
+    if nueva_cantidad <= 0:
+        db.delete(item)
+    else:
+        item.cantidad = nueva_cantidad
+
     db.commit()
     db.refresh(carrito)
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 2.4: recalcularSubtotalesYTotal(id_carrito)
     return construir_carrito_response(db, carrito)
 
 

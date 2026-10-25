@@ -33,6 +33,8 @@ def solicitar_reserva_endpoint(
     """
     Endpoint para que un cliente autenticado solicite una reserva en una sucursal.
     """
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1: Seleccionar sucursal, fecha/hora y prendas
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
     return crear_reserva(db=db, reserva_in=reserva_in, id_usuario=current_user.id_usuario)
 
 
@@ -44,6 +46,7 @@ def listar_mis_reservas_endpoint(
     """
     CU11: Permite al cliente autenticado consultar todas sus reservas activas y pasadas con su código QR.
     """
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.13: renderiza ticket QR y agrega a Mis Tickets
     return listar_mis_reservas(db=db, id_usuario=current_user.id_usuario)
 
 
@@ -76,6 +79,8 @@ def obtener_reservas_hoy_endpoint(
     CU12: Lista las reservas del día (o fecha/rango seleccionado) para la sucursal del encargado autenticado.
     Si es Administrador, puede filtrar por sucursal específica o ver todas.
     """
+    # CU12: Preparar y Atender Reserva Presencial, Paso 1: Consultar reservas activas del día
+    # CU12: Preparar y Atender Reserva Presencial, Paso 1.1: listar_reservas_sucursal(sucursal_id, fecha)
     es_admin = (current_user.rol == "ADMINISTRADOR")
     target_sucursal = current_user.id_sucursal or id_sucursal
 
@@ -110,6 +115,8 @@ def cambiar_estado_reserva_endpoint(
     Actualiza el estado de una reserva (ej. PENDIENTE -> PREPARADA).
     Solo el encargado de la sucursal dueña de la reserva (o un administrador) puede realizarlo.
     """
+    # CU12: Preparar y Atender Reserva Presencial, Paso 2: Clic en 'Apartar en Probador'
+    # CU12: Preparar y Atender Reserva Presencial, Paso 2.1: cambiar_estado_reserva(id_reserva, 'PREPARADA')
     id_sucursal = current_user.id_sucursal
     es_admin = (current_user.rol == "ADMINISTRADOR")
     if not id_sucursal and not es_admin:
@@ -135,6 +142,8 @@ def escanear_qr_endpoint(
     """
     Recibe el texto del QR escaneado (o ID), busca la reserva, la valida y la marca como ATENDIDA.
     """
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.1: Escanear o digitar qr_texto
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.2: atender_reserva_qr(qr_texto, sucursal_id)
     id_sucursal = current_user.id_sucursal
     es_admin = (current_user.rol == "ADMINISTRADOR")
     if not id_sucursal and not es_admin:

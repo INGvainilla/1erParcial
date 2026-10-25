@@ -26,15 +26,19 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
+  // CU03: Recuperar Contraseña (Token OTP de 6 Dígitos), Paso 1: Usuario ingresa correo y solicita recuperación
   Future<void> _solicitarOtp() async {
+    // CU03: Recuperar Contraseña (Token OTP), Paso 1.1: IRecuperarBoundary captura el correo electrónico
     final email = _emailController.text.trim();
     if (email.isEmpty) return;
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 1.2: Enviar solicitud de generación de OTP al servidor
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final msg = await auth.solicitarOtp(email);
 
     if (!mounted) return;
     if (msg != null) {
+      // CU03: Recuperar Contraseña (Token OTP), Paso 1.3: Cambiar UI a formulario de validación OTP y nueva clave
       setState(() {
         _otpEnviado = true;
         _infoMessage = msg;
@@ -42,11 +46,14 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
+  // CU03: Recuperar Contraseña (Token OTP de 6 Dígitos), Paso 2: Usuario ingresa OTP de 6 dígitos y nueva clave
   Future<void> _verificarOtpYReset() async {
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.1: Captura de campos OTP, correo y nueva contraseña
     final email = _emailController.text.trim();
     final otp = _otpController.text.trim();
     final newPass = _newPasswordController.text;
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.2: Validación de longitud y formato seguro
     if (otp.length != 6 || newPass.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -57,6 +64,7 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.3: Invocar endpoint de verificación de OTP y actualización de contraseña
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final ok = await auth.resetPasswordOtp(
       email: email,
@@ -65,6 +73,7 @@ class _OtpScreenState extends State<OtpScreen> {
     );
 
     if (!mounted) return;
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.4: Notificar éxito y redirigir a inicio de sesión
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

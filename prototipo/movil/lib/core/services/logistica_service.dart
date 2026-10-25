@@ -5,6 +5,7 @@ import 'api_service.dart';
 class LogisticaService {
   final ApiService _api = ApiService();
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.1: obtener_tracking_orden(id_orden)
   Future<Tracking> getTracking(int idOrden) async {
     final response = await _api.get(
       ApiConstants.tracking(idOrden),

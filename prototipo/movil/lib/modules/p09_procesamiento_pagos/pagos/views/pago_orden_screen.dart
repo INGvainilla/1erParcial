@@ -59,6 +59,7 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
     });
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1: Cargar pantalla de pago seguro (/pagos/orden/:id)
   Future<void> _iniciarIntencion() async {
     setState(() {
       _isGeneratingIntent = true;
@@ -66,8 +67,10 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
     });
 
     try {
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
       final intent = await _pagosService.crearIntencionPago(widget.orden.idOrden);
       if (!mounted) return;
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.8: devuelve client_secret para Stripe Elements
       setState(() {
         _intencion = intent;
         _isGeneratingIntent = false;
@@ -87,6 +90,7 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
     }
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2: Ingresar datos de tarjeta y clic 'Pagar'
   Future<void> _confirmarPago() async {
     if (_intencion == null) return;
     if (_formKey.currentState?.validate() == false) return;
@@ -97,6 +101,9 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
     });
 
     try {
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.1: stripe.confirmCardPayment(client_secret, cardData)
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.2: confirmación de cobro exitoso (PCI-DSS token)
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.3: confirmar_transaccion_pago(payment_intent_id, id_orden)
       final tx = await _pagosService.confirmarPagoDirecto(
         widget.orden.idOrden,
         _intencion!.paymentIntentId,
@@ -543,6 +550,7 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
     );
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.9: muestra voucher de éxito y enlace a tracking en vivo
   Widget _buildPagoExitosoView() {
     final tx = _transaccionExitosa!;
 

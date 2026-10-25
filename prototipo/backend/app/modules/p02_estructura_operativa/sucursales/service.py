@@ -23,13 +23,13 @@ class SucursalControl:
     # --- CIUDADES ---
     @staticmethod
     def listar_ciudades(db: Session) -> List[CiudadResponse]:
-        # Paso 1: Consulta de catálogo geográfico de ciudades
+        # CU05: Gestionar Ciudades y Sucursales, Paso 1: Consultar catálogo de ciudades operativas en CiudadEntity
         ciudades = db.query(Ciudad).order_by(Ciudad.nombre_ciudad.asc()).all()
         return [CiudadResponse.from_orm(c) for c in ciudades]
 
     @staticmethod
     def crear_ciudad(db: Session, request: CiudadCreate) -> CiudadResponse:
-        # Paso 1: Validar unicidad y registrar ciudad en CiudadEntity
+        # CU05: Gestionar Ciudades y Sucursales, Paso 2: Registrar nueva ciudad en CiudadEntity con validación de unicidad
         nombre_normalizado = request.nombre_ciudad.strip()
         depto_normalizado = request.departamento.strip()
 
@@ -60,7 +60,7 @@ class SucursalControl:
         id_ciudad: Optional[int] = None,
         estado: Optional[str] = None
     ) -> List[SucursalResponse]:
-        # Paso 1: Consultar sucursales con filtros geográficos u operativos
+        # CU05: Gestionar Ciudades y Sucursales, Paso 3: Consultar sucursales con filtros geográficos u operativos
         query = db.query(Sucursal)
         if id_ciudad:
             query = query.filter(Sucursal.id_ciudad == id_ciudad)
@@ -89,6 +89,7 @@ class SucursalControl:
 
     @staticmethod
     def obtener_sucursal(db: Session, id_sucursal: int) -> SucursalResponse:
+        # CU05: Gestionar Ciudades y Sucursales, Paso 3.1: Obtener detalle individual de sucursal física
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()
         if not sucursal:
             raise HTTPException(
@@ -113,14 +114,8 @@ class SucursalControl:
 
     @staticmethod
     def registrar_sucursal(db: Session, request: SucursalCreate) -> SucursalResponse:
-        # =========================================================================
-        # CASO DE USO: CU05 - Gestionar Ciudades y Sucursales Físicas (Alta)
-        # Diagrama de Comunicación: Com_CU05_Gestionar_Sucursales
-        # =========================================================================
-        # Paso 1: El Administrador ingresa datos de la sucursal (nombre, dir, lat, lon, probadores, horarios) en ISucursalBoundary
-        # Paso 1.1: ISucursalBoundary invoca registrarSucursal(datosSucursal) en SucursalControl
-
-        # Paso 1.2: SucursalControl verifica la existencia de la ciudad en CiudadEntity
+        # CU05: Gestionar Ciudades y Sucursales, Paso 4: Administrador ingresa datos de la sucursal (GPS, probadores, horarios)
+        # CU05: Gestionar Ciudades y Sucursales, Paso 4.1: SucursalControl verifica la existencia de la ciudad en CiudadEntity
         ciudad = db.query(Ciudad).filter(Ciudad.id_ciudad == request.id_ciudad).first()
         if not ciudad:
             raise HTTPException(
@@ -128,11 +123,7 @@ class SucursalControl:
                 detail=f"La ciudad con ID {request.id_ciudad} no existe en el sistema."
             )
 
-        # Paso 1.3: CiudadEntity confirma ciudad válida
-        
-        # Paso 1.4: SucursalControl valida reglas de negocio:
-        # - Coordenadas GPS válidas (Latitud: -90 a +90, Longitud: -180 a +180)
-        # - Capacidad de probadores mayor o igual a 1
+        # CU05: Gestionar Ciudades y Sucursales, Paso 4.2: Validar coordenadas geodésicas GPS y capacidad mínima de probadores
         lat = Decimal(str(request.latitud))
         lon = Decimal(str(request.longitud))
         if lat < Decimal("-90.0") or lat > Decimal("90.0"):
@@ -142,6 +133,7 @@ class SucursalControl:
         if request.capacidad_probadores < 1:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La capacidad de probadores debe ser al menos 1.")
 
+        # CU05: Gestionar Ciudades y Sucursales, Paso 4.3: Persistir sucursal física en SucursalEntity
         nueva_sucursal = Sucursal(
             id_ciudad=request.id_ciudad,
             nombre_sucursal=request.nombre_sucursal.strip(),
@@ -158,9 +150,7 @@ class SucursalControl:
         db.commit()
         db.refresh(nueva_sucursal)
 
-        # Paso 1.5: SucursalEntity retorna sucursal_id generado
-        # Paso 1.6: SucursalControl confirma el éxito del registro
-        # Paso 1.7: ISucursalBoundary renderiza la sucursal en grilla y visualización cartográfica
+        # CU05: Gestionar Ciudades y Sucursales, Paso 4.4: Confirmar persistencia y retornar SucursalResponse al Boundary
         return SucursalResponse(
             id_sucursal=nueva_sucursal.id_sucursal,
             id_ciudad=nueva_sucursal.id_ciudad,
@@ -179,7 +169,8 @@ class SucursalControl:
 
     @staticmethod
     def modificar_sucursal(db: Session, id_sucursal: int, request: SucursalUpdate) -> SucursalResponse:
-        # Paso 1: Edición de campos operativos de la sucursal
+        # CU05: Gestionar Ciudades y Sucursales, Paso 5: Administrador actualiza parámetros operativos de la sucursal
+        # CU05: Gestionar Ciudades y Sucursales, Paso 5.1: Recuperar sucursal en SucursalEntity
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()
         if not sucursal:
             raise HTTPException(
@@ -214,6 +205,7 @@ class SucursalControl:
         if request.estado:
             sucursal.estado = request.estado.upper()
 
+        # CU05: Gestionar Ciudades y Sucursales, Paso 5.2: Persistir cambios en SucursalEntity y retornar confirmación
         db.commit()
         db.refresh(sucursal)
         return SucursalResponse(

@@ -773,6 +773,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1: Cargar pantalla de pago seguro (/pagos/orden/:id)
   cargarOrdenEIntencion() {
     this.isLoadingOrder = true;
     this.stripeErrorMessage = '';
@@ -799,8 +800,10 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         // Generar la intención de pago segura contra Stripe Sandbox
+        // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
         this.pagosService.crearIntencionPago(this.idOrden).subscribe({
           next: (intencion) => {
+            // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.8: devuelve client_secret para Stripe Elements
             this.intencionPago = intencion;
             this.isLoadingOrder = false;
             this.cdr.detectChanges();
@@ -860,6 +863,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.9: renderiza formulario seguro de tarjeta
       this.cardElement.mount(this.cardElementContainer.nativeElement);
 
       this.cardElement.on('focus', () => this.isCardFocused = true);
@@ -885,6 +889,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
     this.toast.info('Tarjeta de Prueba', type === 'success' ? 'Use 4242 4242... fecha futura y cualquier CVC' : 'Use 4000 0000 0000 9995 para simular fondos insuficientes');
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2: Ingresar datos de tarjeta y clic 'Pagar'
   async procesarPago(event: Event) {
     event.preventDefault();
 
@@ -903,6 +908,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       // Confirmar el pago de forma segura y directa contra la pasarela Stripe
+      // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.1: stripe.confirmCardPayment(client_secret, cardData)
       const result = await this.stripe.confirmCardPayment(this.intencionPago.client_secret, {
         payment_method: {
           card: this.cardElement,
@@ -918,11 +924,13 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
         this.stripeErrorMessage = result.error.message || 'La tarjeta fue rechazada por la pasarela.';
         this.toast.error('Pago No Aprobado', this.stripeErrorMessage);
       } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-        // Pago exitoso en Stripe -> Confirmar y asentar en el backend
+        // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.2: confirmación de cobro exitoso (PCI-DSS token)
+        // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.3: confirmar_transaccion_pago(payment_intent_id, id_orden)
         this.pagosService.confirmarPago(this.idOrden, result.paymentIntent.id).subscribe({
           next: (tx) => {
             this.isProcessing = false;
             this.transaccionExitosa = tx;
+            // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.9: muestra voucher de éxito y enlace a tracking en vivo
             this.isPaymentSuccess = true;
             if (this.orden) {
               this.orden.estado_pago = 'PAGADO';

@@ -126,6 +126,7 @@ export class LogisticaService {
     };
   }
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 1.1: listar_ordenes_logistica(filtro_estado='PREPARACION')
   getOrdenes(estado?: string, modalidad?: string): Observable<OrdenLogistica[]> {
     const params: string[] = [];
     if (estado) params.push(`estado=${encodeURIComponent(estado)}`);
@@ -134,6 +135,8 @@ export class LogisticaService {
     return this.http.get<OrdenLogistica[]>(`${this.apiUrl}/ordenes${query}`, this.getHeaders());
   }
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 2: Asignar chofer y avanzar estado a EN_TRANSITO
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 2.1: avanzar_estado_orden(id_orden, nuevo_estado, datos_repartidor)
   asignarRepartidor(idOrden: number, payload: AsignarRepartidorPayload): Observable<OrdenLogistica> {
     return this.http.post<OrdenLogistica>(`${this.apiUrl}/ordenes/${idOrden}/asignar`, payload, this.getHeaders());
   }
@@ -146,6 +149,7 @@ export class LogisticaService {
     return this.http.get<RepartidorDisponible[]>(`${this.apiUrl}/repartidores`, this.getHeaders());
   }
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.1: obtener_tracking_orden(id_orden)
   getTracking(idOrden: number): Observable<TrackingOrden> {
     return this.http.get<TrackingOrden>(`${this.apiUrl}/tracking/${idOrden}`, this.getHeaders());
   }

@@ -1303,6 +1303,7 @@ export class CheckoutComponent implements OnInit {
     }
 
     this.submitting = true;
+    // CU14: Procesar Compra Digital y Checkout, Paso 1: Completar Wizard (Entrega, NIT/Factura, Metodo Pago)
     const payload: OrdenCreateRequest = {
       modalidad_entrega: this.modalidad,
       id_sucursal: this.modalidad === 'RETIRO_TIENDA' ? this.selectedSucursalId : null,
@@ -1314,13 +1315,14 @@ export class CheckoutComponent implements OnInit {
       codigo_cupon: this.cuponAplicado ? this.cuponAplicado.codigo_cupon : null
     };
 
+    // CU14: Procesar Compra Digital y Checkout, Paso 1.1: crear_orden_checkout(dtoCheckout, id_usuario)
     this.checkoutService.procesarCheckout(payload).subscribe({
       next: (ordenCreada) => {
         this.submitting = false;
         this.toast.success('¡Orden Formalizada!', `Orden #${ordenCreada.id_orden} registrada exitosamente.`);
         // Recargar carrito (ahora vacío)
         this.carritoService.cargarCarrito();
-        // Redirigir directamente al apartado de pago electrónico (CU16)
+        // CU14: Procesar Compra Digital y Checkout, Paso 1.15: redirige a pantalla de Pago Seguro (/pagos/orden/:id)
         this.router.navigate(['/pagos', ordenCreada.id_orden]);
       },
       error: (err) => {

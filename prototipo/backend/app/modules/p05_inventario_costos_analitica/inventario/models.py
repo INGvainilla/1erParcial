@@ -19,6 +19,7 @@ class Inventario(Base):
     __tablename__ = "inventario"
 
     id_inventario = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="CASCADE"), nullable=True, index=True)
     id_sucursal = Column(Integer, ForeignKey("sucursales.id_sucursal", ondelete="CASCADE"), nullable=False)
     id_producto = Column(Integer, ForeignKey("productos.id_producto", ondelete="CASCADE"), nullable=False)
     talla = Column(String(20), nullable=False)

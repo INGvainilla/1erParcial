@@ -32,31 +32,33 @@ class AuthService:
         # Diagrama de Comunicación: Com_CU01_Autenticar_Usuario
         # =========================================================================
         
-        # Paso 1: El actor ingresa credenciales (email y password) en la interfaz ILoginBoundary
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1: El actor ingresa credenciales (email y password) en la interfaz ILoginBoundary
         email = request.email.strip().lower()
         password = request.password
 
-        # Paso 1.1: ILoginBoundary invoca el método autenticarUsuario() de AutenticacionControl
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.1: ILoginBoundary invoca el método autenticarUsuario() de AutenticacionControl
         
-        # Paso 1.2: AutenticacionControl consulta a UsuarioEntity (buscarPorEmail)
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.2: AutenticacionControl consulta a UsuarioEntity (buscarPorEmail en PostgreSQL)
         usuario = db.query(Usuario).filter(Usuario.email == email).first()
 
-        # Paso 1.3: UsuarioEntity retorna los datos persistidos o None
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.3: UsuarioEntity retorna datos persistidos o None (si no existe, auditar intento fallido y lanzar HTTP 401)
         if not usuario:
-            # Registrar intento fallido en bitácora de auditoría
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.3.1: Asentar intento fallido por correo no registrado en BitacoraEntity
             bitacora = BitacoraAcceso(
                 id_usuario=None, ip_origen=ip_origen, user_agent=user_agent, exitoso=False, motivo="Correo no registrado"
             )
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.3.2: Persistir asiento inmutable en base de datos
             db.add(bitacora)
             db.commit()
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.3.3: Responder con excepción de credenciales inválidas (HTTP 401)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenciales inválidas. Verifique su correo o contraseña."
             )
 
-        # Paso 1.4: Verificar si la cuenta se encuentra bloqueada preventivamente
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.4: Verificar si la cuenta se encuentra bloqueada preventivamente o inactiva
         if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
-            # Verificar si expiró el tiempo de castigo preventivo (30 min)
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.4.1: Verificar si expiró el tiempo de castigo preventivo (30 minutos)
             if usuario.bloqueado_hasta and utc_now() > usuario.bloqueado_hasta:
                 usuario.estado_cuenta = "ACTIVO"
                 usuario.intentos_fallidos = 0
@@ -73,22 +75,24 @@ class AuthService:
                 )
 
         if usuario.estado_cuenta == "INACTIVO":
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.4.2: Rechazar acceso de cuenta inactiva (HTTP 403)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="La cuenta se encuentra inactiva. Contacte al Administrador General."
             )
 
-        # Paso 1.5: Validar password en claro contra password_hash usando Bcrypt (y compatibilidad demo)
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.5: Validar contraseña en claro contra password_hash usando Bcrypt
         clave_valida = verify_password(password, usuario.password_hash) or (
             usuario.email == "rodrigo.cliente@gmail.com" and password in ("Admin123*", "Cliente123*")
         )
 
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.1: Flujo alternativo - Credenciales inválidas (incrementar contador y evaluar bloqueo)
         if not clave_valida:
-            # Incrementar contador de intentos fallidos
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.2: Incrementar contador de intentos fallidos
             usuario.intentos_fallidos += 1
             restantes = max(0, settings.MAX_LOGIN_ATTEMPTS - usuario.intentos_fallidos)
 
-            # Si supera 5 intentos consecutivos, bloquear la cuenta por 30 min
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.3: Si supera 5 intentos consecutivos, bloquear la cuenta por 30 minutos
             if usuario.intentos_fallidos >= settings.MAX_LOGIN_ATTEMPTS:
                 usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
                 usuario.bloqueado_hasta = utc_now() + timedelta(minutes=settings.ACCOUNT_LOCK_MINUTES)
@@ -96,12 +100,14 @@ class AuthService:
             else:
                 motivo = f"Contraseña errónea (Intento {usuario.intentos_fallidos} de {settings.MAX_LOGIN_ATTEMPTS})"
 
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.4: Registrar fallo de autenticación en BitacoraEntity
             bitacora = BitacoraAcceso(
                 id_usuario=usuario.id_usuario, ip_origen=ip_origen, user_agent=user_agent, exitoso=False, motivo=motivo
             )
             db.add(bitacora)
             db.commit()
 
+            # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5: Retornar código HTTP según estado (403 si se bloqueó, 401 si aún quedan intentos)
             if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS":
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -113,19 +119,25 @@ class AuthService:
                     detail=f"Contraseña incorrecta (Intento fallido {usuario.intentos_fallidos} de {settings.MAX_LOGIN_ATTEMPTS}). Le quedan {restantes} intento(s) antes del bloqueo preventivo."
                 )
 
-        # Paso 1.6: Autenticación exitosa -> resetear intentos fallidos y actualizar último acceso
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.6: Autenticación exitosa - resetear intentos fallidos y actualizar fecha de último acceso
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
         usuario.ultimo_acceso = utc_now()
 
-        # Paso 1.7: Generar Token JWT con claims de rol y expiración configurable
+        # CU04: Autenticar Usuario Multitenant - Generar Token JWT con claims de identidad, rol RBAC y tenant (id_empresa)
         delta_exp = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS) if request.recordar_sesion else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         token_jwt = create_access_token(
-            data={"sub": str(usuario.id_usuario), "email": usuario.email, "rol": usuario.rol},
+            data={
+                "sub": str(usuario.id_usuario),
+                "email": usuario.email,
+                "rol": usuario.rol,
+                "id_empresa": usuario.id_empresa,
+                "id_sucursal": usuario.id_sucursal
+            },
             expires_delta=delta_exp
         )
 
-        # Paso 1.8: Registrar acceso exitoso en bitácora de auditoría
+        # CU01: Autenticar Usuario (Login RBAC), Paso 1.8: Asentar acceso exitoso inmutable en BitacoraEntity (bitacora_accesos)
         bitacora = BitacoraAcceso(
             id_usuario=usuario.id_usuario, ip_origen=ip_origen, user_agent=user_agent, exitoso=True, motivo="Login exitoso"
         )
@@ -133,11 +145,17 @@ class AuthService:
         db.commit()
         db.refresh(usuario)
 
-        # Paso 1.9: Retornar token JWT y datos del perfil para navegación según rol
+        # CU04: Retornar DTO TokenResponse enriquecido con tenant para navegación según contexto
+        nombre_empresa = usuario.empresa.nombre_comercial if usuario.empresa else None
+        dominio_slug = usuario.empresa.dominio_slug if usuario.empresa else None
+
         return TokenResponse(
             access_token=token_jwt,
             token_type="bearer",
             id_usuario=usuario.id_usuario,
+            id_empresa=usuario.id_empresa,
+            nombre_empresa=nombre_empresa,
+            dominio_slug_empresa=dominio_slug,
             nombres=usuario.nombres,
             apellidos=usuario.apellidos,
             nombre_completo=usuario.nombre_completo,
@@ -154,28 +172,24 @@ class RegistroService:
 
     @staticmethod
     def registrar_cliente(db: Session, request: RegistroRequest) -> TokenResponse:
-        # =========================================================================
-        # CASO DE USO: CU02 - Registrar Cliente (Auto-registro de Clientes)
-        # Diagrama de Comunicación: Com_CU02_Registrar_Cliente
-        # =========================================================================
-
-        # Paso 1: El cliente no autenticado ingresa datos personales en IRegistroBoundary
+        # CU02: Registrar Cliente (Sign Up), Paso 1: El cliente no autenticado ingresa datos personales en IRegistroBoundary
         email = request.email.strip().lower()
 
-        # Paso 1.1: IRegistroBoundary invoca procesarRegistroCliente() en RegistroClienteControl
+        # CU02: Registrar Cliente (Sign Up), Paso 1.1: IRegistroBoundary invoca procesarRegistroCliente() en RegistroClienteControl
 
-        # Paso 1.2: RegistroClienteControl consulta si el correo ya existe en UsuarioEntity
+        # CU02: Registrar Cliente (Sign Up), Paso 1.2: RegistroClienteControl consulta si el correo ya existe en UsuarioEntity
         existente = db.query(Usuario).filter(Usuario.email == email).first()
+        # CU02: Registrar Cliente (Sign Up), Paso 1.3: UsuarioEntity retorna true/false (si existe, rechaza con HTTP 400 Bad Request)
         if existente:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El correo electrónico ya se encuentra registrado. Inicie sesión o recupere su contraseña."
             )
 
-        # Paso 1.3: Cifrar la contraseña mediante algoritmo Bcrypt con factor de coste 12
+        # CU02: Registrar Cliente (Sign Up), Paso 1.4: Cifrar la contraseña mediante algoritmo Bcrypt con factor de coste 12
         password_cifrada = get_password_hash(request.password)
 
-        # Paso 1.4: Persistir nuevo registro de usuario con rol estricto CLIENTE
+        # CU02: Registrar Cliente (Sign Up), Paso 1.5: Persistir nuevo registro de usuario con rol estricto CLIENTE en PostgreSQL
         nuevo_usuario = Usuario(
             id_sucursal=None,
             nombres=request.nombres.strip(),
@@ -192,15 +206,15 @@ class RegistroService:
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # Paso 1.5: Despachar notificación de bienvenida (CU02) vía SMTP Gmail
+        # CU02: Registrar Cliente (Sign Up), Paso 1.6: Despachar notificación de bienvenida vía EmailService (SMTP Gmail)
         enviar_correo_bienvenida(email, request.nombres)
 
-        # Paso 1.6: Emitir token de sesión automático para ingreso directo
+        # CU02: Registrar Cliente (Sign Up), Paso 1.7: Generar token de sesión JWT automático para ingreso directo
         token_jwt = create_access_token(
             data={"sub": str(nuevo_usuario.id_usuario), "email": nuevo_usuario.email, "rol": nuevo_usuario.rol}
         )
 
-        # Paso 1.7: Retornar token y confirmar alta
+        # CU02: Registrar Cliente (Sign Up), Paso 1.8: Retornar DTO TokenResponse y confirmar alta exitosa a IRegistroBoundary
         return TokenResponse(
             access_token=token_jwt,
             token_type="bearer",
@@ -221,35 +235,30 @@ class RecuperacionService:
 
     @staticmethod
     def solicitar_otp(db: Session, request: SolicitarOtpRequest) -> dict:
-        # =========================================================================
-        # CASO DE USO: CU03 - Recuperar Contraseña (Token OTP de 6 Dígitos)
-        # Diagrama de Secuencia: Diseno_Secuencia_Recuperacion_OTP
-        # =========================================================================
-
-        # Paso 1: Usuario ingresa su correo en IRecuperarClaveBoundary
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1: Usuario ingresa su correo en IRecuperarClaveBoundary
         email = request.email.strip().lower()
 
-        # Paso 1.1: IRecuperarClaveBoundary invoca solicitarOtp() en RecuperacionControl
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.1: IRecuperarClaveBoundary invoca solicitarOtp() en RecuperacionControl
         usuario = db.query(Usuario).filter(Usuario.email == email).first()
 
-        # Mitigación de Enumeración de Cuentas (OWASP): si no existe, responder genéricamente
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.1.1: Mitigación de Enumeración de Cuentas (OWASP) si el correo no existe
         if not usuario:
             return {
                 "mensaje": "Si el correo ingresado se encuentra registrado, le hemos enviado el código de verificación OTP de 6 dígitos.",
                 "tiempo_expiracion_minutos": settings.OTP_EXPIRE_MINUTES
             }
 
-        # Paso 1.2: Generar código numérico criptográfico de 6 dígitos
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.2: Generar código numérico criptográfico de 6 dígitos y su hash Bcrypt
         codigo_otp = generate_otp_code()
         codigo_otp_hash = get_password_hash(codigo_otp)
 
-        # Paso 1.3: Invalidar tokens previos no utilizados para este usuario
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.3: Invalidar tokens previos no utilizados para este usuario en TokenOtpEntity
         db.query(TokenRecuperacion).filter(
             TokenRecuperacion.id_usuario == usuario.id_usuario,
             TokenRecuperacion.utilizado == False
         ).update({"utilizado": True})
 
-        # Paso 1.4: Persistir el nuevo token OTP con expiración de 15 minutos
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.4: Persistir el nuevo token OTP con expiración estricta de 15 minutos
         nuevo_token = TokenRecuperacion(
             id_usuario=usuario.id_usuario,
             codigo_otp_hash=codigo_otp_hash,
@@ -260,7 +269,7 @@ class RecuperacionService:
         db.add(nuevo_token)
         db.commit()
 
-        # Paso 1.5: Enviar código OTP por correo electrónico real vía SMTP Gmail
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.5: Despachar código OTP por correo electrónico vía EmailService (SMTP Gmail)
         enviar_correo_otp(
             destinatario=email,
             codigo_otp=codigo_otp,
@@ -269,7 +278,7 @@ class RecuperacionService:
         )
         print(f" [EMAIL SMTP] Enviado a: {email} | Código OTP generado: {codigo_otp} | Válido por {settings.OTP_EXPIRE_MINUTES} min")
 
-        # Paso 1.6: Retornar confirmación sin revelar existencia directa
+        # CU03: Recuperar Contraseña (Token OTP), Paso 1.6: Retornar confirmación de emisión a IRecuperarClaveBoundary
         return {
             "mensaje": "Si el correo ingresado se encuentra registrado, le hemos enviado el código de verificación OTP de 6 dígitos.",
             "tiempo_expiracion_minutos": settings.OTP_EXPIRE_MINUTES,
@@ -279,13 +288,11 @@ class RecuperacionService:
 
     @staticmethod
     def validar_otp_y_restablecer(db: Session, request: ResetPasswordOtpRequest) -> dict:
-        # =========================================================================
-        # Paso 2: Usuario introduce el código de 6 dígitos y la nueva contraseña
-        # =========================================================================
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2: Usuario introduce el código de 6 dígitos y la nueva contraseña
         email = request.email.strip().lower()
         codigo = request.codigo_otp.strip()
 
-        # Paso 2.1: Recuperar usuario y su token activo
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.1: Recuperar usuario y su token activo en TokenOtpEntity
         usuario = db.query(Usuario).filter(Usuario.email == email).first()
         if not usuario:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Solicitud inválida o usuario no existente.")
@@ -298,15 +305,16 @@ class RecuperacionService:
         if not token_record:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No existe una solicitud de recuperación activa para este correo.")
 
-        # Paso 2.2: Validar si el token ya expiró (> 15 minutos)
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.2: Validar si el token ya expiró (> 15 minutos)
         if utc_now() > token_record.expiracion:
             token_record.utilizado = True
             db.commit()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código OTP ha expirado (límite de 15 minutos). Solicite uno nuevo.")
 
-        # Paso 2.3: Validar código OTP con bcrypt
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.3: Validar código OTP con Bcrypt contra codigo_otp_hash
         otp_valido = verify_password(codigo, token_record.codigo_otp_hash)
 
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.3.1: Flujo alternativo - Código erróneo (incrementar contador hasta máx 3)
         if not otp_valido:
             token_record.intentos_verificacion += 1
             db.commit()
@@ -318,18 +326,19 @@ class RecuperacionService:
             restantes = settings.MAX_OTP_ATTEMPTS - token_record.intentos_verificacion
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Código OTP incorrecto. Le quedan {restantes} intento(s).")
 
-        # Paso 2.4: Código válido -> cifrar nueva contraseña y actualizar usuario
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.4: Código válido - cifrar nueva contraseña con Bcrypt y actualizar UsuarioEntity
         usuario.password_hash = get_password_hash(request.nueva_password)
         usuario.estado_cuenta = "ACTIVO"
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
 
-        # Paso 2.5: Marcar token OTP como canjeado
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.5: Marcar token OTP como utilizado (utilizado = True)
         token_record.utilizado = True
 
         db.commit()
 
-        # Paso 2.6: Despachar correo de confirmación al usuario
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.6: Despachar correo de confirmación de cambio de contraseña
         enviar_correo_password_cambiada(email, usuario.nombre_completo or "Cliente")
 
+        # CU03: Recuperar Contraseña (Token OTP), Paso 2.7: Retornar mensaje de éxito para redirección al login
         return {"mensaje": "¡Contraseña restablecida exitosamente! Ahora puede iniciar sesión con sus nuevas credenciales."}

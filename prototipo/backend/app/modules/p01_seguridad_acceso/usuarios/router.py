@@ -24,31 +24,32 @@ def listar_usuarios_endpoint(
     rol: Optional[str] = Query(None, description="Filtrar por rol"),
     estado: Optional[str] = Query(None, description="Filtrar por estado"),
     id_sucursal: Optional[int] = Query(None, description="Filtrar por sucursal"),
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU04 - Listar Usuarios
-    # Paso 1: Administrador consulta la lista de usuarios con filtros opcionales
-    # Paso 1.1: Invocación a UsuarioAdminControl.listar_usuarios()
-    return UsuarioAdminControl.listar_usuarios(db, rol=rol, estado=estado, id_sucursal=id_sucursal)
+    # CU05: Gestionar Usuarios y Roles por Empresa (RBAC Multitenant)
+    id_empresa_filtro = None if current_user.rol == "SUPER_ADMIN" else current_user.id_empresa
+    return UsuarioAdminControl.listar_usuarios(
+        db, rol=rol, estado=estado, id_sucursal=id_sucursal, id_empresa=id_empresa_filtro
+    )
 
 @router.post("", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def crear_usuario_endpoint(
     request_data: UsuarioCreate,
     request: Request,
-    current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU04 - Alta de Personal Administrativo / Operativo
-    # Paso 1: Administrador envía formulario de nuevo empleado
-    # Paso 1.1: Invocación a UsuarioAdminControl.registrar_usuario_staff()
+    # CU05: Alta de usuario asignando automáticamente la empresa del administrador
     client_ip = request.client.host if request.client else "127.0.0.1"
+    empresa_id_destino = request_data.id_empresa if current_user.rol == "SUPER_ADMIN" else current_user.id_empresa
     return UsuarioAdminControl.registrar_usuario_staff(
         db=db,
         request=request_data,
         admin_id=current_user.id_usuario,
-        ip_origen=client_ip
+        ip_origen=client_ip,
+        id_empresa=empresa_id_destino
     )
 
 @router.put("/{id_usuario}", response_model=UsuarioResponse)
@@ -59,9 +60,8 @@ def modificar_usuario_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU04 - Modificar Usuario
-    # Paso 1: Administrador envía datos actualizados de un usuario
-    # Paso 1.1: Invocación a UsuarioAdminControl.modificar_usuario()
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador envía datos actualizados de rol o sucursal
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.1: IUsuariosBoundary invoca modificar_usuario() en UsuarioAdminControl
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.modificar_usuario(
         db=db,
@@ -78,9 +78,8 @@ def desbloquear_cuenta_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU04 - Desbloquear Cuenta
-    # Paso 2: Administrador presiona botón 'Desbloquear Cuenta'
-    # Paso 2.1: Invocación a UsuarioAdminControl.desbloquear_cuenta()
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Administrador presiona botón 'Desbloquear Cuenta'
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.1: IUsuariosBoundary invoca desbloquear_cuenta() en UsuarioAdminControl
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.desbloquear_cuenta(
         db=db,
@@ -97,7 +96,8 @@ def bloquear_cuenta_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU04 - Bloqueo Preventivo / Temporal de Cuenta
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Administrador aplica bloqueo preventivo o administrativo
+    # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.1: IUsuariosBoundary invoca bloquear_cuenta() en UsuarioAdminControl
     client_ip = request.client.host if request.client else "127.0.0.1"
     return UsuarioAdminControl.bloquear_cuenta(
         db=db,

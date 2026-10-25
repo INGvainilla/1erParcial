@@ -317,7 +317,9 @@ export class ProveedoresComponent implements OnInit {
     this.loadProveedores();
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1.7: mostrar proveedor en lista de abastecimiento
   loadProveedores(): void {
+    // CU08: Gestionar Proveedores Textiles, Paso 1.1: consultarCatalogoProveedores()
     this.api.getProveedores().subscribe({
       next: (data) => {
         this.proveedores = data;
@@ -352,11 +354,13 @@ export class ProveedoresComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1.4: actualizarEstadoProveedor(idProveedor, estado)
   toggleEstadoProveedor(p: Proveedor): void {
     const nuevoEstado = (p.estado === 'ACTIVO') ? 'INACTIVO' : 'ACTIVO';
     const accion = nuevoEstado === 'ACTIVO' ? 'habilitar' : 'deshabilitar';
 
     this.togglingId = p.id_proveedor;
+    // CU08: Gestionar Proveedores Textiles, Paso 1.4: guardarProveedor(proveedorDTO)
     this.api.updateProveedor(p.id_proveedor, { estado: nuevoEstado }).subscribe({
       next: (actualizado) => {
         this.togglingId = null;
@@ -375,6 +379,7 @@ export class ProveedoresComponent implements OnInit {
     });
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1: Enviar datos proveedor (NIT, razón social, contacto)
   submitProveedor(): void {
     this.submitting = true;
     const payload = {
@@ -387,10 +392,12 @@ export class ProveedoresComponent implements OnInit {
       estado: this.newProv.estado || 'ACTIVO'
     };
 
+    // CU08: Gestionar Proveedores Textiles, Paso 1.1: registrarProveedor(datosProv)
     this.api.createProveedor(payload).subscribe({
       next: (res) => {
         this.submitting = false;
         this.showModal = false;
+        // CU08: Gestionar Proveedores Textiles, Paso 1.6: confirmarAltaProveedor()
         this.toast.success('Proveedor Registrado (CU08)', `${res.razon_social} (NIT: ${res.nit_identificacion}) creado.`);
         this.loadProveedores();
       },
@@ -402,6 +409,7 @@ export class ProveedoresComponent implements OnInit {
     });
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1.4: actualizarRegistroProveedor(idProveedor, datosProv)
   submitEditProveedor(): void {
     this.submittingEdit = true;
     const payload = {
@@ -413,10 +421,12 @@ export class ProveedoresComponent implements OnInit {
       estado: this.editProv.estado
     };
 
+    // CU08: Gestionar Proveedores Textiles, Paso 1.4: guardarProveedor(proveedorDTO)
     this.api.updateProveedor(this.editProv.id_proveedor, payload).subscribe({
       next: (res) => {
         this.submittingEdit = false;
         this.showEditModal = false;
+        // CU08: Gestionar Proveedores Textiles, Paso 1.6: confirmarAltaProveedor()
         this.toast.success('Proveedor Modificado (CU08)', `Proveedor "${res.razon_social}" actualizado exitosamente.`);
         this.loadProveedores();
       },

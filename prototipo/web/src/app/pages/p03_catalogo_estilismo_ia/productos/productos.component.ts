@@ -273,14 +273,17 @@ export class ProductosComponent implements OnInit {
     this.loadProductos();
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 1: Consultar categorías taxonómicas disponibles
   loadCategorias(): void {
     this.api.getCategorias().subscribe(data => this.categorias = data);
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 2: Consultar marcas registradas de moda
   loadMarcas(): void {
     this.api.getMarcas().subscribe(data => this.marcas = data);
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 3: Consultar catálogo maestro de indumentaria
   loadProductos(): void {
     this.api.getProductos().subscribe({
       next: (data) => {
@@ -349,9 +352,11 @@ export class ProductosComponent implements OnInit {
       });
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 4: Administrador envía ficha técnica con tallas y colores Hex
   submitProducto(): void {
     this.submitting = true;
 
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 4.1: Parsear paleta multivaluada de colores (nombre y código HEX)
     const parsedColores = this.rawColores.split(',').map(c => {
       const parts = c.split(':');
       return {
@@ -360,6 +365,7 @@ export class ProductosComponent implements OnInit {
       };
     });
 
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 4.2: Parsear colección de tallas normalizadas
     const parsedTallas = this.rawTallas.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
     const payload = {
@@ -368,10 +374,12 @@ export class ProductosComponent implements OnInit {
       tallas: parsedTallas
     };
 
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 4.3: Invocar API REST para persistir la prenda y sus variantes
     this.api.createProducto(payload).subscribe({
       next: (res) => {
         this.submitting = false;
         this.showModal = false;
+        // CU06: Gestionar Productos y Atributos de Moda, Paso 4.4: Confirmar alta de producto y refrescar catálogo
         this.toast.success('Producto Registrado (CU06)', `${res.nombre} (SKU: ${res.codigo_sku_base}) creado.`);
         this.loadProductos();
       },

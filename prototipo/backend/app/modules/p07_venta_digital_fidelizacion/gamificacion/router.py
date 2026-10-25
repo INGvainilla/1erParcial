@@ -37,6 +37,8 @@ def get_perfil_gamificacion(
     Puntos actuales, nivel jerárquico (Bronce a Diamante), progreso porcentual,
     insignias desbloqueadas y beneficios exclusivos de la boutique.
     """
+    # CU21: Gestionar Fidelización Gamificada, Paso Consulta: UI -> Ctrl : getPerfilGamificacion(id_usuario)
+    # CU21: Gestionar Fidelización Gamificada, Paso Consulta 1.1 & 1.2: Ctrl -> Perfil : findByUsuarioId / retorna puntos_actuales y nivel
     try:
         return obtener_o_crear_perfil(db, current_user.id_usuario)
     except Exception as e:
@@ -64,6 +66,8 @@ def post_canjear_recompensa(
     """
     Canjea una recompensa descontando los puntos requeridos y emitiendo el código de cupón único.
     """
+    # CU21: Gestionar Fidelización Gamificada, Paso 2: Selecciona recompensa y solicita canje
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.1: canjear_recompensa(id_usuario, codigo_recompensa)
     return canjear_recompensa_usuario(db, current_user.id_usuario, request.codigo_recompensa)
 
 

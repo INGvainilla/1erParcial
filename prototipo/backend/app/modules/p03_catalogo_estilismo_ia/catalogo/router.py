@@ -29,9 +29,8 @@ def consultar_catalogo_endpoint(
     busqueda: Optional[str] = Query(None, description="Término de búsqueda por nombre o SKU"),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU10 - Consultar Catálogo y Disponibilidad por Sucursal
-    # Paso 1: El cliente ingresa criterios de búsqueda o filtros en el catálogo
-    # Paso 1.1: Invocación a CatalogoControl.consultar_prendas()
+    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros de búsqueda
+    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
     return CatalogoControl.consultar_prendas(
         db=db,
         id_categoria=id_categoria,
@@ -52,10 +51,8 @@ def consultar_disponibilidad_sucursales_endpoint(
     color: Optional[str] = Query(None, description="Filtrar stock por color específico (nombre del color)"),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU10 - Disponibilidad por Sucursal en Detalle de Producto
-    # Paso 1: El cliente hace clic en 'Ver disponibilidad en tiendas'
-    # Paso 1.1: Invocación a CatalogoControl.obtener_disponibilidad_sucursales()
-    # Paso 1.2: Si se especifica talla y/o color, se filtra el stock por esa variante exacta
+    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.8: opt consultarDetallePrendaConStock(productoId)
+    # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.4: consultarStockPorSucursal(producto_id, sucursalId)
     return CatalogoControl.obtener_disponibilidad_sucursales(
         db, id_producto=id_producto, talla=talla, color=color
     )

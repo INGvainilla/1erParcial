@@ -21,6 +21,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
   String? _errorMessage;
   Timer? _pollTimer;
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 3: Cargar pantalla de seguimiento (/tracking/:id)
   @override
   void initState() {
     super.initState();
@@ -60,9 +61,11 @@ class _TrackingScreenState extends State<TrackingScreen> {
     });
 
     try {
+      // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.1: obtener_tracking_orden(id_orden)
       final data = await _logisticaService.getTracking(widget.idOrden);
       if (!mounted) return;
       setState(() {
+        // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.8: Renderiza stepper de 4 etapas y mapa interactivo con tracking en tiempo real
         _tracking = data;
         _isLoading = false;
       });

@@ -144,10 +144,12 @@ class _ModalBusquedaVozRealState extends State<ModalBusquedaVozReal>
     _animController.repeat(reverse: true);
 
     try {
+      // CU23: Buscar Productos por Comandos de Voz, Paso 1.2: Ctrl -> STTExt : transcribirAudioATexto(audio_buffer)
       await _speech.listen(
         onResult: (SpeechRecognitionResult result) {
           if (!mounted) return;
           setState(() {
+            // CU23: Buscar Productos por Comandos de Voz, Paso 1.3: STTExt --> Ctrl : retorna consulta_texto
             _palabrasReconocidas = result.recognizedWords;
             _textController.text = _palabrasReconocidas;
           });
@@ -193,6 +195,7 @@ class _ModalBusquedaVozRealState extends State<ModalBusquedaVozReal>
     _animController.reset();
   }
 
+  // CU23: Buscar Productos por Comandos de Voz, Paso 1.1: UI -> Ctrl : procesar_busqueda_voz(audio_buffer / consulta_voz)
   void _confirmarBusqueda(String texto) {
     final query = texto.trim();
     if (query.isEmpty) return;

@@ -1084,11 +1084,14 @@ export class LogisticaDashboardComponent implements OnInit {
     this.cargarOrdenes();
   }
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 1: Consultar pedidos para empaque y despacho
   cargarOrdenes(): void {
     this.cargando = true;
     this.cdr.detectChanges();
+    // CU18: Gestionar Despacho y Logística de Delivery, Paso 1.1: listar_ordenes_logistica(filtro_estado)
     this.logisticaService.getOrdenes(undefined, this.filtroModalidad).subscribe({
       next: (res) => {
+        // CU18: Gestionar Despacho y Logística de Delivery, Paso 1.4: Retorna colección de órdenes y renderiza tablero con botones de acción
         this.ordenes = res;
         this.cargando = false;
         this.cdr.detectChanges();
@@ -1225,11 +1228,13 @@ export class LogisticaDashboardComponent implements OnInit {
     }
   }
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 2: Asignar chofer y avanzar estado a EN_TRANSITO
   confirmarAsignacion(): void {
     if (!this.ordenSeleccionada || !this.nombreRepartidorInput.trim()) return;
 
     this.procesandoId = this.ordenSeleccionada.id_orden;
     this.cdr.detectChanges();
+    // CU18: Gestionar Despacho y Logística de Delivery, Paso 2.1: avanzar_estado_orden(id_orden, nuevo_estado, datos_repartidor)
     this.logisticaService.asignarRepartidor(this.ordenSeleccionada.id_orden, {
       id_repartidor: this.idRepartidorSeleccionado,
       nombre_repartidor: this.nombreRepartidorInput.trim(),
@@ -1238,6 +1243,7 @@ export class LogisticaDashboardComponent implements OnInit {
       next: (actualizada) => {
         this.procesandoId = null;
         this.toast.success('Despacho Iniciado', `Courier asignado a la orden #${actualizada.id_orden}. Pedido en tránsito.`);
+        // CU18: Gestionar Despacho y Logística de Delivery, Paso 2.5: Notifica y actualiza tablero en tiempo real
         this.actualizarOrdenEnLista(actualizada);
         this.cerrarModalAsignar();
         this.cdr.detectChanges();

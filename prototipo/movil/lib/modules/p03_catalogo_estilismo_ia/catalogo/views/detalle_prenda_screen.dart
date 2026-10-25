@@ -53,10 +53,13 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
     );
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 1: Cálculo dinámico de precio según talla normalizada
   double get _precioActual {
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 1.1: Si la talla posee precio explícito, utilizarlo
     if (_selectedTalla.precio != null && _selectedTalla.precio! > 0) {
       return _selectedTalla.precio!;
     }
+    // CU06: Gestionar Productos y Atributos de Moda, Paso 1.2: Aplicar factor ponderador según tamaño de prenda
     const factores = {
       'S': 0.95, 'M': 1.00, 'L': 1.05, 'XL': 1.10, 'XXL': 1.15,
       '30': 0.95, '32': 1.00, '34': 1.05, '36': 1.10,
@@ -67,6 +70,7 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
     return widget.prenda.precioFinal * factor;
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 2: Cálculo de precio base con factor de escala
   double get _precioBaseActual {
     if (widget.prenda.descuentoPct <= 0) return _precioActual;
     const factores = {
@@ -303,6 +307,7 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
                       'PROBAR EN VESTIDOR VIRTUAL (RA)',
                       style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
                     ),
+                    // CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1: Selecciona prenda y presiona "Probar con RA"
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -383,7 +388,7 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
                         const SizedBox(height: 20),
                       ],
 
-                      // Selector de color
+                      // CU06: Gestionar Productos y Atributos de Moda, Paso 3: Renderizado de paleta de colores multivaluados con muestra visual HEX
                       if (p.colores.isNotEmpty) ...[
                         const Text(
                           'COLOR',
@@ -449,7 +454,7 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
                         const SizedBox(height: 20),
                       ],
 
-                      // Selector de talla
+                      // CU06: Gestionar Productos y Atributos de Moda, Paso 4: Renderizado y selección de tallas normalizadas
                       if (p.tallas.isNotEmpty) ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -22,6 +22,7 @@ from app.modules.p03_catalogo_estilismo_ia.ia_recomendaciones.services import (
 router = APIRouter(prefix="/recomendaciones", tags=["Recomendaciones Contextuales de IA y Voz (CU22, CU23)"])
 
 
+# CU22: Solicitar Recomendación Contextual de IA, Paso 1.2: Ctrl -> ClimaExt : consultarClimaActual(ciudad)
 @router.get("/clima", response_model=ClimaLocalDTO)
 def get_clima_local(
     ciudad: Optional[str] = Query(None, description="Nombre de la ciudad (Santa Cruz, La Paz, Cochabamba)")
@@ -29,9 +30,11 @@ def get_clima_local(
     """
     Retorna el estado meteorológico local y las pautas textiles inteligentes recomendadas para la jornada.
     """
+    # CU22: Solicitar Recomendación Contextual de IA, Paso 1.3: ClimaExt --> Ctrl : retorna temperatura, sensación y condición
     return resolver_clima(ciudad)
 
 
+# CU22: Solicitar Recomendación Contextual de IA, Paso 1.1: UI -> Ctrl : solicitar_recomendaciones(ciudad, ocasion, id_usuario)
 @router.get("/outfits", response_model=RecomendacionesContextualesResponse)
 def get_outfits_recomendados(
     ciudad: Optional[str] = Query(None, description="Ciudad para contexto de clima"),
@@ -47,6 +50,7 @@ def get_outfits_recomendados(
     Genera combinaciones completas de outfits considerando telemetría meteorológica en vivo,
     filtros de estilo, colorimetría y existencias físicas de inventario.
     """
+    # CU22: Solicitar Recomendación Contextual de IA, Paso 1.10: Ctrl --> UI : entrega listado de outfits y análisis del estilista
     return generar_outfits_contextuales(
         db=db,
         ciudad_nombre=ciudad,
@@ -59,6 +63,7 @@ def get_outfits_recomendados(
     )
 
 
+# CU23: Buscar Productos por Comandos de Voz, Paso 1.1: UI -> Ctrl : procesar_busqueda_voz(audio_buffer / consulta_voz)
 @router.post("/busqueda-voz", response_model=BusquedaVozResponse)
 def post_busqueda_voz(
     request: BusquedaVozRequest,
@@ -68,4 +73,5 @@ def post_busqueda_voz(
     Procesa consultas en lenguaje natural provenientes del reconocimiento por voz móvil,
     extrayendo intención, ocasión, colores y devolviendo productos sugeridos ordenados por afinidad semántica.
     """
+    # CU23: Buscar Productos por Comandos de Voz, Paso 1.8: Ctrl --> UI : transfiere resultados y transcripción final
     return procesar_busqueda_voz_semantica(db=db, consulta_voz=request.consulta_voz)

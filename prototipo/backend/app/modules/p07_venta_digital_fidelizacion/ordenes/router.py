@@ -44,6 +44,8 @@ def procesar_checkout_endpoint(
     CU14: Formaliza la compra transformando el carrito del usuario en una Orden de Venta oficial.
     Valida existencias atómicamente, aplica tarifa de entrega y vacía el carrito.
     """
+    # CU14: Procesar Compra Digital y Checkout, Paso 1: Completar Wizard (Entrega, NIT/Factura, Metodo Pago)
+    # CU14: Procesar Compra Digital y Checkout, Paso 1.1: crear_orden_checkout(dtoCheckout, id_usuario)
     return crear_orden_desde_carrito(
         db=db,
         id_usuario=current_user.id_usuario,

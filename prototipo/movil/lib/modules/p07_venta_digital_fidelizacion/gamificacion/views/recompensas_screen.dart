@@ -17,6 +17,7 @@ class _RecompensasScreenState extends State<RecompensasScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  // CU21: Gestionar Fidelización Gamificada, Paso Consulta 1: accederSeccionRecompensas() y cargarPerfil()
   @override
   void initState() {
     super.initState();
@@ -75,6 +76,7 @@ class _RecompensasScreenState extends State<RecompensasScreen>
     }
   }
 
+  // CU21: Gestionar Fidelización Gamificada, Paso 2: Selecciona recompensa y solicita canje
   void _canjear(RecompensaItem rec) async {
     final gProvider = context.read<GamificacionProvider>();
     final confirm = await showDialog<bool>(
@@ -113,6 +115,7 @@ class _RecompensasScreenState extends State<RecompensasScreen>
 
       if (res['exito'] == true) {
         final cupon = res['codigo_cupon'] ?? '';
+        // CU21: Gestionar Fidelización Gamificada, Paso 2.9: visualiza cupón generado y saldo restante
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(

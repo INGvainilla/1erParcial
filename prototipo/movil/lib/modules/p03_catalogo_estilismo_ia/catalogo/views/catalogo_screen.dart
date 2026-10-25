@@ -50,6 +50,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     super.dispose();
   }
 
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros de búsqueda
   Future<void> _cargarFiltrosYCatalogo() async {
     setState(() {
       _isLoading = true;
@@ -57,6 +58,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     });
 
     try {
+      // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
       final results = await Future.wait([
         _catalogoService.getCategorias(),
         _catalogoService.getSucursales(),
@@ -83,6 +85,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     }
   }
 
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
   Future<void> _recargarCatalogo() async {
     try {
       final list = await _catalogoService.getCatalogo(
@@ -338,6 +341,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                         : RefreshIndicator(
                             color: AppTheme.accentGold,
                             onRefresh: _cargarFiltrosYCatalogo,
+                            // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.7: renderizar cuadrícula con tarjetas de producto y stock
                             child: GridView.builder(
                               padding: const EdgeInsets.all(16),
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

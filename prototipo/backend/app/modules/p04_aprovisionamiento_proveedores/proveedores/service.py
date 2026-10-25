@@ -21,6 +21,7 @@ class ProveedorControl:
 
     @staticmethod
     def listar_proveedores(db: Session, estado: Optional[str] = None) -> List[ProveedorResponse]:
+        # CU08: Gestionar Proveedores Textiles, Paso 1: Consultar directorio de empresas proveedoras en ProveedorEntity
         query = db.query(Proveedor)
         if estado:
             query = query.filter(Proveedor.estado == estado.upper())
@@ -29,6 +30,7 @@ class ProveedorControl:
 
     @staticmethod
     def obtener_proveedor(db: Session, id_proveedor: int) -> ProveedorResponse:
+        # CU08: Gestionar Proveedores Textiles, Paso 1.2: Obtener ficha técnica de proveedor en ProveedorEntity
         p = db.query(Proveedor).filter(Proveedor.id_proveedor == id_proveedor).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Proveedor {id_proveedor} no encontrado.")
@@ -36,16 +38,11 @@ class ProveedorControl:
 
     @staticmethod
     def registrar_proveedor(db: Session, request: ProveedorCreate) -> ProveedorResponse:
-        # =========================================================================
-        # CASO DE USO: CU08 - Gestionar Proveedores Textiles (Alta de Proveedor)
-        # Diagrama de Comunicación: Com_CU08_Gestionar_Proveedores
-        # =========================================================================
-        # Paso 1: El Personal de Logística o Administrador envía datos del proveedor (NIT, razón social, contacto) en IProveedorBoundary
+        # CU08: Gestionar Proveedores Textiles, Paso 2: Personal de Logística envía datos del proveedor (NIT, razón social, contacto)
+        # CU08: Gestionar Proveedores Textiles, Paso 2.1: IProveedorBoundary invoca registrar_proveedor(datosProv) en ProveedorControl
         nit_limpio = request.nit_identificacion.strip()
 
-        # Paso 1.1: IProveedorBoundary invoca registrarProveedor(datosProv) en ProveedorControl
-
-        # Paso 1.2: ProveedorControl verifica unicidad de NIT en ProveedorEntity
+        # CU08: Gestionar Proveedores Textiles, Paso 2.2: ProveedorControl verifica unicidad de NIT en ProveedorEntity
         existente = db.query(Proveedor).filter(Proveedor.nit_identificacion == nit_limpio).first()
         if existente:
             raise HTTPException(
@@ -53,15 +50,13 @@ class ProveedorControl:
                 detail=f"El NIT '{nit_limpio}' ya está registrado a nombre de '{existente.razon_social}'."
             )
 
-        # Paso 1.3: ProveedorEntity confirma que el NIT está disponible
-        
         # Validar términos de pago válidos
         terminos_validos = {"CONTADO", "CREDITO_30_DIAS", "CREDITO_60_DIAS", "CONSIGNACION"}
         termino_norm = request.terminos_pago.upper()
         if termino_norm not in terminos_validos:
             termino_norm = "CONTADO"
 
-        # Paso 1.4: ProveedorControl crea el registro de la empresa proveedora en ProveedorEntity
+        # CU08: Gestionar Proveedores Textiles, Paso 2.3: Crear registro de la empresa proveedora en ProveedorEntity
         nuevo_prov = Proveedor(
             nit_identificacion=nit_limpio,
             razon_social=request.razon_social.strip(),
@@ -75,13 +70,13 @@ class ProveedorControl:
         db.commit()
         db.refresh(nuevo_prov)
 
-        # Paso 1.5: ProveedorEntity retorna proveedor_id generado
-        # Paso 1.6: ProveedorControl confirma el alta exitosa del proveedor textil
-        # Paso 1.7: IProveedorBoundary muestra al nuevo proveedor en el directorio de abastecimiento
+        # CU08: Gestionar Proveedores Textiles, Paso 2.4: Confirmar alta de proveedor y retornar ProveedorResponse
         return ProveedorResponse.from_orm(nuevo_prov)
 
     @staticmethod
     def modificar_proveedor(db: Session, id_proveedor: int, request: ProveedorUpdate) -> ProveedorResponse:
+        # CU08: Gestionar Proveedores Textiles, Paso 3: Administrador actualiza información de contacto o términos comerciales
+        # CU08: Gestionar Proveedores Textiles, Paso 3.1: Recuperar proveedor en ProveedorEntity
         p = db.query(Proveedor).filter(Proveedor.id_proveedor == id_proveedor).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Proveedor {id_proveedor} no encontrado.")
@@ -99,6 +94,7 @@ class ProveedorControl:
         if request.estado:
             p.estado = request.estado.upper()
 
+        # CU08: Gestionar Proveedores Textiles, Paso 3.2: Persistir cambios en base de datos y retornar DTO
         db.commit()
         db.refresh(p)
         return ProveedorResponse.from_orm(p)

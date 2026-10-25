@@ -59,6 +59,7 @@ def get_dashboard_user(
     fallback_any = db.query(Usuario).first()
     return fallback_any
 
+# CU24: Generar Reportes y Cuadros de Mando, Paso 1.1: UI -> Ctrl : obtener_metricas_consolidadas(periodo, sucursal_id)
 @router.get(
     "/metricas",
     status_code=status.HTTP_200_OK,
@@ -108,6 +109,7 @@ def get_dashboard_metrics(
         fecha_limite = ahora_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # 3. Consultas de Órdenes de Venta
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.2: Ctrl -> OrdEnt : calcularVentasTotalesYCanales(periodo)
     q_ordenes = db.query(OrdenVenta)
     if sucursal_id:
         q_ordenes = q_ordenes.filter(OrdenVenta.id_sucursal == sucursal_id)
@@ -123,6 +125,7 @@ def get_dashboard_metrics(
     ).with_entities(func.sum(OrdenVenta.total)).scalar() or 0.0
 
     # Canal Online vs POS
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.3: OrdEnt --> Ctrl : retorna ingresos (POS vs Online)
     ventas_pos = q_ordenes.filter(
         (OrdenVenta.canal_venta == "POS") | (OrdenVenta.numero_factura.like("POS%"))
     ).count()
@@ -135,6 +138,7 @@ def get_dashboard_metrics(
     entregadas = q_ordenes.filter(OrdenVenta.estado_logistica == "ENTREGADA").count()
 
     # 4. Reservas de Probador (CU11 / CU12)
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.6: Ctrl -> ResEnt : calcularTasaEfectividadProbadores()
     q_reservas = db.query(Reserva)
     if sucursal_id:
         q_reservas = q_reservas.filter(Reserva.id_sucursal == sucursal_id)
@@ -144,14 +148,17 @@ def get_dashboard_metrics(
     total_reservas = q_reservas.count()
     reservas_pendientes = q_reservas.filter(Reserva.estado == "PENDIENTE").count()
     reservas_confirmadas = q_reservas.filter(Reserva.estado.in_(["CONFIRMADA", "ATENDIDA"])).count()
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.7: ResEnt --> Ctrl : retorna porcentaje de conversión a venta
     efectividad_probadores = round((reservas_confirmadas / total_reservas * 100.0), 1) if total_reservas > 0 else 78.5
 
     # 5. Inventario y Valuación Contable al Costo Promedio Ponderado (CPP - CU09 / CU24)
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.4: Ctrl -> InvEnt : calcularValuacionStockAlCPP()
     q_inv = db.query(Inventario)
     if sucursal_id:
         q_inv = q_inv.filter(Inventario.id_sucursal == sucursal_id)
 
     stock_total = q_inv.with_entities(func.sum(Inventario.stock_fisico)).scalar() or 0
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.5: InvEnt --> Ctrl : retorna valor monetario total de existencias
     valuacion_cpp = q_inv.with_entities(
         func.sum(Inventario.stock_fisico * Inventario.costo_promedio_ponderado)
     ).scalar() or 0.0
@@ -282,6 +289,7 @@ def get_dashboard_metrics(
 
     # Registrar en bitácora sin bloquear la lectura inmutable
     try:
+        # CU24: Generar Reportes y Cuadros de Mando, Paso 1.8: Ctrl -> AuditEnt : registrarAccesoDashboard(id_admin, ip, fecha_local)
         bitacora = BitacoraAcceso(
             id_usuario=current_user.id_usuario,
             ip_origen="127.0.0.1",
@@ -290,10 +298,12 @@ def get_dashboard_metrics(
             motivo=f"CU24 Consulta: Sucursal={sucursal_nombre[:25]}, Rango={rango_fecha}, Ranking={ranking_tipo}"[:99]
         )
         db.add(bitacora)
+        # CU24: Generar Reportes y Cuadros de Mando, Paso 1.9: AuditEnt --> Ctrl : confirma asiento de auditoría (-04:00)
         db.commit()
     except Exception:
         db.rollback()
 
+    # CU24: Generar Reportes y Cuadros de Mando, Paso 1.10: Ctrl --> UI : entrega métricas consolidadas y series gráficas
     return {
         "kpis": {
             "ventas_totales_bs": round(float(total_ventas_pagadas), 2),

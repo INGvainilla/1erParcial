@@ -118,6 +118,11 @@ import { CarritoService } from '../../core/services/carrito.service';
             <span>Cuadros de Mando & Dashboards (CU24)</span>
           </a>
 
+          <a routerLink="/tenants" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-sitemap"></i>
+            <span>SaaS Tenants & Planes (CU01-03)</span>
+          </a>
+
           <a routerLink="/usuarios" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-users-cog"></i>
             <span>Gestión de Usuarios (CU04)</span>

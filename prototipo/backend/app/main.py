@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 
 # Importar todos los modelos organizados en los 10 paquetes para registro en metadata
+import app.modules.p01_seguridad_acceso.tenants.models
 import app.modules.p01_seguridad_acceso.auth.models
 import app.modules.p02_estructura_operativa.sucursales.models
 import app.modules.p03_catalogo_estilismo_ia.productos.models
@@ -29,6 +30,7 @@ import app.modules.p08_punto_venta_pos.pos.models
 import app.modules.p09_procesamiento_pagos.pagos.models
 
 # Importar enrutadores desde la arquitectura de 10 paquetes
+from app.modules.p01_seguridad_acceso.tenants.router import router as tenants_router
 from app.modules.p01_seguridad_acceso.auth.router import router as auth_router
 from app.modules.p01_seguridad_acceso.usuarios.router import router as usuarios_router
 from app.modules.p02_estructura_operativa.sucursales.router import router as sucursales_router, ciudades_router
@@ -48,11 +50,26 @@ from app.modules.p09_procesamiento_pagos.pagos.router import router as pagos_rou
 from app.modules.p09_procesamiento_pagos.pagos.config_router import router as config_pagos_router
 from app.modules.p10_logistica_delivery.logistica.router import router as logistica_router
 
-# Inicializar tablas de base de datos y migraciones preventivas DDL
+# Inicializar tablas de base de datos y migraciones preventivas DDL para 2do Parcial
 try:
     from sqlalchemy import text
     with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS precio NUMERIC(10, 2);"))
+        ddls = [
+            "ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS precio NUMERIC(10, 2);",
+            "ALTER TABLE producto_tallas ADD COLUMN IF NOT EXISTS medidas_cm VARCHAR(150);",
+            "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
+            "ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
+            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS id_empresa INTEGER;",
+            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS medidas_antropometricas TEXT;",
+            "ALTER TABLE productos ADD COLUMN IF NOT EXISTS composicion_textil VARCHAR(150);",
+            "ALTER TABLE producto_colores ADD COLUMN IF NOT EXISTS codigo_hex_secundario VARCHAR(10);",
+            "ALTER TABLE inventario ADD COLUMN IF NOT EXISTS id_empresa INTEGER;"
+        ]
+        for ddl in ddls:
+            try:
+                conn.execute(text(ddl))
+            except Exception:
+                pass
         conn.commit()
 except Exception:
     pass
@@ -97,6 +114,7 @@ app.add_middleware(
 
 # Inclusión de Enrutadores con prefijo /api/v1
 API_PREFIX = "/api/v1"
+app.include_router(tenants_router, prefix=API_PREFIX)
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(usuarios_router, prefix=API_PREFIX)
 app.include_router(ciudades_router, prefix=API_PREFIX)

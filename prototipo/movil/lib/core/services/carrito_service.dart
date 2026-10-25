@@ -10,6 +10,7 @@ class CarritoService {
     return Carrito.fromJson(response);
   }
 
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 1.1: agregar_item(id_usuario, datos_item)
   Future<Carrito> addItem({
     required int idProducto,
     required String talla,
@@ -29,6 +30,7 @@ class CarritoService {
     return Carrito.fromJson(response);
   }
 
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 2.1: actualizar_cantidad(id_item, nueva_cant)
   Future<Carrito> updateCantidad(int idItem, int cantidad) async {
     final response = await _api.patch(
       ApiConstants.carritoItem(idItem),
@@ -38,6 +40,7 @@ class CarritoService {
     return Carrito.fromJson(response);
   }
 
+  // CU13: Administrar Carrito de Compras Omnicanal, Paso 2.3: actualizarOCantidadCeroEliminar(id_item, 0)
   Future<Carrito> removeItem(int idItem) async {
     final response = await _api.delete(
       ApiConstants.carritoItem(idItem),

@@ -8,6 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
 class UsuarioCreate(BaseModel):
+    id_empresa: Optional[int] = Field(None, description="ID de la empresa si es super admin quien registra")
     email: EmailStr = Field(..., description="Correo electrónico institucional o de contacto")
     password: str = Field(..., min_length=8, description="Contraseña inicial del empleado")
     nombre_completo: str = Field(..., min_length=3, max_length=150)
@@ -24,6 +25,7 @@ class UsuarioUpdate(BaseModel):
 
 class UsuarioResponse(BaseModel):
     id_usuario: int
+    id_empresa: Optional[int] = None
     email: str
     nombre_completo: str
     telefono: Optional[str] = None

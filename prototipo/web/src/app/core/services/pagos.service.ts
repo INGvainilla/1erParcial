@@ -36,6 +36,7 @@ export class PagosService {
   private auth = inject(AuthService);
   private apiUrl = `${API_BASE_URL}/pagos`;
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
   crearIntencionPago(id_orden: number): Observable<IntencionPagoResponse> {
     return this.http.post<IntencionPagoResponse>(
       `${this.apiUrl}/intencion`,
@@ -44,6 +45,7 @@ export class PagosService {
     );
   }
 
+  // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.3: confirmar_transaccion_pago(payment_intent_id, id_orden)
   confirmarPago(id_orden: number, payment_intent_id: string): Observable<TransaccionResponse> {
     return this.http.post<TransaccionResponse>(
       `${this.apiUrl}/confirmar`,

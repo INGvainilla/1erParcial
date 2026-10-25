@@ -446,6 +446,7 @@ export class InventarioComponent implements OnInit {
     });
   }
 
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
   loadInventario(): void {
     this.loading = true;
     this.api.getInventario(this.filterSucursalId || undefined).subscribe({
@@ -474,8 +475,10 @@ export class InventarioComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1: Registrar entrada de lote (sucursal_id, SKU, cant, costo_unit)
   submitEntrada(): void {
     this.submitting = true;
+    // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
     this.api.registrarEntradaCompra({
       id_sucursal: Number(this.entradaData.id_sucursal),
       id_producto: Number(this.entradaData.id_producto),
@@ -488,6 +491,7 @@ export class InventarioComponent implements OnInit {
       next: (res) => {
         this.submitting = false;
         this.showEntradaModal = false;
+        // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.7: notificarInventarioActualizado(nuevo_stock, nuevo_cpp)
         this.toast.success(
           'Entrada Registrada (CU09)',
           `Saldo resultante: ${res.saldo_cantidad_resultante} unid. | Nuevo CPP: Bs. ${Number(res.saldo_cpp_resultante).toFixed(2)}`
@@ -503,6 +507,7 @@ export class InventarioComponent implements OnInit {
     });
   }
 
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.8: mostrar comprobante de kardex con nuevo CPP
   verKardex(item: InventarioItem): void {
     this.selectedItemKardex = { ...item };
     this.kardexList = [];
@@ -511,6 +516,7 @@ export class InventarioComponent implements OnInit {
     this.cdr.detectChanges(); // Inmediatamente despliega el modal en la pantalla
 
     // 1. Cargar asientos inmutables de Kardex
+    // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.6: asentarMovimientoKardex / consultarKardex
     this.api.getKardex(item.id_inventario).subscribe({
       next: (data) => {
         this.kardexList = data || [];

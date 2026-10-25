@@ -57,13 +57,16 @@ def crear_intencion_pago(
         )
 
     # CU17: Verificar disponibilidad operativa del canal de cobro Stripe
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.2: verificarStripeHabilitado()
     metodo_stripe = db.query(MetodoPagoConfig).filter(MetodoPagoConfig.codigo == "STRIPE").first()
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.3: confirma método ACTIVO y retorna publishable_key
     if metodo_stripe and not metodo_stripe.activo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="La pasarela de pagos en línea (Stripe) se encuentra temporalmente deshabilitada por administración. Por favor consulte a soporte o intente más tarde."
         )
 
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.4: obtenerTotalOrden(id_orden)
     monto_float = float(orden.total)
     if monto_float <= 0:
         raise HTTPException(
@@ -72,10 +75,12 @@ def crear_intencion_pago(
         )
 
     # Stripe requiere el importe en centavos enteros (ej: 280.00 Bs -> 28000 centavos)
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.5: retorna monto total (Bs)
     monto_centavos = int(round(monto_float * 100))
     moneda = (settings.STRIPE_CURRENCY or "bob").lower()
 
     try:
+        # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.6: stripe.PaymentIntent.create(amount_centavos, currency='bob')
         payment_intent = stripe.PaymentIntent.create(
             amount=monto_centavos,
             currency=moneda,
@@ -90,6 +95,7 @@ def crear_intencion_pago(
             }
         )
 
+        # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.7: retorna client_secret y payment_intent_id
         return IntencionPagoResponse(
             client_secret=payment_intent.client_secret,
             publishable_key=settings.STRIPE_PUBLISHABLE_KEY,
@@ -159,6 +165,7 @@ def confirmar_transaccion_pago(
 
     try:
         # Verificar directamente contra los servidores seguros de Stripe
+        # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.4: stripe.PaymentIntent.retrieve(payment_intent_id)
         pi = stripe.PaymentIntent.retrieve(payment_intent_id)
         # En entorno de pruebas sandbox (sk_test_), si la intención está en requires_payment_method
         if pi.status == "requires_payment_method" and settings.STRIPE_SECRET_KEY.startswith("sk_test_"):
@@ -173,6 +180,7 @@ def confirmar_transaccion_pago(
             detail=f"No se pudo verificar el pago en Stripe: {str(e)}"
         )
 
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.5: verifica status == 'succeeded'
     if pi.status != "succeeded":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -199,6 +207,7 @@ def confirmar_transaccion_pago(
         pass
 
     # Actualizar estado de la orden
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.7: actualizarEstado(id_orden, estado='PAGADO', logistica='PREPARACION')
     orden.estado_pago = "PAGADO"
     if orden.modalidad_entrega == "RETIRO_TIENDA":
         orden.estado_logistica = "LISTO_DESPACHO"
@@ -206,6 +215,7 @@ def confirmar_transaccion_pago(
         orden.estado_logistica = "PREPARACION"
 
     # Registrar en transacciones_pago
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.6: registrarTransaccionInmutable(id_orden, payload_json)
     tx = TransaccionPago(
         id_orden=orden.id_orden,
         pasarela="STRIPE",
@@ -253,6 +263,7 @@ def confirmar_transaccion_pago(
     except Exception as e:
         print(f"[KARDEX ONLINE] Advertencia al asentar salida de venta: {e}")
 
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.8: confirma pago completado
     db.commit()
     db.refresh(tx)
 
@@ -436,6 +447,8 @@ def listar_metodos_pago(db: Session, solo_activos: bool = False) -> List[MetodoP
     if solo_activos:
         query = query.filter(MetodoPagoConfig.activo == True)
 
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 1.2: obtenerTodosLosMetodos()
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 1.3: retorna lista de registros
     metodos = query.order_by(MetodoPagoConfig.id_metodo.asc()).all()
 
     resultado = []
@@ -447,6 +460,7 @@ def listar_metodos_pago(db: Session, solo_activos: bool = False) -> List[MetodoP
             except Exception:
                 pass
 
+        # CU17: Gestionar Tipos y Medios de Cobro, Paso 1.4: enmascararCredencialesSensibles(sk_test_****XXXX)
         resultado.append(
             MetodoPagoResponse(
                 id_metodo=m.id_metodo,
@@ -462,6 +476,7 @@ def listar_metodos_pago(db: Session, solo_activos: bool = False) -> List[MetodoP
             )
         )
 
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 1.5: retorna metodos con estado y claves enmascaradas
     return resultado
 
 
@@ -501,6 +516,7 @@ def actualizar_metodo_pago(
         )
 
     if update_data.activo is not None:
+        # CU17: Gestionar Tipos y Medios de Cobro, Paso 2.2: updateEstado(codigo, activo)
         metodo.activo = update_data.activo
 
     if update_data.credenciales is not None:
@@ -512,10 +528,12 @@ def actualizar_metodo_pago(
                 pass
 
         for k, v in update_data.credenciales.items():
+            # CU17: Gestionar Tipos y Medios de Cobro, Paso 3.2: verificarSiMantieneClaveOriginal(credenciales_json)
             # Si el valor no fue alterado (es decir, contiene los asteriscos de enmascaramiento), ignorar
             if "****" not in str(v):
                 raw_creds[k] = str(v).strip()
 
+        # CU17: Gestionar Tipos y Medios de Cobro, Paso 3.3: guardarCredencialesCifradas(codigo, credenciales_limpias)
         metodo.credenciales_json = json.dumps(raw_creds)
 
         # Si el método es Stripe, propagar claves en tiempo de ejecución
@@ -532,6 +550,8 @@ def actualizar_metodo_pago(
                 settings.STRIPE_WEBHOOK_SECRET = new_wh
 
     metodo.actualizado_en = datetime.now(timezone.utc).replace(tzinfo=None)
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 2.3: confirma actualizacion
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 3.4: confirma guardado seguro
     db.commit()
     db.refresh(metodo)
 

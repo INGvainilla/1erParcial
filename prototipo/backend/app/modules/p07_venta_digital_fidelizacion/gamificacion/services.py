@@ -378,6 +378,8 @@ def canjear_recompensa_usuario(
         monto_desc = seed_item["descuento_monto"]
         tipo_ben = seed_item["tipo_beneficio"]
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.2: Ctrl -> RecEnt : obtenerCostoPuntos(codigo_recompensa)
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.3: retorna costo_puntos y beneficio
     if perfil.puntos_actuales < costo:
         return CanjeResponse(
             exito=False,
@@ -385,9 +387,11 @@ def canjear_recompensa_usuario(
             puntos_restantes=perfil.puntos_actuales
         )
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.4 & 2.5: verificarYDescontarPuntos(costo_puntos) y saldo suficiente descontado
     # 1. Descontar puntos
     perfil.puntos_actuales -= costo
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.6 & 2.7: Ctrl -> CupEnt : generarCuponDescuento(id_usuario, beneficio) y retorna codigo_cupon único
     # 2. Generar código alfanumérico único para el cupón
     codigo_cupon = f"FS-{codigo_recompensa}-{uuid.uuid4().hex[:6].upper()}"
 
@@ -430,6 +434,7 @@ def canjear_recompensa_usuario(
         ip_cliente=ip_cliente
     )
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 2.8: devuelve cupón listo para usar en checkout
     return CanjeResponse(
         exito=True,
         mensaje=f"¡Felicidades! Has canjeado '{titulo}'.",
@@ -528,6 +533,7 @@ def marcar_cupon_utilizado(db: Session, codigo_cupon: str) -> bool:
     return False
 
 
+# CU21: Gestionar Fidelización Gamificada, Paso 1: Motor -> Ctrl : registrar_compra_y_otorgar_puntos(id_usuario, monto_total)
 def otorgar_puntos_por_compra(
     db: Session,
     id_usuario: int,
@@ -541,11 +547,13 @@ def otorgar_puntos_por_compra(
     if not id_usuario or monto_total <= 0:
         return {"exito": False, "puntos_otorgados": 0}
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 1.1 & 1.2: Ctrl -> PerfilEnt : obtenerPerfil(id_usuario) y retorna puntos y nivel
     perfil = db.query(GamificacionPerfil).filter(GamificacionPerfil.id_usuario == id_usuario).first()
     if not perfil:
         obtener_o_crear_perfil(db, id_usuario)
         perfil = db.query(GamificacionPerfil).filter(GamificacionPerfil.id_usuario == id_usuario).first()
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 1.3: Ctrl -> PerfilEnt : acumularPuntos(puntos_nuevos = monto / 10)
     puntos_ganados = int(monto_total / 10.0)
     if puntos_ganados <= 0:
         return {"exito": True, "puntos_otorgados": 0, "puntos_actuales": perfil.puntos_actuales}
@@ -553,6 +561,7 @@ def otorgar_puntos_por_compra(
     perfil.puntos_actuales += puntos_ganados
     perfil.puntos_historicos += puntos_ganados
 
+    # CU21: Gestionar Fidelización Gamificada, Paso 1.4 & 1.5: Ctrl -> PerfilEnt : actualizarNivelEInsignias y confirma membresía
     # Auto-desbloqueo de insignia primer_pedido
     insignias = json.loads(perfil.insignias_json or "[]")
     if "primer_pedido" not in insignias:

@@ -708,10 +708,12 @@ export class ComparadorComponent implements OnInit {
     this.cargarOutfits();
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1: Ensambla hasta 3 combinaciones de ropa
   cargarOutfits(): void {
     this.isUpdating = true;
     this.cdr.detectChanges();
 
+    // CU20: Comparar Outfits Lado a Lado, Paso 1.1: evaluar_comparacion(outfit_1, outfit_2, outfit_3)
     this.api.getOutfitsRecomendados('Santa Cruz', this.ocasionActiva).subscribe({
       next: (res: any) => {
         this.isUpdating = false;
@@ -899,6 +901,7 @@ export class ComparadorComponent implements OnInit {
     return col.prenda_superior.precio_base + col.prenda_inferior.precio_base + col.calzado_accesorio.precio_base;
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1.2 & 1.4: Obtener precios unitarios y consultar descuentos aplicables
   calcularTotal(col: OutfitColumna): number {
     return col.prenda_superior.precio_final + col.prenda_inferior.precio_final + col.calzado_accesorio.precio_final;
   }
@@ -907,6 +910,7 @@ export class ComparadorComponent implements OnInit {
     return this.calcularSubtotal(col) - this.calcularTotal(col);
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1.6 & 1.8: calcularTotalesYIdentificarMejorOpcion() y etiquetar "Más Económico"
   esMasEconomico(col: OutfitColumna): boolean {
     if (!this.outfits || this.outfits.length === 0) return false;
     const precios = this.outfits.map(o => this.calcularTotal(o));
@@ -914,12 +918,15 @@ export class ComparadorComponent implements OnInit {
     return this.calcularTotal(col) === min;
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 2: Pulsa "Comprar Outfit Ganador"
   comprarOutfitCompleto(col: OutfitColumna): void {
     const prendas = [col.prenda_superior, col.prenda_inferior, col.calzado_accesorio];
+    // CU20: Comparar Outfits Lado a Lado, Paso 2.1: transferir_outfit_a_carrito(id_outfit, id_usuario)
     prendas.forEach(p => {
       this.cart.agregarItem(p.id_producto, p.talla_sugerida, p.color_sugerido, 1);
     });
 
+    // CU20: Comparar Outfits Lado a Lado, Paso 2.4: notifica transferencia exitosa
     this.toast.success('¡Outfit transferido!', `Outfit completo "${col.titulo}" transferido al carrito.`);
     this.cart.openCart();
   }

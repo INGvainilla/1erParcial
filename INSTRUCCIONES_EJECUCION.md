@@ -26,17 +26,18 @@
 12. [Fase 7: Despliegue en la Nube y Docker (Render / Local)](#-fase-7-despliegue-en-la-nube-y-docker-render--local)
 13. [Credenciales, Roles RBAC y Matriz de Acceso](#-credenciales-roles-rbac-y-matriz-de-acceso)
 14. [Solución de Problemas Frecuentes (FAQ)](#-solución-de-problemas-frecuentes-faq)
+15. [Guía Detallada: Ejecución Móvil Inalámbrica por ADB (Sin Cable / Zona Wi-Fi)](#-guía-detallada-ejecución-móvil-inalámbrica-por-adb-sin-cable--compartiendo-internet-con-el-celular)
 
 ---
 
 ## 🏗 Arquitectura Tecnológica del Proyecto
 
-| Capa | Tecnología | Características Clave y Alcance Ciclo 3 |
-| :--- | :--- | :--- |
-| **Backend API** | Python 3.10+ / 3.13 / FastAPI / Uvicorn | Arquitectura modular de 3 capas distribuida en **10 subsistemas PUDS** (`p01` a `p10`), SQLAlchemy 2.0 con carga impaciente optimizada (`joinedload`), soporte para cálculo de Costo Promedio Ponderado (CPP), motor de promociones, pasarela Stripe tokenizada, analítica predictiva y endpoints de devoluciones (`/pos/devoluciones`). |
-| **Base de Datos** | PostgreSQL 15+ (con Fallback a SQLite) | Base principal `fashionstore_db` con esquema relacional 3FN. Incorpora script semilla idempotente con **auto-reparación DDL en caliente** (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) y conmutación automática y transparente a SQLite local (`fashionstore_local.db`) en caso de caída. |
-| **Frontend Web** | Angular 17+/19+ (TypeScript / Standalone Components) | Single Page Application (SPA) responsiva con diseño **Dark Glassmorphism**, guardas RBAC activas, visualizador de probador virtual WebGL, catálogo reactivo, tablero logístico de delivery, y **Terminal POS con soporte completo para CU25 (Devoluciones y Cambios de prendas)**. |
-| **Aplicación Móvil** | Flutter 3.x / Dart | Multiplataforma (Android, Web, Windows Desktop, iOS), arquitectura de capas (`core`, `modules`, `views`), consumo asíncrono REST, **Vestidor Virtual AR con Google ML Kit Pose Detection**, Comparador de Outfits y Gamificación con catálogo de recompensas. |
+| Capa                 | Tecnología                                           | Características Clave y Alcance Ciclo 3                                                                                                                                                                                                                                                                                                  |
+| :------------------- | :--------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend API**      | Python 3.10+ / 3.13 / FastAPI / Uvicorn              | Arquitectura modular de 3 capas distribuida en **10 subsistemas PUDS** (`p01` a `p10`), SQLAlchemy 2.0 con carga impaciente optimizada (`joinedload`), soporte para cálculo de Costo Promedio Ponderado (CPP), motor de promociones, pasarela Stripe tokenizada, analítica predictiva y endpoints de devoluciones (`/pos/devoluciones`). |
+| **Base de Datos**    | PostgreSQL 15+ (con Fallback a SQLite)               | Base principal `fashionstore_db` con esquema relacional 3FN. Incorpora script semilla idempotente con **auto-reparación DDL en caliente** (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) y conmutación automática y transparente a SQLite local (`fashionstore_local.db`) en caso de caída.                                                |
+| **Frontend Web**     | Angular 17+/19+ (TypeScript / Standalone Components) | Single Page Application (SPA) responsiva con diseño **Dark Glassmorphism**, guardas RBAC activas, visualizador de probador virtual WebGL, catálogo reactivo, tablero logístico de delivery, y **Terminal POS con soporte completo para CU25 (Devoluciones y Cambios de prendas)**.                                                       |
+| **Aplicación Móvil** | Flutter 3.x / Dart                                   | Multiplataforma (Android, Web, Windows Desktop, iOS), arquitectura de capas (`core`, `modules`, `views`), consumo asíncrono REST, **Vestidor Virtual AR con Google ML Kit Pose Detection**, Comparador de Outfits y Gamificación con catálogo de recompensas.                                                                            |
 
 ---
 
@@ -99,33 +100,33 @@ El proyecto consolida la totalidad del ciclo de vida del software en 10 paquetes
 
 ## 🎯 Matriz de Casos de Uso del Sistema (CU01 al CU25)
 
-| Ciclo | Caso de Uso | Módulo / Paquete | Descripción Operativa |
-| :---: | :--- | :--- | :--- |
-| **1** | **CU01: Iniciar Sesión (Login)** | `p01_seguridad_acceso` | Autenticación JWT con bloqueo preventivo tras 5 intentos fallidos. |
-| **1** | **CU02: Registrar Nuevo Cliente** | `p01_seguridad_acceso` | Auto-registro público con rol por defecto `CLIENTE`. |
-| **1** | **CU03: Recuperar Contraseña** | `p01_seguridad_acceso` | Generación y validación de código OTP criptográfico de 6 dígitos. |
-| **1** | **CU04: Gestionar Cuentas de Usuarios** | `p01_seguridad_acceso` | Desbloqueo administrativo y asignación de roles RBAC. |
-| **1** | **CU05: Registrar Sucursal Física** | `p02_estructura_empresa` | Gestión de tiendas físicas con geolocalización GPS y probadores. |
-| **1** | **CU06: Registrar Prenda de Vestir** | `p03_catalogo_estilismo_ia`| Alta de productos de moda con códigos de color HEX y tallas. |
-| **1** | **CU07: Gestionar Temporadas Comerciales**| `p03_catalogo_estilismo_ia`| Campañas de moda estacionales (Primavera-Verano, Otoño-Invierno). |
-| **1** | **CU08: Registrar Proveedor Textil** | `p04_aprovisionamiento_proveedores`| Gestión de proveedores de hilados y telas con NIT único. |
-| **1** | **CU09: Registrar Inventario y Valuación**| `p05_inventario_costos_analitica`| Kardex inmutable y valuación matemática por Costo Promedio Ponderado ($CPP$). |
-| **1** | **CU10: Consultar Catálogo Omnicanal**| `p03_catalogo_estilismo_ia`| Búsqueda omnicanal con stock físico en tiempo real por sucursal. |
-| **2** | **CU11: Reservar Probador Físico** | `p06_reservas_presenciales` | Reserva presencial de prendas para prueba en sucursal con QR. |
-| **2** | **CU12: Gestionar Carrito de Compras** | `p07_venta_digital_fidelizacion`| Carrito reactivo persistente con validación de inventario disponible. |
-| **2** | **CU13: Aplicar Cupones y Promociones**| `p07_venta_digital_fidelizacion`| Descuentos porcentuales y montos fijos con validación de vigencia. |
-| **2** | **CU14: Procesar Compra E-Commerce** | `p07_venta_digital_fidelizacion`| Generación de orden de pedido digital con reserva de inventario. |
-| **2** | **CU15: Registrar Venta en Caja (POS)**| `p08_punto_venta_pos` | Facturación de mostrador con lector SKU, cálculo de vuelto y Kardex. |
-| **2** | **CU16: Procesar Pago con Pasarela** | `p09_procesamiento_pagos` | Integración con Stripe PaymentIntents tokenizados y webhooks. |
-| **2** | **CU17: Configurar Métodos de Pago** | `p09_procesamiento_pagos` | Parámetros de cobro en línea, efectivo y datáfonos de mostrador. |
-| **2** | **CU18: Gestionar Despacho y Logística**| `p10_logistica_delivery` | Rutas de entrega, cálculo de tarifas Haversine y courier en vivo. |
-| **3** | **CU19: Visualizar Prenda en Probador AR**| `p03_catalogo_estilismo_ia`| Pose Detection en tiempo real vía Google ML Kit y superposición AR. |
-| **3** | **CU20: Comparar Outfits y Conjuntos** | `p03_catalogo_estilismo_ia`| Comparador lado a lado de combinaciones de prendas y paletas. |
-| **3** | **CU21: Fidelización y Gamificación** | `p07_venta_digital_fidelizacion`| Sistema de puntos por acciones, niveles VIP (Bronce, Plata, Oro, Platino) y catálogo de recompensas. |
-| **3** | **CU22: Asesoría de Estilismo por Clima**| `p03_catalogo_estilismo_ia`| Recomendaciones contextuales inteligentes basadas en clima local. |
-| **3** | **CU23: Búsqueda Semántica y por Voz** | `p03_catalogo_estilismo_ia`| Procesamiento de lenguaje natural para búsquedas por atributos de moda. |
-| **3** | **CU24: Métricas y Reportes Predictivos**| `p05_inventario_costos_analitica`| Tableros ejecutivos de rotación, proyección de ventas y tendencias. |
-| **3** | **CU25: Gestionar Devolución y Cambio** | `p08_punto_venta_pos` | **Validación fiscal ($\le 14$ días), inspección física, reingreso a Kardex al CPP histórico y compensación vía cambio por factor de talla, vale o dinero.** |
+| Ciclo | Caso de Uso                                | Módulo / Paquete                    | Descripción Operativa                                                                                                                                       |
+| :---: | :----------------------------------------- | :---------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1** | **CU01: Iniciar Sesión (Login)**           | `p01_seguridad_acceso`              | Autenticación JWT con bloqueo preventivo tras 5 intentos fallidos.                                                                                          |
+| **1** | **CU02: Registrar Nuevo Cliente**          | `p01_seguridad_acceso`              | Auto-registro público con rol por defecto `CLIENTE`.                                                                                                        |
+| **1** | **CU03: Recuperar Contraseña**             | `p01_seguridad_acceso`              | Generación y validación de código OTP criptográfico de 6 dígitos.                                                                                           |
+| **1** | **CU04: Gestionar Cuentas de Usuarios**    | `p01_seguridad_acceso`              | Desbloqueo administrativo y asignación de roles RBAC.                                                                                                       |
+| **1** | **CU05: Registrar Sucursal Física**        | `p02_estructura_empresa`            | Gestión de tiendas físicas con geolocalización GPS y probadores.                                                                                            |
+| **1** | **CU06: Registrar Prenda de Vestir**       | `p03_catalogo_estilismo_ia`         | Alta de productos de moda con códigos de color HEX y tallas.                                                                                                |
+| **1** | **CU07: Gestionar Temporadas Comerciales** | `p03_catalogo_estilismo_ia`         | Campañas de moda estacionales (Primavera-Verano, Otoño-Invierno).                                                                                           |
+| **1** | **CU08: Registrar Proveedor Textil**       | `p04_aprovisionamiento_proveedores` | Gestión de proveedores de hilados y telas con NIT único.                                                                                                    |
+| **1** | **CU09: Registrar Inventario y Valuación** | `p05_inventario_costos_analitica`   | Kardex inmutable y valuación matemática por Costo Promedio Ponderado ($CPP$).                                                                               |
+| **1** | **CU10: Consultar Catálogo Omnicanal**     | `p03_catalogo_estilismo_ia`         | Búsqueda omnicanal con stock físico en tiempo real por sucursal.                                                                                            |
+| **2** | **CU11: Reservar Probador Físico**         | `p06_reservas_presenciales`         | Reserva presencial de prendas para prueba en sucursal con QR.                                                                                               |
+| **2** | **CU12: Gestionar Carrito de Compras**     | `p07_venta_digital_fidelizacion`    | Carrito reactivo persistente con validación de inventario disponible.                                                                                       |
+| **2** | **CU13: Aplicar Cupones y Promociones**    | `p07_venta_digital_fidelizacion`    | Descuentos porcentuales y montos fijos con validación de vigencia.                                                                                          |
+| **2** | **CU14: Procesar Compra E-Commerce**       | `p07_venta_digital_fidelizacion`    | Generación de orden de pedido digital con reserva de inventario.                                                                                            |
+| **2** | **CU15: Registrar Venta en Caja (POS)**    | `p08_punto_venta_pos`               | Facturación de mostrador con lector SKU, cálculo de vuelto y Kardex.                                                                                        |
+| **2** | **CU16: Procesar Pago con Pasarela**       | `p09_procesamiento_pagos`           | Integración con Stripe PaymentIntents tokenizados y webhooks.                                                                                               |
+| **2** | **CU17: Configurar Métodos de Pago**       | `p09_procesamiento_pagos`           | Parámetros de cobro en línea, efectivo y datáfonos de mostrador.                                                                                            |
+| **2** | **CU18: Gestionar Despacho y Logística**   | `p10_logistica_delivery`            | Rutas de entrega, cálculo de tarifas Haversine y courier en vivo.                                                                                           |
+| **3** | **CU19: Visualizar Prenda en Probador AR** | `p03_catalogo_estilismo_ia`         | Pose Detection en tiempo real vía Google ML Kit y superposición AR.                                                                                         |
+| **3** | **CU20: Comparar Outfits y Conjuntos**     | `p03_catalogo_estilismo_ia`         | Comparador lado a lado de combinaciones de prendas y paletas.                                                                                               |
+| **3** | **CU21: Fidelización y Gamificación**      | `p07_venta_digital_fidelizacion`    | Sistema de puntos por acciones, niveles VIP (Bronce, Plata, Oro, Platino) y catálogo de recompensas.                                                        |
+| **3** | **CU22: Asesoría de Estilismo por Clima**  | `p03_catalogo_estilismo_ia`         | Recomendaciones contextuales inteligentes basadas en clima local.                                                                                           |
+| **3** | **CU23: Búsqueda Semántica y por Voz**     | `p03_catalogo_estilismo_ia`         | Procesamiento de lenguaje natural para búsquedas por atributos de moda.                                                                                     |
+| **3** | **CU24: Métricas y Reportes Predictivos**  | `p05_inventario_costos_analitica`   | Tableros ejecutivos de rotación, proyección de ventas y tendencias.                                                                                         |
+| **3** | **CU25: Gestionar Devolución y Cambio**    | `p08_punto_venta_pos`               | **Validación fiscal ($\le 14$ días), inspección física, reingreso a Kardex al CPP histórico y compensación vía cambio por factor de talla, vale o dinero.** |
 
 ---
 
@@ -240,7 +241,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Puntos de Enlace Clave:
-* 📖 **Swagger UI interactivo (OpenAPI con CU01 a CU25):**  
+* 📖 **Swagger UI interactivo (OpenAPI con CU01 al CU25):**  
   👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 * 🩺 **Health Check del Sistema (Versión Ciclo 3):**  
   👉 [http://localhost:8000/health](http://localhost:8000/health)  
@@ -309,7 +310,8 @@ flutter run -d chrome
 # Para probar en Emulador o Celular conectado:
 flutter run
 ```
-
+# Ejecutar adb reverse con la ruta directa del SDK de Android en Windows:
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" reverse tcp:8000 tcp:8000
 ---
 
 ## 🧪 Fase 5: Pruebas Automatizadas de Aceptación (Pytest 100% Green)
@@ -344,7 +346,7 @@ tests/test_ciclo3_api.py::test_cu22_obtener_clima_local PASSED           [ 62%]
 tests/test_ciclo3_api.py::test_cu22_generar_outfits_contextuales PASSED  [ 66%]
 tests/test_ciclo3_api.py::test_cu23_busqueda_voz_semantica_formal PASSED [ 70%]
 tests/test_ciclo3_api.py::test_cu23_busqueda_voz_semantica_calor_lino PASSED [ 75%]
-tests/test_cu21_gamificacion.py::test_cu21_flujo_integral_gamificacion PASSED [ 79%]
+tests/test_ciclo3_api.py::test_cu21_flujo_integral_gamificacion PASSED [ 79%]
 tests/test_cu25_devoluciones.py::test_cu25_consultar_ticket_dentro_de_plazo PASSED [ 83%]
 tests/test_cu25_devoluciones.py::test_cu25_consultar_ticket_fuera_de_plazo PASSED [ 87%]
 tests/test_cu25_devoluciones.py::test_cu25_procesar_cambio_variante_factor_talla PASSED [ 91%]
@@ -419,15 +421,15 @@ docker run -d --name fashionstore_app -p 8000:8000 fashionstore:latest
 
 Todas las cuentas del sistema comparten la contraseña estándar de evaluación: **`Admin123*`**
 
-| Rol RBAC | Correo Electrónico | Contraseña | Estado | Módulos y Permisos Visibles |
-| :--- | :--- | :--- | :---: | :--- |
-| **ADMINISTRADOR** | `alberto.delgado@store.bo` | `Admin123*` | `ACTIVO` | **Acceso total:** Todos los 25 casos de uso (Dashboard, Usuarios, Sucursales, Prendas, CPP, POS, Devoluciones, Analítica y Auditoría). |
-| **ADMINISTRADOR** | `andy.mujica@store.bo` | `Admin123*` | `ACTIVO` | **Acceso total:** Mismos privilegios de administración global y auditoría. |
-| **ENCARGADO DE TIENDA** | `carlos.morales@store.bo` | `Admin123*` | `ACTIVO` | Inventario físico de sucursal, POS de caja y autorizaciones de devolución. |
-| **CAJERO POS** | `javier.roca@store.bo` | `Admin123*` | `ACTIVO` | Operación de caja, facturación de prendas (CU15) y procesamiento de devoluciones en mostrador (CU25). |
-| **LOGÍSTICA / DELIVERY** | `mateo.logistica@store.bo` | `Admin123*` | `ACTIVO` | Proveedores textiles, recepción de mercadería y despacho de pedidos delivery (CU18). |
-| **CLIENTE** | `rodrigo.cliente@gmail.com` | `Admin123*` | `ACTIVO` | Catálogo omnicanal, probador virtual AR, comparador de outfits, gamificación VIP y e-commerce. |
-| **VISITANTE (Público)** | *(Sin login previo)* | — | `ANÓNIMO` | Navegación de catálogo, probador virtual y pantalla de login/auto-registro. |
+| Rol RBAC                 | Correo Electrónico          | Contraseña  |  Estado   | Módulos y Permisos Visibles                                                                                                            |
+| :----------------------- | :-------------------------- | :---------- | :-------: | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **ADMINISTRADOR**        | `alberto.delgado@store.bo`  | `Admin123*` | `ACTIVO`  | **Acceso total:** Todos los 25 casos de uso (Dashboard, Usuarios, Sucursales, Prendas, CPP, POS, Devoluciones, Analítica y Auditoría). |
+| **ADMINISTRADOR**        | `andy.mujica@store.bo`      | `Admin123*` | `ACTIVO`  | **Acceso total:** Mismos privilegios de administración global y auditoría.                                                             |
+| **ENCARGADO DE TIENDA**  | `carlos.morales@store.bo`   | `Admin123*` | `ACTIVO`  | Inventario físico de sucursal, POS de caja y autorizaciones de devolución.                                                             |
+| **CAJERO POS**           | `javier.roca@store.bo`      | `Admin123*` | `ACTIVO`  | Operación de caja, facturación de prendas (CU15) y procesamiento de devoluciones en mostrador (CU25).                                  |
+| **LOGÍSTICA / DELIVERY** | `mateo.logistica@store.bo`  | `Admin123*` | `ACTIVO`  | Proveedores textiles, recepción de mercadería y despacho de pedidos delivery (CU18).                                                   |
+| **CLIENTE**              | `rodrigo.cliente@gmail.com` | `Admin123*` | `ACTIVO`  | Catálogo omnicanal, probador virtual AR, comparador de outfits, gamificación VIP y e-commerce.                                         |
+| **VISITANTE (Público)**  | *(Sin login previo)*        | —           | `ANÓNIMO` | Navegación de catálogo, probador virtual y pantalla de login/auto-registro.                                                            |
 
 ---
 
@@ -459,6 +461,119 @@ flutter run -d windows
 ### 5. ¿Dónde se encuentra la documentación metodológica completa del Ciclo 3?
 El informe metodológico exhaustivo con diagramas UML 2.5+, diagramas de comunicación, clases de análisis, secuencia y navegación se encuentra en:
 * [DOCUMENTACION2/ciclo3.md](file:///c:/Users/User/Documents/2-2026/SI2/1erParcial/DOCUMENTACION2/ciclo3.md)
+
+---
+
+## 📶 Guía Detallada: Ejecución Móvil Inalámbrica por ADB (Sin Cable / Compartiendo Internet con el Celular)
+
+Esta guía resuelve de forma definitiva el problema recurrente de **cables USB con falsos contactos, puertos flojos o interrupciones de conexión**, permitiendo depurar en el dispositivo físico con **Hot Reload (`r`)**, inspección de logs en vivo y libertad de movimiento (imprescindible para probar el probador virtual con cámara AR en mano).
+
+### 💡 Principio de Funcionamiento (Punto de Acceso / Zona Wi-Fi)
+Cuando activas la **Zona Wi-Fi (Punto de acceso móvil / Hotspot)** de tu teléfono y conectas tu laptop a esa red:
+* **Tu celular se convierte en el router/gateway** de la red local.
+* Ambos dispositivos quedan aislados en la misma subred (usualmente `192.168.43.x`), eliminando firewalls o bloqueos de puertos típicos de redes Wi-Fi institucionales.
+* La dirección IP interna del celular pasa a ser la **Puerta de enlace predeterminada** (habitualmente `192.168.43.1`).
+
+---
+
+### 🚀 Paso a Paso: Configuración Inalámbrica ADB vía TCP/IP
+
+> **Ubicación del ejecutable ADB en el entorno:**  
+> `C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe`  
+> *(Puedes ejecutarlo directamente con esa ruta o añadir la carpeta a las variables de entorno PATH de Windows).*
+
+#### Paso 1: Compartir Internet desde el Celular y Conectar la PC
+1. En tu teléfono, activa **Punto de acceso móvil / Zona Wi-Fi**.
+2. En tu PC con Windows, busca las redes Wi-Fi disponibles y conéctate a la red emitida por tu celular.
+
+#### Paso 2: Identificar la IP del Celular (Puerta de Enlace)
+Abre una terminal de PowerShell en tu PC y ejecuta:
+```powershell
+ipconfig
+```
+Localiza la sección correspondiente a tu adaptador de red inalámbrico (`Adaptador de LAN inalámbrica Wi-Fi`):
+```text
+Adaptador de LAN inalámbrica Wi-Fi:
+   Dirección IPv4. . . . . . . . . . . . . . : 192.168.43.15  <-- IP de tu PC
+   Máscara de subred . . . . . . . . . . . . : 255.255.255.0
+   Puerta de enlace predeterminada . . . . . : 192.168.43.1   <-- IP DE TU CELULAR
+```
+> Anota la **Puerta de enlace predeterminada** (en este ejemplo, `192.168.43.1`). Esa es la IP directa de tu celular.
+
+#### Paso 3: Habilitar el Puerto TCP/IP de ADB (Solo 5 segundos con cable)
+1. Conecta el cable USB al celular firmemente solo un momento (asegúrate de que en el celular esté activa la **Depuración por USB** en *Opciones de desarrollador*).
+2. En la terminal de la PC, activa el modo TCP/IP en el puerto estándar `5555`:
+   ```powershell
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" tcpip 5555
+   ```
+   **Respuesta esperada:**
+   ```text
+   restarting in TCP mode port: 5555
+   ```
+
+#### Paso 4: ¡Desconectar el Cable USB Definitivamente!
+* Retira el cable USB del teléfono y de la computadora. A partir de este momento **no se requiere ningún cable físico**.
+
+#### Paso 5: Conectar ADB Inalámbricamente a la IP de tu Celular
+En la terminal, ejecuta la conexión a la IP de la puerta de enlace obtenida en el Paso 2:
+```powershell
+& "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" connect 192.168.43.1:5555
+```
+**Respuesta esperada:**
+```text
+connected to 192.168.43.1:5555
+```
+
+Verifica que el teléfono figure en la lista de dispositivos activos:
+```powershell
+& "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" devices
+```
+*Aparecerá listado como `192.168.43.1:5555 device` o con su identificador de modelo.*
+
+#### Paso 6: Redirigir el Puerto del Backend FastAPI (Crucial)
+Para que las peticiones HTTP de la app móvil a `http://127.0.0.1:8000/api/v1` lleguen de forma transparente al backend FastAPI que corre en tu PC:
+```powershell
+& "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse tcp:8000 tcp:8000
+```
+*(Este comando funciona de manera 100% idéntica sobre la conexión Wi-Fi que sobre cable físico).*
+
+#### Paso 7: Ejecutar la Aplicación Flutter
+Desde el directorio móvil:
+```powershell
+cd c:\Users\User\Documents\2-2026\SI2\1erParcial\prototipo\movil
+flutter run
+```
+* ¡La aplicación compilará, se instalará y se lanzará en tu teléfono de forma completamente inalámbrica!
+* Cuentas con soporte total para **Stateful Hot Reload** presionando `r` en la terminal, **Hot Restart** con `R` y salida de logs en tiempo real.
+
+---
+
+### 🔄 Reconexión Rápida en Caso de Interrupción
+Si apagas la pantalla mucho tiempo o reinicias la Zona Wi-Fi y ADB pierde el enlace:
+1. Verifica que la PC continúe conectada al Wi-Fi del celular.
+2. Vuelve a ejecutar directamente en la terminal (sin necesidad de volver a conectar el cable, ya que el modo TCP/IP permanece activo en el celular mientras no se reinicie):
+   ```powershell
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" connect 192.168.43.1:5555
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse tcp:8000 tcp:8000
+   flutter run
+   ```
+
+---
+
+### ⚡ Variante Nativa 100% sin Cables (Android 11 o Superior)
+Si tu dispositivo cuenta con Android 11+ y prefieres no conectar el cable ni siquiera 5 segundos:
+1. Conecta la PC a la Zona Wi-Fi del celular.
+2. En el teléfono: **Ajustes** > **Opciones de desarrollador** > **Depuración inalámbrica** (Activar).
+3. Toca sobre *Depuración inalámbrica* > **Vincular dispositivo con código de vinculación**.
+4. Te mostrará una IP, un puerto temporal (ej. `192.168.43.1:39215`) y un código de 6 dígitos.
+5. En la PC ejecuta:
+   ```powershell
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" pair 192.168.43.1:PUERTO_PAIR
+   # (Ingresas el código de 6 dígitos cuando lo solicite)
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" connect 192.168.43.1:PUERTO_CONNECT
+   & "C:\Users\User\AppData\Local\Android\Sdk\platform-tools\adb.exe" reverse tcp:8000 tcp:8000
+   flutter run
+   ```
 
 ---
 

@@ -27,20 +27,19 @@ class UsuarioAdminControl:
     """
 
     @staticmethod
+    @staticmethod
     def listar_usuarios(
         db: Session,
         rol: Optional[str] = None,
         estado: Optional[str] = None,
-        id_sucursal: Optional[int] = None
+        id_sucursal: Optional[int] = None,
+        id_empresa: Optional[int] = None
     ) -> List[UsuarioResponse]:
-        # =========================================================================
-        # CASO DE USO: CU04 - Gestionar Usuarios y Roles (Consulta y Filtros)
-        # =========================================================================
-        # Paso 1: El Administrador accede al panel de usuarios y define criterios de filtro
-        # Paso 1.1: IGestionUsuariosBoundary invoca listar_usuarios() en UsuarioAdminControl
+        # CU05: Gestionar Usuarios y Roles por Empresa (RBAC Multitenant)
         query = db.query(Usuario).options(joinedload(Usuario.sucursal))
         
-        # Paso 1.2: UsuarioAdminControl aplica los filtros sobre UsuarioEntity
+        if id_empresa:
+            query = query.filter(Usuario.id_empresa == id_empresa)
         if rol:
             query = query.filter(Usuario.rol == rol.upper())
         if estado:
@@ -48,15 +47,14 @@ class UsuarioAdminControl:
         if id_sucursal:
             query = query.filter(Usuario.id_sucursal == id_sucursal)
 
-        # Paso 1.3: UsuarioEntity ejecuta la consulta y retorna la colección de usuarios
         usuarios = query.order_by(Usuario.id_usuario.desc()).all()
 
-        # Paso 1.4: Mapear respuesta incluyendo el nombre descriptivo de la sucursal asignada
         resultado = []
         for u in usuarios:
             sucursal_nombre = u.sucursal.nombre_sucursal if u.sucursal else None
             resultado.append(UsuarioResponse(
                 id_usuario=u.id_usuario,
+                id_empresa=u.id_empresa,
                 email=u.email,
                 nombre_completo=u.nombre_completo,
                 telefono=getattr(u, 'telefono', None),
@@ -75,26 +73,21 @@ class UsuarioAdminControl:
         db: Session,
         request: UsuarioCreate,
         admin_id: int,
-        ip_origen: str = "127.0.0.1"
+        ip_origen: str = "127.0.0.1",
+        id_empresa: Optional[int] = None
     ) -> UsuarioResponse:
-        # =========================================================================
-        # CASO DE USO: CU04 - Gestionar Usuarios y Roles (Alta de Empleado)
-        # Diagrama de Comunicación: Com_CU04_Gestionar_Usuarios
-        # =========================================================================
-        # Paso 1: El Administrador ingresa datos del usuario (email, clave, rol, sucursal) en IGestionUsuariosBoundary
+        # CU05: Gestionar Usuarios y Roles por Empresa (RBAC Multitenant)
         email = request.email.strip().lower()
         rol_solicitado = request.rol.upper()
 
-        roles_validos = {"ADMINISTRADOR", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
+        roles_validos = {"SUPER_ADMIN", "ADMINISTRADOR", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
         if rol_solicitado not in roles_validos:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Rol '{rol_solicitado}' no es válido en la matriz RBAC."
             )
 
-        # Paso 1.1: IGestionUsuariosBoundary envía registrarOModificarUsuario(datosUsuario) a UsuarioAdminControl
-
-        # Paso 1.2: UsuarioAdminControl verifica si la sucursal física asignada existe y está activa
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.1: Verificar existencia y estado de la sucursal física asignada
         if request.id_sucursal and int(request.id_sucursal) > 0:
             sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == int(request.id_sucursal)).first()
             if not sucursal:
@@ -111,7 +104,7 @@ class UsuarioAdminControl:
         else:
             request.id_sucursal = None
 
-        # Paso 1.3: UsuarioAdminControl verifica unicidad del correo electrónico en UsuarioEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.2: Verificar unicidad del correo en UsuarioEntity
         usuario_existente = db.query(Usuario).filter(Usuario.email == email).first()
         if usuario_existente:
             raise HTTPException(
@@ -119,13 +112,16 @@ class UsuarioAdminControl:
                 detail="El correo electrónico ya se encuentra registrado por otro usuario."
             )
 
-        # Paso 1.4: Cifrado seguro de contraseña inicial mediante Bcrypt (factor=12) y persistencia en UsuarioEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.3: Cifrado seguro de contraseña con Bcrypt (factor=12) y persistencia
         hashed_pw = get_password_hash(request.password)
         partes = request.nombre_completo.strip().split(" ", 1)
         nombres = partes[0]
         apellidos = partes[1] if len(partes) > 1 else "."
 
+        empresa_asignada = request.id_empresa or id_empresa
+
         nuevo_usuario = Usuario(
+            id_empresa=empresa_asignada,
             email=email,
             password_hash=hashed_pw,
             nombres=nombres,
@@ -139,24 +135,25 @@ class UsuarioAdminControl:
         db.add(nuevo_usuario)
         db.flush()
 
-        # Paso 1.5: UsuarioEntity confirma la persistencia y retorna el id_usuario generado
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.4: UsuarioEntity confirma persistencia y genera id_usuario
         db.commit()
         db.refresh(nuevo_usuario)
 
-        # Paso 1.6: UsuarioAdminControl asienta el evento de auditoría en BitacoraEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.5: Registrar auditoría de alta en BitacoraEntity
         bitacora = BitacoraAcceso(
             id_usuario=admin_id,
             ip_origen=ip_origen,
             exitoso=True,
-            motivo=f"ALTA_USUARIO: Se creó usuario ID {nuevo_usuario.id_usuario} ({nuevo_usuario.email}) con rol {rol_solicitado}"
+            motivo=f"ALTA_USUARIO: Se creó usuario ID {nuevo_usuario.id_usuario} ({nuevo_usuario.email}) con rol {rol_solicitado} en Empresa #{empresa_asignada}"
         )
         db.add(bitacora)
         db.commit()
 
-        # Paso 1.7: UsuarioAdminControl devuelve el usuario registrado al Boundary
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.6: Retornar UsuarioResponse al Boundary
         sucursal_nombre = nuevo_usuario.sucursal.nombre_sucursal if nuevo_usuario.sucursal else None
         return UsuarioResponse(
             id_usuario=nuevo_usuario.id_usuario,
+            id_empresa=nuevo_usuario.id_empresa,
             email=nuevo_usuario.email,
             nombre_completo=nuevo_usuario.nombre_completo,
             telefono=getattr(nuevo_usuario, 'telefono', None),
@@ -177,11 +174,8 @@ class UsuarioAdminControl:
         admin_id: int,
         ip_origen: str = "127.0.0.1"
     ) -> UsuarioResponse:
-        # =========================================================================
-        # CASO DE USO: CU04 - Modificación de Datos y Roles de Usuario
-        # =========================================================================
-        # Paso 1: El Administrador edita campos del usuario y envía la petición
-        # Paso 1.1: IGestionUsuariosBoundary invoca modificarUsuario() en UsuarioAdminControl
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador edita campos del usuario y envía la petición
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.1: Recuperar usuario a modificar en UsuarioEntity
         usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         if not usuario:
             raise HTTPException(
@@ -189,7 +183,7 @@ class UsuarioAdminControl:
                 detail=f"Usuario con ID {id_usuario} no encontrado."
             )
 
-        # Paso 1.2: Validar sucursal si fue modificada
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.2: Validar sucursal asignada si fue actualizada
         if request.id_sucursal is not None:
             if request.id_sucursal > 0:
                 sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == request.id_sucursal).first()
@@ -199,7 +193,7 @@ class UsuarioAdminControl:
             else:
                 usuario.id_sucursal = None
 
-        # Paso 1.3: Validar rol si fue modificado
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.3: Validar rol asignado en la matriz RBAC
         if request.rol:
             rol_upper = request.rol.upper()
             roles_validos = {"ADMINISTRADOR", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
@@ -225,11 +219,11 @@ class UsuarioAdminControl:
             elif nuevo_estado == "INACTIVO":
                 usuario.bloqueado_hasta = None
 
-        # Paso 1.4: UsuarioAdminControl persiste los cambios en UsuarioEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.4: Persistir cambios de perfil y rol en UsuarioEntity
         db.commit()
         db.refresh(usuario)
 
-        # Paso 1.5: Registrar auditoría en BitacoraEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.5: Asentar auditoría de modificación en BitacoraEntity
         bitacora = BitacoraAcceso(
             id_usuario=admin_id,
             ip_origen=ip_origen,
@@ -239,7 +233,7 @@ class UsuarioAdminControl:
         db.add(bitacora)
         db.commit()
 
-        # Paso 1.6: Retornar usuario modificado
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.6: Retornar usuario actualizado al Boundary
         sucursal_nombre = usuario.sucursal.nombre_sucursal if usuario.sucursal else None
         return UsuarioResponse(
             id_usuario=usuario.id_usuario,
@@ -262,12 +256,8 @@ class UsuarioAdminControl:
         admin_id: int,
         ip_origen: str = "127.0.0.1"
     ) -> DesbloquearUsuarioResponse:
-        # =========================================================================
-        # CASO DE USO: CU04 - Desbloqueo Administrativo de Cuenta Bloqueada
-        # Diagrama de Comunicación: Com_CU04_Gestionar_Usuarios (Mensaje 2)
-        # =========================================================================
-        # Paso 2: El Administrador pulsa el botón 'Desbloquear Cuenta' en IGestionUsuariosBoundary
-        # Paso 2.1: IGestionUsuariosBoundary invoca desbloquearCuentaUsuario(usuario_id) en UsuarioAdminControl
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Administrador pulsa 'Desbloquear Cuenta' en IGestionUsuariosBoundary
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.1: IGestionUsuariosBoundary invoca desbloquear_cuenta(usuario_id)
         usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         if not usuario:
             raise HTTPException(
@@ -275,16 +265,16 @@ class UsuarioAdminControl:
                 detail=f"Usuario con ID {id_usuario} no existe en el sistema."
             )
 
-        # Paso 2.2: UsuarioAdminControl resetea intentos fallidos, limpia bloqueado_hasta y actualiza estado en UsuarioEntity
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.2: Resetear intentos fallidos a 0, limpiar bloqueo y fijar estado ACTIVO
         usuario.estado_cuenta = "ACTIVO"
         usuario.intentos_fallidos = 0
         usuario.bloqueado_hasta = None
 
-        # Paso 2.3: UsuarioEntity confirma actualización exitosa (estado='ACTIVO', intentos=0)
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.3: UsuarioEntity confirma actualización exitosa en base de datos
         db.commit()
         db.refresh(usuario)
 
-        # Registrar auditoría de seguridad
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.4: Registrar auditoría de desbloqueo administrativo en BitacoraEntity
         bitacora = BitacoraAcceso(
             id_usuario=admin_id,
             ip_origen=ip_origen,
@@ -294,8 +284,7 @@ class UsuarioAdminControl:
         db.add(bitacora)
         db.commit()
 
-        # Paso 2.4: UsuarioAdminControl confirma la reactivación al Boundary
-        # Paso 2.5: IGestionUsuariosBoundary actualiza el badge a verde [ACTIVO]
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.5: Retornar confirmación de reactivación a IGestionUsuariosBoundary
         return DesbloquearUsuarioResponse(
             id_usuario=usuario.id_usuario,
             email=usuario.email,
@@ -313,6 +302,7 @@ class UsuarioAdminControl:
         minutos: int = 30,
         ip_origen: str = "127.0.0.1"
     ) -> DesbloquearUsuarioResponse:
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Administrador solicita bloqueo preventivo de cuenta
         usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         if not usuario:
             raise HTTPException(
@@ -325,6 +315,7 @@ class UsuarioAdminControl:
                 detail="No puede bloquear su propia cuenta de Administrador."
             )
 
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.1: Establecer estado BLOQUEADO_POR_INTENTOS y ventana de tiempo
         usuario.estado_cuenta = "BLOQUEADO_POR_INTENTOS"
         usuario.intentos_fallidos = max(usuario.intentos_fallidos, settings.MAX_LOGIN_ATTEMPTS)
         usuario.bloqueado_hasta = utc_now() + timedelta(minutes=minutos)
@@ -332,6 +323,7 @@ class UsuarioAdminControl:
         db.commit()
         db.refresh(usuario)
 
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.2: Asentar auditoría de bloqueo en BitacoraEntity
         bitacora = BitacoraAcceso(
             id_usuario=admin_id,
             ip_origen=ip_origen,
@@ -341,6 +333,7 @@ class UsuarioAdminControl:
         db.add(bitacora)
         db.commit()
 
+        # CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.3: Confirmar bloqueo a IGestionUsuariosBoundary
         return DesbloquearUsuarioResponse(
             id_usuario=usuario.id_usuario,
             email=usuario.email,

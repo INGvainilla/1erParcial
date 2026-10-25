@@ -1892,9 +1892,12 @@ export class RecompensasComponent implements OnInit {
     }
 
     if (this.auth.isAuthenticated()) {
+      // CU21: Gestionar Fidelización Gamificada, Paso Consulta: accederSeccionRecompensas()
+      // CU21: Gestionar Fidelización Gamificada, Paso Consulta 1.1: UI -> Ctrl : getGamificacionPerfil()
       this.api.getGamificacionPerfil().subscribe({
         next: (res: any) => {
           if (res) {
+            // CU21: Gestionar Fidelización Gamificada, Paso Consulta 1.2: renderiza tarjeta de membresía, medallas y barra de progreso
             this.perfil = {
               ...res,
               progreso_siguiente_nivel_pct: res.progreso_nivel_pct ?? res.progreso_siguiente_nivel_pct ?? 0,
@@ -2013,6 +2016,7 @@ export class RecompensasComponent implements OnInit {
     });
   }
 
+  // CU21: Gestionar Fidelización Gamificada, Paso 2: Selecciona recompensa y solicita canje
   canjear(rec: Recompensa): void {
     if (!this.auth.isAuthenticated()) {
       this.toast.info('Sesión requerida', 'Debes iniciar sesión para canjear recompensas.');
@@ -2026,9 +2030,11 @@ export class RecompensasComponent implements OnInit {
     }
 
     this.isCanjeando = true;
+    // CU21: Gestionar Fidelización Gamificada, Paso 2.1: canjearRecompensa(codigo_recompensa)
     this.api.canjearRecompensa(rec.codigo).subscribe({
       next: (res: any) => {
         this.isCanjeando = false;
+        // CU21: Gestionar Fidelización Gamificada, Paso 2.9: visualiza cupón generado y saldo restante
         this.cuponEmitido = res;
         this.toast.success('¡Canje exitoso!', '¡Recompensa canjeada con éxito!');
         this.cargarDatos();

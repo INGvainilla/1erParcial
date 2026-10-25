@@ -21,7 +21,8 @@ ciudades_router = APIRouter(prefix="/ciudades", tags=["Gestión de Ciudades"])
 # --- ENDPOINTS CIUDADES ---
 @ciudades_router.get("", response_model=List[CiudadResponse])
 def listar_ciudades_endpoint(db: Session = Depends(get_db)):
-    # Paso 1: Consulta del directorio de ciudades
+    # CU05: Gestionar Ciudades y Sucursales, Paso 1: Administrador consulta catálogo de ciudades operativas
+    # CU05: Gestionar Ciudades y Sucursales, Paso 1.1: Invocación a SucursalControl.listar_ciudades()
     return SucursalControl.listar_ciudades(db)
 
 @ciudades_router.post("", response_model=CiudadResponse, status_code=status.HTTP_201_CREATED)
@@ -30,7 +31,8 @@ def crear_ciudad_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # Paso 1: Administrador registra nueva ciudad
+    # CU05: Gestionar Ciudades y Sucursales, Paso 2: Administrador registra nueva ciudad de cobertura
+    # CU05: Gestionar Ciudades y Sucursales, Paso 2.1: Invocación a SucursalControl.crear_ciudad()
     return SucursalControl.crear_ciudad(db, request)
 
 # --- ENDPOINTS SUCURSALES (CU05) ---
@@ -40,14 +42,13 @@ def listar_sucursales_endpoint(
     estado: Optional[str] = Query(None, description="Filtrar por estado operativo"),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU05 - Consultar Sucursales
-    # Paso 1: Cliente u operador solicita listado de tiendas físicas con filtros
-    # Paso 1.1: Invocación a SucursalControl.listar_sucursales()
+    # CU05: Gestionar Ciudades y Sucursales, Paso 3: Consultar sucursales físicas con filtros geográficos u operativos
+    # CU05: Gestionar Ciudades y Sucursales, Paso 3.1: Invocación a SucursalControl.listar_sucursales()
     return SucursalControl.listar_sucursales(db, id_ciudad=id_ciudad, estado=estado)
 
 @router.get("/{id_sucursal}", response_model=SucursalResponse)
 def obtener_sucursal_endpoint(id_sucursal: int, db: Session = Depends(get_db)):
-    # Paso 1: Detalle de sucursal específica con ubicación GPS y probadores
+    # CU05: Gestionar Ciudades y Sucursales, Paso 3.2: Consultar detalle individual con coordenadas GPS y probadores
     return SucursalControl.obtener_sucursal(db, id_sucursal=id_sucursal)
 
 @router.post("", response_model=SucursalResponse, status_code=status.HTTP_201_CREATED)
@@ -56,9 +57,8 @@ def registrar_sucursal_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU05 - Alta de Sucursal Física
-    # Paso 1: Administrador envía formulario de apertura de sucursal (GPS, probadores)
-    # Paso 1.1: Invocación a SucursalControl.registrar_sucursal()
+    # CU05: Gestionar Ciudades y Sucursales, Paso 4: Administrador envía formulario de apertura de sucursal física
+    # CU05: Gestionar Ciudades y Sucursales, Paso 4.1: Invocación a SucursalControl.registrar_sucursal()
     return SucursalControl.registrar_sucursal(db, request)
 
 @router.put("/{id_sucursal}", response_model=SucursalResponse)
@@ -68,7 +68,6 @@ def modificar_sucursal_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU05 - Modificación de Sucursal
-    # Paso 1: Administrador actualiza horarios o capacidad de probadores
-    # Paso 1.1: Invocación a SucursalControl.modificar_sucursal()
+    # CU05: Gestionar Ciudades y Sucursales, Paso 5: Administrador actualiza horarios operativos o probadores
+    # CU05: Gestionar Ciudades y Sucursales, Paso 5.1: Invocación a SucursalControl.modificar_sucursal()
     return SucursalControl.modificar_sucursal(db, id_sucursal=id_sucursal, request=request)

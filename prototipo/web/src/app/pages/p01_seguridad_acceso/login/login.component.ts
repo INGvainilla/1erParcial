@@ -1249,37 +1249,47 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
+  // CU01: Autenticar Usuario (Login RBAC), Paso 1: El actor ingresa credenciales (email y password) en la interfaz ILoginBoundary
   onLogin(): void {
     this.loginServerError = '';
 
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.0: Validar formato de campos en el cliente
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       this.focusFirstInvalidField('login');
       return;
     }
 
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.0.1: Extraer y sanitizar credenciales de acceso
     const { email, password, recordar_sesion } = this.loginForm.value;
     const cleanEmail = email.trim().toLowerCase();
 
     this.loading = true;
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.1: ILoginBoundary invoca el método login() de AuthService
     this.auth.login({
       email: cleanEmail,
       password,
       recordar_sesion
     }).subscribe({
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.7: Recibir token JWT y perfil del usuario autenticado
       next: (res) => {
         this.loading = false;
+        // CU01: Autenticar Usuario (Login RBAC), Paso 1.8: Notificar autenticación exitosa mediante toast UI
         this.toast.success('Bienvenido', `Sesión iniciada correctamente como ${res.nombres} (${res.rol})`);
+        // CU01: Autenticar Usuario (Login RBAC), Paso 1.9: Redirigir al catálogo / dashboard según rol
         this.router.navigate(['/catalogo']);
         this.cdr.markForCheck();
       },
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5: Flujo alternativo - Gestión de errores de autenticación
       error: (err) => {
         this.loading = false;
         const status = err.status;
         const detail = err.error?.detail;
 
+        // CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5.a: Manejo de HTTP 401 (Contraseña o email erróneo)
         if (status === 401) {
           this.loginServerError = detail || 'Credenciales inválidas. Verifique su correo o contraseña.';
+        // CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5.b: Manejo de HTTP 403 (Bloqueo preventivo por 5 intentos fallidos)
         } else if (status === 403) {
           this.loginServerError = detail || 'Cuenta bloqueada preventivamente tras superar los intentos fallidos permitidos.';
         } else if (status === 0) {
@@ -1288,6 +1298,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.loginServerError = detail || 'Error de autenticación. Verifique sus credenciales.';
         }
 
+        // CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5.c: Mostrar alerta de error en la interfaz
         this.toast.error('Acceso denegado', this.loginServerError);
         this.cdr.markForCheck();
       }
@@ -1316,16 +1327,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.regForm.get('confirmar_password')?.updateValueAndValidity();
   }
 
+  // CU02: Registrar Cliente (Sign Up), Paso 1: El cliente no autenticado ingresa datos personales en IRegistroBoundary
   onRegister(): void {
     this.registerServerError = '';
     this.emailExistsError = '';
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.0: Validar formulario de registro en el cliente
     if (this.regForm.invalid) {
       this.regForm.markAllAsTouched();
       this.focusFirstInvalidField('reg');
       return;
     }
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.0.1: Preparar DTO con nombres capitalizados y email normalizado
     const { nombres, apellidos, email, password } = this.regForm.value;
     const payload = {
       nombres: capitalizeWords(nombres),
@@ -1335,16 +1349,21 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
 
     this.loading = true;
+    // CU02: Registrar Cliente (Sign Up), Paso 1.1: IRegistroBoundary invoca register() en AuthService
     this.auth.register(payload).subscribe({
+      // CU02: Registrar Cliente (Sign Up), Paso 1.7: Recibir token JWT y confirmar alta exitosa
       next: (res) => {
         this.loading = false;
+        // CU02: Registrar Cliente (Sign Up), Paso 1.8: Notificar bienvenida al cliente
         this.toast.success(
           'Registro Exitoso (CU02)',
           `Bienvenido ${res.nombres}. Su cuenta de cliente ha sido activada.`
         );
+        // CU02: Registrar Cliente (Sign Up), Paso 1.9: Redirigir al catálogo de productos
         this.router.navigate(['/catalogo']);
         this.cdr.markForCheck();
       },
+      // CU02: Registrar Cliente (Sign Up), Paso 1.3: Flujo alternativo - Correo duplicado o error de validación
       error: (err) => {
         this.loading = false;
         const detail = err.error?.detail || '';
@@ -1371,9 +1390,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // CU03: Recuperar Contraseña (Token OTP), Paso 1: Usuario ingresa su correo en IRecuperarClaveBoundary
   onSolicitarOtp(): void {
     this.otpServerError = '';
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 1.0: Validar formato de correo en el cliente
     if (this.otpRequestForm.invalid) {
       this.otpRequestForm.markAllAsTouched();
       const el = document.getElementById('otp-email');
@@ -1381,10 +1402,13 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 1.0.1: Sanitizar dirección de correo
     const email = this.otpRequestForm.get('email')?.value.trim().toLowerCase();
     this.loading = true;
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 1.1: IRecuperarClaveBoundary invoca requestOtp() en AuthService
     this.auth.requestOtp(email).subscribe({
+      // CU03: Recuperar Contraseña (Token OTP), Paso 1.6: Recibir confirmación de emisión y avanzar al paso 2
       next: (res) => {
         this.loading = false;
         this.otpSimulado = res.codigo_otp_simulado || '';
@@ -1424,9 +1448,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  // CU03: Recuperar Contraseña (Token OTP), Paso 2: Usuario introduce el código de 6 dígitos y la nueva contraseña
   onRestablecerOtp(): void {
     this.otpServerError = '';
 
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.0: Validar código y fortaleza de la nueva clave
     if (this.otpResetForm.invalid) {
       this.otpResetForm.markAllAsTouched();
       this.focusFirstInvalidField('otp');
@@ -1437,29 +1463,28 @@ export class LoginComponent implements OnInit, OnDestroy {
     const { codigo_otp, nueva_password } = this.otpResetForm.value;
 
     this.loading = true;
+    // CU03: Recuperar Contraseña (Token OTP), Paso 2.1: IRecuperarClaveBoundary invoca resetPasswordOtp() en AuthService
     this.auth.resetPasswordOtp({
       email,
       codigo_otp: codigo_otp.trim(),
       nueva_password
     }).subscribe({
+      // CU03: Recuperar Contraseña (Token OTP), Paso 2.7: Confirmación de clave cambiada y retorno al panel de login
       next: () => {
         this.loading = false;
         this.toast.success(
           'Contraseña Restablecida (CU03)',
           'Ahora puede iniciar sesión con su nueva clave.'
         );
-        this.activeTab = 'login';
-        this.loginForm.patchValue({
-          email,
-          password: nueva_password
-        });
+        this.selectTab('login');
+        this.otpStep = 1;
+        this.otpRequestForm.reset();
         this.otpResetForm.reset();
-        this.otpSimulado = '';
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
-        this.otpServerError = err.error?.detail || 'Error al validar OTP. El código puede ser inválido o haber expirado.';
+        this.otpServerError = err.error?.detail || 'Error al validar OTP o actualizar contraseña.';
         this.toast.error('Error OTP', this.otpServerError);
         this.cdr.markForCheck();
       }

@@ -22,12 +22,14 @@ export class FashionApiService {
   // ==========================================
   // CU04: GESTIÓN DE USUARIOS Y ROLES (RBAC)
   // ==========================================
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 1: Administrador consulta lista de personal
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(`${this.apiUrl}/usuarios`, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 2: Registrar colaborador con rol jerárquico y sucursal
   crearUsuario(data: {
     email: string;
     password: string;
@@ -41,6 +43,7 @@ export class FashionApiService {
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Modificar datos de perfil, rol o sucursal
   modificarUsuario(idUsuario: number, data: {
     nombre_completo?: string;
     telefono?: string;
@@ -53,12 +56,14 @@ export class FashionApiService {
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Desbloqueo administrativo de cuenta bloqueada
   desbloquearUsuario(idUsuario: number): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}/desbloquear`, {}, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Bloqueo preventivo o administrativo de cuenta
   bloquearUsuario(idUsuario: number, minutos: number = 30): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/usuarios/${idUsuario}/bloquear?minutos=${minutos}`, {}, {
       headers: this.auth.getAuthHeaders()
@@ -74,20 +79,24 @@ export class FashionApiService {
   // ==========================================
   // CU05: GESTIÓN DE SUCURSALES Y CIUDADES (GPS)
   // ==========================================
+  // CU05: Gestionar Ciudades y Sucursales, Paso 1: Consultar catálogo de ciudades operativas
   getCiudades(): Observable<Ciudad[]> {
     return this.http.get<Ciudad[]>(`${this.apiUrl}/ciudades`);
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 2: Listar sucursales físicas con datos GPS y probadores
   getSucursales(): Observable<Sucursal[]> {
     return this.http.get<Sucursal[]>(`${this.apiUrl}/sucursales`);
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 3: Registrar nueva sucursal física georreferenciada
   createSucursal(sucursal: any): Observable<Sucursal> {
     return this.http.post<Sucursal>(`${this.apiUrl}/sucursales`, sucursal, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 4: Actualizar parámetros operativos y probadores de sucursal
   updateSucursal(idSucursal: number, data: any): Observable<Sucursal> {
     return this.http.put<Sucursal>(`${this.apiUrl}/sucursales/${idSucursal}`, data, {
       headers: this.auth.getAuthHeaders()
@@ -97,18 +106,22 @@ export class FashionApiService {
   // ==========================================
   // CU06: CATÁLOGO DE PRODUCTOS Y MODA
   // ==========================================
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 1: Consultar catálogo maestro de indumentaria
   getProductos(): Observable<Producto[]> {
     return this.http.get<Producto[]>(`${this.apiUrl}/productos`);
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 2: Obtener categorías taxonómicas de prendas
   getCategorias(): Observable<Categoria[]> {
     return this.http.get<Categoria[]>(`${this.apiUrl}/productos/categorias`);
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 3: Obtener marcas registradas de moda
   getMarcas(): Observable<Marca[]> {
     return this.http.get<Marca[]>(`${this.apiUrl}/productos/marcas`);
   }
 
+  // CU06: Gestionar Productos y Atributos de Moda, Paso 4: Registrar ficha técnica, SKU, tallas y colores Hex
   createProducto(data: any): Observable<Producto> {
     return this.http.post<Producto>(`${this.apiUrl}/productos`, data, {
       headers: this.auth.getAuthHeaders()
@@ -118,16 +131,19 @@ export class FashionApiService {
   // ==========================================
   // CU07: TEMPORADAS Y COLECCIONES
   // ==========================================
+  // CU07: Gestionar Temporadas y Colecciones, Paso 1: Consultar campañas y temporadas estacionales
   getTemporadas(): Observable<Temporada[]> {
     return this.http.get<Temporada[]>(`${this.apiUrl}/temporadas`);
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 2: Programar nueva temporada comercial con fechas de vigencia
   createTemporada(data: any): Observable<Temporada> {
     return this.http.post<Temporada>(`${this.apiUrl}/temporadas`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 3: Modificar vigencia, estado o políticas de liquidación
   updateTemporada(idTemporada: number, data: any): Observable<Temporada> {
     return this.http.put<Temporada>(`${this.apiUrl}/temporadas/${idTemporada}`, data, {
       headers: this.auth.getAuthHeaders()
@@ -137,18 +153,21 @@ export class FashionApiService {
   // ==========================================
   // CU08: PROVEEDORES TEXTILES (NIT ÚNICO)
   // ==========================================
+  // CU08: Gestionar Proveedores Textiles, Paso 1.1: consultarCatalogoProveedores()
   getProveedores(): Observable<Proveedor[]> {
     return this.http.get<Proveedor[]>(`${this.apiUrl}/proveedores`, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1.1: registrarProveedor(datosProv)
   createProveedor(data: any): Observable<Proveedor> {
     return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, data, {
       headers: this.auth.getAuthHeaders()
     });
   }
 
+  // CU08: Gestionar Proveedores Textiles, Paso 1.4: actualizarRegistroProveedor(idProveedor, datosProv)
   updateProveedor(idProveedor: number, data: any): Observable<Proveedor> {
     return this.http.put<Proveedor>(`${this.apiUrl}/proveedores/${idProveedor}`, data, {
       headers: this.auth.getAuthHeaders()
@@ -158,6 +177,7 @@ export class FashionApiService {
   // ==========================================
   // CU09: INVENTARIO MULTI-SUCURSAL Y CPP
   // ==========================================
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
   getInventario(idSucursal?: number): Observable<InventarioItem[]> {
     let params = new HttpParams();
     if (idSucursal) {
@@ -169,6 +189,7 @@ export class FashionApiService {
     });
   }
 
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
   registrarEntradaCompra(data: {
     id_sucursal: number;
     id_producto: number;
@@ -183,6 +204,7 @@ export class FashionApiService {
     });
   }
 
+  // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.8: mostrar comprobante de kardex con nuevo CPP
   getKardex(idInventario: number): Observable<KardexItem[]> {
     const params = new HttpParams().set('id_inventario', idInventario.toString());
     return this.http.get<KardexItem[]>(`${this.apiUrl}/inventario/kardex`, {
@@ -194,6 +216,7 @@ export class FashionApiService {
   // ==========================================
   // CU10: CONSULTA OMNICANAL Y DISPONIBILIDAD
   // ==========================================
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
   getCatalogo(filtros?: {
     id_categoria?: number;
     id_sucursal?: number;

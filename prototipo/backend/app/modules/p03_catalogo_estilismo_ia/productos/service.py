@@ -92,22 +92,33 @@ class ProductoControl:
         productos = query.order_by(Producto.id_producto.desc()).all()
         resultado = []
         for p in productos:
-            colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
+            colores_resp = [
+                ColorResponse(
+                    id_color=c.id_color,
+                    color_nombre=c.color_nombre,
+                    codigo_hex=c.codigo_hex,
+                    codigo_hex_secundario=getattr(c, 'codigo_hex_secundario', None)
+                ) for c in p.colores
+            ]
             tallas_resp = [
                 TallaResponse(
                     id_talla=t.id_talla,
                     talla=t.talla,
                     precio=t.precio if getattr(t, 'precio', None) is not None else calcular_precio_talla(p.precio_base, t.talla),
-                    factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00)
+                    factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00),
+                    medidas_cm=getattr(t, 'medidas_cm', None)
                 )
                 for t in p.tallas
             ]
             resultado.append(ProductoResponse(
                 id_producto=p.id_producto,
+                id_empresa=getattr(p, 'id_empresa', None),
                 codigo_sku_base=p.codigo_sku_base,
                 nombre=p.nombre,
                 descripcion=p.descripcion,
                 precio_base=p.precio_base,
+                composicion_textil=getattr(p, 'composicion_textil', None),
+                medidas_antropometricas=getattr(p, 'medidas_antropometricas', None),
                 id_categoria=p.id_categoria,
                 nombre_categoria=p.categoria.nombre_categoria if p.categoria else None,
                 id_marca=p.id_marca,
@@ -125,25 +136,37 @@ class ProductoControl:
 
     @staticmethod
     def obtener_producto(db: Session, id_producto: int) -> ProductoResponse:
+        # CU19: Visualizar Prenda en Vestidor Virtual con RA, Paso 1.2: Ctrl invoca ProdEnt.obtenerDatosPrenda(id_producto)
         p = db.query(Producto).filter(Producto.id_producto == id_producto).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Producto con ID {id_producto} no encontrado.")
-        colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in p.colores]
+        colores_resp = [
+            ColorResponse(
+                id_color=c.id_color,
+                color_nombre=c.color_nombre,
+                codigo_hex=c.codigo_hex,
+                codigo_hex_secundario=getattr(c, 'codigo_hex_secundario', None)
+            ) for c in p.colores
+        ]
         tallas_resp = [
             TallaResponse(
                 id_talla=t.id_talla,
                 talla=t.talla,
                 precio=t.precio if getattr(t, 'precio', None) is not None else calcular_precio_talla(p.precio_base, t.talla),
-                factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00)
+                factor=FACTORES_TALLA.get(t.talla.strip().upper(), 1.00),
+                medidas_cm=getattr(t, 'medidas_cm', None)
             )
             for t in p.tallas
         ]
         return ProductoResponse(
             id_producto=p.id_producto,
+            id_empresa=getattr(p, 'id_empresa', None),
             codigo_sku_base=p.codigo_sku_base,
             nombre=p.nombre,
             descripcion=p.descripcion,
             precio_base=p.precio_base,
+            composicion_textil=getattr(p, 'composicion_textil', None),
+            medidas_antropometricas=getattr(p, 'medidas_antropometricas', None),
             id_categoria=p.id_categoria,
             nombre_categoria=p.categoria.nombre_categoria if p.categoria else None,
             id_marca=p.id_marca,
@@ -160,16 +183,8 @@ class ProductoControl:
 
     @staticmethod
     def guardar_producto(db: Session, request: ProductoCreate) -> ProductoResponse:
-        # =========================================================================
-        # CASO DE USO: CU06 - Gestionar Productos y Atributos de Moda (Alta de Prenda)
-        # Diagrama de Comunicación: Com_CU06_Gestionar_Productos
-        # =========================================================================
-        # Paso 1: El Administrador envía la ficha técnica (SKU, nombre, tallas[], colores[], modelo 3D) en IProductoBoundary
         sku_base = request.codigo_sku_base.strip().upper()
 
-        # Paso 1.1: IProductoBoundary invoca guardarProducto(datosProducto) en ProductoControl
-
-        # Paso 1.2: ProductoControl valida unicidad de codigo_sku_base en ProductoEntity
         sku_existente = db.query(Producto).filter(Producto.codigo_sku_base == sku_base).first()
         if sku_existente:
             raise HTTPException(
@@ -177,7 +192,6 @@ class ProductoControl:
                 detail=f"El SKU base '{sku_base}' ya se encuentra registrado en el catálogo."
             )
 
-        # Validar existencia de categoría y marca
         cat = db.query(Categoria).filter(Categoria.id_categoria == request.id_categoria).first()
         if not cat:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categoría no encontrada.")
@@ -185,8 +199,8 @@ class ProductoControl:
         if not mrc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Marca no encontrada.")
 
-        # Paso 1.3: ProductoControl crea el registro base en ProductoEntity
         nuevo_producto = Producto(
+            id_empresa=request.id_empresa,
             id_categoria=request.id_categoria,
             id_marca=request.id_marca,
             id_temporada=request.id_temporada,
@@ -194,6 +208,8 @@ class ProductoControl:
             codigo_sku_base=sku_base,
             nombre=request.nombre.strip(),
             descripcion=request.descripcion.strip() if request.descripcion else None,
+            composicion_textil=request.composicion_textil.strip() if request.composicion_textil else None,
+            medidas_antropometricas=request.medidas_antropometricas,
             precio_base=Decimal(str(request.precio_base)),
             imagen_principal=request.imagen_principal,
             modelo_3d_glb=request.modelo_3d_glb,
@@ -202,21 +218,19 @@ class ProductoControl:
         db.add(nuevo_producto)
         db.flush()
 
-        # Paso 1.4: ProductoEntity retorna producto_id generado
         producto_id = nuevo_producto.id_producto
 
-        # Paso 1.5: ProductoControl asocia variantes de colores en ColorEntity
         colores_creados = []
         for c in request.colores:
             color_obj = ProductoColor(
                 id_producto=producto_id,
                 color_nombre=c.color_nombre.strip(),
-                codigo_hex=c.codigo_hex.strip().upper()
+                codigo_hex=c.codigo_hex.strip().upper(),
+                codigo_hex_secundario=c.codigo_hex_secundario.strip().upper() if c.codigo_hex_secundario else None
             )
             db.add(color_obj)
             colores_creados.append(color_obj)
 
-        # Paso 1.6: ProductoControl asocia variantes de tallas en TallaEntity
         tallas_creadas = []
         tallas_set = set()
         for t in request.tallas:
@@ -235,17 +249,25 @@ class ProductoControl:
         db.commit()
         db.refresh(nuevo_producto)
 
-        # Paso 1.7: ProductoControl notifica producto guardado con sus variantes
-        # Paso 1.8: IProductoBoundary renderiza la ficha confirmada con variantes y visualizador 3D
-        colores_resp = [ColorResponse(id_color=c.id_color, color_nombre=c.color_nombre, codigo_hex=c.codigo_hex) for c in colores_creados]
-        tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla) for t in tallas_creadas]
+        colores_resp = [
+            ColorResponse(
+                id_color=c.id_color,
+                color_nombre=c.color_nombre,
+                codigo_hex=c.codigo_hex,
+                codigo_hex_secundario=getattr(c, 'codigo_hex_secundario', None)
+            ) for c in colores_creados
+        ]
+        tallas_resp = [TallaResponse(id_talla=t.id_talla, talla=t.talla, precio=t.precio, medidas_cm=getattr(t, 'medidas_cm', None)) for t in tallas_creadas]
         
         return ProductoResponse(
             id_producto=nuevo_producto.id_producto,
+            id_empresa=nuevo_producto.id_empresa,
             codigo_sku_base=nuevo_producto.codigo_sku_base,
             nombre=nuevo_producto.nombre,
             descripcion=nuevo_producto.descripcion,
             precio_base=nuevo_producto.precio_base,
+            composicion_textil=nuevo_producto.composicion_textil,
+            medidas_antropometricas=nuevo_producto.medidas_antropometricas,
             id_categoria=nuevo_producto.id_categoria,
             nombre_categoria=cat.nombre_categoria,
             id_marca=nuevo_producto.id_marca,
@@ -262,7 +284,8 @@ class ProductoControl:
 
     @staticmethod
     def modificar_producto(db: Session, id_producto: int, request: ProductoUpdate) -> ProductoResponse:
-        # Paso 1: Edición de campos de producto
+        # CU06: Gestionar Productos y Atributos de Moda, Paso 2: Administrador actualiza especificaciones de la prenda
+        # CU06: Gestionar Productos y Atributos de Moda, Paso 2.1: Recuperar prenda en ProductoEntity y actualizar atributos
         p = db.query(Producto).filter(Producto.id_producto == id_producto).first()
         if not p:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Producto {id_producto} no encontrado.")
@@ -281,6 +304,10 @@ class ProductoControl:
             p.id_temporada = request.id_temporada if request.id_temporada > 0 else None
         if request.id_proveedor is not None:
             p.id_proveedor = request.id_proveedor if request.id_proveedor > 0 else None
+        if request.composicion_textil is not None:
+            p.composicion_textil = request.composicion_textil.strip() if request.composicion_textil else None
+        if request.medidas_antropometricas is not None:
+            p.medidas_antropometricas = request.medidas_antropometricas
         if request.imagen_principal:
             p.imagen_principal = request.imagen_principal
         if request.modelo_3d_glb:
@@ -288,13 +315,17 @@ class ProductoControl:
         if request.estado:
             p.estado = request.estado.upper()
 
-        # Si se envían nuevos colores, reemplazar
+        # CU06: Gestionar Productos y Atributos de Moda, Paso 2.2: Reemplazar colección de colores Hex y tallas si fueron editadas
         if request.colores is not None:
             db.query(ProductoColor).filter(ProductoColor.id_producto == id_producto).delete()
             for c in request.colores:
-                db.add(ProductoColor(id_producto=id_producto, color_nombre=c.color_nombre.strip(), codigo_hex=c.codigo_hex.strip().upper()))
+                db.add(ProductoColor(
+                    id_producto=id_producto,
+                    color_nombre=c.color_nombre.strip(),
+                    codigo_hex=c.codigo_hex.strip().upper(),
+                    codigo_hex_secundario=c.codigo_hex_secundario.strip().upper() if c.codigo_hex_secundario else None
+                ))
 
-        # Si se envían nuevas tallas, reemplazar
         if request.tallas is not None:
             db.query(ProductoTalla).filter(ProductoTalla.id_producto == id_producto).delete()
             tallas_set = set()
@@ -308,6 +339,7 @@ class ProductoControl:
             for t in p.tallas:
                 t.precio = calcular_precio_talla(p.precio_base, t.talla)
 
+        # CU06: Gestionar Productos y Atributos de Moda, Paso 2.3: Persistir cambios y retornar ficha técnica actualizada
         db.commit()
         db.refresh(p)
         return ProductoControl.obtener_producto(db, id_producto)

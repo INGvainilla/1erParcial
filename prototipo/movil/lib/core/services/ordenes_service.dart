@@ -5,6 +5,7 @@ import 'api_service.dart';
 class OrdenesService {
   final ApiService _api = ApiService();
 
+  // CU14: Procesar Compra Digital y Checkout, Paso 1.1: crear_orden_checkout(dtoCheckout, id_usuario)
   Future<Orden> checkout({
     required String modalidadEntrega,
     int? idSucursal,

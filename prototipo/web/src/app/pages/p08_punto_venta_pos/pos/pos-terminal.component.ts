@@ -2866,6 +2866,8 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.isLoadingScan = true;
     this.cdr.detectChanges();
 
+    // CU15: Registrar Venta Presencial en Caja (POS), Paso 1: Escanear código SKU o ingresar nombre
+    // CU15: Registrar Venta Presencial en Caja (POS), Paso 1.1: buscar_producto_por_sku(sku, sucursal_id)
     this.posService.lookupProducto(this.skuSearchTerm, Number(this.selectedSucursalId)).subscribe({
       next: (resp) => {
         this.isLoadingScan = false;
@@ -2873,6 +2875,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         this.selectedTalla = resp.tallas[0] || 'M';
         this.selectedColor = resp.colores[0] || 'Único';
         this.selectedQty = 1;
+        // CU15: Registrar Venta Presencial en Caja (POS), Paso 1.7: muestra prenda en grilla con selector de variante
         this.showVariantModal = true;
         this.skuSearchTerm = '';
         this.cdr.detectChanges();
@@ -3043,6 +3046,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
 
     this.isProcessingSale = true;
 
+    // CU15: Registrar Venta Presencial en Caja (POS), Paso 2: Cobrar orden (Efectivo / Tarjeta / QR)
     const payload: PosVentaCreate = {
       nombre_cliente: this.nombreCliente.trim() || 'Cliente Mostrador',
       nit_cliente: this.nitCliente.trim() || '0',
@@ -3060,10 +3064,12 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       }))
     };
 
+    // CU15: Registrar Venta Presencial en Caja (POS), Paso 2.1: procesar_venta_pos(dtoVentaPOS)
     this.posService.procesarVenta(payload).subscribe({
       next: (ticketResp) => {
         this.isProcessingSale = false;
         this.ultimoTicket = ticketResp;
+        // CU15: Registrar Venta Presencial en Caja (POS), Paso 2.9: emite ticket fiscal e inicializa nueva venta
         this.showTicketModal = true;
         this.toast.success('Venta Exitosa', `¡Venta completada con éxito! Factura: ${ticketResp.numero_factura}`);
       },
@@ -3101,6 +3107,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.showDevolucionModal = false;
   }
 
+  // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1: Cajero -> UI : Ingresa código de ticket y prenda ("POS-2026-0042")
   consultarTicketDevolucion() {
     if (!this.ticketDevSearchTerm.trim()) {
       this.toast.warning('Ticket Requerido', 'Ingrese o escanee el número de ticket o factura.');
@@ -3108,6 +3115,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     }
 
     this.isLoadingTicketDev = true;
+    // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.2 & 1.3: Ctrl -> VentaEnt : obtenerDatosVentaYValidarPlazo(id_venta, max_dias = 14) / retorna venta_valida, fecha, cpp_historico
     this.posService.consultarTicketDevolucion(this.ticketDevSearchTerm).subscribe({
       next: (resp) => {
         this.isLoadingTicketDev = false;
@@ -3149,6 +3157,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.diferenciaCambio = Math.round((this.precioNuevaVariante - this.selectedDevItem.precio_unitario) * 100) / 100;
   }
 
+  // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.1: UI -> Ctrl : procesar_devolucion(id_venta, id_variante, cantidad, motivo, resolucion)
   confirmarDevolucion() {
     if (!this.selectedDevItem || !this.ticketDevData) {
       this.toast.warning('Datos Incompletos', 'Seleccione la prenda que desea devolver.');
@@ -3186,6 +3195,8 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     this.posService.procesarDevolucion(payload, this.selectedSucursalId).subscribe({
       next: (ticketResp) => {
         this.isProcessingDev = false;
+        // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.12: Ctrl --> UI : entrega resumen de devolucion y ticket fiscal
+        // CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.13: UI --> Cajero : imprime ticket fiscal y confirma operacion
         this.ultimoTicketDev = ticketResp;
         this.showDevolucionModal = false;
         this.showDevReceiptModal = true;

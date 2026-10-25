@@ -482,6 +482,7 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
     }
   }
 
+  // CU12: Preparar y Atender Reserva Presencial, Paso 3.1: Escanear o digitar qr_texto
   procesarCodigoManual(): void {
     const codigo = this.codigoManual.trim();
     if (!codigo) return;
@@ -490,10 +491,12 @@ export class EscanerQrComponent implements OnInit, OnDestroy {
     this.lastResult = null;
     this.cdr.detectChanges();
 
+    // CU12: Preparar y Atender Reserva Presencial, Paso 3.2: atender_reserva_qr(qr_texto, sucursal_id)
     this.encargadoService.escanearQr(codigo).subscribe({
       next: (reserva) => {
         this.isProcessing = false;
         this.codigoManual = '';
+        // CU12: Preparar y Atender Reserva Presencial, Paso 3.8: muestra prendas validadas y boton 'Derivar a POS'
         this.lastResult = {
           type: 'success',
           title: '¡Reserva Atendida Exitosamente!',

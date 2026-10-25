@@ -26,6 +26,7 @@ class Sucursal(Base):
     __tablename__ = "sucursales"
 
     id_sucursal = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="CASCADE"), nullable=True, index=True)
     id_ciudad = Column(Integer, ForeignKey("ciudades.id_ciudad", ondelete="CASCADE"), nullable=False)
     nombre_sucursal = Column(String(100), nullable=False)
     direccion = Column(String(200), nullable=False)
@@ -40,3 +41,4 @@ class Sucursal(Base):
     ciudad = relationship("Ciudad", back_populates="sucursales")
     usuarios = relationship("Usuario", back_populates="sucursal")
     inventarios = relationship("Inventario", back_populates="sucursal", cascade="all, delete-orphan")
+    empresa = relationship("Empresa", back_populates="sucursales", foreign_keys=[id_empresa])

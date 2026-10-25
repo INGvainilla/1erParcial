@@ -63,6 +63,7 @@ export class CheckoutService {
   /**
    * CU14: Enviar datos del checkout y formalizar orden de venta
    */
+  // CU14: Procesar Compra Digital y Checkout, Paso 1.1: crear_orden_checkout(dtoCheckout, id_usuario)
   procesarCheckout(datos: OrdenCreateRequest): Observable<OrdenData> {
     return this.http.post<OrdenData>(`${this.apiUrl}/checkout`, datos, {
       headers: this.auth.getAuthHeaders()

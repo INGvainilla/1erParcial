@@ -65,9 +65,9 @@ class InventarioControl:
         talla_norm = request.talla.strip().upper()
         color_norm = request.color.strip()
 
-        # Paso 1.1: IInventarioBoundary invoca procesarEntradaMercaderia(...) en InventarioControl
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.1: procesarEntradaMercaderia(sucursal_id, SKU, cant, costo_unit)
 
-        # Paso 1.2: InventarioControl consulta existencias y CPP actual en InventarioEntity
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
         item_inv = db.query(Inventario).filter(
             Inventario.id_sucursal == request.id_sucursal,
             Inventario.id_producto == request.id_producto,
@@ -75,14 +75,13 @@ class InventarioControl:
             Inventario.color == color_norm
         ).first()
 
-        # Paso 1.3: InventarioEntity retorna (stock_ant, cpp_ant)
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.3: retorna existencias actuales (stock_ant, cpp_ant)
         if item_inv:
             stock_anterior = item_inv.stock_fisico
             cpp_anterior = Decimal(str(item_inv.costo_promedio_ponderado))
 
-            # Paso 1.4: InventarioControl calcula el nuevo Costo Promedio Ponderado (CPP)
-            # Fórmula formal matemática de Costo Promedio Ponderado:
-            # CPP = [(Stock_ant * CPP_ant) + (Cant_lote * Costo_lote)] / (Stock_ant + Cant_lote)
+            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.4: calcularCppNuevo(stock_ant, cpp_ant, cant, costo_unit)
+            # Fórmula formal: CPP = [(Stock_ant * CPP_ant) + (Cant_lote * Costo_lote)] / (Stock_ant + Cant_lote)
             inversion_anterior = Decimal(str(stock_anterior)) * cpp_anterior
             inversion_nueva = Decimal(str(cant_lote)) * costo_lote
             nuevo_stock_total = stock_anterior + cant_lote
@@ -90,16 +89,17 @@ class InventarioControl:
             nuevo_cpp_raw = (inversion_anterior + inversion_nueva) / Decimal(str(nuevo_stock_total))
             nuevo_cpp = nuevo_cpp_raw.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-            # Paso 1.5: InventarioControl actualiza existencias y costos en InventarioEntity
+            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.5: actualizarStockYCostos(nuevo_stock, costo_unit, nuevo_cpp)
             item_inv.stock_fisico = nuevo_stock_total
             item_inv.stock_disponible = nuevo_stock_total - item_inv.stock_reservado
             item_inv.ultimo_costo_compra = costo_lote
             item_inv.costo_promedio_ponderado = nuevo_cpp
         else:
-            # Primer ingreso de la variante en la sucursal física
+            # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.5: crearRegistroInventario(sucursalId, SKU, talla, color, cantLote, costoUnit)
             nuevo_stock_total = cant_lote
             nuevo_cpp = costo_lote.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             item_inv = Inventario(
+                id_empresa=sucursal.id_empresa or producto.id_empresa,
                 id_sucursal=request.id_sucursal,
                 id_producto=request.id_producto,
                 talla=talla_norm,
@@ -114,7 +114,7 @@ class InventarioControl:
             db.add(item_inv)
             db.flush()
 
-        # Paso 1.6: InventarioControl asienta el movimiento inmutable en KardexEntity
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.6: asentarMovimientoKardex(tipo="COMPRA", cant, costo_unit, nuevo_stock, nuevo_cpp)
         referencia = f"Factura: {request.numero_factura.strip()}" if request.numero_factura else "Recepción Lote Proveedor"
         asiento = KardexMovimiento(
             id_inventario=item_inv.id_inventario,
@@ -129,8 +129,8 @@ class InventarioControl:
         db.commit()
         db.refresh(asiento)
 
-        # Paso 1.7: InventarioControl notifica inventario actualizado (nuevo stock, nuevo CPP)
-        # Paso 1.8: IInventarioBoundary muestra comprobante de kardex con el nuevo CPP calculado
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.7: notificarInventarioActualizado(nuevo_stock, nuevo_cpp)
+        # CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.8: mostrar comprobante de kardex con nuevo CPP calculado
         return KardexResponse(
             id_movimiento=asiento.id_movimiento,
             id_inventario=asiento.id_inventario,
@@ -147,12 +147,15 @@ class InventarioControl:
     def consultar_stock(
         db: Session,
         id_sucursal: Optional[int] = None,
-        id_producto: Optional[int] = None
+        id_producto: Optional[int] = None,
+        id_empresa: Optional[int] = None
     ) -> List[InventarioResponse]:
         query = db.query(Inventario).options(
             joinedload(Inventario.sucursal),
             joinedload(Inventario.producto)
         )
+        if id_empresa:
+            query = query.filter(Inventario.id_empresa == id_empresa)
         if id_sucursal:
             query = query.filter(Inventario.id_sucursal == id_sucursal)
         if id_producto:
@@ -163,6 +166,7 @@ class InventarioControl:
         for it in items:
             resultado.append(InventarioResponse(
                 id_inventario=it.id_inventario,
+                id_empresa=it.id_empresa,
                 id_sucursal=it.id_sucursal,
                 nombre_sucursal=it.sucursal.nombre_sucursal if it.sucursal else None,
                 id_producto=it.id_producto,

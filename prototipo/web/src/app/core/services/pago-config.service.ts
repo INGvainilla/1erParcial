@@ -38,6 +38,7 @@ export class PagoConfigService {
   private auth = inject(AuthService);
   private apiUrl = `${API_BASE_URL}/configuracion/pagos`;
 
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 1.1: listar_metodos_pago()
   getMetodos(): Observable<MetodoPagoResponse[]> {
     return this.http.get<MetodoPagoResponse[]>(this.apiUrl, {
       headers: this.auth.getAuthHeaders()
@@ -48,6 +49,8 @@ export class PagoConfigService {
     return this.http.get<MetodoPagoPublico[]>(`${this.apiUrl}/activos`);
   }
 
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 2.1: actualizar_estado_metodo(codigo, {activo: false/true})
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 3.1: actualizar_credenciales(codigo, credenciales_json)
   actualizarMetodo(idMetodo: number, data: MetodoPagoUpdate): Observable<MetodoPagoResponse> {
     return this.http.patch<MetodoPagoResponse>(`${this.apiUrl}/${idMetodo}`, data, {
       headers: this.auth.getAuthHeaders()

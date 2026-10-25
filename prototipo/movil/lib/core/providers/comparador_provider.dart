@@ -22,6 +22,7 @@ class ComparadorProvider extends ChangeNotifier {
     }
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1: Ensambla hasta 3 combinaciones de ropa
   bool agregarPrenda(PrendaCatalogo prenda) {
     if (_prendas.length >= 3) {
       return false;
@@ -44,6 +45,7 @@ class ComparadorProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1.2 & 1.4: Obtener precios unitarios y consultar descuentos aplicables
   double get totalPrecioBase {
     return _prendas.fold(0.0, (acc, p) => acc + p.precioBase);
   }
@@ -52,6 +54,7 @@ class ComparadorProvider extends ChangeNotifier {
     return _prendas.fold(0.0, (acc, p) => acc + p.precioFinal);
   }
 
+  // CU20: Comparar Outfits Lado a Lado, Paso 1.6: calcularTotalesYIdentificarMejorOpcion()
   double get ahorroTotal {
     return totalPrecioBase - totalPrecioFinal;
   }

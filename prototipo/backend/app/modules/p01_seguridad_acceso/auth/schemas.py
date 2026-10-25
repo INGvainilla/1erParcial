@@ -16,6 +16,9 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     id_usuario: int
+    id_empresa: Optional[int] = None
+    nombre_empresa: Optional[str] = None
+    dominio_slug_empresa: Optional[str] = None
     nombres: str
     apellidos: str
     nombre_completo: Optional[str] = None

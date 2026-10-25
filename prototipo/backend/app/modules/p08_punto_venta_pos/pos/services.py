@@ -40,6 +40,7 @@ def buscar_producto_por_sku(db: Session, sku: str, id_sucursal: int) -> PosProdu
     if clean_sku.isdigit():
         conds.append(Producto.id_producto == int(clean_sku))
 
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.2: obtenerProductoConVariantes(sku)
     producto = query.filter(or_(*conds)).first()
     if not producto:
         raise HTTPException(
@@ -48,11 +49,14 @@ def buscar_producto_por_sku(db: Session, sku: str, id_sucursal: int) -> PosProdu
         )
 
     # Stock disponible en la sucursal actual
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.3: retorna producto y tabla de tallas
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.4: consultarStockSucursal(producto_id, sucursal_id)
     stock_sucursal = db.query(func.coalesce(func.sum(Inventario.stock_disponible), 0)).filter(
         Inventario.id_producto == producto.id_producto,
         Inventario.id_sucursal == id_sucursal
     ).scalar() or 0
 
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.5: retorna stock físico por variante
     tallas_list = [t.talla for t in (producto.tallas or [])]
     colores_list = [c.color_nombre for c in (producto.colores or [])]
 
@@ -71,6 +75,7 @@ def buscar_producto_por_sku(db: Session, sku: str, id_sucursal: int) -> PosProdu
         ).distinct().all()
         colores_list = [c[0] for c in inv_colores] or ["Único"]
 
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.6: retorna datos con precios calculados por talla
     return PosProductoLookupResponse(
         id_producto=producto.id_producto,
         codigo_sku_base=producto.codigo_sku_base,
@@ -183,7 +188,9 @@ def procesar_venta_pos(
 
     metodo = venta_in.metodo_pago.strip().upper()
     codigo_cfg = "EFECTIVO" if metodo == "EFECTIVO" else ("TARJETA_POS" if "TARJETA" in metodo else "QR_BCB")
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.2: verificarCanalHabilitado(metodo_pago, 'POS')
     metodo_cfg = db.query(MetodoPagoConfig).filter(MetodoPagoConfig.codigo == codigo_cfg).first()
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.3: confirma método activo
     if metodo_cfg and not metodo_cfg.activo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -224,10 +231,12 @@ def procesar_venta_pos(
                 )
 
             # Descontar existencias físicas y disponibles en la sucursal
+            # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.4: descontarStockFisico(variante_id, cant)
             inv.stock_disponible -= item.cantidad
             inv.stock_fisico -= item.cantidad
 
             # Registrar asiento inmutable en Kardex (CU09 / CU15)
+            # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.5: asentarMovimientoSalida(tipo='VENTA_POS', cant, cpp)
             kardex = KardexMovimiento(
                 id_inventario=inv.id_inventario,
                 tipo_movimiento="SALIDA_VENTA",
@@ -268,6 +277,7 @@ def procesar_venta_pos(
                 reserva.estado = "CERRADA_POR_VENTA"
 
         # Crear OrdenVenta oficial en base de datos
+        # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.6: registrarOrdenVenta(canal='POS', estado='PAGADO')
         orden = OrdenVenta(
             id_usuario=id_cajero,
             id_sucursal=id_sucursal,
@@ -283,6 +293,7 @@ def procesar_venta_pos(
             estado_logistica="ENTREGADA"
         )
         db.add(orden)
+        # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.7: retorna orden confirmada y nro_factura
         db.flush()
 
         for d in detalles_orden:
@@ -300,6 +311,7 @@ def procesar_venta_pos(
 
         db.commit()
 
+        # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.8: retorna ticket de venta y cambio a devolver
         return PosTicketResponse(
             id_orden=orden.id_orden,
             numero_factura=correlativo_fac,
@@ -489,6 +501,7 @@ def obtener_o_materializar_orden_ticket(db: Session, nro_ticket: str) -> OrdenVe
     )
 
 
+# CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.2: Ctrl -> VentaEnt : obtenerDatosVentaYValidarPlazo(id_venta, max_dias = 14)
 def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketConsultaResponse:
     """
     CU25: Consulta una venta original por número de factura, código de reserva o ID.
@@ -500,6 +513,7 @@ def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketCons
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     fecha_emision = orden.creado_en or now
     dias_transcurridos = max(0, (now - fecha_emision).days)
+    # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.3: VentaEnt --> Ctrl : retorna venta_valida, fecha, cpp_historico
     es_valido = dias_transcurridos <= 14
 
     if es_valido:
@@ -547,6 +561,7 @@ def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketCons
     )
 
 
+# CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.1: UI -> Ctrl : procesar_devolucion(id_venta, id_variante, cantidad, motivo, resolucion)
 def procesar_devolucion_pos(
     db: Session,
     id_cajero: int,
@@ -627,6 +642,8 @@ def procesar_devolucion_pos(
             costo_cpp = inv.costo_promedio_ponderado or Decimal("107.14")
 
             # Reingreso de stock según estado físico
+            # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.4: Ctrl -> InvEnt : reingresarStockFisico(id_sucursal, id_variante, cantidad)
+            # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.5: InvEnt --> Ctrl : confirma incremento de stock_actual
             if it.estado_fisico == "APTO_VENTA":
                 inv.stock_disponible += it.cantidad
                 inv.stock_fisico += it.cantidad
@@ -635,6 +652,8 @@ def procesar_devolucion_pos(
                 inv.stock_fisico += it.cantidad
 
             # Asiento inmutable en Kardex (CU09 / CU25)
+            # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.6: Ctrl -> KarEnt : asentarMovimientoKardex(DEVOLUCION_VENTA, cantidad, cpp_historico)
+            # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.7: KarEnt --> Ctrl : confirma asiento inmutable al CPP historico
             kardex = KardexMovimiento(
                 id_inventario=inv.id_inventario if inv else 1,
                 tipo_movimiento="DEVOLUCION_VENTA",
@@ -683,6 +702,8 @@ def procesar_devolucion_pos(
         item_nuevo_info = None
 
         # 3. Resolución: Cambio, Vale o Reembolso
+        # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.10: Ctrl -> NotaEnt : emitirResolucionComercial(tipo_resolucion, monto_diferencia)
+        # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.11: NotaEnt --> Ctrl : retorna comprobante_resolucion
         if dev_in.tipo_resolucion == "CAMBIO_VARIANTE":
             if not dev_in.cambio_info:
                 raise HTTPException(
@@ -766,6 +787,8 @@ def procesar_devolucion_pos(
             diferencia_cobrada = Decimal("0.00")
 
         # 4. Registrar cabecera Devolucion en BD
+        # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.8: Ctrl -> DevEnt : registrarComprobanteDevolucion(id_venta, motivo, resolucion, total)
+        # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.9: DevEnt --> Ctrl : retorna id_devolucion
         devolucion_db = Devolucion(
             tenant_id="fashionstore_scz",
             id_orden=orden.id_orden,
@@ -790,6 +813,7 @@ def procesar_devolucion_pos(
 
         db.commit()
 
+        # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.12: Ctrl --> UI : entrega resumen de devolucion y ticket fiscal
         return DevolucionTicketResponse(
             id_devolucion=devolucion_db.id_devolucion,
             nro_devolucion=correlativo_dev,

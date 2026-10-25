@@ -335,6 +335,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
 
     try {
+      // CU14: Procesar Compra Digital y Checkout, Paso 1: Completar Wizard (Entrega, NIT/Factura, Metodo Pago)
+      // CU14: Procesar Compra Digital y Checkout, Paso 1.1: crear_orden_checkout(dtoCheckout, id_usuario)
       final orden = await _ordenesService.checkout(
         modalidadEntrega: _modalidadEntrega,
         idSucursal: _modalidadEntrega == 'RETIRO_TIENDA' ? _selectedSucursalId : null,
@@ -350,7 +352,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await cart.cargarCarrito();
 
       if (!mounted) return;
-      // Redirigir a pantalla de pago directo
+      // CU14: Procesar Compra Digital y Checkout, Paso 1.15: redirige a pantalla de Pago Seguro (/pagos/orden/:id)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

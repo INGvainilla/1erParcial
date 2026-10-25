@@ -1888,6 +1888,7 @@ export class DashboardComponent implements OnInit {
     return this.useCases;
   }
 
+  // CU24: Generar Reportes y Cuadros de Mando, Paso 1: Admin -> UI : Accede a vista /dashboard
   ngOnInit(): void {
     if (this.canAccess()) {
       this.cargarMetricas();
@@ -1909,6 +1910,7 @@ export class DashboardComponent implements OnInit {
     this.cargarMetricas();
   }
 
+  // CU24: Generar Reportes y Cuadros de Mando, Paso 1.1: UI -> Ctrl : obtener_metricas_consolidadas(periodo, sucursal_id)
   cargarMetricas(): void {
     this.isLoading = true;
     this.isError = false;
@@ -1917,6 +1919,8 @@ export class DashboardComponent implements OnInit {
     this.api.getDashboardMetricas(this.selectedSucursalId, this.selectedRangoFecha, this.selectedRankingTipo).subscribe({
       next: (data) => {
         if (data && data.kpis) {
+          // CU24: Generar Reportes y Cuadros de Mando, Paso 1.10: Ctrl --> UI : entrega métricas consolidadas y series gráficas
+          // CU24: Generar Reportes y Cuadros de Mando, Paso 1.11: UI --> Admin : renderiza KPIs, gráficos y ranking de prendas
           this.kpis = data.kpis;
           this.distribucion = data.distribucion_canales || { online: 0, pos: 0 };
           this.distribucionMediosPago = data.distribucion_medios_pago || {};

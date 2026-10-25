@@ -299,7 +299,9 @@ export class TemporadasComponent implements OnInit {
     this.loadTemporadas();
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 1: Administrador consulta listado de campañas estacionales
   loadTemporadas(): void {
+    // CU07: Gestionar Temporadas y Colecciones, Paso 1.1: Invocar API REST para recuperar temporadas vigentes y concluidas
     this.api.getTemporadas().subscribe({
       next: (data) => {
         this.temporadas = data;
@@ -333,11 +335,13 @@ export class TemporadasComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 4: Cambiar estado de temporada (habilitar / inhabilitar campaña)
   toggleEstadoTemporada(t: Temporada): void {
     const nuevoEstado = (t.estado === 'VIGENTE') ? 'FINALIZADA' : 'VIGENTE';
     const accion = nuevoEstado === 'VIGENTE' ? 'habilitar' : 'deshabilitar';
 
     this.togglingId = t.id_temporada;
+    // CU07: Gestionar Temporadas y Colecciones, Paso 4.1: Enviar solicitud de cambio de estado a la API REST
     this.api.updateTemporada(t.id_temporada, { estado: nuevoEstado }).subscribe({
       next: (actualizada) => {
         this.togglingId = null;
@@ -356,6 +360,7 @@ export class TemporadasComponent implements OnInit {
     });
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 2: Administrador envía programación de nueva temporada
   submitTemporada(): void {
     this.submitting = true;
     const payload = {
@@ -366,10 +371,12 @@ export class TemporadasComponent implements OnInit {
       descuento_liquidacion: Number(this.newTemp.descuento_liquidacion_pct) || 0,
       estado: 'VIGENTE'
     };
+    // CU07: Gestionar Temporadas y Colecciones, Paso 2.1: Enviar petición POST para registrar la temporada
     this.api.createTemporada(payload).subscribe({
       next: (res) => {
         this.submitting = false;
         this.showModal = false;
+        // CU07: Gestionar Temporadas y Colecciones, Paso 2.2: Confirmar alta exitosa y actualizar grilla
         this.toast.success('Temporada Creada (CU07)', `${res.nombre_temporada || res.nombre_coleccion} registrada.`);
         this.loadTemporadas();
       },
@@ -381,6 +388,7 @@ export class TemporadasComponent implements OnInit {
     });
   }
 
+  // CU07: Gestionar Temporadas y Colecciones, Paso 3: Administrador actualiza fechas de vigencia o descuento
   submitEditTemporada(): void {
     this.submittingEdit = true;
     const payload = {
@@ -391,10 +399,12 @@ export class TemporadasComponent implements OnInit {
       estado: this.editTemp.estado
     };
 
+    // CU07: Gestionar Temporadas y Colecciones, Paso 3.1: Enviar petición PUT con datos modificados
     this.api.updateTemporada(this.editTemp.id_temporada, payload).subscribe({
       next: (res) => {
         this.submittingEdit = false;
         this.showEditModal = false;
+        // CU07: Gestionar Temporadas y Colecciones, Paso 3.2: Notificar éxito y actualizar vista
         this.toast.success('Temporada Modificada (CU07)', `Temporada "${res.nombre_temporada}" actualizada exitosamente.`);
         this.loadTemporadas();
       },

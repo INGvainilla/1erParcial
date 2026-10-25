@@ -1,0 +1,36 @@
+TRANSCRIPCIÓN COMPLETA Y VERBATIM: Parcial2-4.m4a
+================================================================================
+
+Hay tres presentaciones, ¿no es cierto? La uno, la dos, la tres. Esta se aproxima. Esta de aquí más que nada esta. Ya. Entonces ustedes, como han podido ver, tienen un contenido mínimo, llámenle. Es un contenido mínimo, es una tabla de contenido mínimo, ¿ya? Pero los modelos que deben visualizar, porque hay varias cosas que deben rellenar. sexualmente como las características de la regla de negocio, este alguna funcionalidad de requisito funcional, requisito no funcional, esa es teoría que cada uno va a ir llenando de acuerdo a la característica que tiene, ¿no es cierto? Pero como siempre, seguimos básicamente con esto. Esto que estoy colocando aquí el segundo implementación y prueba. Estas pruebas aquí lo hacen por caso de uso, ¿no? Las pruebas son por caso de uso. Entonces, como ustedes habrán podido ver, me imagino que han de haber leído ya el icone con es aparentemente una metodología ligera, se llama ligera, pesada, se llama realidad, ¿ya?
+
+Entonces significa que igual estamos usando UNL, UNL ustedes lo conocen. Entonces, en este tipo de características igual ustedes identifican acá de uso, identifican No hay priorización de caso de uso por si acaso, no hace falta, no lo necesita, no tiene ese detalle incógnito, pero sí tiene, una vez que usted lo identifica su caso de uso, sí tiene el detalle de caso de uso que lo va a hacer, el detalle de caso de uso con su diseñar caso de uso y su prototipo, si quiere verlo así, ya no hay priorizar caso tampoco existe que en en el por decir en el ciclo 1, ciclo 2, ciclo 3, como lo veíamos en el proceso unificado, el avance se ve en todito. Usted me presenta el otro, seguimos advancing. En el tres ya completamos. Entonces, una vez que ha terminado su caso de uso, entonces solamente usted va identificando en el requisito lo que va a trabajar en esta presentación. Entonces, aquí en el análisis prácticamente el diagrama de robot, ¿cómo se llama?
+
+Que no es más que Otra cosa, es sinónimo de lo que lo conoce usted como diagrama de comunicación. Bien, entonces esto este se utiliza aquí en el diseño, utiliza el diseño de arquitectura que lo utiliza estos dos, el de despliegue y el de paquete, ¿no? Los dos aquí en el arquitectura. En esta parte de la arquitectura entonces está el diagrama de despliegue y el diagrama de paquete, diagrama de paquete, el de despliegue y el diagrama de paquetes. Cuando hablamos del diseño de datos, cuando hablo del diseño del caso de uso, está el diagrama de secuencia. Entonces, un caso de uso que usted lo va a colocar aquí, lo va a ver como un diagrama de robustel y un diagrama de secuencia. En otras palabras, este es mi caso de uso uno por decir tengo que ver de una manera de una dependencia funcional este mismo caso de uso uno y de una manera de dependencia funcional que este de mi caso de uso. Aquí lo vemos en la parte de requisito. Aquí Lo vemos en análisis y así lo veo en diseño.
+
+En requisito se llama diagrama de caso de uso. En análisis se llama diagrama de robots. En diseño lo miro el diagrama de secuencia. Diagrama de secuencia. Entonces podemos evidenciar, como ustedes ven, la lógica de negocio. No importa la metodología que agarremos. es la que más se detalla, es la que más empiezan a visualizar. Entonces, eso es lo que se va a ver. Fíjense, todo va a depender de lo que ustedes hagan aquí. A eso ustedes le hacen el rostro, a eso le hacen el diagrama de secuencia. Y aquí en la parte ya de la implementación, aquí en la parte de la implementación normalmente esta arquitectura puede representarlo o aquí o aquí. En la mayoría de Iconi lo representa aquí. Aquí ve el diagrama de Eh, son tres en realidad, ¿no? El de despliegue, el de paquete y el de componente. ¿Okay? Entonces, ese es el avance que ustedes presentan. Por ejemplo, todo lo que ustedes vayan trabajándolo, ustedes lo van presentando.
+
+Acá viene la presentación número de la misma forma, la presentación tres, ya el documento está con ustedes. ¿Qué significa que ustedes agrega los nuevos casos de uso aquí y lo avanzan, los nuevos casos aquí lo avanzan, los últimos casos de uso y lo avanzan. Nada más se ve que dicen el uno, que dicen dos, no, no, nada de eso. Y el documento se convierte en uno solo. Cuando ya veo el documento final, significa de en la última presentación tres, si quieren verlo así, veo el documento completito, pero no se ve que en el primero, quen el segundo, lo veo completo hasta la parte de las pruebas, que las pruebas lo hacemos con la misma plantillita que yo que yo les di ya de los casos de uso. Ya, eso sería entonces para la presentación del documento que es el día domingo, ¿no es cierto? Ya. Entonces, a ver, no, ya el lunes, el lunes al mediodía, entonces va a ser, a ver, un que foto. Esto de losre es que necesito revisarlo. Vamos a poner este documento que sea hasta el lunes. Este, ¿qué fech?
+
+27
+
+27. 26
+
+ya 26 ya le voy a dar hasta las 1 de la tarde. Ya
+
+como van a presentar el domingo en la noche entonces más atividados van a estar por eso. Ya. Entonces por favor quiero ver esta documentación para que no nos tengamos sorpresa ese día y tengan la mitad de su nota. Entonces había tiempo, una semana va a haber tiempo de que ustedes lo puedan revisar y lo puedan traer como debe ser. ¿Listo? Eso se mantiene el domingo. Entonces, el domingo presenta estaría domingo 25, creo que 25. El domingo 25 presentarían tal como fue ya planificado el la primer presentación de su parcial 2 y el día lunes al mediodía para que el martes lo podamos corregir y podamos verlo. Ahora, otra cosa, este también necesito ver su documentación. ¿Qué tanto han avanzado en Iconic?
+
+El jueves si alguien me puede mostrar o alguien lo pueda desplegar para ver si están haciendo como debería ser. se compromete el juez a mostrar lo que está haciendo. Si no se compromete, yo digo a cualquiera ahorita y lo trae el jueves. ¿Hay algún voluntario acuerdo? Entonces, hay obligado. Eh,
+
+a ver, ¿qué grupo es?
+
+37. Pero yo tengo una tesis de un grupo de la de una universidad de médico que quis Lo puedo pasar el enlace en para que lo puedan ver.
+
+Puede pasarlo. Claro. Sí, está bien. Puede pasarlo. Pero lo que digo, tiene avanzado en su trabajo, puede mostrarlo. No quiero que muestre la tesis. Trabajo de usted puede mirar la tesis, puede mirar lo que usted quiera, pero ya plasmado en su trabajo. Capítulo un
+
+No, pero yo quiero ver modelo.
+
+No, no, no modelo. Quiero ver todos los modelos que ustedes están usando. Si los modelos son los míos,
+
+o sea, quiero que traigan, si bien es cierto no es terminado, pero algo de que hay alpi. Es verdad, eso es cierto, digámoslo porque Coni vienen usándolo más de 20 años porque si no es nuevo, más de 20 años lo vienen usando muchas universidades a nivel mundial justamente por eso ya. Y a ver, no hay voluntario, entonces obligado, ¿no?
+
+Chao, tengan ch

@@ -23,6 +23,7 @@ class TemporadaControl:
 
     @staticmethod
     def listar_temporadas(db: Session, estado: Optional[str] = None) -> List[TemporadaResponse]:
+        # CU07: Gestionar Temporadas y Colecciones, Paso 1: Consultar catálogo de campañas estacionales en TemporadaEntity
         query = db.query(Temporada)
         if estado:
             query = query.filter(Temporada.estado == estado.upper())
@@ -44,16 +45,11 @@ class TemporadaControl:
 
     @staticmethod
     def programar_temporada(db: Session, request: TemporadaCreate) -> TemporadaResponse:
-        # =========================================================================
-        # CASO DE USO: CU07 - Gestionar Temporadas y Colecciones (Programación)
-        # Diagrama de Comunicación: Com_CU07_Gestionar_Temporadas
-        # =========================================================================
-        # Paso 1: El Administrador ingresa temporada (código, fechas, productos_ids[]) en ITemporadaBoundary
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2: Administrador ingresa temporada (código, fechas, productos_ids[])
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2.1: ITemporadaBoundary invoca programar_temporada() en TemporadaControl
         codigo = request.codigo_campana.strip().upper()
 
-        # Paso 1.1: ITemporadaBoundary invoca programarTemporada(datosTemp, productos_ids) en TemporadaControl
-
-        # Paso 1.2: TemporadaControl valida que el rango de fechas sea coherente (inicio < fin)
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2.2: TemporadaControl valida que el rango de fechas sea coherente (inicio < fin)
         if request.fecha_inicio >= request.fecha_fin:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -68,7 +64,7 @@ class TemporadaControl:
                 detail=f"La temporada con código de campaña '{codigo}' ya se encuentra registrada."
             )
 
-        # Paso 1.3: TemporadaControl crea el registro validado en TemporadaEntity
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2.3: Persistir registro de temporada en TemporadaEntity
         nueva_temp = Temporada(
             codigo_campana=codigo,
             nombre_temporada=request.nombre_temporada.strip(),
@@ -80,10 +76,9 @@ class TemporadaControl:
         db.add(nueva_temp)
         db.flush()
 
-        # Paso 1.4: TemporadaEntity retorna temporada_id generado
         temporada_id = nueva_temp.id_temporada
 
-        # Paso 1.5: TemporadaControl asocia productos seleccionados a la temporada en ProductoEntity
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2.4: Asociar colección de prendas a la temporada en ProductoEntity
         cant_asociados = 0
         if request.productos_ids:
             for p_id in request.productos_ids:
@@ -95,8 +90,7 @@ class TemporadaControl:
         db.commit()
         db.refresh(nueva_temp)
 
-        # Paso 1.6: TemporadaControl confirma temporada vigente
-        # Paso 1.7: ITemporadaBoundary visualiza la campaña estacional activada
+        # CU07: Gestionar Temporadas y Colecciones, Paso 2.5: Retornar TemporadaResponse confirmada al Boundary
         return TemporadaResponse(
             id_temporada=nueva_temp.id_temporada,
             codigo_campana=nueva_temp.codigo_campana,
@@ -110,6 +104,8 @@ class TemporadaControl:
 
     @staticmethod
     def modificar_temporada(db: Session, id_temporada: int, request: TemporadaUpdate) -> TemporadaResponse:
+        # CU07: Gestionar Temporadas y Colecciones, Paso 3: Administrador actualiza fechas de vigencia o prendas vinculadas
+        # CU07: Gestionar Temporadas y Colecciones, Paso 3.1: Recuperar temporada en TemporadaEntity
         temp = db.query(Temporada).filter(Temporada.id_temporada == id_temporada).first()
         if not temp:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Temporada {id_temporada} no encontrada.")
@@ -135,8 +131,8 @@ class TemporadaControl:
         if request.estado:
             temp.estado = request.estado.upper()
 
+        # CU07: Gestionar Temporadas y Colecciones, Paso 3.2: Reasignar prendas a la temporada en ProductoEntity
         if request.productos_ids is not None:
-            # Desasociar productos anteriores y asociar nuevos
             db.query(Producto).filter(Producto.id_temporada == id_temporada).update({"id_temporada": None})
             for p_id in request.productos_ids:
                 prod = db.query(Producto).filter(Producto.id_producto == p_id).first()
@@ -158,7 +154,8 @@ class TemporadaControl:
 
     @staticmethod
     def activar_descuento_liquidacion(db: Session, id_temporada: int, request: ActivarLiquidacionRequest) -> TemporadaResponse:
-        # Paso 1: Activar liquidación de fin de temporada con descuento masivo
+        # CU07: Gestionar Temporadas y Colecciones, Paso 4: Administrador activa liquidación estacional con descuento
+        # CU07: Gestionar Temporadas y Colecciones, Paso 4.1: Fijar estado LIQUIDACION y porcentaje de descuento en TemporadaEntity
         temp = db.query(Temporada).filter(Temporada.id_temporada == id_temporada).first()
         if not temp:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Temporada no encontrada.")

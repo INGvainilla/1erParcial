@@ -31,8 +31,9 @@ def enriquecer_reserva(reserva: Reserva) -> Reserva:
             det.imagen_principal = det.producto.imagen_principal
     return reserva
 
+# CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
 def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Reserva:
-    # 1. Validar Stock y apartar
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.2: SELECT FOR UPDATE / validarStock(sucursal_id, items)
     for det in reserva_in.detalles:
         inv = db.query(Inventario).filter(
             Inventario.id_sucursal == reserva_in.id_sucursal,
@@ -41,13 +42,14 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
             Inventario.color == det.color
         ).with_for_update().first() # Pesimista
         
+        # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.3: confirma disponibilidad de existencias (o error si insuficiente)
         if not inv or inv.stock_disponible < det.cantidad:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Stock insuficiente para el producto {det.id_producto} en talla {det.talla} y color {det.color}"
             )
         
-        # Descontar stock disponible y sumar al reservado
+        # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.4: apartarStockReservado(stock_reservado += cant)
         inv.stock_disponible -= det.cantidad
         inv.stock_reservado += det.cantidad
         
@@ -63,19 +65,21 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
         )
         db.add(kardex)
 
-    # 2. Generar QR Code
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.9: generarTicketQR(id_reserva, uuid_token)
     qr_data = f"RES-{uuid.uuid4()}-{id_usuario}"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.10: retorna qr_base64 y qr_texto
     buffered = BytesIO()
     img.save(buffered, format="PNG")
     qr_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
     qr_code_str = f"data:image/png;base64,{qr_base64}"
 
-    # 3. Guardar en Base de Datos
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.5: crearReserva(usuario_id, sucursal_id, fecha, PENDIENTE)
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.11: actualizarCodigoQR(id_reserva, qr_base64, qr_texto)
     db_reserva = Reserva(
         id_usuario=id_usuario,
         id_sucursal=reserva_in.id_sucursal,
@@ -85,8 +89,10 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
         estado="PENDIENTE"
     )
     db.add(db_reserva)
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.6: retorna id_reserva
     db.flush()
 
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.7: crearDetalles(id_reserva, items)
     for det in reserva_in.detalles:
         db_detalle = ReservaDetalle(
             id_reserva=db_reserva.id_reserva,
@@ -97,6 +103,7 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
         )
         db.add(db_detalle)
     
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.8: confirma persistencia de prendas
     db.commit()
     
     # Recargar con relaciones completas
@@ -106,6 +113,7 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
         joinedload(Reserva.usuario)
     ).filter(Reserva.id_reserva == db_reserva.id_reserva).first()
     
+    # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.12: retorna reserva con ticket QR generado
     return enriquecer_reserva(reserva_creada or db_reserva)
 
 
@@ -113,6 +121,7 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
 # CU12: PREPARAR Y ATENDER RESERVA PRESENCIAL
 # ==========================================
 
+# CU12: Preparar y Atender Reserva Presencial, Paso 1.2: filtrarReservasPorSucursal(sucursal_id, fecha)
 def listar_reservas_sucursal_hoy(db: Session, id_sucursal: Optional[int] = None, fecha_filtro: Optional[str] = "hoy"):
     """
     CU12: Lista las reservas de una sucursal (o todas si id_sucursal es None),
@@ -130,6 +139,7 @@ def listar_reservas_sucursal_hoy(db: Session, id_sucursal: Optional[int] = None,
     if id_sucursal:
         query = query.filter(Reserva.id_sucursal == id_sucursal)
     
+    # CU12: Preparar y Atender Reserva Presencial, Paso 1.3: retorna coleccion de reservas
     reservas = query.all()
     
     def obtener_fecha_str(f):
@@ -167,6 +177,7 @@ def listar_reservas_sucursal_hoy(db: Session, id_sucursal: Optional[int] = None,
     return reservas_filtradas
 
 
+# CU12: Preparar y Atender Reserva Presencial, Paso 2.2: actualizarEstado(id_reserva, 'PREPARADA')
 def actualizar_estado_reserva(db: Session, id_reserva: int, nuevo_estado: str, id_sucursal: Optional[int] = None, es_admin: bool = False) -> Reserva:
     """
     Actualiza el estado de una reserva (ej. PENDIENTE -> PREPARADA).
@@ -204,6 +215,7 @@ def actualizar_estado_reserva(db: Session, id_reserva: int, nuevo_estado: str, i
         motivo = "Atendida" if nuevo_estado == "ATENDIDA" else "Cancelada"
         liberar_stock_reserva(db, reserva, motivo)
 
+    # CU12: Preparar y Atender Reserva Presencial, Paso 2.3: confirma cambio de estado
     db.commit()
     db.refresh(reserva)
     return reserva
@@ -245,6 +257,7 @@ def liberar_stock_reserva(db: Session, reserva: Reserva, motivo: str = "Atendida
             db.add(kardex)
 
 
+# CU12: Preparar y Atender Reserva Presencial, Paso 3.2: atender_reserva_qr(qr_texto, sucursal_id)
 def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int] = None, es_admin: bool = False) -> Reserva:
     """
     Busca una reserva por el texto del QR escaneado, ID o Data URI, valida la sucursal
@@ -262,18 +275,21 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
     if codigo_clean.isdigit():
         conds.append(Reserva.id_reserva == int(codigo_clean))
 
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.3: buscarPorQR(qr_texto)
     reserva = db.query(Reserva).options(
         joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
         joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
         joinedload(Reserva.usuario)
     ).filter(or_(*conds)).first()
     
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.4: retorna reserva encontrada
     if not reserva:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Código QR inválido. No se encontró ninguna reserva asociada."
         )
     
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.5: validarPertenenciaSucursal(reserva.sucursal_id, sucursal_id)
     if not es_admin and id_sucursal and reserva.id_sucursal != id_sucursal:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -292,10 +308,12 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
             detail="Esta reserva fue cancelada."
         )
     
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.6: marcarEstadoAtendida(id_reserva, 'ATENDIDA')
     reserva.estado = "ATENDIDA"
     liberar_stock_reserva(db, reserva, "Atendida en Probador")
     db.commit()
     db.refresh(reserva)
+    # CU12: Preparar y Atender Reserva Presencial, Paso 3.7: confirmacion de atencion presencial
     return enriquecer_reserva(reserva)
 
 

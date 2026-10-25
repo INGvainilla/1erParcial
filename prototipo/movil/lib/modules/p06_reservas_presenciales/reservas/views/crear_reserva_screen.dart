@@ -127,6 +127,7 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
     }
   }
 
+  // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1: Seleccionar sucursal, fecha/hora y prendas
   Future<void> _crearReserva() async {
     if (_selectedSucursalId == null) {
       setState(() => _errorMessage = 'Selecciona una sucursal para la visita.');
@@ -164,6 +165,7 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
     });
 
     try {
+      // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
       await _reservaService.crearReserva(
         idSucursal: _selectedSucursalId!,
         fechaVisita: fechaHoraVisita,
@@ -178,6 +180,7 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
         ),
       );
 
+      // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.13: renderiza ticket QR y agrega a Mis Tickets
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

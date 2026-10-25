@@ -34,6 +34,8 @@ def get_ordenes_logistica(
     Retorna el listado de órdenes pagadas para gestión logística y empaque (CU18).
     Utilizado por el Tablero Kanban de Logística (CU18).
     """
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 1: Consultar pedidos para empaque y despacho
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 1.1: listar_ordenes_logistica(filtro_estado='PREPARACION')
     return listar_ordenes_delivery(db, estado_filtro=estado, modalidad_filtro=modalidad)
 
 
@@ -63,6 +65,8 @@ def cambiar_estado_orden_logistica(
     CREADA -> PREPARACION -> LISTO_DESPACHO -> EN_TRANSITO -> ENTREGADA.
     Si el salto es ilegal, responde HTTP 409 Conflict.
     """
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 2: Asignar chofer y avanzar estado a EN_TRANSITO
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 2.1: avanzar_estado_orden(id_orden, nuevo_estado, datos_repartidor)
     return transicionar_estado_logistica(db, id_orden, request.nuevo_estado)
 
 
@@ -108,4 +112,6 @@ def get_tracking_orden(
     Endpoint de seguimiento público o del cliente:
     Retorna el estado de progreso logístico, pasos completados, repartidor y prendas.
     """
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3: Cargar pantalla de seguimiento (/tracking/:id)
+    # CU18: Gestionar Despacho y Logística de Delivery, Paso 3.1: obtener_tracking_orden(id_orden)
     return obtener_tracking_cliente(db, id_orden)

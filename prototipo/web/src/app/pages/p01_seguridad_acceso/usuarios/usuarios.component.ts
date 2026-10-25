@@ -801,13 +801,16 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 1: Administrador solicita listado de usuarios
   loadUsuarios(): void {
     if (!this.auth.isAdmin()) {
       return;
     }
     this.loading = true;
+    // CU04: Gestionar Usuarios y Roles (RBAC), Paso 1.1: IUsuariosBoundary consulta usuarios al backend
     this.api.getUsuarios().subscribe({
       next: (data) => {
+        // CU04: Gestionar Usuarios y Roles (RBAC), Paso 1.2: Renderizar lista y actualizar vista reactiva
         this.usuarios = data;
         this.loading = false;
         this.cdr.detectChanges();
@@ -881,6 +884,7 @@ export class UsuariosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 2: Administrador envía formulario para nuevo colaborador
   onCreateUser(): void {
     if (!this.newUser.nombre_completo || !this.newUser.email || !this.newUser.password) {
       this.toast.warning('Campos Incompletos', 'Complete todos los campos requeridos.');
@@ -897,6 +901,7 @@ export class UsuariosComponent implements OnInit {
 
     this.loading = true;
     this.cdr.detectChanges();
+    // CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.1: Enviar petición POST de creación con rol y sucursal
     this.api.crearUsuario({
       email: this.newUser.email.trim(),
       password: this.newUser.password,
@@ -908,6 +913,7 @@ export class UsuariosComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         this.showCreateModal = false;
+        // CU04: Gestionar Usuarios y Roles (RBAC), Paso 2.2: Confirmar alta de personal y refrescar grilla
         this.toast.success('Colaborador Registrado (CU04)', `Usuario ${res.email} creado con rol ${res.rol}.`);
         this.loadUsuarios();
         this.cdr.detectChanges();
@@ -943,11 +949,13 @@ export class UsuariosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 3: Administrador actualiza rol, sucursal o estado
   onUpdateUser(): void {
     if (!this.editingUser) return;
 
     this.loading = true;
     this.cdr.detectChanges();
+    // CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.1: Enviar petición PUT con datos modificados
     this.api.modificarUsuario(this.editingUser.id_usuario, {
       nombre_completo: this.editFormData.nombre_completo.trim(),
       telefono: this.editFormData.telefono?.trim() || undefined,
@@ -959,6 +967,7 @@ export class UsuariosComponent implements OnInit {
         this.loading = false;
         this.showEditModal = false;
         this.editingUser = null;
+        // CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.2: Notificar éxito y actualizar tabla
         this.toast.success('Usuario Modificado (CU04)', `Datos actualizados para ${res.email}.`);
         this.loadUsuarios();
         this.cdr.detectChanges();
@@ -971,9 +980,12 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 4: Administrador presiona 'Desbloquear Cuenta'
   desbloquear(u: Usuario): void {
+    // CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.1: Enviar orden de reactivación y reseteo de intentos
     this.api.desbloquearUsuario(u.id_usuario).subscribe({
       next: (res) => {
+        // CU04: Gestionar Usuarios y Roles (RBAC), Paso 4.2: Actualizar badge de estado a ACTIVO en la interfaz
         this.toast.success('Desbloqueo Exitoso (CU04)', `Usuario ${u.email} reactivado. Intentos fallidos restablecidos a 0.`);
         u.estado_cuenta = 'ACTIVO';
         u.intentos_fallidos = 0;
@@ -987,9 +999,12 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
+  // CU04: Gestionar Usuarios y Roles (RBAC), Paso 5: Bloqueo administrativo preventivo
   bloquear(u: Usuario): void {
+    // CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.1: Enviar solicitud de bloqueo temporal
     this.api.bloquearUsuario(u.id_usuario, 30).subscribe({
       next: (res) => {
+        // CU04: Gestionar Usuarios y Roles (RBAC), Paso 5.2: Actualizar vista con badge BLOQUEADO_POR_INTENTOS
         this.toast.warning('Cuenta Bloqueada (CU04)', `Usuario ${u.email} bloqueado temporalmente por 30 minutos.`);
         u.estado_cuenta = 'BLOQUEADO_POR_INTENTOS';
         u.intentos_fallidos = res.intentos_fallidos || 5;

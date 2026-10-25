@@ -33,6 +33,7 @@ class KardexResponse(BaseModel):
 
 class InventarioResponse(BaseModel):
     id_inventario: int
+    id_empresa: Optional[int] = None
     id_sucursal: int
     nombre_sucursal: Optional[str] = None
     id_producto: int

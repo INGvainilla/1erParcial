@@ -52,15 +52,18 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // CU01: Autenticar Usuario (Login RBAC), Paso 1.1: AuthProvider coordina la autenticación del usuario desde la app móvil
   Future<bool> login(String email, String password) async {
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.1.0: Inicializar estado de carga y resetear errores previos
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.1.1: Invocar AuthService para enviar credenciales al backend
       final user = await _authService.login(email, password);
 
-      // Gate: Solo clientes en la app móvil
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.4: Validación RBAC en cliente - Restricción de acceso para la App Móvil (solo CLIENTE)
       if (!user.isCliente) {
         await _authService.logout();
         _usuario = null;
@@ -70,10 +73,12 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
 
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.7: Almacenar usuario autenticado en el estado global
       _usuario = user;
       _isLoading = false;
       notifyListeners();
       return true;
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.5.5: Captura de error de API (401 credenciales inválidas / 403 bloqueo preventivo)
     } on ApiException catch (e) {
       _errorMessage = e.message;
       _isLoading = false;
@@ -87,6 +92,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // CU02: Registrar Cliente (Sign Up), Paso 1.1: AuthProvider procesa el auto-registro del cliente móvil
   Future<bool> registro({
     required String nombres,
     required String apellidos,
@@ -99,6 +105,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // CU02: Registrar Cliente (Sign Up), Paso 1.1.1: Invocar servicio de registro en backend
       _usuario = await _authService.registro(
         nombres: nombres,
         apellidos: apellidos,
@@ -106,6 +113,7 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         telefono: telefono,
       );
+      // CU02: Registrar Cliente (Sign Up), Paso 1.7: Actualizar sesión activa del cliente registrado
       _isLoading = false;
       notifyListeners();
       return true;
@@ -122,13 +130,16 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // CU03: Recuperar Contraseña (Token OTP), Paso 1.1: AuthProvider despacha la solicitud de emisión de código OTP
   Future<String?> solicitarOtp(String email) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
+      // CU03: Recuperar Contraseña (Token OTP), Paso 1.1.1: Invocar backend para generar y enviar OTP por correo
       final msg = await _authService.solicitarOtp(email);
+      // CU03: Recuperar Contraseña (Token OTP), Paso 1.6: Retornar mensaje de éxito
       _isLoading = false;
       notifyListeners();
       return msg;
@@ -145,6 +156,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // CU03: Recuperar Contraseña (Token OTP), Paso 2.1: AuthProvider envía código OTP y nueva clave para su restablecimiento
   Future<bool> resetPasswordOtp({
     required String email,
     required String codigoOtp,
@@ -155,11 +167,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // CU03: Recuperar Contraseña (Token OTP), Paso 2.1.1: Invocar verificación y cambio en backend
       await _authService.resetPasswordOtp(
         email: email,
         codigoOtp: codigoOtp,
         nuevaPassword: nuevaPassword,
       );
+      // CU03: Recuperar Contraseña (Token OTP), Paso 2.7: Confirmación de contraseña actualizada
       _isLoading = false;
       notifyListeners();
       return true;

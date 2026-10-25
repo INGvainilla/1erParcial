@@ -974,6 +974,7 @@ export class TrackingComponent implements OnInit, OnDestroy {
   errorMsg: string | null = null;
   private pollTimer: any = null;
 
+  // CU18: Gestionar Despacho y Logística de Delivery, Paso 3: Cargar pantalla de seguimiento (/tracking/:id)
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam && !isNaN(Number(idParam))) {
@@ -1001,8 +1002,10 @@ export class TrackingComponent implements OnInit, OnDestroy {
       this.cargando = true;
       this.cdr.detectChanges();
     }
+    // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.1: obtener_tracking_orden(id_orden)
     this.logisticaService.getTracking(this.idOrden).subscribe({
       next: (data) => {
+        // CU18: Gestionar Despacho y Logística de Delivery, Paso 3.8: Renderiza stepper de 4 etapas y mapa interactivo con tracking en tiempo real
         this.tracking = data;
         this.cargando = false;
         this.cdr.detectChanges();

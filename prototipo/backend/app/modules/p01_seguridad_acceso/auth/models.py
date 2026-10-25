@@ -20,13 +20,14 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id_usuario = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="CASCADE"), nullable=True, index=True)
     id_sucursal = Column(Integer, ForeignKey("sucursales.id_sucursal", ondelete="SET NULL"), nullable=True)
     nombres = Column(String(100), nullable=False)
     apellidos = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, index=True, nullable=False)
     password_hash = Column(String(120), nullable=False)
     telefono = Column(String(30), nullable=True)
-    rol = Column(String(30), nullable=False, default="CLIENTE")  # ADMINISTRADOR, ENCARGADO_SUCURSAL, CAJERO, LOGISTICA, CLIENTE, PROVEEDOR
+    rol = Column(String(30), nullable=False, default="CLIENTE")  # SUPER_ADMIN, ADMINISTRADOR, ENCARGADO_SUCURSAL, CAJERO, LOGISTICA, CLIENTE, PROVEEDOR
     estado_cuenta = Column(String(30), nullable=False, default="ACTIVO")  # ACTIVO, INACTIVO, BLOQUEADO_POR_INTENTOS
     intentos_fallidos = Column(Integer, nullable=False, default=0)
     bloqueado_hasta = Column(DateTime, nullable=True)
@@ -42,6 +43,7 @@ class Usuario(Base):
     tokens_otp = relationship("TokenRecuperacion", back_populates="usuario", cascade="all, delete-orphan")
     bitacoras = relationship("BitacoraAcceso", back_populates="usuario")
     sucursal = relationship("Sucursal", back_populates="usuarios", foreign_keys=[id_sucursal])
+    empresa = relationship("Empresa", back_populates="usuarios", foreign_keys=[id_empresa])
 
 
 class TokenRecuperacion(Base):

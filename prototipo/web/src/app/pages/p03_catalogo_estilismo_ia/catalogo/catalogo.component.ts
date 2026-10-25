@@ -1454,8 +1454,10 @@ export class CatalogoComponent implements OnInit {
     });
   }
 
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros (categoría, talla, color, sucursal, búsqueda)
   loadCatalogo(): void {
     this.loading = true;
+    // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
     this.api.getCatalogo({
       id_categoria: this.selectedCategoriaId || undefined,
       id_sucursal: this.selectedSucursalId || undefined,
@@ -1465,6 +1467,7 @@ export class CatalogoComponent implements OnInit {
       talla: this.selectedTallaFiltro || undefined
     }).subscribe({
       next: (data) => {
+        // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.7: renderizar cuadrícula con tarjetas de producto y stock
         this.productos = data;
         // Inicializar selecciones reactivas por producto
         for (const p of this.productos) {

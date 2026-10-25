@@ -5,6 +5,7 @@ import 'api_service.dart';
 class CatalogoService {
   final ApiService _api = ApiService();
 
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
   Future<List<PrendaCatalogo>> getCatalogo({
     String? busqueda,
     int? idCategoria,
@@ -34,6 +35,8 @@ class CatalogoService {
     return [];
   }
 
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.8: opt consultarDetallePrendaConStock(productoId)
+  // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.4: consultarStockPorSucursal(producto_id, sucursalId)
   Future<List<StockSucursalItem>> getDisponibilidadSucursales(
     int idProducto, {
     String? talla,

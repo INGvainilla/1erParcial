@@ -48,6 +48,7 @@ def api_crear_intencion_pago(
     Inicia el flujo de cobro digital para una orden de venta en estado PENDIENTE.
     Devuelve el client_secret para que el frontend tokenice la tarjeta sin intermediar datos sensibles.
     """
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
     return crear_intencion_pago(
         db=db,
         id_orden=payload.id_orden,
@@ -71,6 +72,7 @@ def api_confirmar_pago(
     Verifica con la API de Stripe que el PaymentIntent esté en estado 'succeeded',
     marca la orden como PAGADA y genera el asiento inmutable en transacciones_pago.
     """
+    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.3: confirmar_transaccion_pago(payment_intent_id, id_orden)
     return confirmar_transaccion_pago(
         db=db,
         id_orden=payload.id_orden,

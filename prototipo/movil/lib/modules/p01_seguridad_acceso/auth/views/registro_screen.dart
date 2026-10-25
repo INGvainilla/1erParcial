@@ -69,13 +69,16 @@ class _RegistroScreenState extends State<RegistroScreen> {
     );
   }
 
+  // CU02: Registrar Cliente (Sign Up), Paso 1: El cliente no autenticado ingresa datos personales en IRegistroBoundary móvil
   Future<void> _procesarRegistro() async {
+    // CU02: Registrar Cliente (Sign Up), Paso 1.0: Captura y sanitización de datos del formulario
     final nombres = _nombresController.text.trim();
     final apellidos = _apellidosController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final telefono = _telefonoController.text.trim();
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.0.1: Validación de campos obligatorios en el cliente
     if (nombres.isEmpty || apellidos.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -86,6 +89,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       return;
     }
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.0.2: Validación de complejidad de contraseña (8 caracteres, mayúscula, minúscula, número/símbolo)
     if (!_cumpleRequisitosPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -96,6 +100,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       return;
     }
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.1: IRegistroBoundary móvil invoca registro() a través de AuthProvider
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final ok = await auth.registro(
       nombres: nombres,
@@ -107,6 +112,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
     if (!mounted) return;
 
+    // CU02: Registrar Cliente (Sign Up), Paso 1.8: Notificar alta exitosa y redirigir a la pantalla principal
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

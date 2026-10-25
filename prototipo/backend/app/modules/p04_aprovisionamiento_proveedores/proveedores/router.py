@@ -23,9 +23,8 @@ def listar_proveedores_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU08 - Consultar Proveedores
-    # Paso 1: Personal de logística consulta el directorio de proveedores
-    # Paso 1.1: Invocación a ProveedorControl.listar_proveedores()
+    # CU08: Gestionar Proveedores Textiles, Paso 1: Personal de logística o Administrador consulta directorio de proveedores
+    # CU08: Gestionar Proveedores Textiles, Paso 1.1: Invocación a ProveedorControl.listar_proveedores()
     return ProveedorControl.listar_proveedores(db, estado=estado)
 
 @router.get("/{id_proveedor}", response_model=ProveedorResponse)
@@ -34,6 +33,7 @@ def obtener_proveedor_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
     db: Session = Depends(get_db)
 ):
+    # CU08: Gestionar Proveedores Textiles, Paso 1.2: Obtener detalle individual de empresa proveedora
     return ProveedorControl.obtener_proveedor(db, id_proveedor=id_proveedor)
 
 @router.post("", response_model=ProveedorResponse, status_code=status.HTTP_201_CREATED)
@@ -42,9 +42,8 @@ def registrar_proveedor_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU08 - Alta de Proveedor Textil
-    # Paso 1: Personal de logística envía datos comerciales y NIT
-    # Paso 1.1: Invocación a ProveedorControl.registrar_proveedor()
+    # CU08: Gestionar Proveedores Textiles, Paso 2: Administrador envía datos comerciales y NIT de la empresa
+    # CU08: Gestionar Proveedores Textiles, Paso 2.1: Invocación a ProveedorControl.registrar_proveedor()
     return ProveedorControl.registrar_proveedor(db, request)
 
 @router.put("/{id_proveedor}", response_model=ProveedorResponse)
@@ -54,7 +53,6 @@ def modificar_proveedor_endpoint(
     current_user: Usuario = Depends(require_roles(["ADMINISTRADOR", "LOGISTICA"])),
     db: Session = Depends(get_db)
 ):
-    # CASO DE USO: CU08 - Modificación de Proveedor
-    # Paso 1: Personal de logística actualiza contacto o términos
-    # Paso 1.1: Invocación a ProveedorControl.modificar_proveedor()
+    # CU08: Gestionar Proveedores Textiles, Paso 3: Administrador actualiza información de contacto o términos
+    # CU08: Gestionar Proveedores Textiles, Paso 3.1: Invocación a ProveedorControl.modificar_proveedor()
     return ProveedorControl.modificar_proveedor(db, id_proveedor=id_proveedor, request=request)

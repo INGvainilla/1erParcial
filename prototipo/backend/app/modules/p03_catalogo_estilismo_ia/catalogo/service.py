@@ -48,9 +48,10 @@ class CatalogoControl:
         # Paso 1: El Cliente o usuario selecciona criterios de filtro en ICatalogoBoundary:
         # (categoría, marca, temporada, talla, color, rango de precios, sucursal física de interés)
 
-        # Paso 1.1: ICatalogoBoundary invoca consultarPrendas(criteriosFiltro) en CatalogoControl
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1: Seleccionar filtros (categoría, talla, color, sucursal, búsqueda)
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
 
-        # Paso 1.2: CatalogoControl formula la consulta estructurada sobre ProductoEntity con carga impaciente
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.2: buscarPrendasPorFiltro(criterios)
         query = db.query(Producto).options(
             selectinload(Producto.colores),
             selectinload(Producto.tallas),
@@ -85,13 +86,13 @@ class CatalogoControl:
             color_norm = f"%{color.strip()}%"
             query = query.join(Producto.colores).filter(ProductoColor.color_nombre.ilike(color_norm))
 
-        # Paso 1.3: ProductoEntity ejecuta el filtro y retorna la colección de productos base
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.3: retorna lista de productos base
         productos = query.order_by(Producto.id_producto.desc()).all()
 
         if not productos:
             return []
 
-        # Paso 1.4: CatalogoControl consulta existencias disponibles en InventarioEntity
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.4: loop consultarStockDisponible(producto_id, sucursalId)
         # cruzando con sucursales operativas en una sola consulta por lote
         sucursales_activas = db.query(Sucursal).options(joinedload(Sucursal.ciudad)).filter(Sucursal.estado == "OPERATIVA").all()
         sucursal_map = {s.id_sucursal: s for s in sucursales_activas}
@@ -121,7 +122,7 @@ class CatalogoControl:
             # Existencias de inventario precargadas en memoria
             items_inv = inv_by_prod.get(p.id_producto, [])
 
-            # Paso 1.5: InventarioEntity retorna existencias físicas por sucursal, talla y color
+            # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.5: retorna existencias disponibles / stock por sucursal
             stock_total = 0
             stock_por_sucursal_dict = {}
 
@@ -203,7 +204,7 @@ class CatalogoControl:
 
             cpp_prom = (cpp_acumulado / Decimal(str(cpp_count))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if cpp_count > 0 else None
 
-            # Paso 1.6: CatalogoControl serializa y consolida la respuesta del catálogo con stock real y CPP
+            # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.6: serializarRespuestaCatalogo(prendasConStock)
             catalogo_resultado.append(PrendaCatalogoResponse(
                 id_producto=p.id_producto,
                 codigo_sku_base=p.codigo_sku_base,
@@ -228,8 +229,7 @@ class CatalogoControl:
                 cpp_promedio=cpp_prom
             ))
 
-        # Paso 1.7: CatalogoControl entrega el catálogo enriquecido
-        # Paso 1.8: ICatalogoBoundary renderiza el catálogo digital y badges de disponibilidad
+        # CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.7: renderizar cuadrícula con tarjetas de producto y stock
         return catalogo_resultado
 
     @staticmethod

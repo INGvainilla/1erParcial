@@ -51,6 +51,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 def require_roles(allowed_roles: list):
     """Filtro de autorización estricta por roles jerárquicos (RBAC)"""
     def role_checker(current_user: Usuario = Depends(get_current_user)) -> Usuario:
+        # SUPER_ADMIN tiene acceso global a todas las operaciones
+        if current_user.rol == "SUPER_ADMIN":
+            return current_user
         if current_user.rol not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -58,3 +61,33 @@ def require_roles(allowed_roles: list):
             )
         return current_user
     return role_checker
+
+
+def require_super_admin(current_user: Usuario = Depends(get_current_user)) -> Usuario:
+    """Verifica que el usuario actual tenga rol de Super Administrador de la plataforma SaaS"""
+    if current_user.rol != "SUPER_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operación restringida exclusivamente al Super Administrador de la Plataforma SaaS."
+        )
+    return current_user
+
+
+def get_tenant_id(
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> int:
+    """
+    Inyector de dependencias que resuelve el tenant_id (id_empresa) de la sesión.
+    Garantiza el aislamiento lógico estricto exigido por la cátedra para el modelo SaaS.
+    """
+    if current_user.rol == "SUPER_ADMIN":
+        # Si es super admin y no tiene empresa asignada, retorna None o su id si lo tuviera
+        return current_user.id_empresa
+    if not current_user.id_empresa:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El usuario no se encuentra asignado a ninguna empresa activa (tenant)."
+        )
+    return current_user.id_empresa
+

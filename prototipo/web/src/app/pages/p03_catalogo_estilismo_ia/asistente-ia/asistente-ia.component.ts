@@ -2310,6 +2310,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     }
   }
 
+  // CU22: Solicitar Recomendación Contextual de IA, Paso 1: Cliente -> UI : Elige ocasión de uso y confirma ciudad
   seleccionarCiudad(c: string): void {
     this.ciudadSeleccionada = c;
     this.filtroClimaSeleccionado = 'AUTO';
@@ -2371,15 +2372,18 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     this.cargarDatos();
   }
 
+  // CU22: Solicitar Recomendación Contextual de IA, Paso 1.1: UI -> Ctrl : solicitar_recomendaciones(ciudad, ocasion, id_usuario)
   cargarDatos(): void {
     this.isUpdating = true;
     this.cdr.detectChanges();
 
     // 1. Clima satelital en tiempo real si está en modo AUTO
     if (this.filtroClimaSeleccionado === 'AUTO') {
+      // CU22: Solicitar Recomendación Contextual de IA, Paso 1.2: Ctrl -> ClimaExt : consultarClimaActual(ciudad)
       this.api.getClimaLocal(this.ciudadSeleccionada).subscribe({
         next: (res: any) => {
           if (res) {
+            // CU22: Solicitar Recomendación Contextual de IA, Paso 1.3: ClimaExt --> Ctrl : retorna temperatura, sensación y condición
             this.clima = res;
           }
           this.cdr.detectChanges();
@@ -2391,6 +2395,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     }
 
     // 2. Outfits recomendados de IA con filtros completos (incluyendo rango térmico)
+    // CU22: Solicitar Recomendación Contextual de IA, Paso 1.4: Ctrl -> LLMExt : generarRecomendacionEstilista(clima, ocasion, reglas_color)
     this.api.getOutfitsRecomendados(
       this.ciudadSeleccionada,
       this.ocasionSeleccionada,
@@ -2408,6 +2413,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
         }
         const list = res?.outfits_recomendados || res?.outfits || [];
         if (list.length > 0) {
+          // CU22: Solicitar Recomendación Contextual de IA, Paso 1.11: UI --> Cliente : despliega sugerencias con widget de clima
           this.outfits = list;
         }
         this.cdr.detectChanges();
@@ -2481,6 +2487,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     }
   }
 
+  // CU23: Buscar Productos por Comandos de Voz, Paso 1: Cliente -> UI : Dicta requerimiento ("Camisa blanca formal")
   private iniciarReconocimiento(): void {
     if (typeof window === 'undefined') return;
 
@@ -2522,6 +2529,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
           }
         }
 
+        // CU23: Buscar Productos por Comandos de Voz, Paso 1.2 & 1.3: Ctrl -> STTExt : transcribirAudioATexto(audio_buffer) / retorna consulta_texto
         const frase = finalTranscript || interimTranscript;
         this.transcriptEnVivo = frase;
         this.consultaTexto = frase;
@@ -2587,6 +2595,7 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     this.ejecutarBusquedaVoz(frase);
   }
 
+  // CU23: Buscar Productos por Comandos de Voz, Paso 1.1: UI -> Ctrl : procesar_busqueda_voz(audio_buffer / consulta_voz)
   ejecutarBusquedaVoz(frase: string): void {
     const q = (frase || '').trim();
     if (!q) {
@@ -2599,10 +2608,12 @@ export class AsistenteIaComponent implements OnInit, OnDestroy {
     this.statusVoice = `Procesando: "${q}" con el motor semántico NLP...`;
     this.cdr.detectChanges();
 
+    // CU23: Buscar Productos por Comandos de Voz, Paso 1.4: Ctrl -> NLPExt : extraerIntencionesYEntidades(consulta_texto)
     this.api.buscarPorVoz(q).subscribe({
       next: (res: any) => {
         this.isAnalyzing = false;
         if (res) {
+          // CU23: Buscar Productos por Comandos de Voz, Paso 1.9: UI --> Cliente : renderiza catálogo filtrado automáticamente
           const list = (res.prendas_sugeridas || res.productos_sugeridos || []).map((p: any) => ({
             id_producto: p.id_producto,
             codigo_sku_base: p.codigo_sku_base,

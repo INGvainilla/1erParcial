@@ -377,12 +377,14 @@ export class SucursalesComponent implements OnInit {
     this.loadSucursales();
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 1: Consultar directorio de ciudades operativas
   loadCiudades(): void {
     this.api.getCiudades().subscribe({
       next: (data) => this.ciudades = data
     });
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 2: Consultar sucursales físicas con GPS y probadores
   loadSucursales(): void {
     this.api.getSucursales().subscribe({
       next: (data) => {
@@ -421,11 +423,13 @@ export class SucursalesComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 5: Modificar estado operativo (habilitar / inhabilitar sucursal)
   toggleEstadoSucursal(s: Sucursal): void {
     const nuevoEstado = (s.estado === 'OPERATIVA') ? 'CERRADA' : 'OPERATIVA';
     const accion = nuevoEstado === 'OPERATIVA' ? 'habilitar' : 'deshabilitar';
     
     this.togglingId = s.id_sucursal;
+    // CU05: Gestionar Ciudades y Sucursales, Paso 5.1: Enviar solicitud de actualización de estado
     this.api.updateSucursal(s.id_sucursal, { estado: nuevoEstado }).subscribe({
       next: (actualizada) => {
         this.togglingId = null;
@@ -444,6 +448,7 @@ export class SucursalesComponent implements OnInit {
     });
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 3: Administrador envía formulario para registrar nueva sucursal física
   submitSucursal(): void {
     this.submitting = true;
     const payload = {
@@ -459,10 +464,12 @@ export class SucursalesComponent implements OnInit {
       estado: this.newSucursal.estado || 'OPERATIVA'
     };
 
+    // CU05: Gestionar Ciudades y Sucursales, Paso 3.1: Enviar petición POST a la API REST de sucursales
     this.api.createSucursal(payload).subscribe({
       next: (res) => {
         this.submitting = false;
         this.showModal = false;
+        // CU05: Gestionar Ciudades y Sucursales, Paso 3.2: Confirmar alta de sucursal y refrescar tarjetas
         this.toast.success('Sucursal Creada (CU05)', `Sucursal ${res.nombre_sucursal} registrada exitosamente.`);
         this.loadSucursales();
       },
@@ -474,6 +481,7 @@ export class SucursalesComponent implements OnInit {
     });
   }
 
+  // CU05: Gestionar Ciudades y Sucursales, Paso 4: Administrador actualiza horarios y probadores de la sucursal
   submitEditSucursal(): void {
     this.submittingEdit = true;
     const payload = {
@@ -488,10 +496,12 @@ export class SucursalesComponent implements OnInit {
       estado: this.editSucursal.estado
     };
 
+    // CU05: Gestionar Ciudades y Sucursales, Paso 4.1: Enviar petición PUT a la API REST
     this.api.updateSucursal(this.editSucursal.id_sucursal, payload).subscribe({
       next: (res) => {
         this.submittingEdit = false;
         this.showEditModal = false;
+        // CU05: Gestionar Ciudades y Sucursales, Paso 4.2: Notificar éxito y actualizar vista
         this.toast.success('Sucursal Modificada (CU05)', `Sucursal "${res.nombre_sucursal}" actualizada exitosamente.`);
         this.loadSucursales();
       },

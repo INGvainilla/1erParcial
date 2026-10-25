@@ -43,6 +43,7 @@ export class EncargadoService {
   /**
    * CU12: Obtener reservas para la sucursal del encargado (opcionalmente filtradas por sucursal y fecha)
    */
+  // CU12: Preparar y Atender Reserva Presencial, Paso 1.1: listar_reservas_sucursal(sucursal_id, fecha)
   getReservasHoy(idSucursal?: number | null, fecha: string = 'todas'): Observable<ReservaEncargado[]> {
     const params: string[] = [];
     if (idSucursal) params.push(`id_sucursal=${idSucursal}`);
@@ -56,6 +57,7 @@ export class EncargadoService {
   /**
    * CU12: Cambiar estado de una reserva (PENDIENTE -> PREPARADA)
    */
+  // CU12: Preparar y Atender Reserva Presencial, Paso 2.1: cambiar_estado_reserva(id_reserva, 'PREPARADA')
   cambiarEstadoReserva(idReserva: number, nuevoEstado: string): Observable<ReservaEncargado> {
     return this.http.patch<ReservaEncargado>(
       `${this.apiUrl}/${idReserva}/estado`,
@@ -67,6 +69,7 @@ export class EncargadoService {
   /**
    * CU12: Escanear QR y atender reserva
    */
+  // CU12: Preparar y Atender Reserva Presencial, Paso 3.2: atender_reserva_qr(qr_texto, sucursal_id)
   escanearQr(codigoQr: string): Observable<ReservaEncargado> {
     return this.http.post<ReservaEncargado>(
       `${this.apiUrl}/escanear-qr`,

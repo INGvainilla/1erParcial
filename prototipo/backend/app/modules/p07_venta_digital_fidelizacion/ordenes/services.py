@@ -72,7 +72,9 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
     a una Orden de Venta oficial. Valida existencias y vacía el carrito.
     """
     # 1. Recuperar Carrito Activo
+    # CU14: Procesar Compra Digital y Checkout, Paso 1.2: obtenerItemsActivos(id_usuario)
     carrito = obtener_o_crear_carrito_activo(db, id_usuario)
+    # CU14: Procesar Compra Digital y Checkout, Paso 1.3: retorna items del carrito
     if not carrito.items or len(carrito.items) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -90,12 +92,14 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Debes seleccionar una sucursal física para el retiro de tu compra."
             )
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.4: obtenerCoordenadasSucursal(sucursal_id)
         sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == orden_in.id_sucursal).first()
         if not sucursal:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"La sucursal #{orden_in.id_sucursal} no existe en la red."
             )
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.5: retorna lat_origen, lon_origen
         sucursal_id = sucursal.id_sucursal
         costo_envio = Decimal("0.00")
 
@@ -105,6 +109,7 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Debes ingresar la dirección completa de entrega a domicilio."
             )
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.6: calcularDistanciaHaversine(lat1, lon1, lat2, lon2)
         # Tarifa plana inicial de logística de delivery en Bolivia (Ciclo 2)
         costo_envio = Decimal("25.00")
     else:
@@ -169,6 +174,7 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
             except Exception:
                 pass
 
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.7: retorna distancia_km y costo_envio
         total_orden = max(Decimal("0.00"), subtotal_acum - descuento_cupon + costo_envio)
         correlativo_fac = f"FAC-{datetime.now().year}-{uuid.uuid4().hex[:6].upper()}"
 
@@ -178,6 +184,7 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
 
 
         # Crear cabecera de orden
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.8: generarOrdenVenta(nro_factura, montos, PENDIENTE_PAGO)
         nueva_orden = OrdenVenta(
             id_usuario=id_usuario,
             id_sucursal=sucursal_id,
@@ -195,11 +202,14 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
             estado_pago="PENDIENTE",
             estado_logistica="CREADA"
         )
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.9: retorna id_orden creada
         db.add(nueva_orden)
         db.flush()
 
         # Insertar detalles asociados
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.10: transferirItemsADetalle(id_orden, items)
         for d in detalles_a_crear:
+            # CU14: Procesar Compra Digital y Checkout, Paso 1.11: confirma persistencia de detalles
             det = OrdenDetalle(
                 id_orden=nueva_orden.id_orden,
                 id_producto=d["id_producto"],
@@ -212,12 +222,15 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
             db.add(det)
 
         # 5. Crucial: Vaciar el Carrito del Usuario tras formalizar la orden
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.12: vaciarCarrito(id_usuario)
         db.query(CarritoItem).filter(
             CarritoItem.id_carrito == carrito.id_carrito
         ).delete(synchronize_session=False)
 
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.13: carrito vaciado exitosamente
         db.commit()
         db.refresh(nueva_orden)
+        # CU14: Procesar Compra Digital y Checkout, Paso 1.14: retorna orden creada (id_orden, nro_factura, total)
         return construir_orden_response(nueva_orden)
 
     except HTTPException:

@@ -729,13 +729,16 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
     this.cargarReservas();
   }
 
+  // CU12: Preparar y Atender Reserva Presencial, Paso 1: Consultar reservas activas del día
   cargarReservas(): void {
     this.isLoading = true;
     this.cdr.detectChanges();
 
+    // CU12: Preparar y Atender Reserva Presencial, Paso 1.1: listar_reservas_sucursal(sucursal_id, fecha)
     this.encargadoService.getReservasHoy(this.filtroSucursal, this.filtroFecha).subscribe({
       next: (data) => {
         this.todasReservas = data || [];
+        // CU12: Preparar y Atender Reserva Presencial, Paso 1.4: renderiza lista en tablero operativo
         this.clasificarReservas();
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -755,12 +758,15 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
     this.atendidas = this.todasReservas.filter(r => r.estado === 'ATENDIDA' || r.estado === 'CERRADA_POR_VENTA');
   }
 
+  // CU12: Preparar y Atender Reserva Presencial, Paso 2: Clic en 'Apartar en Probador'
   prepararReserva(reserva: ReservaEncargado): void {
     this.processingId = reserva.id_reserva;
     this.cdr.detectChanges();
 
+    // CU12: Preparar y Atender Reserva Presencial, Paso 2.1: cambiar_estado_reserva(id_reserva, 'PREPARADA')
     this.encargadoService.cambiarEstadoReserva(reserva.id_reserva, 'PREPARADA').subscribe({
       next: () => {
+        // CU12: Preparar y Atender Reserva Presencial, Paso 2.4: actualiza badge visual a PREPARADA
         this.toast.success('¡Listo!', `Reserva #${reserva.id_reserva} marcada como PREPARADA en probador.`);
         this.processingId = null;
         this.cargarReservas();
@@ -774,6 +780,7 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // CU12: Preparar y Atender Reserva Presencial, Paso 3.6: marcarEstadoAtendida(id_reserva, 'ATENDIDA')
   atenderReserva(reserva: ReservaEncargado): void {
     this.processingId = reserva.id_reserva;
     this.cdr.detectChanges();

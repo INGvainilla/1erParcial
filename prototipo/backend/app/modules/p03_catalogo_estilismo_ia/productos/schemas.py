@@ -36,11 +36,13 @@ class MarcaResponse(BaseModel):
 class ColorItem(BaseModel):
     color_nombre: str = Field(..., min_length=2, max_length=50, description="Ej. Azul Marino")
     codigo_hex: str = Field(..., pattern=r"^#[0-9a-fA-F]{6}$", description="Código Hexadecimal, ej. #000080")
+    codigo_hex_secundario: Optional[str] = Field(None, description="Código HEX secundario para textiles combinados")
 
 class ColorResponse(BaseModel):
     id_color: int
     color_nombre: str
     codigo_hex: str
+    codigo_hex_secundario: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -50,6 +52,7 @@ class TallaResponse(BaseModel):
     talla: str
     precio: Optional[Decimal] = None
     factor: Optional[float] = None
+    medidas_cm: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -60,10 +63,13 @@ class ProductoCreate(BaseModel):
     nombre: str = Field(..., min_length=3, max_length=150)
     descripcion: Optional[str] = None
     precio_base: Decimal = Field(..., gt=0, description="Precio de venta en Bs.")
+    id_empresa: Optional[int] = Field(None, description="Tenant / Empresa propietaria del producto")
     id_categoria: int
     id_marca: int
     id_temporada: Optional[int] = None
     id_proveedor: Optional[int] = None
+    composicion_textil: Optional[str] = Field(None, description="Ej. 100% Algodón Pima Peruano")
+    medidas_antropometricas: Optional[str] = Field(None, description="JSON con medidas corporales en cm")
     imagen_principal: Optional[str] = Field(None, description="URL de fotografía en alta resolución")
     modelo_3d_glb: Optional[str] = Field(None, description="Enlace a archivo .glb para Realidad Aumentada")
     colores: List[ColorItem] = Field(..., min_items=1, description="Lista de colores con código HEX")
@@ -77,6 +83,8 @@ class ProductoUpdate(BaseModel):
     id_marca: Optional[int] = None
     id_temporada: Optional[int] = None
     id_proveedor: Optional[int] = None
+    composicion_textil: Optional[str] = None
+    medidas_antropometricas: Optional[str] = None
     imagen_principal: Optional[str] = None
     modelo_3d_glb: Optional[str] = None
     estado: Optional[str] = Field(None, description="BORRADOR, PUBLICADO, DESCATALOGADO")
@@ -85,10 +93,13 @@ class ProductoUpdate(BaseModel):
 
 class ProductoResponse(BaseModel):
     id_producto: int
+    id_empresa: Optional[int] = None
     codigo_sku_base: str
     nombre: str
     descripcion: Optional[str] = None
     precio_base: Decimal
+    composicion_textil: Optional[str] = None
+    medidas_antropometricas: Optional[str] = None
     id_categoria: int
     nombre_categoria: Optional[str] = None
     id_marca: int

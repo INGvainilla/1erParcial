@@ -40,6 +40,7 @@ class Producto(Base):
     __tablename__ = "productos"
 
     id_producto = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="CASCADE"), nullable=True, index=True)
     id_categoria = Column(Integer, ForeignKey("categorias.id_categoria", ondelete="RESTRICT"), nullable=False)
     id_marca = Column(Integer, ForeignKey("marcas.id_marca", ondelete="RESTRICT"), nullable=False)
     id_temporada = Column(Integer, ForeignKey("temporadas.id_temporada", ondelete="SET NULL"), nullable=True)
@@ -50,6 +51,8 @@ class Producto(Base):
     precio_base = Column(Numeric(10, 2), nullable=False)
     imagen_principal = Column(String(255), nullable=True)
     modelo_3d_glb = Column(String(255), nullable=True)
+    medidas_antropometricas = Column(Text, nullable=True)  # JSON medidas en cm (pecho, cintura, largo)
+    composicion_textil = Column(String(150), nullable=True, default="100% Algodón Pima Hipoalergénico")
     estado = Column(String(30), nullable=False, default="PUBLICADO")  # BORRADOR, PUBLICADO, DESCATALOGADO
 
     # Relaciones
@@ -60,12 +63,13 @@ class Producto(Base):
     colores = relationship("ProductoColor", back_populates="producto", cascade="all, delete-orphan")
     tallas = relationship("ProductoTalla", back_populates="producto", cascade="all, delete-orphan")
     inventarios = relationship("Inventario", back_populates="producto", cascade="all, delete-orphan")
+    empresa = relationship("Empresa", back_populates="productos", foreign_keys=[id_empresa])
 
 
 class ProductoColor(Base):
     """
     Entidad Color (ColorEntity):
-    Manejo normalizado de paleta de colores multivaluados con código HEX (CU06).
+    Manejo normalizado de paleta de colores multivaluados con código HEX primario y secundario (CU06).
     """
     __tablename__ = "producto_colores"
 
@@ -73,6 +77,7 @@ class ProductoColor(Base):
     id_producto = Column(Integer, ForeignKey("productos.id_producto", ondelete="CASCADE"), nullable=False)
     color_nombre = Column(String(50), nullable=False)
     codigo_hex = Column(String(10), nullable=False)  # Ej. #000080
+    codigo_hex_secundario = Column(String(10), nullable=True)  # Ej. #FFFFFF para patrones compuestos
 
     producto = relationship("Producto", back_populates="colores")
 
@@ -80,7 +85,7 @@ class ProductoColor(Base):
 class ProductoTalla(Base):
     """
     Entidad Talla (TallaEntity):
-    Manejo normalizado de tallas disponibles con precio diferenciado (CU06).
+    Manejo normalizado de tallas disponibles con precio y medidas anatómicas en cm (CU06).
     """
     __tablename__ = "producto_tallas"
 
@@ -88,5 +93,6 @@ class ProductoTalla(Base):
     id_producto = Column(Integer, ForeignKey("productos.id_producto", ondelete="CASCADE"), nullable=False)
     talla = Column(String(20), nullable=False)  # S, M, L, XL, 38, 40, 42
     precio = Column(Numeric(10, 2), nullable=True)  # Precio diferenciado por talla (CU06)
+    medidas_cm = Column(String(150), nullable=True)  # Ej. "Pecho: 104cm, Largo: 74cm"
 
     producto = relationship("Producto", back_populates="tallas")

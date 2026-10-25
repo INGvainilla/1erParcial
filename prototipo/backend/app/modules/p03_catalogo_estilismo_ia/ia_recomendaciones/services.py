@@ -82,6 +82,7 @@ COORDENADAS_CIUDADES_BOLIVIA: Dict[str, Dict[str, Any]] = {
 _CACHE_CLIMA: Dict[str, Dict[str, Any]] = {}
 
 
+# CU22: Solicitar Recomendación Contextual de IA, Paso 1.2: Ctrl -> ClimaExt : consultarClimaActual(ciudad)
 def resolver_clima(ciudad_nombre: Optional[str] = None) -> ClimaLocalDTO:
     """
     Obtiene la telemetría climática en tiempo real mediante Open-Meteo Satelital
@@ -117,6 +118,7 @@ def resolver_clima(ciudad_nombre: Optional[str] = None) -> ClimaLocalDTO:
             f"apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto"
         )
         req = urllib.request.Request(url, headers={"User-Agent": "FashionStore-AI-Meteo/2.0"})
+        # CU22: Solicitar Recomendación Contextual de IA, Paso 1.3: ClimaExt --> Ctrl : retorna temperatura, sensación y condición
         with urllib.request.urlopen(req, timeout=1.8) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             current = data.get("current", {})
@@ -221,6 +223,7 @@ def generar_outfits_contextuales(
     prompt_ia: Optional[str] = None,
     filtro_clima: Optional[str] = "AUTO"
 ) -> RecomendacionesContextualesResponse:
+    # CU22: Solicitar Recomendación Contextual de IA, Paso 1.2: Ctrl -> ClimaExt : consultarClimaActual(ciudad)
     clima = resolver_clima(ciudad_nombre)
 
     # Si el usuario selecciona un filtro de rango térmico explícito
@@ -251,12 +254,14 @@ def generar_outfits_contextuales(
             clima.icono_clima = "umbrella"
             clima.recomendacion_textil = "Rango húmedo: calzado de cuero tratado, prendas de alta densidad y capas intermedias resistentes a la humedad."
 
+    # CU22: Solicitar Recomendación Contextual de IA, Paso 1.6: Ctrl -> InvEnt : filtrarPrendasConStockDisponible(skus_propuestos)
     productos = db.query(Producto).filter(Producto.estado == "PUBLICADO").all()
 
     def buscar_producto(termino: str) -> Optional[Producto]:
         for p in productos:
             if termino.lower() in p.nombre.lower() or termino.lower() in p.codigo_sku_base.lower():
                 return p
+        # CU22: Solicitar Recomendación Contextual de IA, Paso 1.7: InvEnt --> Ctrl : retorna prendas confirmadas en stock
         return productos[0] if productos else None
 
     # Prenda base
@@ -312,6 +317,7 @@ def generar_outfits_contextuales(
         total_fin_1 = sum(p.precio_final for p in prendas_1)
         afinidad_1 = 98 if clima.temperatura_c < 22 else 88
 
+        # CU22: Solicitar Recomendación Contextual de IA, Paso 1.4: Ctrl -> LLMExt : generarRecomendacionEstilista(clima, ocasion, reglas_color)
         outfits.append(OutfitRecomendadoDTO(
             id_outfit="outfit_executive",
             titulo="Traje Ejecutivo de Alta Distinción",
@@ -461,6 +467,7 @@ def generar_outfits_contextuales(
         f"para generar combinaciones con máxima afinidad textil, armonía cromática y existencias reales en catálogo."
     )
 
+    # CU22: Solicitar Recomendación Contextual de IA, Paso 1.10: Ctrl --> UI : entrega listado de outfits y análisis del estilista
     return RecomendacionesContextualesResponse(
         ciudad=clima.ciudad,
         clima=clima,
@@ -476,11 +483,13 @@ def generar_outfits_contextuales(
     )
 
 
+# CU23: Buscar Productos por Comandos de Voz, Paso 1.4: Ctrl -> NLPExt : extraerIntencionesYEntidades(consulta_texto)
 def procesar_busqueda_voz_semantica(db: Session, consulta_voz: str) -> BusquedaVozResponse:
     texto = consulta_voz.lower().strip()
+    # CU23: Buscar Productos por Comandos de Voz, Paso 1.6: Ctrl -> CatEnt : buscarProductosFiltrados(filtros)
     productos = db.query(Producto).filter(Producto.estado == "PUBLICADO").all()
 
-    # Detección de intenciones
+    # CU23: Buscar Productos por Comandos de Voz, Paso 1.5: NLPExt --> Ctrl : retorna filtros {categoria, color, estilo}
     intencion = "Búsqueda general de moda masculina"
     ocasion = None
     categoria = None
@@ -557,6 +566,7 @@ def procesar_busqueda_voz_semantica(db: Session, consulta_voz: str) -> BusquedaV
             p_final = round(p_base * (1.0 - (desc / 100.0)), 2)
             colores_list = [c.color_nombre for c in p.colores] if p.colores else ["Único"]
 
+            # CU23: Buscar Productos por Comandos de Voz, Paso 1.7: CatEnt --> Ctrl : retorna lista de productos coincidentes
             resultados.append(PrendaResultadoBusquedaDTO(
                 id_producto=p.id_producto,
                 codigo_sku_base=p.codigo_sku_base,
@@ -593,6 +603,7 @@ def procesar_busqueda_voz_semantica(db: Session, consulta_voz: str) -> BusquedaV
                 motivo_coincidencia="Sugerencia destacada del catálogo"
             ))
 
+    # CU23: Buscar Productos por Comandos de Voz, Paso 1.8: Ctrl --> UI : transfiere resultados y transcripción final
     return BusquedaVozResponse(
         consulta_original=consulta_voz,
         intencion_detectada=intencion,

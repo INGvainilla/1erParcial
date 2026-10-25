@@ -25,10 +25,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // CU01: Autenticar Usuario (Login RBAC), Paso 1: El actor ingresa credenciales (email y password) en la interfaz ILoginBoundary móvil
   Future<void> _iniciarSesion() async {
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.0: Sanitizar y capturar entradas del formulario
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.0.1: Validación de campos obligatorios en el cliente móvil
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -39,16 +42,19 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.1: ILoginBoundary móvil invoca autenticación a través de AuthProvider
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final ok = await auth.login(email, password);
 
     if (!mounted) return;
 
+    // CU01: Autenticar Usuario (Login RBAC), Paso 1.8: Si autenticación es exitosa, inicializar contexto de sesión
     if (ok) {
-      // Cargar carrito del usuario autenticado
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.8.1: Sincronizar estado del carrito de compras del usuario autenticado
       await Provider.of<CarritoProvider>(context, listen: false).cargarCarrito();
 
       if (!mounted) return;
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.8.2: Mostrar notificación visual de bienvenida con nombre del cliente
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Bienvenido de vuelta, ${auth.usuario?.displayName ?? ""}'),
@@ -56,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
 
+      // CU01: Autenticar Usuario (Login RBAC), Paso 1.9: Redirigir o cerrar modal de login tras acceso exitoso
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }

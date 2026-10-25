@@ -40,6 +40,8 @@ def api_listar_metodos_pago(
     Exclusivo para Administrador General:
     Devuelve la configuración completa de todos los canales de pago con llaves secretas enmascaradas.
     """
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 1: Acceder a 'Configuración de Pagos' (/admin/pagos-config)
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 1.1: listar_metodos_pago()
     return listar_metodos_pago(db=db, solo_activos=False)
 
 
@@ -59,6 +61,9 @@ def api_actualizar_metodo_pago(
     Exclusivo para Administrador General:
     Modifica el estado activo/inactivo (Toggle Switch) o actualiza credenciales sensibles (API Keys).
     """
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 2: Cambiar interruptor Toggle (Habilitar/Deshabilitar canal)
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 2.1: actualizar_estado_metodo(codigo, {activo: false/true})
+    # CU17: Gestionar Tipos y Medios de Cobro, Paso 3.1: actualizar_credenciales(codigo, credenciales_json)
     return actualizar_metodo_pago(db=db, id_metodo=id_metodo, update_data=update_data)
 
 

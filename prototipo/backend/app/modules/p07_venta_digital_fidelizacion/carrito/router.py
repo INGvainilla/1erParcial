@@ -43,6 +43,10 @@ def agregar_item(
     """
     CU13: Añade un producto al carrito de compras validando existencias atómicamente.
     """
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1: Clic 'Agregar al Carrito' (producto, talla, color, cant)
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 1.1: agregar_item(id_usuario, datos_item)
+    # CU20: Comparar Outfits Lado a Lado, Paso 2.1: transferir_outfit_a_carrito(id_outfit, id_usuario)
+    # CU20: Comparar Outfits Lado a Lado, Paso 2.2: Ctrl -> CartEnt : agregarPrendas(id_usuario, items_outfit)
     return agregar_item_carrito(db=db, id_usuario=current_user.id_usuario, item_in=item_in)
 
 
@@ -56,6 +60,8 @@ def actualizar_item(
     """
     CU13: Actualiza la cantidad de un ítem existente en el carrito con verificación de stock.
     """
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 2: Modificar cantidad (+ / -) o eliminar ítem
+    # CU13: Administrar Carrito de Compras Omnicanal, Paso 2.1: actualizar_cantidad(id_item, nueva_cant)
     return actualizar_cantidad_item(
         db=db,
         id_usuario=current_user.id_usuario,

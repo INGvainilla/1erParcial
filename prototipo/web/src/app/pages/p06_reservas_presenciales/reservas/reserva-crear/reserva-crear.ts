@@ -219,6 +219,7 @@ export class ReservaCrear implements OnInit {
     this.cdr.detectChanges();
   }
 
+  // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1: Seleccionar sucursal, fecha/hora y prendas
   crearReserva() {
     if (!this.selectedSucursal || !this.fechaVisita || !this.horaVisita) {
       this.errorMessage = 'Por favor complete todos los campos obligatorios (Sucursal, Fecha y Hora).';
@@ -250,6 +251,7 @@ export class ReservaCrear implements OnInit {
       }))
     };
 
+    // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
     this.reservaService.crearReserva(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
@@ -260,6 +262,7 @@ export class ReservaCrear implements OnInit {
         }
         this.toast.success('¡Reserva Confirmada!', 'Se ha generado tu Ticket QR oficial.');
         this.cdr.detectChanges();
+        // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.13: renderiza ticket QR y agrega a Mis Tickets
         // Navegar a la pantalla del Ticket pasando los datos completos de la reserva
         this.router.navigate(['/reservas/ticket'], { state: { reserva: response } });
       },

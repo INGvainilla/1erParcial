@@ -770,14 +770,17 @@ export class AdminPagosConfigComponent implements OnInit {
     this.cargarMetodos();
   }
 
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 1: Acceder a 'Configuración de Pagos' (/admin/pagos-config)
   cargarMetodos() {
     this.isLoading = true;
     this.cdr.detectChanges();
 
+    // CU17: Gestionar Tipos y Medios de Cobro, Paso 1.1: listar_metodos_pago()
     this.pagoConfig.getMetodos().subscribe({
       next: (data) => {
         this.metodos = data;
         this.isLoading = false;
+        // CU17: Gestionar Tipos y Medios de Cobro, Paso 1.6: muestra grilla de canales con switches toggle
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -799,15 +802,18 @@ export class AdminPagosConfigComponent implements OnInit {
     }
   }
 
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 2: Cambiar interruptor Toggle (Habilitar/Deshabilitar canal)
   toggleMetodo(metodo: MetodoPagoResponse) {
     const nuevoEstado = !metodo.activo;
     // Actualización optimista en UI
     metodo.activo = nuevoEstado;
     this.cdr.detectChanges();
 
+    // CU17: Gestionar Tipos y Medios de Cobro, Paso 2.1: actualizar_estado_metodo(codigo, {activo: false/true})
     this.pagoConfig.actualizarMetodo(metodo.id_metodo, { activo: nuevoEstado }).subscribe({
       next: (updated) => {
         metodo.activo = updated.activo;
+        // CU17: Gestionar Tipos y Medios de Cobro, Paso 2.6: switch refleja nuevo estado (impacta Checkout y POS en tiempo real)
         this.cdr.detectChanges();
         const msg = updated.activo
           ? `El canal '${metodo.nombre}' fue habilitado.`
@@ -871,6 +877,7 @@ export class AdminPagosConfigComponent implements OnInit {
     }
   }
 
+  // CU17: Gestionar Tipos y Medios de Cobro, Paso 3: Guardar credenciales de pasarela (API Keys)
   guardarConfiguracion(event: Event) {
     event.preventDefault();
     if (!this.selectedMetodo) return;
@@ -882,6 +889,7 @@ export class AdminPagosConfigComponent implements OnInit {
       credenciales: { ...this.editForm }
     };
 
+    // CU17: Gestionar Tipos y Medios de Cobro, Paso 3.1: actualizar_credenciales(codigo, credenciales_json)
     this.pagoConfig.actualizarMetodo(this.selectedMetodo.id_metodo, updatePayload).subscribe({
       next: (updated) => {
         this.isSaving = false;
@@ -890,6 +898,7 @@ export class AdminPagosConfigComponent implements OnInit {
         if (idx >= 0) {
           this.metodos[idx] = updated;
         }
+        // CU17: Gestionar Tipos y Medios de Cobro, Paso 3.5: alerta toast de éxito
         this.toast.success('Parámetros Guardados', `Credenciales para '${updated.nombre}' actualizadas con éxito.`);
         this.closeModal();
       },

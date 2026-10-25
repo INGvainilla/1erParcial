@@ -50,6 +50,8 @@ def buscar_producto_endpoint(
     CU15: Busca un producto por SKU o código de barras y devuelve sus atributos y stock en la sucursal actual.
     """
     suc_id = resolver_sucursal_usuario(current_user, db, id_sucursal)
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1: Escanear código SKU o ingresar nombre
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 1.1: buscar_producto_por_sku(sku, sucursal_id)
     return buscar_producto_por_sku(db=db, sku=sku, id_sucursal=suc_id)
 
 
@@ -81,6 +83,8 @@ def procesar_venta_endpoint(
     suc_id = resolver_sucursal_usuario(current_user, db, id_sucursal)
     cajero_nombre = f"{current_user.nombres} {current_user.apellidos}".strip()
 
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 2: Cobrar orden (Efectivo / Tarjeta / QR)
+    # CU15: Registrar Venta Presencial en Caja (POS), Paso 2.1: procesar_venta_pos(dtoVentaPOS)
     return procesar_venta_pos(
         db=db,
         id_cajero=current_user.id_usuario,
@@ -94,6 +98,7 @@ def procesar_venta_endpoint(
 # ENDPOINTS CU25: Devoluciones y Cambios de Prendas
 # ============================================================================
 
+# CU25: Gestionar Devolución y Cambio de Prendas, Paso 1: Cajero -> UI : Ingresa código de ticket y prenda ("POS-2026-0042")
 @router.get("/devoluciones/ticket/{nro_ticket}", response_model=TicketConsultaResponse)
 def consultar_ticket_devolucion_endpoint(
     nro_ticket: str,
@@ -104,9 +109,11 @@ def consultar_ticket_devolucion_endpoint(
     CU25: Consulta un ticket fiscal para trámite de devolución o cambio de prendas.
     Valida el límite de 14 días calendario y devuelve el detalle de prendas con sus costos históricos CPP.
     """
+    # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.2 & 1.3: Ctrl -> VentaEnt : obtenerDatosVentaYValidarPlazo(id_venta, max_dias = 14) / retorna venta_valida, fecha, cpp_historico
     return consultar_ticket_para_devolucion(db=db, nro_ticket=nro_ticket)
 
 
+# CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.1: UI -> Ctrl : procesar_devolucion(id_venta, id_variante, cantidad, motivo, resolucion)
 @router.post("/devoluciones", response_model=DevolucionTicketResponse, status_code=status.HTTP_201_CREATED)
 def procesar_devolucion_endpoint(
     dev_in: DevolucionCreate,
@@ -124,6 +131,7 @@ def procesar_devolucion_endpoint(
     suc_id = resolver_sucursal_usuario(current_user, db, id_sucursal)
     cajero_nombre = f"{current_user.nombres} {current_user.apellidos}".strip()
 
+    # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.12: Ctrl --> UI : entrega resumen de devolucion y ticket fiscal
     return procesar_devolucion_pos(
         db=db,
         id_cajero=current_user.id_usuario,

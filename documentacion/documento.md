@@ -4586,6 +4586,30 @@ NodeAppServer -- NodeIA : HTTPS REST (JSON)
 @enduml
 ```
 
+> [!NOTE]
+> El diagrama de despliegue oficial se encuentra modelado en Enterprise Architect ([`diagramas1erParcial.eapx`](file:///c:/Users/User/Documents/2-2026/SI2/1erParcial/diagramas/diagramas1erParcial.eapx)).
+
+---
+
+#### 3.1.3 Arquitectura de Red y Topología de Seguridad (Diagrama de Red)
+
+El siguiente diagrama modela la topología física y de seguridad de la infraestructura de red para **FashionStore**, aplicando el estándar de defensa en profundidad con segmentación en DMZ (Zona Desmilitarizada) y VLANs internas protegidas por doble cortafuegos (Firewalls):
+
+> [!NOTE]
+> El diagrama oficial de arquitectura de red se encuentra sincronizado en el repositorio de Enterprise Architect ([`diagramas1erParcial.eapx`](file:///c:/Users/User/Documents/2-2026/SI2/1erParcial/diagramas/diagramas1erParcial.eapx)) bajo el paquete `diagramas de arquitectura y diseno` con el nombre `Diseno_Arquitectura_Red`. Su renderizado de exportación está disponible en [`diagramas/diagrama_de_red.png`](file:///c:/Users/User/Documents/2-2026/SI2/1erParcial/diagramas/diagrama_de_red.png).
+
+<p align="center">
+  <img src="../diagramas/diagrama_de_red.png" alt="Diagrama de Red FashionStore" width="750" />
+</p>
+
+* **Internet y Usuarios:** Conexión de clientes finales a través de la nube pública mediante enlaces redundantes a rúteres de borde.
+* **Firewall Perimetral:** Inspección de tráfico entrante, filtrado de paquetes y mitigación de amenazas hacia servicios expuestos.
+* **DMZ (Zona Desmilitarizada):** Aloja el Servidor Web (frontend y proxy inverso), Servidor de Correo (SMTP transaccional para códigos OTP) y DNS Server corporativo.
+* **Firewall Interno:** Aislamiento estricto entre los servicios de cara al público y la infraestructura interna del negocio.
+* **VLAN Usuarios:** Segmento de red exclusivo para las estaciones de trabajo administrativas y terminales de punto de venta (POS) en sucursales.
+* **VLAN Aplicación:** Segmento seguro para el servidor de aplicaciones backend (FastAPI y microservicios).
+* **VLAN Datos:** Segmento aislado de máxima seguridad para el motor relacional de base de datos (PostgreSQL).
+
 ---
 
 ### 3.2 Diseño de Casos de Uso (Diagramas de Interacción: Secuencia)
