@@ -82,9 +82,7 @@ class AuthService:
             )
 
         # CU01: Autenticar Usuario (Login RBAC), Paso 1.5: Validar contraseña en claro contra password_hash usando Bcrypt
-        clave_valida = verify_password(password, usuario.password_hash) or (
-            usuario.email == "rodrigo.cliente@gmail.com" and password in ("Admin123*", "Cliente123*")
-        )
+        clave_valida = verify_password(password, usuario.password_hash)
 
         # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.1: Flujo alternativo - Credenciales inválidas (incrementar contador y evaluar bloqueo)
         if not clave_valida:

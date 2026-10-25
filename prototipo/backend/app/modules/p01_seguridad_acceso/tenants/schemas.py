@@ -121,3 +121,9 @@ class SuscripcionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CambiarPlanRequest(BaseModel):
+    id_empresa: int
+    id_plan: int
+

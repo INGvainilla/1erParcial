@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, get_current_user_optional, require_roles
+from app.core.subscription import exigir_suscripcion_vigente, verificar_limite_sucursales
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p02_estructura_operativa.sucursales.schemas import (
     CiudadCreate, CiudadResponse, SucursalCreate, SucursalUpdate, SucursalResponse
@@ -61,20 +62,31 @@ def obtener_sucursal_endpoint(
 @router.post("", response_model=SucursalResponse, status_code=status.HTTP_201_CREATED)
 def registrar_sucursal_endpoint(
     request: SucursalCreate,
-    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    # CU05: Alta de sucursal física asignada automáticamente al tenant del administrador
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+        )
+    empresa_id = request.id_empresa if current_user.rol == "SUPER_ADMIN" else current_user.id_empresa
+    if current_user.rol != "SUPER_ADMIN" and empresa_id:
+        verificar_limite_sucursales(db, empresa_id)
     return SucursalControl.registrar_sucursal(db, request, current_user=current_user)
 
 @router.put("/{id_sucursal}", response_model=SucursalResponse)
 def modificar_sucursal_endpoint(
     id_sucursal: int,
     request: SucursalUpdate,
-    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    # CU05: Administrador actualiza horarios operativos o probadores con verificación de tenant
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+        )
     return SucursalControl.modificar_sucursal(
         db, id_sucursal=id_sucursal, request=request, current_user=current_user
     )

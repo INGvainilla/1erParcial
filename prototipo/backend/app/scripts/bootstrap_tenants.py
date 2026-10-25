@@ -174,6 +174,12 @@ def _sembrar_usuarios(db: Session, emp2, resumen: Dict) -> None:
             telefono="+591 71112233", rol="ADMINISTRADOR", estado_cuenta="ACTIVO"
         ))
         resumen["usuarios_creados"] += 1
+
+    # CU01/D2: Resembrar cuenta demo rodrigo con hash Bcrypt estándar para eliminar puerta trasera
+    rodrigo = db.query(Usuario).filter(Usuario.email == "rodrigo.cliente@gmail.com").first()
+    if rodrigo:
+        rodrigo.password_hash = get_password_hash("Admin123*")
+
     db.commit()
 
 

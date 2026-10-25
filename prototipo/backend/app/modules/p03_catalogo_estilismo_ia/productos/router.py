@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, get_current_user_optional, require_roles
+from app.core.subscription import exigir_suscripcion_vigente
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p03_catalogo_estilismo_ia.productos.schemas import (
     CategoriaCreate, CategoriaResponse, MarcaCreate, MarcaResponse,
@@ -86,21 +87,30 @@ def obtener_producto_endpoint(
 @router.post("", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED)
 def guardar_producto_endpoint(
     request: ProductoCreate,
-    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    # CU06: Administrador envía ficha técnica de prenda; id_empresa proviene del usuario autenticado
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+        )
     return ProductoControl.guardar_producto(db, request, current_user=current_user)
 
 @router.put("/{id_producto}", response_model=ProductoResponse)
 def modificar_producto_endpoint(
     id_producto: int,
     request: ProductoUpdate,
-    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    # CU06: Administrador actualiza especificaciones técnicas con verificación estricta de tenant
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+        )
     return ProductoControl.modificar_producto(
         db, id_producto=id_producto, request=request, current_user=current_user
     )
+
 

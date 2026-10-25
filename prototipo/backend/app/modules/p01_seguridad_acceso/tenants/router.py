@@ -8,10 +8,13 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_super_admin, require_roles
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.core.subscription import (
+    obtener_suscripcion_vigente, cambiar_plan, obtener_capacidades
+)
 from app.modules.p01_seguridad_acceso.tenants.schemas import (
     EmpresaCreate, EmpresaUpdate, EmpresaEstadoUpdate, EmpresaResponse,
     PlanCreate, PlanUpdate, PlanResponse,
-    SuscripcionCreate, SuscripcionResponse
+    SuscripcionCreate, SuscripcionResponse, CambiarPlanRequest
 )
 from app.modules.p01_seguridad_acceso.tenants import services
 
@@ -150,7 +153,36 @@ def obtener_suscripcion_activa(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tiene permiso para consultar la suscripción de otra empresa."
         )
-    susc = services.obtener_suscripcion_activa(db, id_empresa)
+    susc = obtener_suscripcion_vigente(db, id_empresa)
     if not susc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"La empresa #{id_empresa} no tiene una suscripción activa")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"La empresa #{id_empresa} no tiene una suscripción activa o vigente.")
     return susc
+
+
+@router.post("/suscripciones/cambiar-plan", response_model=SuscripcionResponse, summary="CU03: Cambiar Plan de Suscripción (Upgrade / Downgrade)")
+def cambiar_plan_endpoint(
+    datos: CambiarPlanRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    if current_user.rol != "SUPER_ADMIN" and (current_user.id_empresa != datos.id_empresa or current_user.rol not in ["ADMINISTRADOR", "GERENTE"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No cuenta con permisos para modificar el plan de esta empresa."
+        )
+    return cambiar_plan(db, datos.id_empresa, datos.id_plan)
+
+
+@router.get("/empresas/{id_empresa}/capacidades", summary="CU01/CU03: Consultar Capacidades y Cuotas de Tenant")
+def obtener_capacidades_endpoint(
+    id_empresa: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    if current_user.rol != "SUPER_ADMIN" and current_user.id_empresa != id_empresa:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permiso para consultar las capacidades de otra empresa."
+        )
+    return obtener_capacidades(db, id_empresa)
+

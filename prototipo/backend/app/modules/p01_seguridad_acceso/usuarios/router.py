@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_roles
+from app.core.subscription import exigir_suscripcion_vigente, verificar_limite_usuarios
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
 from app.modules.p01_seguridad_acceso.usuarios.schemas import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse, DesbloquearUsuarioResponse
@@ -38,12 +39,18 @@ def listar_usuarios_endpoint(
 def crear_usuario_endpoint(
     request_data: UsuarioCreate,
     request: Request,
-    current_user: Usuario = Depends(require_roles(["SUPER_ADMIN", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    # CU05: Alta de usuario asignando automáticamente la empresa del administrador
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+        )
     client_ip = request.client.host if request.client else "127.0.0.1"
     empresa_id_destino = request_data.id_empresa if current_user.rol == "SUPER_ADMIN" else current_user.id_empresa
+    if current_user.rol != "SUPER_ADMIN" and empresa_id_destino:
+        verificar_limite_usuarios(db, empresa_id_destino, request_data.rol)
     return UsuarioAdminControl.registrar_usuario_staff(
         db=db,
         request=request_data,
