@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     
     @property
     def SQLITE_URL(self) -> str:
+        # Permite aislar la BD local (p. ej. copia temporal para pruebas) sin tocar la versionada
+        override = os.getenv("FASHIONSTORE_SQLITE_PATH")
+        if override:
+            return f"sqlite:///{override.replace(chr(92), '/')}"
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         return f"sqlite:///{os.path.join(base_dir, 'fashionstore_local.db')}"
 

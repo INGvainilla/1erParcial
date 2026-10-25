@@ -2,6 +2,23 @@
 """
 Fixtures compartidos de Pytest para la suite de pruebas de FashionStore.
 """
+import os
+import shutil
+import tempfile
+
+# --- Aislamiento de datos de prueba (F0.2) -----------------------------------
+# Debe ejecutarse ANTES de importar cualquier módulo de `app`, porque el motor de
+# base de datos se crea al importar. Si no hay PostgreSQL/DATABASE_URL ni una ruta
+# explícita, se trabaja sobre una COPIA temporal del .db versionado.
+if not os.getenv("DATABASE_URL") and not os.getenv("FASHIONSTORE_SQLITE_PATH"):
+    _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _origen = os.path.join(_backend_dir, "app", "fashionstore_local.db")
+    _tmp_dir = tempfile.mkdtemp(prefix="fashionstore_tests_")
+    _destino = os.path.join(_tmp_dir, "fashionstore_test.db")
+    if os.path.exists(_origen):
+        shutil.copy2(_origen, _destino)
+    os.environ["FASHIONSTORE_SQLITE_PATH"] = _destino
+
 import pytest
 from app.core.database import SessionLocal
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
