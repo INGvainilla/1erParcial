@@ -291,44 +291,43 @@ La aplicación de ICONIX permite a los futuros ingenieros dominar el **principio
 A continuación se especifica exhaustivamente cada uno de los **8 módulos consolidados del Segundo Parcial**, detallando su descripción operativa, estructura de datos clave con restricciones de integridad, funcionalidades nucleares y casos de uso asociados:
 
 #### 1.5.1.1 Módulo M01: Plataforma SaaS Multitenant, Planes y Seguridad RBAC (Desafío VI)
-- **Descripción General:** Administra el ciclo de vida, configuración, aprovisionamiento y aislamiento lógico estricto de las empresas clientes (**tenants**). Gobierna los tiers comerciales de suscripción (Básico, Profesional, Enterprise) con fiscalización de cuotas máximas de sucursales activas y usuarios, y gestiona la seguridad perimetral mediante autenticación JWT cifrada con hash `bcrypt` y control de acceso basado en roles (RBAC) con discriminador `tenant_id` en PostgreSQL 15.
+- **Descripción General:** Administra el ciclo de vida, configuración, aprovisionamiento y aislamiento lógico estricto de las empresas clientes (**tenants**). Gobierna los tiers comerciales de suscripción (Plan Básico: hasta 2 sucursales; Plan Profesional: hasta 10 sucursales) con fiscalización de cuotas máximas de sucursales activas y empleados, y gestiona la seguridad perimetral mediante autenticación JWT cifrada con hash `bcrypt` y control de acceso basado en roles (RBAC) con discriminador `id_empresa` (Integer) y validación en PostgreSQL / SQLite de respaldo.
 - **Datos Principales:** 
-  - `empresas` (`id_empresa` PK UUID, `razon_social` VarChar 150, `nit_identificacion` VarChar 30 Unique, `subdominio` VarChar 50 Unique, `email_contacto` VarChar 100, `estado_empresa` Enum: `ACTIVA`, `SUSPENDIDA`, `INACTIVA`, `fecha_registro` Timestamp).
-  - `planes_suscripcion` (`id_plan` PK Int, `codigo_plan` VarChar 20 Unique, `nombre_plan` VarChar 50, `costo_mensual` Decimal 10,2, `limite_sucursales` Int, `limite_usuarios` Int, `acceso_ia_generativa` Boolean, `acceso_machine_learning` Boolean).
-  - `suscripciones` (`id_suscripcion` PK UUID, `empresa_id` FK, `plan_id` FK, `fecha_inicio` Date, `fecha_vencimiento` Date, `estado` Enum: `ACTIVA`, `VENCIDA`, `SUSPENDIDA`).
-  - `usuarios` (`id_usuario` PK UUID, `tenant_id` FK, `email` VarChar 150 Unique, `password_hash` VarChar 255, `rol` Enum: `SUPER_ADMIN`, `ADMIN_EMPRESA`, `ENCARGADO_SUCURSAL`, `CAJERO`, `CLIENTE`, `intentos_fallidos` SmallInt).
+  - `empresas` (`id_empresa` PK Integer autoincremental, `nit` VarChar 30 Unique, `razon_social` VarChar 150, `nombre_comercial` VarChar 150, `dominio_slug` VarChar 50 Unique, `schema_name` VarChar 50, `presupuesto_disponible` Numeric 12,2, `estado` Enum/VarChar: `ACTIVA`, `SUSPENDIDA`, `VENCIDA`, `email_contacto` VarChar 100).
+  - `planes_suscripcion` (`id_plan` PK Integer autoincremental, `codigo` VarChar 30 Unique, `nombre` VarChar 50, `precio_mensual` Numeric 10,2, `max_sucursales` Integer, `max_usuarios` Integer, `permite_reportes_ia` Boolean, `permite_ml_dashboard` Boolean, `soporta_offline` Boolean, `estado` VarChar 20).
+  - `suscripciones` (`id_suscripcion` PK Integer autoincremental, `id_empresa` FK Integer, `id_plan` FK Integer, `fecha_inicio` Date, `fecha_vencimiento` Date, `estado` Enum/VarChar: `ACTIVA`, `VENCIDA`, `SUSPENDIDA`, `CANCELADA`, `CAMBIADA`, `auto_renovar` Boolean).
+  - `usuarios` (`id_usuario` PK Integer autoincremental, `id_empresa` FK Integer Nullable, `id_sucursal` FK Integer Nullable, `email` VarChar 100 Unique, `password_hash` VarChar 255, `rol` Enum/VarChar: `SUPER_ADMIN`, `ADMINISTRADOR`, `ENCARGADO_SUCURSAL`, `CAJERO`, `LOGISTICA`, `CLIENTE`, `PROVEEDOR`, `estado_cuenta` VarChar 30, `intentos_fallidos` Integer).
 - **Funcionalidades Clave:**
-  - Aprovisionamiento administrativo de nuevas empresas con validación de NIT y subdominio único.
-  - Aislamiento estricto de datos en backend: inyección forzosa del filtro `WHERE tenant_id = :current_tenant` en el 100% de consultas ORM y queries SQL.
-  - Parametrización y control dinámico de cuotas según plan contratado (bloqueo automático ante intentos de creación que excedan el límite de sucursales o usuarios).
-  - Middleware de verificación de vigencia de suscripción previo a conceder acceso a endpoints de negocio.
-  - Autenticación segura con tokens JWT portando claims de identidad, rol y tenant, con bloqueo de cuenta tras 5 intentos fallidos.
+  - Aprovisionamiento administrativo de nuevas empresas con validación de NIT y slug de subdominio único.
+  - Aislamiento estricto multitenant en backend (`app/core/tenancy.py`): resolución forzosa de tenant mediante `resolver_empresa` y validación cruzada con `exigir_mismo_tenant`, retornando `HTTP 403 Forbidden` ante accesos entre tenants ajenos.
+  - Motor de suscripciones (`app/core/subscription.py`): validación de vigencia temporal (`exigir_suscripcion_vigente`), cuotas de sucursales (`LIMITE_PLAN_SUCURSALES` 409), cuotas de personal (`LIMITE_PLAN_USUARIOS` 409) y validación de downgrades (`DOWNGRADE_NO_PERMITIDO` 409).
+  - Consulta de capacidades y consumo de cuotas vía endpoint `GET /api/v1/tenants/empresas/{id}/capacidades`.
+  - Autenticación segura con tokens JWT portando claims de identidad, rol y tenant, con bloqueo preventivo tras 5 intentos fallidos y resguardo contra puertas traseras.
 - **Casos de Uso Asociados:** `CU01` (Gestionar Empresas), `CU02` (Gestionar Planes de Suscripción), `CU03` (Gestionar Suscripción de Empresa), `CU04` (Autenticar Usuario Multitenant), `CU05` (Gestionar Usuarios y Roles por Empresa).
 
 #### 1.5.1.2 Módulo M02: Catálogo de Productos y Atributos Textiles Avanzados
-- **Descripción General:** Centraliza la catalogación técnica de prendas de vestir masculinas bajo especificaciones avanzadas del retail de moda. Erradica la incertidumbre dimensional de calce mediante tablas métricas anatómicas en centímetros, gestiona esquemas de color simples y combinados bicolores con códigos visuales Hexadecimales, especifica la composición de telas (lino, algodón pima, lana merino) con advertencias dermatológicas hipoalergénicas y gestiona modelos tridimensionales (`.glb`) para el vestidor virtual en Realidad Aumentada.
-- **Datos Principales:** `id_producto` (PK, UUID), `tenant_id` (FK, UUID), `sku` (VarChar 50, Unique por Tenant), `nombre_comercial` (VarChar 120), `categoria_id` (FK, Int), `temporada_id` (FK, Int), `corte_estilo` (Enum: `SLIM_FIT`, `REGULAR_FIT`, `CUSTOM_FIT`), `tipo_tejido` (VarChar 100), `es_hipoalergenico` (Boolean), `modelo_3d_url` (Text), `precio_base_menor` (Decimal 10,2), `precio_mayorista` (Decimal 10,2), `variantes` (`talla_cm_json` [pecho, cintura, cadera, largo], `color_hex_primario`, `color_hex_secundario`).
+- **Descripción General:** Centraliza la catalogación técnica de prendas de vestir masculinas bajo especificaciones avanzadas del retail textil y confección de alta sastrería. Erradica la incertidumbre dimensional de calce mediante tablas métricas anatómicas en centímetros (`medidas_antropometricas` en JSON por talla), gestiona esquemas de color con código HEX primario y secundario para solapas y contrastes (`codigo_hex_secundario`), y especifica la composición precisa de telas (`composicion_textil`, ej. 100% Algodón Pima, 85% Lana Merino Super 120s) con certificación hipoalergénica y modelos tridimensionales (`.glb`).
+- **Datos Principales:** `id_producto` (PK, Integer autoincremental), `id_empresa` (FK, Integer), `codigo_sku_base` (VarChar 50, Unique Global), `nombre` (VarChar 150), `id_categoria` (FK, Integer), `id_marca` (FK, Integer), `id_temporada` (FK, Integer Nullable), `precio_base` (Numeric 10,2), `composicion_textil` (VarChar 150), `medidas_antropometricas` (Text JSON conteniendo medidas corporales en cm: pecho, cintura, cadera y largo por talla), `modelo_3d_glb` (VarChar 255), `colores` (`color_nombre`, `codigo_hex`, `codigo_hex_secundario`), `tallas` (`talla`, `medidas_cm`, factor de precio).
 - **Funcionalidades Clave:**
-  - Alta y catalogación de prendas con ficha técnica completa y switch de certificación dermatológica hipoalergénica.
-  - Generador matricial de variantes combinando tallas antropométricas en cm y selectores bicolores (ej. Blanco/Negro `#FFFFFF / #000000` o Azul/Gris `#1A2A3A / #808080`).
-  - Vinculación y optimización de archivos 3D (`.glb`) para renderizado AR en la cámara de la aplicación móvil Flutter.
-  - Establecimiento de precios diferenciados: tarifa unitaria minorista estándar y precio al por mayor.
+  - Alta y catalogación de prendas con composición textil certificada y enlace de modelo 3D para vestidor virtual.
+  - Generador matricial de variantes con paleta de colores simples o bicolores con códigos hexadecimales.
+  - Guía visual interactiva de medidas antropométricas en centímetros desplegable tanto en el modal de gestión como en el catálogo público, orientada a minimizar devoluciones.
+  - Matriz omnicanal de precios diferenciados por talla calculada automáticamente a partir del precio base.
 - **Casos de Uso Asociados:** `CU06` (Gestionar Productos y Atributos Textiles Avanzados).
 
 #### 1.5.1.3 Módulo M03: Logística de Inventario Multi-Sucursal, Kardex Físico-Valorado y CPP
-- **Descripción General:** Controla las existencias físicas y contables de cada variante textil en cada una de las tiendas de la empresa. Administra el desglose tripartito de stock (físico, reservado y disponible), ejecuta el recálculo matemático inmutable del Costo Promedio Ponderado (CPP) tras cada ingreso de mercadería respaldado por factura, genera auditoría en el libro Kardex, dispara alertas automáticas de reposición por stock mínimo y gestiona la logística de transferencias inter-sucursales.
+- **Descripción General:** Controla las existencias físicas y contables de cada variante textil en cada una de las sucursales de la empresa. Administra el desglose tripartito de stock (físico, reservado y disponible), ejecuta el recálculo matemático inmutable del Costo Promedio Ponderado (CPP) con redondeo estándar contable `ROUND_HALF_UP` a dos decimales tras cada ingreso de mercadería respaldado por factura, genera auditoría cronológica en el libro Kardex y garantiza bloqueo de concurrencia a nivel de fila (`with_for_update`) para impedir condiciones de carrera.
 - **Datos Principales:** 
-  - `inventario_sucursal` (`id_inventario` PK UUID, `tenant_id` FK, `sucursal_id` FK, `variante_id` FK, `stock_fisico` Int, `stock_reservado` Int, `stock_disponible` Int: `stock_fisico - stock_reservado`, `costo_promedio_ponderado` Decimal 12,4, `ultimo_costo_unitario` Decimal 10,2, `stock_minimo_seguridad` Int).
-  - `movimientos_kardex` (`id_kardex` PK UUID, `tipo_movimiento` Enum: `ENTRADA_COMPRA`, `VENTA_POS`, `DEVOLUCION_CAMBIO`, `TRASPASO_SALIDA`, `TRASPASO_ENTRADA`, `cantidad` Int, `costo_unitario` Decimal 10,2, `saldo_fisico` Int, `saldo_valorado` Decimal 12,2, `comprobante_factura` VarChar 50).
-  - `traspasos_inventario` (`id_traspaso` PK UUID, `sucursal_origen_id` FK, `sucursal_destino_id` FK, `guia_remision` VarChar 50 Unique, `estado` Enum: `SOLICITADO`, `EN_TRANSITO`, `RECIBIDO_CONFORME`, `DISCREPANCIA`).
+  - `inventario` (`id_inventario` PK Integer autoincremental, `id_empresa` FK Integer, `id_sucursal` FK Integer, `id_producto` FK Integer, `talla` VarChar 20, `color` VarChar 50, `stock_fisico` Integer, `stock_reservado` Integer, `stock_disponible` Integer: `stock_fisico - stock_reservado`, `stock_minimo` Integer default 5, `costo_promedio_ponderado` Numeric 10,2, `ultimo_costo_compra` Numeric 10,2).
+  - `kardex_movimientos` (`id_movimiento` PK Integer autoincremental, `id_inventario` FK Integer, `tipo_movimiento` VarChar 50: `ENTRADA_COMPRA`, `VENTA_POS`, `DEVOLUCION_CAMBIO`, `cantidad` Integer, `costo_unitario_movimiento` Numeric 10,2, `saldo_cantidad_resultante` Integer, `saldo_cpp_resultante` Numeric 10,2, `referencia_documento` VarChar 150, `fecha_hora` Timestamp).
 - **Funcionalidades Clave:**
-  - Desglose de existencias en tiempo real por sucursal física (`Físico - Reservado = Disponible`).
-  - Recálculo inmutable del Costo Promedio Ponderado tras cada entrada de lote de compra:
+  - Desglose de existencias en tiempo real por sucursal física (`Físico - Reservado = Disponible`) con filtro estricto por tenant.
+  - Recálculo atómico e inmutable del Costo Promedio Ponderado tras cada entrada de lote de compra:
     $$CPP_{\text{nuevo}} = \frac{(\text{Stock}_{\text{ant}} \times CPP_{\text{ant}}) + (\text{Cant}_{\text{ingreso}} \times \text{Costo}_{\text{ingreso}})}{\text{Stock}_{\text{ant}} + \text{Cant}_{\text{ingreso}}}$$
-  - Libro de Kardex físico-valorado inmutable para control fiscal y contable bajo la Ley 843.
-  - Logística de traspasos entre tiendas físicas: despacho en tránsito (descuento de disponible) y confirmación física en destino con ajuste de CPP local.
+  - Asiento cronológico inmutable en `kardex_movimientos` con trazabilidad fiscal bajo la Ley 843 (IVA 13%, IT 3%).
+  - Protección transaccional concurrente con bloqueo de fila para garantizar recálculos exactos bajo múltiples compras simultáneas.
   - Alertas automáticas de reposición urgente ante existencias inferiores al umbral mínimo de seguridad.
-- **Casos de Uso Asociados:** `CU07` (Gestionar Inventario Multi-Sucursal y CPP), `CU14` (Gestionar Traspaso Inter-Sucursal de Inventario).
+- **Casos de Uso Asociados:** `CU07` (Gestionar Inventario Multi-Sucursal y CPP Inmutable).
 
 #### 1.5.1.4 Módulo M04: Operaciones Comerciales Offline y Punto de Venta POS (Desafíos II y III)
 - **Descripción General:** Garantiza la continuidad comercial ininterrumpida de las tiendas físicas y la experiencia del cliente ante caídas del servicio de Internet o cortes de energía eléctrica. Integra almacenamiento local (IndexedDB en la PWA Angular y SQLite en Flutter), navegación autónoma del catálogo, reservas presenciales temporales con tickets QR, terminal POS de contingencia para cobros en efectivo al contado con UUID v4 y bandeja de arqueo local.
@@ -392,6 +391,15 @@ A continuación se especifica exhaustivamente cada uno de los **8 módulos conso
   - Inferencia predictiva de demanda a 6 meses vista por categoría y sucursal para anticipar quiebres o sobrestock.
   - Heatmaps de rotación de prendas por combinaciones de talla (XS a XXL) y color.
 - **Casos de Uso Asociados:** `CU15` (Solicitar Reporte Generativo con IA), `CU16` (Exportar Reportes Analíticos a Excel/PDF), `CU17` (Gestionar Dashboard Analítico con Machine Learning).
+
+#### 1.5.1.9 Cronograma y Alcance de Entregas por Hitos Evaluativos (Línea de Tiempo)
+En concordancia con el plan de desarrollo de la cátedra para el Segundo Parcial, se formaliza el alcance y distribución de los 20 casos de uso en las presentaciones evaluativas:
+
+| Hito Evaluativo | Casos de Uso Cubiertos | Alcance Tecnológico y Entregables Verificados | Estado |
+| :--- | :--- | :--- | :---: |
+| **Presentación 1 (Ciclo 1)** | **CU01 al CU07** | **Infraestructura SaaS Multitenant y Dominio Textil Central:**<br>• CU01: Gestión y aprovisionamiento de Empresas (Tenants).<br>• CU02: Parametrización de Planes de Suscripción (Básico y Pro).<br>• CU03: Control de vigencia de suscripciones, cuotas y cambio de plan.<br>• CU04: Autenticación RBAC Multitenant con JWT seguro.<br>• CU05: Gestión de Sucursales físicas con GPS y Usuarios por Tenant.<br>• CU06: Catálogo textil con composición, color secundario y medidas en cm.<br>• CU07: Inventario multi-sucursal y recálculo inmutable de CPP contable. | **100% IMPLEMENTADO Y VALIDADO** |
+| **Presentación 2 (Ciclo 2)** | **CU08 al CU14** | **Arquitectura Offline-First y Resiliencia en Punto de Venta:**<br>• PWA instalable con Service Workers e IndexedDB en Web.<br>• Persistencia local desconectada con SQLite relacional en Flutter.<br>• Reservas y ventas POS offline con comprobantes temporales UUID v4.<br>• Protocolo idempotente de sincronización batch diferida.<br>• Circuito post-venta de cambio de prendas en dos tiempos y traspasos. | Planificado |
+| **Presentación 3 / Final (Ciclo 3)** | **CU15 al CU20** | **Analítica Avanzada, Inteligencia Artificial y Machine Learning:**<br>• Asistente de reportes generativos en lenguaje natural (NLP).<br>• Motor de Machine Learning (clustering de clientes y regresión de demanda).<br>• Exportación masiva de auditoría a PDF y Excel.<br>• Reglas comerciales de liquidación y compras web desktop. | Planificado |
 
 ### 1.5.2 Los Seis Desafíos Tecnológicos del Segundo Parcial
 
