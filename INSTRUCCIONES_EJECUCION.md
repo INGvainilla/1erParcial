@@ -11,6 +11,74 @@
 
 ---
 
+## 🎯 SEGUNDO PARCIAL — PRESENTACIÓN 1: CASOS DE USO CU01 AL CU07 (100% IMPLEMENTADOS)
+
+Esta entrega corresponde al **Hito 1 (Ciclo 1)** del Segundo Parcial bajo la metodología **ICONIX**, implementando la infraestructura central **SaaS Multitenant** y el dominio textil avanzado:
+
+| Caso de Uso | Denominación Oficial | Backend (FastAPI + SQLAlchemy) | Frontend Web (Angular Glassmorphism) | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| **CU01** | Gestionar Empresas (Tenants) | Modelo `Empresa`, slug único, resolución de tenant en `app/core/tenancy.py`. | Módulo de gestión de empresas en `/admin/tenants/empresas`. | ✅ 100% |
+| **CU02** | Gestionar Planes de Suscripción | Modelo `PlanSuscripcion`, cuotas Básico (2 sucursales) y Pro (10 sucursales). | Visualización y parametrización de planes en `/admin/tenants/planes`. | ✅ 100% |
+| **CU03** | Gestionar Suscripción de Empresa | Motor `app/core/subscription.py`, control de vigencia, cuotas y cambio de plan. | Tarjeta de suscripción en Sidebar con medidores de cuota y cambio de plan. | ✅ 100% |
+| **CU04** | Autenticar Usuario Multitenant | JWT seguro con claims `id_empresa`, `rol`, bloqueo preventivo tras 5 fallos. | Guardas RBAC, login multitenant y discriminación de perfil en sesión. | ✅ 100% |
+| **CU05** | Gestionar Sucursales y Usuarios | Filtro estricto por tenant, validación de límite de plan (`HTTP 409`). | Gestión de tiendas con coordenadas GPS y administración de personal. | ✅ 100% |
+| **CU06** | Catálogo y Atributos Textiles | Composición de tela, medidas en cm (JSON) y código HEX secundario. | Formulario con guía interactiva de medidas en cm, colores y catálogo. | ✅ 100% |
+| **CU07** | Inventario Multi-Sucursal y CPP | Recálculo inmutable de CPP (`ROUND_HALF_UP` 2 decimales) y Kardex. | Vista de existencias por sucursal, libro de Kardex y registro de lotes. | ✅ 100% |
+
+### 🔑 Credenciales Sembradas Oficiales para la Demostración
+
+| Rol | Correo Electrónico | Contraseña | Tenant / Empresa Asignada | Capacidades |
+| :--- | :--- | :--- | :--- | :--- |
+| **SuperAdmin** | `superadmin@fashionstore.bo` | `SuperAdmin123*` | *Plataforma Global* (Sin tenant) | Administra empresas, planes, cuotas globales |
+| **Admin Tenant 1** | `alberto.delgado@store.bo` | `Admin123*` | **FashionStore** (Plan Profesional - hasta 10 tiendas) | Administra sucursales, personal, catálogo y CPP |
+| **Admin Tenant 2** | `admin@elegance.bo` | `Elegance123*` | **Elegance Boutique** (Plan Básico - hasta 2 tiendas) | Administra sucursal única; útil para probar límites |
+
+---
+
+### 🎬 Guión Paso a Paso para la Demostración ante el Docente
+
+1. **Arranque Rápido del Sistema:**
+   ```powershell
+   cd prototipo\backend
+   python run.py
+   ```
+   Abrir navegador en `http://localhost:8000/app` (la SPA Angular servida directamente) o iniciar el frontend con `cd prototipo\web; npm start` en `http://localhost:4200`.
+
+2. **Paso 1: Demostración SuperAdmin (CU01, CU02, CU03)**
+   - Iniciar sesión con `superadmin@fashionstore.bo` / `SuperAdmin123*`.
+   - Navegar a la gestión de **Empresas** y **Planes de Suscripción**.
+   - Observar los planes parametrizados: **Plan Básico** (límite 2 sucursales) y **Plan Profesional** (límite 10 sucursales).
+   - Cerrar sesión.
+
+3. **Paso 2: Demostración Empresa 1 y Contexto de Tenant en Sidebar (CU03, CU04, CU05)**
+   - Iniciar sesión con `alberto.delgado@store.bo` / `Admin123*`.
+   - Observar en el lateral izquierdo (**Sidebar**) la tarjeta de contexto del Tenant:
+     - Nombre comercial: **FashionStore**
+     - Plan activo: **Profesional** con distintivo verde de vigencia.
+     - Días restantes de cobertura.
+     - Medidores de cuota en vivo: **Sucursales utilizadas vs. límite** y **Personal activo vs. límite**.
+
+4. **Paso 3: Atributos Textiles Avanzados en Catálogo (CU06)**
+   - Ir al módulo **Catálogo de Productos**.
+   - Seleccionar una prenda (o presionar *"Nuevo Producto"*):
+     - Observar el campo de **Composición Textil** (ej. *85% Lana Merino Super 120s, 15% Seda Mulberry*).
+     - Observar la paleta de colores bicolores con **código HEX secundario** para solapas o contrastes.
+     - Presionar el botón interactivo **"Guía cm"**: se desplegará el popover con las medidas anatómicas exactas en centímetros (pecho, cintura, cadera, largo) para cada talla.
+
+5. **Paso 4: Logística de Inventario Multi-Sucursal y CPP Inmutable (CU07)**
+   - Ir al módulo de **Inventario y Kardex**.
+   - Registrar un nuevo ingreso de mercadería respaldado con número de factura.
+   - Comprobar cómo el **Costo Promedio Ponderado (CPP)** se recalcula matemáticamente de forma inmutable con redondeo contable a dos decimales y se asienta en el libro de movimientos de Kardex.
+
+6. **Paso 5: Resguardo de Límites de Plan y Aislamiento Multitenant (CU03, CU05)**
+   - Cerrar sesión e ingresar con el **Admin Tenant 2** (`admin@elegance.bo` / `Elegance123*` - Plan Básico).
+   - Intentar registrar una tercera sucursal: el backend interceptará la operación con un error `409 Conflict (LIMITE_PLAN_SUCURSALES)` y la interfaz web desplegará de inmediato una notificación amigable advirtiendo que ha alcanzado el límite de su plan.
+   - Verificar que los datos, productos y personal de FashionStore no son visibles ni accesibles para Elegance Boutique (`HTTP 403 Forbidden`).
+
+---
+
+---
+
 ## 📋 Tabla de Contenidos
 1. [Arquitectura Tecnológica del Proyecto](#-arquitectura-tecnológica-del-proyecto)
 2. [Estructura del Repositorio y los 10 Paquetes PUDS](#-estructura-del-repositorio-y-los-10-paquetes-puds)
