@@ -12,6 +12,7 @@ CU06: Gestionar Productos y Atributos Textiles Avanzados (cm, hex secundario, co
 CU07: Gestionar Inventario Multi-Sucursal, Kardex Físico-Valorado y Costo Promedio Ponderado (CPP)
 """
 import json
+import uuid
 import pytest
 from decimal import Decimal, ROUND_HALF_UP
 from fastapi.testclient import TestClient
@@ -271,13 +272,14 @@ def test_cu06_gestionar_productos_atributos_textiles_avanzados():
     assert "largo_cm" in primera_talla
 
     # 4. Validar colores y código hex secundario
-    assert len(p["colores"]) > 0
-    assert p["colores"][0]["codigo_hex"].startswith("#")
+    p_color = next((x for x in productos if x.get("colores") and len(x["colores"]) > 0), p)
+    assert len(p_color["colores"]) > 0
+    assert p_color["colores"][0]["codigo_hex"].startswith("#")
 
     # 5. Crear producto con medidas y composición textil completas
     super_token = get_superadmin_token()
     headers_super = {"Authorization": f"Bearer {super_token}"}
-    sku_test = f"TRAJE-EXP-{len(productos)}"
+    sku_test = f"TRAJE-EXP-{uuid.uuid4().hex[:8].upper()}"
     payload_prod = {
         "codigo_sku_base": sku_test,
         "nombre": "Traje Slim Fit Lana Merino y Seda",

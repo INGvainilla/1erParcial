@@ -151,7 +151,10 @@ if target_dir:
 @app.on_event("startup")
 def startup_event():
     try:
-        from app.core.database import SessionLocal
+        from app.core.database import SessionLocal, Base, engine
+        from app.core.migrations import ensure_columns
+        Base.metadata.create_all(bind=engine)
+        ensure_columns(engine)
         from app.modules.p01_seguridad_acceso.auth.models import Usuario
         from app.scripts.seed_data import seed_database
         import os

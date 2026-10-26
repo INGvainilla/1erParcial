@@ -21,7 +21,8 @@ from typing import Dict, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, Base, engine
+from app.core.migrations import ensure_columns
 from app.core.security import get_password_hash
 # Importar modelos de los 10 paquetes para asegurar registro completo de mappers SQLAlchemy
 import app.modules.p01_seguridad_acceso.tenants.models
@@ -237,6 +238,9 @@ def bootstrap_tenants(db: Optional[Session] = None, vincular_huerfanos: bool = F
     Retorna un resumen de lo que hizo en esta corrida.
     """
     propia = db is None
+    # Asegurar que las tablas y columnas existan antes de consultar
+    Base.metadata.create_all(bind=engine)
+    ensure_columns(engine)
     db = db or SessionLocal()
     resumen: Dict = {
         "planes_creados": 0, "planes_reconciliados": 0, "empresas_creadas": 0,
