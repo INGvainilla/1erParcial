@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.database import SessionLocal
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
-from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
-from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
+from app.modules.p02_estructura_operativa.sucursales.models import Sucursal, Ciudad
+from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto, Categoria, Marca
 from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario
 
 client = TestClient(app)
@@ -38,6 +38,32 @@ def tokens():
 def fixture_resources():
     db = SessionLocal()
     try:
+        # Asegurar una ciudad existente
+        ciudad = db.query(Ciudad).first()
+        if not ciudad:
+            ciudad = Ciudad(nombre_ciudad="Santa Cruz", departamento="Santa Cruz")
+            db.add(ciudad)
+            db.commit()
+            db.refresh(ciudad)
+        id_ciudad_valida = ciudad.id_ciudad
+
+        # Asegurar categoria y marca válidas
+        cat = db.query(Categoria).first()
+        if not cat:
+            cat = Categoria(nombre_categoria="Trajes Elegance", descripcion="Trajes de vestir")
+            db.add(cat)
+            db.commit()
+            db.refresh(cat)
+        id_cat = cat.id_categoria
+
+        marca = db.query(Marca).first()
+        if not marca:
+            marca = Marca(nombre_marca="Elegance Oficial")
+            db.add(marca)
+            db.commit()
+            db.refresh(marca)
+        id_marca = marca.id_marca
+
         # Empresa 1: Sucursal y Producto
         suc_t1 = db.query(Sucursal).filter(Sucursal.id_empresa == 1).first()
         prod_t1 = db.query(Producto).filter(Producto.id_empresa == 1).first()
@@ -49,7 +75,7 @@ def fixture_resources():
         if not suc_t2:
             suc_t2 = Sucursal(
                 id_empresa=2,
-                id_ciudad=1,
+                id_ciudad=id_ciudad_valida,
                 nombre_sucursal="Sucursal Piloto Elegance",
                 direccion="Av. San Martín #200",
                 latitud=-17.78,
@@ -70,8 +96,8 @@ def fixture_resources():
                 codigo_sku_base="TRAJE-SLIM-ELEGANCE",
                 nombre="Traje Slim Elegance",
                 precio_base=850.00,
-                id_categoria=1,
-                id_marca=1,
+                id_categoria=id_cat,
+                id_marca=id_marca,
                 estado="PUBLICADO"
             )
             db.add(prod_t2)

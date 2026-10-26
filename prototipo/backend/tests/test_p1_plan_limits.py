@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.database import SessionLocal
 from app.modules.p01_seguridad_acceso.tenants.models import PlanSuscripcion, SuscripcionEmpresa
-from app.modules.p02_estructura_operativa.sucursales.models import Sucursal
+from app.modules.p02_estructura_operativa.sucursales.models import Sucursal, Ciudad
 
 client = TestClient(app)
 
@@ -32,6 +32,16 @@ def tokens():
     }
 
 
+def _get_or_create_ciudad(db):
+    ciudad = db.query(Ciudad).first()
+    if not ciudad:
+        ciudad = Ciudad(nombre_ciudad="Santa Cruz", departamento="Santa Cruz")
+        db.add(ciudad)
+        db.commit()
+        db.refresh(ciudad)
+    return ciudad.id_ciudad
+
+
 def test_consultar_capacidades_tenant(tokens):
     headers_t1 = {"Authorization": f"Bearer {tokens['admin_t1']}"}
     resp = client.get("/api/v1/tenants/empresas/1/capacidades", headers=headers_t1)
@@ -52,6 +62,7 @@ def test_limite_max_sucursales_plan_basico(tokens):
     # Asegurar que la Empresa 2 ya tenga 2 sucursales en la BD
     db = SessionLocal()
     try:
+        id_ciudad = _get_or_create_ciudad(db)
         cant_actual = db.query(Sucursal).filter(
             Sucursal.id_empresa == 2,
             Sucursal.estado != "CERRADA"
@@ -60,7 +71,7 @@ def test_limite_max_sucursales_plan_basico(tokens):
             cant_actual += 1
             nueva_s = Sucursal(
                 id_empresa=2,
-                id_ciudad=1,
+                id_ciudad=id_ciudad,
                 nombre_sucursal=f"Sucursal Extra E2 #{cant_actual}",
                 direccion="Calle Falsa 123",
                 latitud=-17.78,
@@ -77,7 +88,7 @@ def test_limite_max_sucursales_plan_basico(tokens):
 
     # Intentar crear una 3ra sucursal con el admin de Empresa 2 -> 409 Conflict
     payload = {
-        "id_ciudad": 1,
+        "id_ciudad": id_ciudad,
         "nombre_sucursal": "Sucursal Prohibida 3",
         "direccion": "Av. Exceso de Cuota #999",
         "latitud": -17.7800,
@@ -99,6 +110,7 @@ def test_downgrade_rechazado_por_exceso_de_uso(tokens):
     # Buscar el id del plan básico (que tiene límite de 2 sucursales)
     db = SessionLocal()
     try:
+        id_ciudad = _get_or_create_ciudad(db)
         plan_basico = db.query(PlanSuscripcion).filter(PlanSuscripcion.codigo == "PLAN_BASICO").first()
         id_basico = plan_basico.id_plan
         # Asegurar que Empresa 1 tenga al menos 3 sucursales
@@ -106,7 +118,7 @@ def test_downgrade_rechazado_por_exceso_de_uso(tokens):
         if cant_t1 < 3:
             s_extra = Sucursal(
                 id_empresa=1,
-                id_ciudad=1,
+                id_ciudad=id_ciudad,
                 nombre_sucursal="Sucursal Test Cuota",
                 direccion="Av. Central #333",
                 latitud=-17.78,

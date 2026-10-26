@@ -57,6 +57,10 @@ def sucursal_activa(db):
 
 def test_cu25_consultar_ticket_dentro_de_plazo(db):
     """CU25: Valida que un ticket emitido hace 5 días sea marcado como apto para devolución"""
+    orden = db.query(OrdenVenta).filter(OrdenVenta.numero_factura == "POS-2026-0042").first()
+    if orden:
+        orden.creado_en = utc_now() - timedelta(days=5)
+        db.commit()
     res = consultar_ticket_para_devolucion(db, "POS-2026-0042")
     assert res.numero_factura == "POS-2026-0042"
     assert res.es_valido_14_dias is True

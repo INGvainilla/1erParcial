@@ -4,6 +4,7 @@ y movimientos de Kardex (CU07 / RNF / Métricas contables).
 """
 import pytest
 import json
+import uuid
 from decimal import Decimal
 from fastapi.testclient import TestClient
 from app.main import app
@@ -46,8 +47,9 @@ def test_cpp_secuencia_lotes_y_ponderacion():
     db.close()
 
     # 1. Crear producto exclusivo para este test
+    sku_dinamico = f"CPP-SEQ-{uuid.uuid4().hex[:6].upper()}"
     prod_payload = {
-        "codigo_sku_base": "CPP-TEST-SEQ-001",
+        "codigo_sku_base": sku_dinamico,
         "nombre": "Camisa Oxford CPP",
         "precio_base": 200.0,
         "id_categoria": id_cat,
@@ -132,8 +134,9 @@ def test_cpp_redondeo_half_up():
     id_marca = marca.id_marca if marca else 1
     db.close()
 
+    sku_round = f"CPP-RND-{uuid.uuid4().hex[:6].upper()}"
     prod_payload = {
-        "codigo_sku_base": "CPP-TEST-ROUND-002",
+        "codigo_sku_base": sku_round,
         "nombre": "Pantalón Chino Rounding",
         "precio_base": 180.0,
         "id_categoria": id_cat,

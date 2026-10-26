@@ -45,11 +45,11 @@ env/
 prototipo/backend/.pytest_cache/
 prototipo/backend/tests/
 
-# Bases de datos locales de desarrollo (se regeneran automáticamente)
+# Bases de datos locales de desarrollo (se regeneran automáticamente si faltan)
 *.db
 *.sqlite
 *.sqlite3
-prototipo/backend/fashionstore_local.db
+!prototipo/backend/app/fashionstore_local.db
 
 # Documentación, diagramas Enterprise Architect y archivos pesados
 DOCUMENTACION2/
