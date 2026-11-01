@@ -6,6 +6,7 @@ import {
   PosService, PosItemInput, PosVentaCreate, PosProductoLookupResponse, PosTicketResponse,
   TicketConsultaResponse, TicketItemLookup, DevolucionCreate, DevolucionTicketResponse
 } from '../../../core/services/pos.service';
+import { OfflineStorageService, OperacionOffline } from '../../../core/services/offline-storage.service';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -61,6 +62,18 @@ interface TicketItem extends PosItemInput {
             <span class="pulse-dot"></span>
             <span>CAJA ABIERTA</span>
           </div>
+
+          <!-- Modo Offline / Online Toggle (CU08, CU10) -->
+          <div class="status-chip" [class.offline-chip]="isOfflineMode" [class.online-chip]="!isOfflineMode" (click)="toggleOfflineMode()" style="cursor: pointer;" title="Alternar Modo Offline/Online">
+            <span class="pulse-dot" [style.background]="isOfflineMode ? '#f59e0b' : '#10b981'"></span>
+            <span>{{ isOfflineMode ? 'MODO OFFLINE' : 'EN LÍNEA' }}</span>
+          </div>
+
+          <!-- Botón Bandeja Offline & Sincronizar (CU11, CU12) -->
+          <button class="status-chip sync-chip" (click)="abrirModalSync()" style="cursor: pointer; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: #fff; padding: 6px 12px; border-radius: 20px;">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isSyncing"></i>
+            <span>Bandeja Offline ({{ totalPendientesOffline }})</span>
+          </button>
         </div>
       </header>
 
@@ -863,6 +876,44 @@ interface TicketItem extends PosItemInput {
           </div>
         </div>
       </div>
+
+      <!-- Modal Bandeja Offline & Sincronización Masiva (CU11, CU12) -->
+      <div *ngIf="showSyncModal" class="pos-modal-overlay">
+        <div class="pos-modal-card glass-panel" style="max-width: 650px; width: 90%;">
+          <div class="modal-header">
+            <h3><i class="fas fa-database"></i> Contingencia Offline & Sincronización (CU08, CU11, CU12)</h3>
+            <button class="btn-modal-close" (click)="showSyncModal = false"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <button class="btn-scan" (click)="descargarCatalogoOffline()" [disabled]="isLoadingSyncCatalog" style="flex: 1;">
+                <i class="fas fa-download"></i> <span>Descargar Catálogo (CU08)</span>
+              </button>
+              <button class="btn-scan" (click)="sincronizarLoteOffline()" [disabled]="isSyncing || totalPendientesOffline === 0" style="flex: 1; background: #10b981;">
+                <i class="fas fa-cloud-upload-alt"></i> <span>Sincronizar Pendientes (CU12)</span>
+              </button>
+            </div>
+            <h4>Operaciones Locales en IndexedDB ({{ operacionesLocales.length }})</h4>
+            <div style="max-height: 250px; overflow-y: auto; margin-top: 10px;">
+              <div *ngFor="let op of operacionesLocales" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 13px;">
+                <div>
+                  <span style="font-weight: 600; color: #60a5fa;">{{ op.tipo_operacion }}</span> - 
+                  <span style="color: #94a3b8; font-family: monospace;">UUID: {{ op.uuid_operacion.substring(0, 8) }}...</span>
+                  <div style="font-size: 11px; color: #64748b;">{{ op.fecha_local | date:'short' }} | Sucursal #{{ op.id_sucursal }}</div>
+                </div>
+                <div>
+                  <span *ngIf="op.sincronizado" class="badge" style="background: rgba(16,185,129,0.2); color: #34d399; padding: 3px 8px; border-radius: 10px;">Sincronizado</span>
+                  <span *ngIf="!op.sincronizado" class="badge" style="background: rgba(245,158,11,0.2); color: #fbbf24; padding: 3px 8px; border-radius: 10px;">Pendiente</span>
+                </div>
+              </div>
+              <div *ngIf="operacionesLocales.length === 0" style="text-align: center; color: #94a3b8; padding: 20px;">
+                No hay operaciones locales registradas en este navegador.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `,
   styles: [`
@@ -2668,6 +2719,16 @@ interface TicketItem extends PosItemInput {
 })
 export class PosTerminalComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
+  offlineStorage = inject(OfflineStorageService);
+  isOfflineMode: boolean = false;
+  isSyncing: boolean = false;
+  isLoadingSyncCatalog: boolean = false;
+  showSyncModal: boolean = false;
+  operacionesLocales: OperacionOffline[] = [];
+  get totalPendientesOffline(): number {
+    return this.operacionesLocales.filter(o => !o.sincronizado).length;
+  }
+
   posService = inject(PosService);
   fashionApi = inject(FashionApiService);
   toast = inject(ToastService);
@@ -2795,6 +2856,62 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
       if (this.ticketItems.length > 0 && !this.isProcessingSale) {
         this.procesarVenta();
       }
+    }
+  }
+
+
+  toggleOfflineMode() {
+    this.isOfflineMode = !this.isOfflineMode;
+    if (this.isOfflineMode) {
+      this.toast.info('Modo Offline Activado', 'Las ventas se registrarán localmente en IndexedDB con UUID v4');
+    } else {
+      this.toast.info('Modo Online Reanudado', 'Conexión activa con el servidor central');
+    }
+  }
+
+  async abrirModalSync() {
+    this.showSyncModal = true;
+    await this.cargarOperacionesLocales();
+  }
+
+  async cargarOperacionesLocales() {
+    try {
+      this.operacionesLocales = await this.offlineStorage.obtenerOperacionesLocales();
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error('Error al cargar operaciones locales:', e);
+    }
+  }
+
+  descargarCatalogoOffline() {
+    this.isLoadingSyncCatalog = true;
+    this.offlineStorage.descargarCatalogoRemoto(this.selectedSucursalId).subscribe({
+      next: async (res) => {
+        this.isLoadingSyncCatalog = false;
+        if (res?.prendas) {
+          await this.offlineStorage.guardarCatalogo(res.prendas);
+          this.toast.success('Catálogo Offline Actualizado', res.total_prendas + ' prendas sincronizadas en IndexedDB');
+        }
+      },
+      error: (err) => {
+        this.isLoadingSyncCatalog = false;
+        this.toast.error('Error al descargar catálogo', err.message || 'No se pudo conectar al servidor');
+      }
+    });
+  }
+
+  async sincronizarLoteOffline() {
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+    try {
+      const res = await this.offlineStorage.sincronizarPendientes();
+      await this.cargarOperacionesLocales();
+      this.toast.success('Sincronización Completada', res.exitosas + ' transacciones procesadas con X-Idempotency-Key');
+    } catch (e: any) {
+      this.toast.error('Error al sincronizar', e.message || 'Error de sincronización');
+    } finally {
+      this.isSyncing = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -3063,6 +3180,45 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
         precio_unitario: it.precio_unitario
       }))
     };
+
+    // Modo Offline (CU10 / CU12)
+    if (this.isOfflineMode) {
+      this.offlineStorage.encolarOperacionOffline('VENTA_POS', payload, this.selectedSucursalId).then((op) => {
+        this.isProcessingSale = false;
+        this.ultimoTicket = {
+          id_orden: Math.floor(Math.random() * 90000) + 10000,
+          numero_factura: 'CONTINGENCIA-' + op.uuid_operacion.substring(0, 8).toUpperCase(),
+          id_sucursal: this.selectedSucursalId,
+          nombre_sucursal: this.sucursalActual?.nombre_sucursal || 'Sucursal Modo Offline',
+          direccion_sucursal: this.sucursalActual?.direccion || 'Operación Desconectada',
+          fecha_hora: op.fecha_local,
+          nit_cliente: payload.nit_cliente || '0',
+          nombre_cliente: payload.nombre_cliente || 'Cliente Mostrador',
+          metodo_pago: payload.metodo_pago,
+          subtotal: this.totalTicket,
+          total: this.totalTicket,
+          monto_recibido: payload.monto_recibido || this.totalTicket,
+          cambio_devolver: this.cambioCalculado,
+          cajero_nombre: this.auth.currentUser()?.nombre_completo || 'Cajero Offline',
+          detalles: this.ticketItems.map(it => ({
+            nombre_producto: it.nombre_producto || 'Prenda',
+            codigo_sku_base: it.sku,
+            talla: it.talla,
+            color: it.color,
+            cantidad: it.cantidad,
+            precio_unitario: it.precio_unitario,
+            subtotal: it.cantidad * it.precio_unitario
+          }))
+        };
+        this.showTicketModal = true;
+        this.toast.warning('Venta Offline Registrada', `Comprobante de contingencia generado. UUID: ${op.uuid_operacion.substring(0,8)}...`);
+        this.cargarOperacionesLocales();
+      }).catch(err => {
+        this.isProcessingSale = false;
+        this.toast.error('Error Offline', 'No se pudo guardar la venta en IndexedDB');
+      });
+      return;
+    }
 
     // CU15: Registrar Venta Presencial en Caja (POS), Paso 2.1: procesar_venta_pos(dtoVentaPOS)
     this.posService.procesarVenta(payload).subscribe({

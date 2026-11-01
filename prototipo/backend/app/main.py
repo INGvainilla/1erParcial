@@ -49,6 +49,11 @@ from app.modules.p08_punto_venta_pos.pos.router import router as pos_router
 from app.modules.p09_procesamiento_pagos.pagos.router import router as pagos_router
 from app.modules.p09_procesamiento_pagos.pagos.config_router import router as config_pagos_router
 from app.modules.p10_logistica_delivery.logistica.router import router as logistica_router
+from app.modules.pos.sync_router import router as sync_router
+from app.modules.p05_inventario_costos_analitica.traspasos.router import router as traspasos_router
+from app.modules.p04_aprovisionamiento_proveedores.compras.router import router as compras_router
+from app.modules.p03_catalogo_estilismo_ia.reportes_ia.router import router as reportes_ia_router
+
 
 # Inicializar tablas de base de datos y migraciones preventivas DDL para 2do Parcial
 # (portable PostgreSQL/SQLite, idempotente y sin ocultar errores; ver app/core/migrations.py)
@@ -115,6 +120,11 @@ app.include_router(logistica_router, prefix=API_PREFIX)
 app.include_router(dashboard_router, prefix=API_PREFIX)
 app.include_router(gamificacion_router, prefix=API_PREFIX)
 app.include_router(recomendaciones_router, prefix=API_PREFIX)
+app.include_router(sync_router, prefix=API_PREFIX)
+app.include_router(traspasos_router, prefix=API_PREFIX)
+app.include_router(compras_router, prefix=API_PREFIX)
+app.include_router(reportes_ia_router, prefix=API_PREFIX)
+
 
 # Montar frontend web estático si existe (soporta distribución Angular compilada o carpeta web directa)
 web_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "web"))

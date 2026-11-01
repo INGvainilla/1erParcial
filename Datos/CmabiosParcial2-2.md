@@ -1,0 +1,139 @@
+# Transcripción Completa y Fiel del Audio: CmabiosParcial2-2.m4a
+
+---
+
+**Docente:** La primera se llama...
+
+**Estudiante:** «Plataforma inteligente de comercio electrónico para tienda de ropa virtual con realidad...»
+
+**Docente:** Ya está. A ver, capítulo 1: vamos a mirar un ratito el índice, por favor. Quiero ver si lo tienen: capítulo 1, 2, 3, 4... Ya, estamos bien. Ya, vamos a introducción. A ver, introducción es una página, ¿no? La introducción es una sola página nada más; por qué han hecho dos bien subiditas... Ya no coloquen más de lo que no debe ser, lo esencial: una sola página que sea su introducción. En la siguiente hoja ya debe ser el objetivo y todo lo demás. Ya, seguimos, seguimos. Yo quiero ver requisitos: requisitos funcionales, alcance, objetivo, objetivo, objetivo... ¿Qué pasó con el objetivo? ¿Por qué está demasiado...? No. ¿Y por qué ese objetivo así si estamos...? Seguimos igualito. Lo están viendo: ¡no puede ser ese objetivo, jóvenes! Es un solo verbo. Y el general es ¿qué están haciendo ustedes?: están desarrollando. Entonces no puede haber lo que aquí dice, miren: «diseñar, desarrollar y evolucionar». ¡No! Solo desarrollar. El diseñar y el evolucionar se lo tiene que colocar en otro lugar, no ahí. Ya, miren: como les digo, estamos terminando Sistemas 2, estamos terminando el semestre, se supone que todo esto ya debería estar totalmente consolidado. Entonces quitamos eso. A ver, en los específicos, por favor, vamos... Les pregunto: ¿están bien sus objetivos específicos? A ver, mírenlos, jóvenes: ¿qué dicen? A ver ustedes: ¿qué les está faltando? ¿Lo ven? Todos los objetivos los venimos trabajando desde Sistemas 1: siempre comienzan con un verbo. No pueden ustedes colocarlos como si fuera una redacción o fuera una oración, ya. Un verbo. ¿Se olvidaron de los verbos? ¿Qué pasó? Y todito lo tienen así, miren, todo lo tienen... No, todos lo tienen así. Ya, entonces parece que no fueran objetivos específicos. Lo acomodamos. Continuamos, seguimos, seguimos... De todos los objetivos que hay... No, el alcance, eso por decir... ¿Qué colocamos en el alcance? A ver: autenticación, ¿qué más tienen?
+
+**Estudiante:** Catálogo, inventario centralizado, control de los puntos de venta, carrito de compras, la gestión de control de reserva de la prenda, pasarela de pago, la gestión de cambio de prenda...
+
+**Docente:** Ya. A ver, tenemos los requisitos funcionales y los módulos ahí. En los requisitos funcionales y los módulos...
+
+**Estudiante:** La gestión de empresas y suscripciones SaaS, gestión de sucursales, la gestión de proveedores de la oferta y el abastecimiento, control de inventario, los puntos de venta, comercio electrónico web, reserva de las prendas, los pagos y la facturación, cambios de prenda, las operaciones fuera de línea que son los offline, sincronización, inteligencia artificial, analítica predictiva del modelo para los reportes y está todo lo que es Machine Learning...
+
+**Docente:** ¿Y la devolución? Nada.
+
+**Estudiante:** Todo: la devolución, la reposición...
+
+**Docente:** Entonces no se olviden de que ese es el tamaño. Por más que existiera en su software lo demás, si ahí no fue citado, entonces queda fuera, fuera de su trabajo. Todo lo que ustedes han hecho está en el documento, es por eso que lo estamos mirando ya para que ustedes de repente creen que nada más es la parte del código, no: mi documento es mi presentación, en mi documento debe estar todo, todo lo que yo tengo.
+
+**Estudiante:** Aquí está el cambio.
+
+**Docente:** Ese es el cambio, pero la reposición está abierta cuando yo le entrego después, porque una cosa es el registro...
+
+**Estudiante:** Claro, pero son notas: la devolución la acepta la empresa, pero...
+
+**Docente:** Todavía no le entrego de forma inmediata, puedo entregarle en este momento otra. Entonces hay otra nueva fecha cuando en esta fecha se le entregó el cambio de la prenda documentada a esta persona. Más o menos esas son dos, o sea, no es uno solo que va. Ya, eso faltaría. De no funcionales ¿qué tienen? A ver, unas tres... A ver, nada más tres de no funcionales que pusieron.
+
+**Estudiante:** La seguridad, el aislamiento lógico de datos... y la persistencia local duradera cuando estamos en modo offline...
+
+**Docente:** Vamos ahí, a los casos de uso. Ya tenemos ahí, tenemos el caso, ya tenemos al actor, al caso de uso... ¿Qué más? A ver, uno de ellos, el más grandecito que tengan, ¿cuál? Para mirar. No se olviden también, por favor, no lo pongan en otro lugar: se debe ver su actor y su caso de uso por cada uno de sus casos de uso, debe verificarse, debe verse, ya. Entonces no es que lo lleven a otro lugar. Ustedes deben diseñar su caso de uso con sus actores; igual si tiene precondición, si tiene postcondición, es decir, los tres estereotipos que manejan los casos de uso los incluyen: include, extend, generalización. Si es preciso que ese caso de uso los tenga, no se olviden de colocar eso, no puede venir así incompleto, debe ser especificado. Este ¿cuál es?
+
+**Estudiante:** De catálogo... No, no, catálogo no: en la primera nos centramos en la parte de los planes y las suscripciones.
+
+**Docente:** Las suscripciones para poder ver las suscripciones también... ¿Y aquí cómo se llama el actor?
+
+**Estudiante:** El superadmin.
+
+**Docente:** Ya, él es el que hace... ¿Y en flujo alternativo?
+
+**Estudiante:** Es alterno...
+
+**Docente:** ¿No será precondición? Porque aquí dice: en el paso 6 es un desvío para menor a uno... Ya, ¿qué dice este? No, ahí tienen que hacer la validez... ¿Y qué prueba la validez? Porque no se olviden que ahí están haciendo el plan. ¿Cuántos planes tienen? ¿Tres?
+
+**Estudiante:** Sí, es uno básico...
+
+**Docente:** Ese es el que justamente aquí lo están validando, pues, ¿no? Porque dicen uno o no sé qué, tienen que ser uno con cada uno de los sectores: validación. Ya, siguiente: el caso de uso grande, el caso de uso completo. ¿Cuántos casos de uso tienen?
+
+**Estudiante:** Son 10 en esta primera presentación.
+
+**Docente:** Ya, no se olviden de eso, por favor: todos tienen que estar en un solo modelo, ya no así separados, ¿me entienden? Ya no separados. Ahí lo que ustedes tienen que colocar son los 20, 30, 40 casos de uso que tienen y luego van avanzando: caso de uso 1, caso de uso 2... pero no hay varios gráficos, en uno solo. Entonces eso lo realizan en uno solo para la siguiente, ya. Este, seguimos: diagrama de...
+
+**Estudiante:** Del plan de suscripción...
+
+**Docente:** A ver, el que estamos mirando con ustedes, ¿no? Ese ¿cuál es? ¿Qué se llama?
+
+**Estudiante:** Suscripción control... Control de planes...
+
+**Docente:** Ya, ¿y a dónde va? A suscripción. ¿Qué más va? Tienen suscripción y suscripción dos veces, ¿qué es? Una suscripción de plan, unos son los planes...
+
+**Estudiante:** Aquí lo hemos puesto para diferenciarlo como entidad, entidad y entidad, para diferenciarlo...
+
+**Docente:** Ya, a ver, vamos a ver más. ¿Esto qué es, es un `opt` o es un `alt`?
+
+**Estudiante:** Es que no se ve...
+
+**Docente:** Ah, no se ve. Es un... para ver si está bien, lo miraremos acá. Aquí, de ahí quiero saber qué solicita... Ahí está la flechita de los planes cuando se accede a... Ya. Bueno, no se puede lograr ver bien, pero miremos cómo los mensajes viajan, ya, cómo viajan los mensajes. Como vimos la anterior vez también el día martes, ¿no es cierto?: esto de aquí viene a ser la clase interfaz, es decir su presentación, porque aquí lo que demuestra es la lógica de negocio en las tres capas: presentación, lógica de negocio que es el código, y la entidad. Entonces aparentemente aquí tienen un solo controlador, ¿no es cierto?, uno solo que es este. En realidad si buscamos en el backend, ¿cuál es la clase que ustedes ya la tienen implementada? La única que va a existir es esta. Todos estos mensajes que ahorita de repente no se pueden leer bien pero son los que deberían estar implementados como métodos de su clase en la parte del backend. O sea, es a eso a lo que llegamos. Entonces aquí, fíjense: cuando este le llega a este controlador, este está básicamente... ¿Quién va a ser esta clase? En esta clase entidad no se olviden que hay tres tipos de mensajes: está el mensaje simple, el mensaje sincrónico y el mensaje asincrónico. Hay uno de ellos que es el sincrónico, es el único que puede retornar, es por eso que su retorno son flechitas débiles, ¿lo ven? Flechitas débiles. ¿Por qué? Porque no tiene mensaje si alguien no lo activa. Y entonces: clase de control hacia mi clase entidad. Suponiendo que pasó este cuadrito y ya viene otro tipo de fragmento que es este, no se olviden que esta era la clase de control: de la clase de control va a ir hacia todas las clases entidades, ¿lo ven? No hay diálogo, vuelvo a decirles, entre clases entidades. Entonces por lo menos aquí evidenciamos que en cuanto a los formatos y a la semántica que sigue el diagrama de secuencia está desde una clase de control hacia las clases entidades. Entonces este último es un `opt`. Es cuando dice `opt`... Y en realidad ¿qué es un `opt` y qué es un `alt`? Ya no se olviden que uno solamente es el `if`, como ustedes han podido ver, y el otro es tipo `switch`: yo tengo varios. Entonces no lo confundan tampoco, por favor: una es cuando ustedes seleccionan varias opciones, y otra es cuando nada más dicen: «si verdadero». Ya, eso por favor hay que saber usarlo también. Y finalmente a ver, lo último, un poquito más arribita: yo quiero ver el retorno. Retorno de la clase interfaz hacia... Ah, aquí está, ya lo vi. Aquí va y ya retorna, ¿no? Entonces el hecho de retornar un poquito más... Miren, este está entregando, pero fíjense: hay una fracción de tiempo, o sea, cuando vuelve no lo está haciendo en el mismo tiempo; sin olvidarse los focos de control, lo único que hacen es un tiempo establecido en el cual yo estoy interactuando con todos los mensajes que me están llegando. Esos mensajes son equivalentes a los métodos. Ustedes ya tienen en todo caso programado esto que llega de la clase interfaz hacia acá, es trabajado porque está llegando al usuario; esto que está llegando ya es electrónico porque está llegando a la interfaz. Entonces, ¿dónde ustedes lo preparan y lo ven a cada uno de ellos? En eso, por favor, porque a veces lo hacen por hacer y tal vez no lo están comprendiendo. Entonces tienen que ver: lo que va del backend es del controlador a todas las clases entidades; cuando ya vienen los retornos del controlador hacia lo que es la clase interfaz es lo que trabajan en la parte del frontend, ya está mirando a su usuario, hacia el cliente. Ya, el diagrama de clases, por favor, o el modelo de dominio que tienen. No, no, esto no lo pedí. A ver... ¿Qué es esto? A ver, ¿lo pedí yo? Esto no. Este es el proceso, no hay... Ya más bien si vienen y es un error porque estoy mezclando con ICONIX, que no es liviano el producto. Entonces no hay varios modelos... Entonces eso, si alguien lo tiene, quítelo. Ya, baje a clases: el modelo... Ya, no importa. Pero aquí lo que está faltando, jóvenes, es el diagrama de clases completo. El diagrama de clases... No sé si este es el diagrama de clases de todo...
+
+**Estudiante:** El diagrama de clases de todo...
+
+**Docente:** Lo que se llama diagrama de clases no más, como les digo. Lo que pasa que ICONIX le toma mucha importancia a la parte de la base de datos. Como yo les comenté la anterior vez, para llegar al diagrama de clases ellos pasan por el modelo de dominio, así como en base de datos lo que es el diseño lógico, el diseño físico, el diseño conceptual; recién llega a su diagrama de clases. Se le da mucho énfasis para que pueda tener una base de datos lo más explícita que se pueda ver. Pero entonces hay varios diseños de esto. Al final el producto final de ello es un diagrama de clases. Este diagrama de clases debe estar ya bien completo: no debe faltarle nada de los atributos, no sé si han cerrado las multiplicidades que se ven. Por ejemplo, si quiero mirar la devolución y la reposición, a ver, ubíquenlo: devolución y reposición. ¿Dónde nos encontramos? Es lo más grandecito, justo ahí donde queremos ver. La devolución debería verse de que va al inventario, en el inventario debería ver la prenda para poder hacer otra nota de reposición y debería llegar al cliente. Así debería estar en el diagrama de clases.
+
+**Estudiante:** No se...
+
+**Docente:** No lo hicieron. ¿Cuál es el motivo de que no se lo trabajó? Ya, ahí lo dejamos. Vamos con el 30, por favor. El 30 de título... Ya no se olviden que si ustedes quieren dar nombres, ¿no es cierto?, un nombre... Les dije también: si ustedes quieren las prendas las personalizan. Por ejemplo aquí, al ver «Women», solo es ropa de mujer, ¿no ven? Pero si yo pongo una tienda abierta puede haber de todo. ¿Qué significa de todo?: unisex y también para niños y con diferentes tallas. Pero ustedes personalizan quiénes son sus productos para poder ver. Y ahora sí: ¿qué tenemos en introducción? ¿Qué es eso? ¡Estamos mal con este grupo! Se desconfiguró su índice, ¿no? Significa que esos índices así me los mandan. Si me los mandan así ya no defienden en el final ya, porque de varios de ustedes... Al bajarlo, porque no tienen un repositorio, lo bajan, a veces se desconfigura su índice y se fijan y así. Entonces no se puede navegar cuando vienen con errores. Yo ya no puedo poner un clic porque ya no lo hace, tengo que navegar página por página y eso es imposible. Entonces, por favor, que no esté desconfigurado, que esté con las numeraciones, que esté dentro de un formato. No lo manden sin formato: que esas tablas... No se olviden que ustedes utilizan en un documento: título, subtítulo, textos normales y todo lo que ustedes quieran ver. Entonces ahí no va con...
+
+**Estudiante:** Sí... No, pero es que vamos a ver el... Ah, no se...
+
+**Docente:** No, lo que quiero ver es si estamos dentro de lo que se tiene que hacer. A ver, el capítulo 1 aquí se ve... Este es el índice que teníamos y ahí está la introducción, los objetivos... Ya, una hojita tiene.
+
+**Estudiante:** Sí, una página. El objetivo general dice: «Desarrollar una plataforma de comercio electrónico SaaS multi-tenant integrando sincronización de ventas, reservas e inventarios offline, análisis de inteligencia artificial, consecución de capacidades de realidad aumentada y aplicando la metodología ICONIX».
+
+**Docente:** Entonces estamos dentro de lo que pedimos. Ya no se olviden de que de los grupos que hemos leído, que hemos visto aquí al frente, todavía seguimos a veces con problemas de objetivos. No se olviden que todos los objetivos... Por eso es que hoy en día se está dando todo esto desde el primer semestre: ustedes han visto que en vez de inglés ahora se da Metodología de la Investigación para que un alumno aprenda a escribir un documento. Entonces significa de que cualquier documento que ellos escriban, obviamente deberían tener toda la habilidad para poder hacerlo. Entonces sin embargo fíjense ustedes: recién vienen... No sé en qué materia más les exigirán escribir el documento, creo que en Evaluación de Proyectos y dónde más... Nada más. Evaluación de Proyectos y aquí que hacen para su desarrollo. Pero pasa que la documentación es importante: donde ustedes van a veces hay un pitch que se llama para un trabajo de una startup, por ejemplo, cuando se empieza a trabajar; y a veces no lo redactan bien, y si no lo redactan bien son puntos en contra. A veces por más que su proyecto sea buenísimo, por no saber colocar esa acción en algo así, a veces están descalificados. Es importante porque ahí venden su producto. Ya, en específicos... Ya este de aquí, esta palabrita de «implementar los planes», tienen que cambiarla porque en realidad no es implementar, ¿no es cierto? Ustedes le buscan un sinónimo de cómo nosotros podemos suscribirnos a uno de estos planes. Entonces es cierto de que ustedes le ofrecen al cliente, por ejemplo le dicen: «usted paga $8 por el básico, paga $15 por el intermedio y por el avanzado paga $25; en el básico apenas puede hacer backup una vez al mes, en el otro puede hacer tres veces, en el otro lo que usted quiera», o sea, ya le vamos dando más características. Entonces más o menos esa es la idea de poder visualizar. ¿Cuántos tienen?
+
+**Estudiante:** Ocho...
+
+**Docente:** Tienen 12. «Desplegar la plataforma en la nube»... ¿Qué están esperando? Primero tiene que estar ya en específico, o sea no sé si están utilizando contenedores porque la idea es eso, digamos, ¿no?: un contenedor para poder desplegar en la nube, AWS por decir o Google Cloud, no sé dónde tenemos y ocupamos un contenedor... Un poquito más porque estoy desarrollando y lo estoy desplegando ya. Ya, eso... Vamos al alcance, alcance. Y aquí es importante el módulo. A ver, escuchamos el último este, por favor, que se van ya... Último este, por favor.
+
+**Estudiante:** El módulo 1 que es Administración SaaS, Usuarios y Organización: este módulo permite administrar las empresas contratando sus suscripciones y su estructura organizacional, controlar el acceso de los usuarios según su responsabilidad.
+
+**Docente:** Ese es su alcance... Está por módulos. ¿Qué faltó, no? Fue directo ya, solo el nombre.
+
+**Estudiante:** Módulo 2: Catálogo, Inventario y Abastecimiento. Módulo 3: Reservas, Compras Digitales y Pedidos. Módulo 4: Ventas Presenciales y Atención en Sucursales. Módulo 5: Probador Virtual y Asistencia Inteligente. Módulo 6: Reportes, Indicadores y Analítica Inteligente...
+
+**Docente:** Y ahí no veo la devolución, la reposición no la veo en ningún lado. Y eso es lo nuevo que le hemos agregado. Lo tienen como está en el Parcial 1 no más. Entonces, por favor: mirar, visualizar, porque a veces parece que ustedes lo manejan en sus mentes, ustedes lo tienen pero no está en el documento. Lo que está faltando es escribirlo en el documento, ya. Entonces esto por favor actualizarlo y poder ver qué tienen. ¿Dónde está? No, vamos, seguimos, no importa, seguimos. Vamos a la parte de los casos de uso.
+
+**Estudiante:** Eh, tenemos el primer caso de uso que es plataforma multi-tenant o multiempresa, que en este caso solo se va a desarrollar de forma web. Caso de uso: gestionar planes y suscripciones business con Stripe que es web; gestionar roles y permisos; página de presentación y catálogo de planes; consultar asistente virtual de chatbot; generar reportes inteligentes con analítica y aprendizaje automático; reaprovisionamiento automático mediante un sistema experto; mercadería mediante RPA e IA; manual de inventario; notificaciones móviles; dashboard de control; generación de reportes; gestionar y aplicar cupones; gestionar lista de deseos, fidelización y billetera de puntos; emitir compra de tarjetas de regalo; gestionar billetera de tienda; entregas y despacho a domicilio... Y tengo ahí el caso 21 que es solicitar y gestionar cambios y devoluciones; caso 22 aplicación web progresiva e instalación; y 23 modo sin conexión.
+
+**Docente:** Ya, esto de devolución solamente es la devolución, pero la reposición es otro, como les dije, otro caso de uso. Ya se lo comprendieron, porque devolución no lo tomen como que ya yo entregué. Fíjense que para devolver algo pasan dos escenarios, como les dije: uno es que yo le devuelva porque existe la cantidad de la prenda de otra talla, ¿no?, porque la mayoría lo devuelve por tamaño; pero en caso de que no existiera, como les comenté, eso significa de que le debe llegar un mensaje al cliente indicándole, de tipo push como les dije porque lo va a hacer en su móvil, pero el cliente tiene que ir a mirar su cuenta y debe retornar su dinero, ¿entienden? Debe retornar su dinero, ¿por qué?, porque no hay, igualito como lo hacen en el offline. Entonces no sé, aquí en la parte... eso también no lo están trabajando: cuando es una base de datos local es un caso de uso donde si tiene éxito no pasa nada, ya yo lo vendí; pero ¿qué pasa si esa prenda no existe? O sea, porque no siempre sigue su curso, siempre hay algunas fallas. A ver, mirémoslo por favor su detalle de caso de uso.
+
+**Estudiante:** Es solamente del primero que hemos hecho, lo completamos... Tenemos en este caso el primer caso de uso que es plataforma multiempresa: el autor, las fechas, la descripción, los actores, las precondiciones, el flujo normal y el flujo alternativo, y las postcondiciones. Y también tenemos el caso de uso 2, que igual hay ciertas revisiones... Lo que pasa es que este viene de 4 a 4a. El 4 dice: «El sistema valida los datos, la disponibilidad del identificador y el correo y el plan seleccionado». ¿Qué es el 4a?: «Si hay datos incompletos, inválidos o duplicados, informa del problema y permite corregirlo. Se vuelve al paso 3 que es donde introduce los datos y confirma el registro».
+
+**Docente:** Ya, no se olviden de que al hacer un desvío... Ya todos los desvíos que ustedes colocan aquí sí que es importante colocarlos, ya ustedes van explicándolos. Ya, muéstreme... Ya le dieron... ¿Cómo se llama?
+
+**Estudiante:** Sí, tengo dos controladores que son... y después también tenemos las actividades que son de empresa.
+
+**Docente:** A ver, sigamos donde lo registran. A ver, ¿cuál es? ¿El 5.1, 5.2? Registrado... Ahí donde lo registran y después aquí el administrador, porque igual tiene que registrar una persona encargada esta parte acá, por favor. Y ella es el usuario, digamos, el encargado; el otro es cuál es el que va a elegir porque tenemos tres planes, y el otro es la suscripción ya de la empresa completamente.
+
+**Estudiante:** Eso mismo. Y tenemos que son la clase interfaz, el controlador, el tema de las suscripciones y las mismas entidades que son: empresas, usuarios, plan de suscripción y suscripción de empresas.
+
+**Docente:** Tenían cuatro clases entidad... ¿Cuáles? No, cuatro, y son dos clases de control.
+
+**Estudiante:** Sí, son dos clases de control: uno es para los tenants y otra es para la administradora que es por empresa.
+
+**Docente:** Ajá, eso está. ¿Y la siguiente qué hace? ¿Cuál? Esta de aquí, ¿dónde participa lo último? ¿Qué se llama esa de ahí? La dos... ¿Qué se llama?
+
+**Estudiante:** Este vamos a guardar el tenant que en sí en todo caso es la empresa, y aquí es donde identifica el nombre, los correos y ya lo registra, digamos, y el plan queda activo.
+
+**Docente:** Encierra todo, eso está bien, está bien. Comienza... Encierra completito porque ustedes van y adquieren... Un poquito más, un poquito más. Se tiene que poder ver completito todas las clases ahí. Ahí yo creo, ahí está todo. Afecta entonces a la parte de la presentación hasta todo. A ver, a todas las clases menos a esta... Quiero ver...
+
+**Estudiante:** A ese no le afecta. No, porque aquí es simplemente cuando registra el nombre, aquí lo llama primero, ¿no? Exactamente, aquí lo hace y está bien... y dentro del cuadrito del fragmento `alt` es lo que están llamando. Y finalmente le retornan cuando ya la empresa... o sea ya estaban los datos, ya es real.
+
+**Docente:** ¿Por qué tan cortito? ¿Qué ha pasado con esto?
+
+**Estudiante:** Eso lo tenemos que modificar y colocarlo hasta acá.
+
+**Docente:** A ver, ese es un error de `alt`: el `alt` no puede ir solo con la clase interfaz y la clase control. Un `alt` abarca: clase interfaz, clase control, clase entidad, y ponen el cuadradito del fragmento. Entonces colocar un `alt` nada más en una clase interfaz y una clase control... ¡Tiene que verse hacia dónde va! Inclusive no sé si se han equivocado: rayitas aquí, ¿no? El `else` es cuando la... No, pero no puede ir nada más. ¿Por qué? Porque sucede que ustedes no están haciendo nada en la parte de la memoria nada más: ustedes siempre van a tener acceso a la base de datos; de la base de datos ustedes deciden qué tipo de información están pidiendo, entonces sí o sí va a llegar a la clase entidad y entonces no puede llegar ahí nada más como si consulte. Eso por favor deben diseñar de alguna manera para poder llegar bien. Por último, su diagrama de clases, mirémoslo por favor. Diagrama de clases completo. Miren: ¡tenemos más relaciones que clases! Pero todo el mundo es... por favor. No sé si realmente es el modelo, pero siempre que ustedes lo hagan tienen que ver: es como que yo dijera que el cliente se relaciona con todo. El cliente nunca se relaciona con producto por decir, porque el cliente jamás va a llegar al inventario si no va por un catálogo, si no va por una venta, si no hace un pedido, porque en eso estamos. El proveedor, por ejemplo, nunca va a llegar al inventario de su cliente; el proveedor nunca llega al inventario que él está en todo caso vendiendo, ¿por qué?, porque el proveedor únicamente va a entregar su mercadería cuando esté haciendo una compra. Todo eso habría que verlo. No sé cómo lo han hecho, pero veo demasiadas las relaciones, ya parece que todo el mundo se relaciona con todo el mundo. Habría que ver cómo han hecho el escenario. Es por eso, a ver, justamente por eso ICONIX pide que se haga el modelo de dominio, porque ahí yo puedo verlo reducido pero puedo ver bien las multiplicidades cómo van, ya. Justamente se ve todo lo que es el diseño lógico, el diseño físico para poder llegar a esto. Entonces esto tal vez... no sé si lo han hecho. El modelo de dominio ¿lo tenemos?
+
+**Estudiante:** A ver, por favor... Ahí está.
+
+**Docente:** Si lo tienen ahí, a ver cómo va...
+
+**Estudiante:** Así lo manejamos: lo separamos con los módulos y las tablas que afectan. Ese es el de dominio.
+
+**Docente:** A ver, díganme: ¿ese es de dominio? ¡No es de dominio! El dominio tiene las mismas clases. ¿Qué tienen?: el nombre de la clase, ¿qué tienen?: los atributos más importantes o más significativos de cada clase y algunos métodos que ustedes coloquen. Esto no es un modelo de dominio: solo tienen el nombre de... medio que están queriendo concluirlo. No, no va, ese no es un modelo de dominio, ya. Entonces eso no es un modelo de dominio. Entonces eso por favor también mírenlo, si quieren investíguenlo, véanlo qué diferencia existe; pero no es solamente que tenga el nombre, tiene atributos significativos, ¿listo? Bueno, nos sentamos entonces, sería todo.
+
+Bueno, entonces ya cerrando con todo lo que es el documento, fíjense: hemos visto tres documentos más o menos a medida del detalle detallado en cada uno de ellos. La finalidad de la clase de hoy día ¿saben qué es?: a veces se les explica pero no lo entienden, es que ustedes mismos miren en su mismo trabajo. A veces no necesariamente es el trabajo de todos, pero para eso son estos trabajos que es una aplicación única que están haciendo ustedes para todos para poder mejorar tanto los modelos como lo que está escrito. Si empezamos a leer, fíjense, ahí hay otra cosa: inclusive a veces hay hasta errores, hay horrores, hay de todo eso y a veces hay redundancia. A veces cuando ustedes lo hacen porque si se lo entregan a la IA, la IA les entrega otra cosa, pues, ¿no? Pero si ustedes lo redactan ahí, ustedes van a ver de que siempre hay algunas palabras que a cada persona le encanta repetir y entonces cuando se ve, se ve como 10 o 15 en una sola página. Entonces todo eso es parte de poder hacer una buena redacción. Como les digo: ustedes para poder participar en cualquier evento deben saber escribir, deben saber expresarse, deben hacer ensayos, deben hacer speech, deben hacer todo lo que ustedes quieran ver, y qué mejor ir desde ahora ustedes trabajando en cada uno de ellos para poder siempre mejorar. Como ya son los últimos productos prácticamente que se están trabajando, ya no se vuelve a repetir más, ¿me entienden? O sea, hoy es el último día que hemos visto documentos y avances; no hemos podido llegar ni al código siquiera para ver cómo está haciendo cada uno, pero bueno, debería ser el reflejo. Como les digo, estas dos semanas estaremos con el proyecto y después ya viene la recta final. ¿Lo ven? Eso sería todo, aquí quedamos.

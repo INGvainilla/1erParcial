@@ -138,3 +138,7 @@ def run_tests():
 
 if __name__ == "__main__":
     run_tests()
+
+
+def test_cu16_stripe_integration():
+    run_tests()

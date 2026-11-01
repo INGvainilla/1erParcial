@@ -73,6 +73,7 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
 # Archivos temporales de Office y Scratch
 ~$*
 scratch/
@@ -80,3 +81,25 @@ prototipo/web/cache/
 * - copia.*
 *-copia.*
 
+# Antigravity & Superpowers logs y auditorías locales
+.superpowers/
+test_out.txt
+prototipo/backend/test_out.txt
+
+# Archivos de respaldo temporales de documentación
+documentacion/*.bak*
+*.bak*
+
+# Backups pesados y bloqueos de Enterprise Architect
+diagramas/*_backup*.eapx
+diagramas/*backup*.eapx
+*.ldb
+!diagramas/diagramas1erParcial.eapx
+
+# Angular build y caché en código fuente web
+prototipo/web/.angular/
+prototipo/web/dist/
+
+# Asegurar que el bundle compilado para Render esté SIEMPRE incluido
+!prototipo/backend/web_dist/
+!prototipo/backend/web_dist/**

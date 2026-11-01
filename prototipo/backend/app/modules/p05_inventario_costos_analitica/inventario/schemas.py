@@ -26,7 +26,7 @@ class KardexResponse(BaseModel):
     saldo_cantidad_resultante: int
     saldo_cpp_resultante: Decimal
     referencia_documento: Optional[str] = None
-    fecha_hora: datetime
+    fecha_hora: Optional[datetime] = None
 
     class Config:
         from_attributes = True

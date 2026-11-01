@@ -23,6 +23,10 @@ import { ComparadorComponent } from './pages/p03_catalogo_estilismo_ia/comparado
 import { RecompensasComponent } from './pages/p07_venta_digital_fidelizacion/recompensas/recompensas.component';
 import { AsistenteIaComponent } from './pages/p03_catalogo_estilismo_ia/asistente-ia/asistente-ia.component';
 import { TenantsComponent } from './pages/p01_seguridad_acceso/tenants/tenants.component';
+import { TraspasosComponent } from './pages/p05_inventario_costos_analitica/traspasos/traspasos.component';
+import { ComprasDesktopComponent } from './pages/p04_aprovisionamiento_proveedores/compras/compras-desktop.component';
+import { DesktopOnlyGuard } from './core/guards/desktop-only.guard';
+
 import { adminGuard, dashboardGuard, staffGuard, inventarioGuard, proveedoresGuard, encargadoGuard, posGuard, logisticaGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -56,6 +60,9 @@ export const routes: Routes = [
   { path: 'productos', component: ProductosComponent, canActivate: [staffGuard] },
   { path: 'proveedores', component: ProveedoresComponent, canActivate: [proveedoresGuard] },
   { path: 'inventario', component: InventarioComponent, canActivate: [inventarioGuard] },
+  { path: 'traspasos', component: TraspasosComponent, canActivate: [inventarioGuard] },
+  { path: 'compras', component: ComprasDesktopComponent, canActivate: [adminGuard, DesktopOnlyGuard] },
+
 
   // CU12: Preparar y Atender Reservas Presenciales (Encargado de Sucursal)
   { path: 'encargado/reservas', component: EncargadoDashboardComponent, canActivate: [encargadoGuard] },
