@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Migraciones ligeras e idempotentes (PostgreSQL y SQLite).
-
-Sustituye a los bloques `ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...` envueltos en
-`try/except: pass`: esa sintaxis solo existe en PostgreSQL, así que en SQLite fallaba
-en silencio y dejaba el esquema viejo (error `no such column: usuarios.id_empresa`).
-
-Aquí se inspecciona el esquema real con `sqlalchemy.inspect`, se agregan solo las
-columnas que faltan y CUALQUIER fallo se registra en lugar de ocultarse.
+Cubre tablas y columnas requeridas para el Parcial 2 (CU08 al CU15).
 """
 import logging
 from typing import List, Tuple
@@ -41,13 +35,56 @@ INDICES_PARCIAL2: List[Tuple[str, str, str]] = [
 
 def ensure_columns(engine: Engine) -> List[str]:
     """
-    Agrega las columnas multitenant/textiles que falten en tablas YA existentes.
-    Las tablas inexistentes se omiten: `Base.metadata.create_all` las creará completas.
-
+    Crea tablas y agrega columnas necesarias para el Parcial 2 (CU08 al CU15).
+    Portable tanto para SQLite local como PostgreSQL de producción.
     Idempotente: ejecutarla varias veces no produce errores ni cambios adicionales.
-    Retorna la lista de cambios aplicados (útil para pruebas y bitácora).
     """
     aplicados: List[str] = []
+    inspector = inspect(engine)
+
+    # 1. Crear tablas esenciales para el 2do Parcial si no existen
+    is_sqlite = engine.dialect.name == "sqlite"
+    id_col_type = "INTEGER PRIMARY KEY AUTOINCREMENT" if is_sqlite else "SERIAL PRIMARY KEY"
+
+    with engine.begin() as conn:
+        if not inspector.has_table("operaciones_offline_sync"):
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS operaciones_offline_sync (
+                    id_operacion {id_col_type},
+                    uuid_operacion VARCHAR(64) UNIQUE NOT NULL,
+                    id_empresa INTEGER NOT NULL,
+                    id_sucursal INTEGER NOT NULL,
+                    tipo_operacion VARCHAR(50) NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    hash_sha256 VARCHAR(64),
+                    estado_sync VARCHAR(30) DEFAULT 'CONFIRMADA',
+                    fecha_sincronizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            aplicados.append("create_table.operaciones_offline_sync")
+            print(" [MIGRACION] Tabla creada: operaciones_offline_sync")
+
+        if not inspector.has_table("traspasos_inter_sucursal"):
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS traspasos_inter_sucursal (
+                    id_traspaso {id_col_type},
+                    codigo_traspaso VARCHAR(64) UNIQUE NOT NULL,
+                    id_empresa INTEGER NOT NULL,
+                    id_sucursal_origen INTEGER NOT NULL,
+                    id_sucursal_destino INTEGER NOT NULL,
+                    id_usuario_solicita INTEGER,
+                    id_usuario_recibe INTEGER,
+                    estado VARCHAR(30) DEFAULT 'EN_TRANSITO',
+                    detalles_json TEXT NOT NULL,
+                    observaciones TEXT,
+                    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    fecha_recepcion TIMESTAMP
+                )
+            """))
+            aplicados.append("create_table.traspasos_inter_sucursal")
+            print(" [MIGRACION] Tabla creada: traspasos_inter_sucursal")
+
+    # Refrescar inspector
     inspector = inspect(engine)
 
     for tabla, columna, tipo in COLUMNAS_PARCIAL2:

@@ -4,12 +4,13 @@ Módulo de Traspasos Inter-Sucursales (CU14).
 Permite transferir stock entre sucursales de la misma empresa con trazabilidad:
 - Descuento en origen
 - Retención en estado 'EN_TRANSITO'
-- Confirmación y acreditación en destino con asentamiento en Kardex.
+- Confirmación y acreditación en destino con doble asentamiento en Kardex.
+Compatible con SQLite local y PostgreSQL.
 """
 import json
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -96,25 +97,29 @@ def crear_traspaso(
 
     insert_traspaso = text("""
         INSERT INTO traspasos_inter_sucursal
-        (codigo_traspaso, id_empresa, id_sucursal_origen, id_sucursal_destino, id_usuario_solicita, estado, detalles_json)
-        VALUES (:cod, :id_emp, :orig, :dest, :id_u, 'EN_TRANSITO', :detalles)
-        RETURNING id_traspaso, codigo_traspaso, estado, fecha_solicitud
+        (codigo_traspaso, id_empresa, id_sucursal_origen, id_sucursal_destino, id_usuario_solicita, estado, detalles_json, observaciones)
+        VALUES (:cod, :id_emp, :orig, :dest, :id_u, 'EN_TRANSITO', :detalles, :obs)
     """)
-    res = db.execute(insert_traspaso, {
+    db.execute(insert_traspaso, {
         "cod": cod_traspaso,
         "id_emp": id_empresa,
         "orig": traspaso_in.id_sucursal_origen,
         "dest": traspaso_in.id_sucursal_destino,
         "id_u": current_user.id_usuario,
-        "detalles": items_json
-    }).mappings().first()
-
+        "detalles": items_json,
+        "obs": traspaso_in.observaciones
+    })
     db.commit()
 
+    res = db.execute(
+        text("SELECT id_traspaso, codigo_traspaso, estado, fecha_solicitud FROM traspasos_inter_sucursal WHERE codigo_traspaso = :cod"),
+        {"cod": cod_traspaso}
+    ).mappings().first()
+
     return {
-        "id_traspaso": res["id_traspaso"],
-        "codigo_traspaso": res["codigo_traspaso"],
-        "estado": res["estado"],
+        "id_traspaso": res["id_traspaso"] if res else None,
+        "codigo_traspaso": res["codigo_traspaso"] if res else cod_traspaso,
+        "estado": res["estado"] if res else "EN_TRANSITO",
         "mensaje": "Traspaso registrado exitosamente en estado EN_TRANSITO",
         "items": traspaso_in.items
     }
@@ -173,17 +178,21 @@ def recibir_traspaso(
             insert_dest = text("""
                 INSERT INTO inventario (id_sucursal, id_producto, talla, color, stock_fisico, stock_reservado, stock_disponible, stock_minimo, costo_promedio_ponderado, id_empresa)
                 VALUES (:id_s, :id_p, :talla, :color, :cant, 0, :cant, 2, 50.0, :id_emp)
-                RETURNING id_inventario
             """)
-            new_inv = db.execute(insert_dest, {
+            db.execute(insert_dest, {
                 "id_s": traspaso["id_sucursal_destino"],
                 "id_p": item["id_producto"],
                 "talla": item["talla"],
                 "color": item.get("color", "ESTANDAR"),
                 "cant": item["cantidad"],
                 "id_emp": traspaso["id_empresa"]
+            })
+            new_inv = db.execute(check_dest, {
+                "id_p": item["id_producto"],
+                "talla": item["talla"],
+                "id_s": traspaso["id_sucursal_destino"]
             }).mappings().first()
-            id_inv_target = new_inv["id_inventario"]
+            id_inv_target = new_inv["id_inventario"] if new_inv else 1
             saldo_nuevo = item["cantidad"]
             costo = 50.0
 
@@ -222,10 +231,11 @@ def recibir_traspaso(
 
 @router.get("", summary="Listar Traspasos")
 def listar_traspasos(
+    id_empresa: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    id_empresa = current_user.id_empresa or 1
+    emp_id = id_empresa if current_user.rol == "SUPER_ADMIN" and id_empresa else (current_user.id_empresa or 1)
     query = text("""
         SELECT t.id_traspaso, t.codigo_traspaso, t.id_sucursal_origen, t.id_sucursal_destino,
                so.nombre_sucursal as nombre_origen, sd.nombre_sucursal as nombre_destino,
@@ -236,7 +246,7 @@ def listar_traspasos(
         WHERE t.id_empresa = :emp_id
         ORDER BY t.id_traspaso DESC
     """)
-    rows = db.execute(query, {"emp_id": id_empresa}).mappings().all()
+    rows = db.execute(query, {"emp_id": emp_id}).mappings().all()
 
     result = []
     for r in rows:

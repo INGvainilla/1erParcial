@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -12,7 +13,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   template: `
     <!-- Topbar Móvil / Tablet (visible únicamente en <= 1024px) -->
     <header class="mobile-topbar">
@@ -62,11 +63,28 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
           </button>
         </div>
 
+        <!-- Selector Dinámico de Tenant para SuperAdmin (CU01-CU03 / RNF02) -->
+        <div class="tenant-switcher-card" *ngIf="auth.isSuperAdmin()">
+          <div class="tenant-switcher-label">
+            <span class="badge-superadmin"><i class="fas fa-crown"></i> SUPER ADMIN</span>
+            <span class="switcher-text">Tenant Activo:</span>
+          </div>
+          <select
+            class="tenant-select-dropdown"
+            [ngModel]="auth.selectedTenant()?.id_empresa ?? null"
+            (ngModelChange)="onGlobalTenantChange($event)">
+            <option [ngValue]="null">🌐 Todas las Empresas</option>
+            <option *ngFor="let emp of auth.empresas()" [ngValue]="emp.id_empresa">
+              🏢 {{ emp.nombre_comercial }} (ID: {{ emp.id_empresa }})
+            </option>
+          </select>
+        </div>
+
         <!-- Tarjeta de Contexto de Tenant y Plan (CU01-03) -->
-        <div class="tenant-context-card" *ngIf="capacidades() as cap">
+        <div class="tenant-context-card" *ngIf="!auth.isSuperAdmin() && capacidades() as cap">
           <div class="tenant-header-line">
             <span class="tenant-name" [title]="cap.nombre_comercial">
-              <i class="fas fa-store"></i> {{ cap.nombre_comercial }}
+              <i class="fas fa-store"></i> {{ auth.getNombreEmpresa() || cap.nombre_comercial }}
             </span>
             <span class="plan-pill">{{ cap.plan.nombre }}</span>
           </div>
@@ -90,12 +108,12 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
         <a routerLink="/catalogo" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-store"></i>
-          <span>Catálogo de Ropa (CU10)</span>
+          <span>Catálogo Digital Offline (CU08)</span>
         </a>
 
         <a routerLink="/asistente-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-robot"></i>
-          <span>Asistente de Estilo IA (CU22/CU23)</span>
+          <span>Asistente de Estilo & Outfits</span>
         </a>
 
         <a routerLink="/comparador" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -110,7 +128,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
         <a routerLink="/reservas/crear" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-calendar-check"></i>
-          <span>Reservar Prendas (CU11)</span>
+          <span>Reservar Prendas (CU09)</span>
         </a>
 
         <a *ngIf="auth.isAuthenticated()" routerLink="/reservas/ticket" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -138,6 +156,11 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-chart-line"></i>
             <span>Cuadros de Mando & Dashboards (CU24)</span>
+          </a>
+
+          <a routerLink="/reportes-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-brain"></i>
+            <span>Reportes Generativos con IA (CU15)</span>
           </a>
 
           <a routerLink="/tenants" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -175,6 +198,11 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
             <span>Inventario Global y CPP (CU09)</span>
           </a>
 
+          <a routerLink="/traspasos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Traspasos Inter-Sucursales (CU14)</span>
+          </a>
+
           <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-clipboard-list"></i>
             <span>Reservas del Día (CU12)</span>
@@ -187,7 +215,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
-            <span>Caja y Venta POS (CU15)</span>
+            <span>POS, Offline & Devoluciones (CU10, CU13)</span>
           </a>
 
           <a routerLink="/admin/pagos-config" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -210,9 +238,14 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
             <span>Dashboard Ejecutivo (CU24)</span>
           </a>
 
+          <a routerLink="/reportes-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-brain"></i>
+            <span>Reportes Generativos con IA (CU15)</span>
+          </a>
+
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
-            <span>Caja y Venta POS (CU15)</span>
+            <span>POS, Offline & Devoluciones (CU10, CU13)</span>
           </a>
 
           <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -228,6 +261,11 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
           <a routerLink="/inventario" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-boxes"></i>
             <span>Stock de Sucursal (CU09)</span>
+          </a>
+
+          <a routerLink="/traspasos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Traspasos Inter-Sucursales (CU14)</span>
           </a>
 
           <a routerLink="/sucursales" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
@@ -382,6 +420,56 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
     .sidebar-header {
       padding: 1.5rem 1.25rem 1rem;
       border-bottom: 1px solid var(--border-subtle);
+    }
+
+    
+    .tenant-switcher-card {
+      margin-top: 0.85rem;
+      padding: 0.65rem 0.8rem;
+      border-radius: var(--radius-md);
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .tenant-switcher-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge-superadmin {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .switcher-text {
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+    .tenant-select-dropdown {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.35rem 0.5rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .tenant-select-dropdown:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.35);
     }
 
     .brand-row {
@@ -978,15 +1066,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   loadCapacidades(): void {
-    const user = this.auth.currentUser();
-    if (user && user.id_empresa) {
-      this.tenantService.obtenerCapacidades(user.id_empresa).subscribe({
+    const idEmpresa = this.auth.getActiveEmpresaId();
+    if (idEmpresa) {
+      this.tenantService.obtenerCapacidades(idEmpresa).subscribe({
         next: (cap) => this.capacidades.set(cap),
         error: () => this.capacidades.set(null)
       });
     } else {
       this.capacidades.set(null);
     }
+  }
+
+  onGlobalTenantChange(idEmpresa: number | null): void {
+    this.auth.setSelectedTenantById(idEmpresa);
+    this.loadCapacidades();
+    const currentUrl = this.router.url;
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([currentUrl]);
+    });
   }
 
   ngOnDestroy(): void {

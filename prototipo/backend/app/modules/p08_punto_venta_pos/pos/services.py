@@ -514,12 +514,12 @@ def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketCons
     fecha_emision = orden.creado_en or now
     dias_transcurridos = max(0, (now - fecha_emision).days)
     # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.3: VentaEnt --> Ctrl : retorna venta_valida, fecha, cpp_historico
-    es_valido = dias_transcurridos <= 14
+    es_valido = dias_transcurridos <= 7
 
     if es_valido:
-        mensaje_plazo = f"Dentro de plazo: {dias_transcurridos} días transcurridos (Máximo 14 días permitidos)."
+        mensaje_plazo = f"Dentro de plazo: {dias_transcurridos} días transcurridos (Máximo 7 días permitidos por política de la tienda)."
     else:
-        mensaje_plazo = f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 14 días permitidos por política de la tienda)."
+        mensaje_plazo = f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 7 días permitidos por política de la tienda)."
 
     items_result = []
     for d in (orden.detalles or []):
@@ -582,10 +582,10 @@ def procesar_devolucion_pos(
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     fecha_emision = orden.creado_en or now
     dias_transcurridos = max(0, (now - fecha_emision).days)
-    if dias_transcurridos > 14:
+    if dias_transcurridos > 7:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 14 días permitidos por política de la tienda)."
+            detail=f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 7 días permitidos por política de la tienda)."
         )
 
     sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()

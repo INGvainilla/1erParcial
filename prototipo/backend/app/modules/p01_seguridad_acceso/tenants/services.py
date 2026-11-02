@@ -170,3 +170,11 @@ def crear_o_renovar_suscripcion(db: Session, datos: SuscripcionCreate) -> Suscri
     db.commit()
     db.refresh(nueva_susc)
     return nueva_susc
+
+
+def verificar_capacidad_ia(db: Session, id_empresa: int) -> bool:
+    """Verifica si la empresa activa cuenta con un plan que incluya IA generativa (CU15)."""
+    susc = obtener_suscripcion_activa(db, id_empresa)
+    if not susc or not susc.plan:
+        return False
+    return bool(susc.plan.permite_reportes_ia)

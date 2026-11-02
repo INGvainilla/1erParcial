@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { InventarioItem, KardexItem, Sucursal, Producto } from '../../../core/models/fashion.models';
+import { InventarioItem, KardexItem, Sucursal, Producto, Empresa } from '../../../core/models/fashion.models';
+import { TenantService } from '../../../core/services/tenant.service';
 
 @Component({
   selector: 'app-inventario',
@@ -27,6 +28,17 @@ import { InventarioItem, KardexItem, Sucursal, Producto } from '../../../core/mo
 
       <!-- Filtros -->
       <div class="filters-bar">
+        <!-- Selector Dinámico de Empresa para SuperAdmin (CU01-03 / RNF02) -->
+        <div class="filter-group" *ngIf="auth.isSuperAdmin()">
+          <label><i class="fas fa-building"></i> Empresa (Tenant):</label>
+          <select [(ngModel)]="filterEmpresaId" (change)="onEmpresaChange()" class="form-control select-tenant">
+            <option [ngValue]="null">🌐 Todas las Empresas Registradas</option>
+            <option *ngFor="let emp of empresas" [ngValue]="emp.id_empresa">
+              🏢 {{ emp.nombre_comercial }} (ID: {{ emp.id_empresa }})
+            </option>
+          </select>
+        </div>
+
         <div class="filter-group">
           <label><i class="fas fa-store"></i> Filtrar por Sucursal:</label>
           <select [(ngModel)]="filterSucursalId" (change)="loadInventario()" class="form-control">
@@ -284,6 +296,14 @@ import { InventarioItem, KardexItem, Sucursal, Producto } from '../../../core/mo
     }
     .view-header h2 { font-size: 1.4rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; }
     .subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem; }
+    
+    .select-tenant {
+      border: 1px solid rgba(99, 102, 241, 0.5) !important;
+      background: rgba(15, 23, 42, 0.8) !important;
+      color: #818cf8 !important;
+      font-weight: 600;
+    }
+
     .filters-bar { margin-bottom: 1.25rem; }
     .filter-group { display: flex; align-items: center; gap: 0.75rem; }
     .filter-group label { font-size: 0.85rem; color: var(--text-secondary); }
@@ -418,27 +438,54 @@ export class InventarioComponent implements OnInit {
   constructor(
     private api: FashionApiService,
     public auth: AuthService,
+    private tenantService: TenantService,
     private toast: ToastService,
     private cdr: ChangeDetectorRef
   ) {}
 
+  filterEmpresaId: number | null = null;
+  empresas: Empresa[] = [];
+
   ngOnInit(): void {
+    this.filterEmpresaId = this.auth.getActiveEmpresaId() || null;
+    if (this.auth.isSuperAdmin()) {
+      this.loadEmpresas();
+    }
     this.loadSucursales();
     this.loadProductos();
     this.loadInventario();
   }
 
+  loadEmpresas(): void {
+    this.tenantService.listarEmpresas().subscribe({
+      next: (data) => {
+        this.empresas = data || [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onEmpresaChange(): void {
+    this.filterSucursalId = null;
+    this.auth.setSelectedTenantById(this.filterEmpresaId);
+    this.loadSucursales();
+    this.loadInventario();
+  }
+
   loadSucursales(): void {
-    this.api.getSucursales().subscribe({
+    this.api.getSucursales(this.filterEmpresaId || undefined).subscribe({
       next: (data) => {
         this.sucursales = data;
+        if (this.sucursales.length > 0) {
+          this.entradaData.id_sucursal = this.sucursales[0].id_sucursal;
+        }
         this.cdr.detectChanges();
       }
     });
   }
 
   loadProductos(): void {
-    this.api.getProductos().subscribe({
+    this.api.getProductos(this.filterEmpresaId || undefined).subscribe({
       next: (data) => {
         this.productos = data;
         this.cdr.detectChanges();
@@ -449,7 +496,7 @@ export class InventarioComponent implements OnInit {
   // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
   loadInventario(): void {
     this.loading = true;
-    this.api.getInventario(this.filterSucursalId || undefined).subscribe({
+    this.api.getInventario(this.filterSucursalId || undefined, this.filterEmpresaId || undefined).subscribe({
       next: (data) => {
         this.inventario = data;
         this.loading = false;

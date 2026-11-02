@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { LoginResponse } from '../models/fashion.models';
+import { LoginResponse, Empresa } from '../models/fashion.models';
 import { API_BASE_URL } from '../constants/api.constants';
 
 @Injectable({
@@ -11,6 +11,8 @@ export class AuthService {
   private apiUrl = API_BASE_URL;
 
   currentUser = signal<LoginResponse | null>(null);
+  selectedTenant = signal<Empresa | null>(null);
+  empresas = signal<Empresa[]>([]);
 
   constructor(private http: HttpClient) {
     this.loadSession();
@@ -22,10 +24,63 @@ export class AuthService {
       try {
         const user = JSON.parse(raw);
         this.currentUser.set(user);
+        if (user.rol === 'SUPER_ADMIN') {
+          this.loadEmpresas();
+        }
       } catch (e) {
         this.clearSession();
       }
     }
+  }
+
+  loadEmpresas(): void {
+    this.http.get<Empresa[]>(`${this.apiUrl}/tenants/empresas`, {
+      headers: this.getAuthHeaders()
+    }).subscribe({
+      next: (list) => {
+        this.empresas.set(list || []);
+        const savedTenantId = localStorage.getItem('fs_active_tenant_id');
+        if (savedTenantId && list && list.length > 0) {
+          const found = list.find(e => e.id_empresa === Number(savedTenantId));
+          if (found) {
+            this.selectedTenant.set(found);
+            return;
+          }
+        }
+        if (list && list.length > 0 && !this.selectedTenant()) {
+          this.selectedTenant.set(list[0]);
+          localStorage.setItem('fs_active_tenant_id', list[0].id_empresa.toString());
+        }
+      },
+      error: (err) => console.error('Error cargando empresas:', err)
+    });
+  }
+
+  setSelectedTenant(empresa: Empresa | null): void {
+    this.selectedTenant.set(empresa);
+    if (empresa) {
+      localStorage.setItem('fs_active_tenant_id', empresa.id_empresa.toString());
+    } else {
+      localStorage.removeItem('fs_active_tenant_id');
+    }
+  }
+
+  setSelectedTenantById(idEmpresa: number | null): void {
+    if (idEmpresa === null) {
+      this.setSelectedTenant(null);
+      return;
+    }
+    const found = this.empresas().find(e => e.id_empresa === Number(idEmpresa));
+    if (found) {
+      this.setSelectedTenant(found);
+    }
+  }
+
+  getActiveEmpresaId(): number | null | undefined {
+    if (this.isSuperAdmin()) {
+      return this.selectedTenant()?.id_empresa ?? null;
+    }
+    return this.currentUser()?.id_empresa;
   }
 
   getToken(): string | null {
@@ -56,10 +111,13 @@ export class AuthService {
   }
 
   getEmpresaId(): number | null | undefined {
-    return this.currentUser()?.id_empresa;
+    return this.getActiveEmpresaId();
   }
 
   getNombreEmpresa(): string | null | undefined {
+    if (this.isSuperAdmin()) {
+      return this.selectedTenant()?.nombre_comercial || 'Plataforma Global SaaS';
+    }
     return this.currentUser()?.nombre_empresa;
   }
 
@@ -98,6 +156,9 @@ export class AuthService {
         // CU01: Autenticar Usuario (Login RBAC), Paso 1.7.1: Persistir token en localStorage/sessionStorage según recordar_sesion
         const storage = credentials.recordar_sesion ? localStorage : sessionStorage;
         storage.setItem('fs_user', JSON.stringify(res));
+        if (res.rol === 'SUPER_ADMIN') {
+          this.loadEmpresas();
+        }
       })
     );
   }
@@ -132,7 +193,10 @@ export class AuthService {
 
   private clearSession(): void {
     localStorage.removeItem('fs_user');
+    localStorage.removeItem('fs_active_tenant_id');
     sessionStorage.removeItem('fs_user');
     this.currentUser.set(null);
+    this.selectedTenant.set(null);
+    this.empresas.set([]);
   }
 }

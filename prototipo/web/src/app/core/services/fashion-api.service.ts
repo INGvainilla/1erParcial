@@ -85,8 +85,16 @@ export class FashionApiService {
   }
 
   // CU05: Gestionar Ciudades y Sucursales, Paso 2: Listar sucursales físicas con datos GPS y probadores
-  getSucursales(): Observable<Sucursal[]> {
-    return this.http.get<Sucursal[]>(`${this.apiUrl}/sucursales`);
+  getSucursales(idEmpresa?: number): Observable<Sucursal[]> {
+    const tenantId = idEmpresa !== undefined ? idEmpresa : (this.auth.getActiveEmpresaId() || undefined);
+    let params = new HttpParams();
+    if (tenantId) {
+      params = params.set('id_empresa', tenantId.toString());
+    }
+    return this.http.get<Sucursal[]>(`${this.apiUrl}/sucursales`, {
+      params,
+      headers: this.auth.getAuthHeaders()
+    });
   }
 
   // CU05: Gestionar Ciudades y Sucursales, Paso 3: Registrar nueva sucursal física georreferenciada
@@ -107,8 +115,16 @@ export class FashionApiService {
   // CU06: CATÁLOGO DE PRODUCTOS Y MODA
   // ==========================================
   // CU06: Gestionar Productos y Atributos de Moda, Paso 1: Consultar catálogo maestro de indumentaria
-  getProductos(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/productos`);
+  getProductos(idEmpresa?: number): Observable<Producto[]> {
+    const tenantId = idEmpresa !== undefined ? idEmpresa : (this.auth.getActiveEmpresaId() || undefined);
+    let params = new HttpParams();
+    if (tenantId) {
+      params = params.set('id_empresa', tenantId.toString());
+    }
+    return this.http.get<Producto[]>(`${this.apiUrl}/productos`, {
+      params,
+      headers: this.auth.getAuthHeaders()
+    });
   }
 
   // CU06: Gestionar Productos y Atributos de Moda, Paso 2: Obtener categorías taxonómicas de prendas
@@ -178,10 +194,14 @@ export class FashionApiService {
   // CU09: INVENTARIO MULTI-SUCURSAL Y CPP
   // ==========================================
   // CU09: Gestionar Inventario Multi-Sucursal y Costos Ponderados (CPP), Paso 1.2: obtenerExistenciasYCppActual(sucursal_id, SKU)
-  getInventario(idSucursal?: number): Observable<InventarioItem[]> {
+  getInventario(idSucursal?: number, idEmpresa?: number): Observable<InventarioItem[]> {
+    const tenantId = idEmpresa !== undefined ? idEmpresa : (this.auth.getActiveEmpresaId() || undefined);
     let params = new HttpParams();
     if (idSucursal) {
       params = params.set('id_sucursal', idSucursal.toString());
+    }
+    if (tenantId) {
+      params = params.set('id_empresa', tenantId.toString());
     }
     return this.http.get<InventarioItem[]>(`${this.apiUrl}/inventario/stock`, {
       params,

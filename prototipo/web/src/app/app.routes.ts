@@ -22,6 +22,7 @@ import { TrackingComponent } from './pages/p10_logistica_delivery/tracking/track
 import { ComparadorComponent } from './pages/p03_catalogo_estilismo_ia/comparador/comparador.component';
 import { RecompensasComponent } from './pages/p07_venta_digital_fidelizacion/recompensas/recompensas.component';
 import { AsistenteIaComponent } from './pages/p03_catalogo_estilismo_ia/asistente-ia/asistente-ia.component';
+import { ReportesIaComponent } from './pages/p03_catalogo_estilismo_ia/reportes-ia/reportes-ia.component';
 import { TenantsComponent } from './pages/p01_seguridad_acceso/tenants/tenants.component';
 import { TraspasosComponent } from './pages/p05_inventario_costos_analitica/traspasos/traspasos.component';
 import { ComprasDesktopComponent } from './pages/p04_aprovisionamiento_proveedores/compras/compras-desktop.component';
@@ -50,6 +51,7 @@ export const routes: Routes = [
 
   // Panel Ejecutivo y Gestión RBAC (Exclusivo Administrador)
   { path: 'dashboard', component: DashboardComponent, canActivate: [dashboardGuard] },
+  { path: 'reportes-ia', component: ReportesIaComponent, canActivate: [dashboardGuard] },
   { path: 'tenants', component: TenantsComponent, canActivate: [adminGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [adminGuard] },
   { path: 'temporadas', component: TemporadasComponent, canActivate: [adminGuard] },

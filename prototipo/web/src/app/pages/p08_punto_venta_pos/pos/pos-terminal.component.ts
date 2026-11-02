@@ -31,7 +31,7 @@ interface TicketItem extends PosItemInput {
           </div>
           <div>
             <h1 class="pos-title">Terminal Punto de Venta (POS)</h1>
-            <span class="pos-subtitle">CU15 - Facturación y Venta Presencial en Mostrador</span>
+            <span class="pos-subtitle">CU10 - Facturación y Venta POS de Contado (Con soporte Offline-First)</span>
           </div>
         </div>
 
@@ -107,9 +107,9 @@ interface TicketItem extends PosItemInput {
             </button>
 
             <!-- Botón para Devolución y Cambio de Prendas (CU25) -->
-            <button class="btn-load-dev" (click)="openDevolucionModal()" title="Devolución y Cambio de Prendas (CU25)">
+            <button class="btn-load-dev" (click)="openDevolucionModal()" title="Devolución y Cambio de Prendas (CU13)">
               <i class="fas fa-exchange-alt"></i>
-              <span>Devoluciones (CU25)</span>
+              <span>Devoluciones & Cambios (CU13)</span>
             </button>
           </div>
 
@@ -287,7 +287,11 @@ interface TicketItem extends PosItemInput {
               <button
                 class="pay-tab"
                 [class.active]="metodoPago === 'TARJETA'"
-                (click)="selectMetodoPago('TARJETA')"
+                [disabled]="isOfflineMode"
+                [style.opacity]="isOfflineMode ? '0.4' : '1'"
+                [style.cursor]="isOfflineMode ? 'not-allowed' : 'pointer'"
+                (click)="!isOfflineMode && selectMetodoPago('TARJETA')"
+                [title]="isOfflineMode ? 'Tarjeta POS requiere conexión a Internet' : 'Cobro con tarjeta'"
               >
                 <i class="fas fa-credit-card"></i>
                 <span>Tarjeta POS</span>
@@ -295,11 +299,21 @@ interface TicketItem extends PosItemInput {
               <button
                 class="pay-tab"
                 [class.active]="metodoPago === 'QR'"
-                (click)="selectMetodoPago('QR')"
+                [disabled]="isOfflineMode"
+                [style.opacity]="isOfflineMode ? '0.4' : '1'"
+                [style.cursor]="isOfflineMode ? 'not-allowed' : 'pointer'"
+                (click)="!isOfflineMode && selectMetodoPago('QR')"
+                [title]="isOfflineMode ? 'QR Simple requiere validación en línea' : 'Cobro con código QR'"
               >
                 <i class="fas fa-qrcode"></i>
                 <span>QR Simple</span>
               </button>
+            </div>
+
+            <!-- Alerta Informativa de Restricción RF11 en Modo Offline -->
+            <div *ngIf="isOfflineMode" class="offline-payment-alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span><strong>Restricción RF11 (CU10):</strong> Sin conexión a Internet únicamente se permite cobro al contado en Efectivo con ticket de contingencia.</span>
             </div>
 
             <!-- Panel Específico de Efectivo y Calculadora de Cambio -->
@@ -613,8 +627,8 @@ interface TicketItem extends PosItemInput {
                 <i class="fas fa-exchange-alt"></i>
               </div>
               <div>
-                <h3>Devolución y Cambio de Prendas (CU25)</h3>
-                <span class="modal-subtitle">Inspección física en mostrador, plazo fiscal de 14 días y reingreso a Kardex al CPP histórico</span>
+                <h3>Devolución y Cambio de Prendas (CU13)</h3>
+                <span class="modal-subtitle">Inspección física en mostrador, plazo máximo de 7 días hábiles y reingreso a Kardex al CPP histórico (CU13)</span>
               </div>
             </div>
             <button class="modal-close" (click)="cerrarDevolucionModal()" title="Cerrar ventana"><i class="fas fa-times"></i></button>
@@ -793,7 +807,7 @@ interface TicketItem extends PosItemInput {
               (click)="confirmarDevolucion()"
             >
               <i class="fas" [class.fa-check-double]="!isProcessingDev" [class.fa-spinner]="isProcessingDev" [class.fa-spin]="isProcessingDev"></i>
-              <span>{{ isProcessingDev ? 'Procesando en Kardex...' : 'Confirmar Cambio y Emitir Ticket Fiscal (CU25)' }}</span>
+              <span>{{ isProcessingDev ? 'Procesando en Kardex...' : 'Confirmar Cambio y Emitir Ticket Fiscal (CU13)' }}</span>
             </button>
           </div>
         </div>
@@ -2863,7 +2877,8 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
   toggleOfflineMode() {
     this.isOfflineMode = !this.isOfflineMode;
     if (this.isOfflineMode) {
-      this.toast.info('Modo Offline Activado', 'Las ventas se registrarán localmente en IndexedDB con UUID v4');
+      this.metodoPago = 'EFECTIVO';
+      this.toast.info('Modo Offline Activado (CU10)', 'Ventas registradas localmente en IndexedDB al contado en Efectivo con UUID v4');
     } else {
       this.toast.info('Modo Online Reanudado', 'Conexión activa con el servidor central');
     }

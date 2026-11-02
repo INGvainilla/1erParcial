@@ -48,7 +48,7 @@ export const inventarioGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const rol = auth.currentUser()?.rol;
-  if (rol === 'ADMINISTRADOR' || rol === 'LOGISTICA' || rol === 'ENCARGADO_SUCURSAL') {
+  if (rol === 'SUPER_ADMIN' || rol === 'ADMINISTRADOR' || rol === 'LOGISTICA' || rol === 'ENCARGADO_SUCURSAL') {
     return true;
   }
   router.navigate(['/catalogo']);
@@ -62,7 +62,7 @@ export const proveedoresGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const rol = auth.currentUser()?.rol;
-  if (rol === 'ADMINISTRADOR' || rol === 'LOGISTICA') {
+  if (rol === 'SUPER_ADMIN' || rol === 'ADMINISTRADOR' || rol === 'LOGISTICA') {
     return true;
   }
   router.navigate(['/catalogo']);
@@ -76,7 +76,7 @@ export const encargadoGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const rol = auth.currentUser()?.rol;
-  if (rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL') {
+  if (rol === 'SUPER_ADMIN' || rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL') {
     return true;
   }
   router.navigate(['/catalogo']);
@@ -91,7 +91,7 @@ export const posGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const rol = auth.currentUser()?.rol;
-  if (rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL' || rol === 'CAJERO') {
+  if (rol === 'SUPER_ADMIN' || rol === 'ADMINISTRADOR' || rol === 'ENCARGADO_SUCURSAL' || rol === 'CAJERO') {
     return true;
   }
   router.navigate(['/catalogo']);
@@ -106,12 +106,9 @@ export const logisticaGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const rol = auth.currentUser()?.rol;
-  if (rol === 'ADMINISTRADOR' || rol === 'LOGISTICA' || rol === 'ENCARGADO_SUCURSAL') {
+  if (rol === 'SUPER_ADMIN' || rol === 'ADMINISTRADOR' || rol === 'LOGISTICA' || rol === 'ENCARGADO_SUCURSAL') {
     return true;
   }
   router.navigate(['/catalogo']);
   return false;
 };
-
-
-

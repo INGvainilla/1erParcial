@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { FashionApiService } from '../../../core/services/fashion-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -1781,6 +1782,7 @@ interface UseCaseItem {
 })
 export class DashboardComponent implements OnInit {
   private api = inject(FashionApiService);
+  private http = inject(HttpClient);
   public auth = inject(AuthService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
@@ -1798,6 +1800,12 @@ export class DashboardComponent implements OnInit {
   selectedRankingTipo: string = 'TODOS';
   auditoriaContable: any = null;
   isPdfModalOpen: boolean = false;
+
+  // Variables y estado para CU15 (Reportes IA)
+  iaPrompt: string = 'Ventas por categoría textil';
+  isLoadingIA: boolean = false;
+  iaError: string | null = null;
+  iaResultado: any = null;
 
   // URLs dinámicas al backend para Swagger y Health
   docsUrl = API_BASE_URL.replace('/api/v1', '/docs');
@@ -1984,6 +1992,35 @@ export class DashboardComponent implements OnInit {
 
   canAccess(): boolean {
     return this.auth.isAdmin() || this.auth.isManager();
+  }
+
+  consultarIA(promptSugerido?: string) {
+    if (promptSugerido) {
+      this.iaPrompt = promptSugerido;
+    }
+    if (!this.iaPrompt || !this.iaPrompt.trim()) return;
+
+    this.isLoadingIA = true;
+    this.iaError = null;
+
+    this.http.post<any>(`${API_BASE_URL}/reportes-ia/query`, {
+      prompt: this.iaPrompt.trim()
+    }, {
+      headers: this.auth.getAuthHeaders()
+    }).subscribe({
+      next: (res) => {
+        this.isLoadingIA = false;
+        this.iaResultado = res;
+        this.toast.success('Reporte Generado', res.interpretacion || 'Consulta analizada con éxito.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoadingIA = false;
+        this.iaError = err.error?.detail || 'Error al ejecutar la consulta generativa con IA.';
+        this.toast.error('Consulta IA', this.iaError || 'Error al ejecutar consulta');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   exportarPDF(): void {

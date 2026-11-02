@@ -24,6 +24,19 @@ import { Sucursal, Ciudad } from '../../../core/models/fashion.models';
         </div>
       </div>
 
+      <!-- Filtro Dinámico de Tenant para SuperAdmin (CU01-03 / RNF02) -->
+      <div class="filters-bar" *ngIf="auth.isSuperAdmin()" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; background: rgba(30, 41, 59, 0.5); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+        <div class="filter-group" style="display: flex; align-items: center; gap: 0.75rem;">
+          <label style="color: #cbd5e1; font-weight: 600; font-size: 0.9rem;"><i class="fas fa-building" style="color: #818cf8;"></i> Empresa (Tenant):</label>
+          <select [ngModel]="auth.selectedTenant()?.id_empresa ?? null" (ngModelChange)="onEmpresaChange($event)" class="form-control" style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(99, 102, 241, 0.5); color: #818cf8; font-weight: 600; padding: 0.45rem 1rem; border-radius: 8px; outline: none; cursor: pointer;">
+            <option [ngValue]="null">🌐 Todas las Empresas</option>
+            <option *ngFor="let emp of auth.empresas()" [ngValue]="emp.id_empresa">
+              🏢 {{ emp.nombre_comercial }} (ID: {{ emp.id_empresa }})
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="branches-grid">
         <div *ngFor="let s of sucursales" class="branch-card glass-panel" [class.card-disabled]="s.estado === 'CERRADA'">
           <div class="branch-card-header">
@@ -378,6 +391,11 @@ export class SucursalesComponent implements OnInit {
   }
 
   // CU05: Gestionar Ciudades y Sucursales, Paso 1: Consultar directorio de ciudades operativas
+  onEmpresaChange(idEmpresa: number | null): void {
+    this.auth.setSelectedTenantById(idEmpresa);
+    this.loadSucursales();
+  }
+
   loadCiudades(): void {
     this.api.getCiudades().subscribe({
       next: (data) => this.ciudades = data
@@ -452,6 +470,7 @@ export class SucursalesComponent implements OnInit {
   submitSucursal(): void {
     this.submitting = true;
     const payload = {
+      id_empresa: this.auth.getActiveEmpresaId() || undefined,
       id_ciudad: Number(this.newSucursal.id_ciudad),
       nombre_sucursal: this.newSucursal.nombre_sucursal.trim(),
       direccion: this.newSucursal.direccion.trim(),

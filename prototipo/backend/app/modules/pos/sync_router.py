@@ -2,6 +2,7 @@
 """
 Enrutador REST FastAPI para Sincronización Transaccional Offline-First (CU08, CU11, CU12).
 Soporta persistencia idempotente con UUID v4 y cabecera X-Idempotency-Key.
+Compatible tanto con SQLite local como PostgreSQL.
 """
 import json
 import hashlib
@@ -143,7 +144,7 @@ def sincronizar_operacion_offline(
     payload_str = json.dumps(operacion.payload)
     hash_payload = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()
 
-    # Si es venta POS, descontar stock de sucursal y asentar en kardex
+    # Si es venta POS, descontar stock de sucursal de manera portable
     if operacion.tipo_operacion == "VENTA_POS":
         detalles = operacion.payload.get("items", [])
         for item in detalles:
@@ -153,35 +154,38 @@ def sincronizar_operacion_offline(
             if id_prod and talla:
                 db.execute(text("""
                     UPDATE inventario 
-                    SET stock_fisico = GREATEST(0, stock_fisico - :cant),
-                        stock_disponible = GREATEST(0, stock_disponible - :cant)
+                    SET stock_fisico = CASE WHEN stock_fisico - :cant < 0 THEN 0 ELSE stock_fisico - :cant END,
+                        stock_disponible = CASE WHEN stock_disponible - :cant < 0 THEN 0 ELSE stock_disponible - :cant END
                     WHERE id_producto = :id_prod AND talla = :talla AND id_sucursal = :id_suc
                 """), {"cant": cantidad, "id_prod": id_prod, "talla": talla, "id_suc": operacion.id_sucursal})
 
-    # 3. Guardar registro en operaciones_offline_sync
+    # 3. Guardar registro en operaciones_offline_sync de forma 100% portable (SQLite y PostgreSQL)
     insert_sql = text("""
         INSERT INTO operaciones_offline_sync 
         (uuid_operacion, id_empresa, id_sucursal, tipo_operacion, payload_json, hash_sha256, estado_sync, fecha_sincronizacion)
         VALUES (:uuid, :empresa_id, :sucursal_id, :tipo, :payload, :hash, 'CONFIRMADA', CURRENT_TIMESTAMP)
-        RETURNING id_operacion, fecha_sincronizacion
     """)
-    res = db.execute(insert_sql, {
+    db.execute(insert_sql, {
         "uuid": uuid_key,
         "empresa_id": id_empresa,
         "sucursal_id": operacion.id_sucursal,
         "tipo": operacion.tipo_operacion,
         "payload": payload_str,
         "hash": hash_payload
-    }).mappings().first()
-
+    })
     db.commit()
+
+    res = db.execute(
+        text("SELECT id_operacion, fecha_sincronizacion FROM operaciones_offline_sync WHERE uuid_operacion = :uuid"),
+        {"uuid": uuid_key}
+    ).mappings().first()
 
     return OperacionSyncResponse(
         status="CONFIRMADA",
         mensaje="Transacción offline sincronizada exitosamente en base de datos central.",
         uuid_operacion=uuid_key,
-        id_operacion=res["id_operacion"],
-        fecha_sincronizacion=str(res["fecha_sincronizacion"])
+        id_operacion=res["id_operacion"] if res else None,
+        fecha_sincronizacion=str(res["fecha_sincronizacion"]) if res else datetime.utcnow().isoformat()
     )
 
 

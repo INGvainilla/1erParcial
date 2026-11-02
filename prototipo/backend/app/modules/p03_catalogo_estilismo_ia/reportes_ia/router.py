@@ -19,6 +19,7 @@ from sqlalchemy import text
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p01_seguridad_acceso.tenants.services import verificar_capacidad_ia
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -54,6 +55,15 @@ def consultar_reportes_ia(
     current_user: Usuario = Depends(get_current_user)
 ):
     id_empresa = current_user.id_empresa or 1
+
+    # Validación de Capacidades por Plan (CU01-CU03, CU15)
+    if current_user.rol != "SUPER_ADMIN":
+        if not verificar_capacidad_ia(db, id_empresa):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Su plan de suscripción actual no incluye Reportes Ejecutivos Asistidos por Inteligencia Artificial. Actualice su suscripción al Plan Profesional o Enterprise para habilitar esta funcionalidad."
+            )
+
     prompt_lower = req.prompt.lower()
 
     # 1. Validación de Seguridad AST: Bloquear inyecciones o comandos destructivos
@@ -64,7 +74,122 @@ def consultar_reportes_ia(
         )
 
     # 2. Generación/Mapeo semántico de SQL seguro forzando WHERE id_empresa = :tenant_id
-    if "categoria" in prompt_lower or "categoría" in prompt_lower:
+    is_sqlite = db.bind.dialect.name == "sqlite" if db.bind else True
+
+    # FILTRO 1: Quiebres de stock / Bajo inventario / Alertas mínimas
+    if any(k in prompt_lower for k in ["bajo stock", "stock minimo", "mínimo", "quiebre", "reabastecer", "critico", "crítico", "alerta", "agotarse"]):
+        interpretacion = "Prendas con stock físico en nivel crítico o inferior al stock de seguridad"
+        sql_query = """
+            SELECT p.nombre || ' (Talla: ' || i.talla || ')' as etiqueta,
+                   i.stock_fisico as cantidad_prendas,
+                   ROUND(i.costo_promedio_ponderado * i.stock_fisico, 2) as total_ventas
+            FROM inventario i
+            JOIN productos p ON p.id_producto = i.id_producto
+            WHERE (p.id_empresa = :tenant_id OR p.id_empresa IS NULL)
+              AND i.stock_fisico <= i.stock_minimo + 5
+            ORDER BY i.stock_fisico ASC
+            LIMIT 10
+        """
+        tipo_grafico = "BAR"
+
+    # FILTRO 2: Medios de pago / Efectivo vs Tarjetas vs QR
+    elif any(k in prompt_lower for k in ["medio", "pago", "efectivo", "tarjeta", "qr", "modalidad", "cobro"]):
+        interpretacion = "Distribución de recaudación según el medio de cobro utilizado"
+        sql_query = """
+            SELECT COALESCE(ov.metodo_pago, 'EFECTIVO') as etiqueta,
+                   COUNT(ov.id_orden) as cantidad_prendas,
+                   COALESCE(SUM(ov.total), 0) as total_ventas
+            FROM ordenes_venta ov
+            WHERE (ov.id_empresa = :tenant_id OR ov.id_empresa IS NULL)
+              AND ov.estado_pago = 'PAGADO'
+            GROUP BY ov.metodo_pago
+            ORDER BY total_ventas DESC
+        """
+        tipo_grafico = "PIE"
+
+    # FILTRO 3: Canales de venta (Web Omnicanal vs Caja Mostrador POS)
+    elif any(k in prompt_lower for k in ["canal", "omnicanal", "pos", "mostrador", "web", "online"]):
+        interpretacion = "Comparativa de facturación por canal de venta (Tienda Web vs Caja POS)"
+        sql_query = """
+            SELECT CASE WHEN ov.id_sucursal IS NOT NULL THEN 'Caja Mostrador POS (Física)' ELSE 'Canal Digital Web (E-Commerce)' END as etiqueta,
+                   COUNT(ov.id_orden) as cantidad_prendas,
+                   COALESCE(SUM(ov.total), 0) as total_ventas
+            FROM ordenes_venta ov
+            WHERE (ov.id_empresa = :tenant_id OR ov.id_empresa IS NULL)
+              AND ov.estado_pago = 'PAGADO'
+            GROUP BY (CASE WHEN ov.id_sucursal IS NOT NULL THEN 'Caja Mostrador POS (Física)' ELSE 'Canal Digital Web (E-Commerce)' END)
+            ORDER BY total_ventas DESC
+        """
+        tipo_grafico = "PIE"
+
+    # FILTRO 4: Valuación de inventario y Costo Promedio Ponderado (CPP)
+    elif any(k in prompt_lower for k in ["valuacion", "valuación", "cpp", "costo", "capital", "activo", "existencias"]):
+        interpretacion = "Valuación financiera de existencias por Costo Promedio Ponderado (CPP)"
+        sql_query = """
+            SELECT c.nombre_categoria as etiqueta,
+                   COALESCE(SUM(i.stock_fisico), 0) as cantidad_prendas,
+                   ROUND(COALESCE(SUM(i.stock_fisico * i.costo_promedio_ponderado), 0), 2) as total_ventas
+            FROM productos p
+            JOIN categorias c ON p.id_categoria = c.id_categoria
+            LEFT JOIN inventario i ON i.id_producto = p.id_producto
+            WHERE (p.id_empresa = :tenant_id OR p.id_empresa IS NULL)
+            GROUP BY c.nombre_categoria
+            ORDER BY total_ventas DESC
+        """
+        tipo_grafico = "BAR"
+
+    # FILTRO 5: Sucursales específicas o comparativa de tiendas
+    elif any(k in prompt_lower for k in ["sucursal", "tienda", "equipetrol", "centro", "san pedro", "calacoto"]):
+        interpretacion = "Rendimiento y volumen de ventas consolidado por sucursal física"
+        sql_query = """
+            SELECT s.nombre_sucursal as etiqueta,
+                   COUNT(ov.id_orden) as cantidad_prendas,
+                   COALESCE(SUM(ov.total), 0) as total_ventas
+            FROM sucursales s
+            LEFT JOIN ordenes_venta ov ON ov.id_sucursal = s.id_sucursal AND ov.estado_pago = 'PAGADO'
+            WHERE (s.id_empresa = :tenant_id OR s.id_empresa IS NULL)
+            GROUP BY s.id_sucursal, s.nombre_sucursal
+            ORDER BY total_ventas DESC
+        """
+        tipo_grafico = "PIE"
+
+    # FILTRO 6: Ventas por prenda específica (Camisas, Trajes, Pantalones, Calzado)
+    elif any(k in prompt_lower for k in ["camisa", "traje", "pantalon", "pantalón", "calzado", "zapato", "blazer", "saco"]):
+        filtro_nombre = "camisa" if "camisa" in prompt_lower else ("traje" if "traje" in prompt_lower else ("pantalon" if "pantal" in prompt_lower else ("zapato" if "zapato" in prompt_lower or "calzado" in prompt_lower else "blazer")))
+        interpretacion = f"Desglose de ventas para la línea textil de {filtro_nombre.capitalize()}s"
+        sql_query = f"""
+            SELECT p.nombre as etiqueta,
+                   COALESCE(SUM(od.cantidad), 0) as cantidad_prendas,
+                   COALESCE(SUM(od.subtotal), 0) as total_ventas
+            FROM productos p
+            LEFT JOIN ordenes_detalle od ON od.id_producto = p.id_producto
+            WHERE (p.id_empresa = :tenant_id OR p.id_empresa IS NULL)
+              AND LOWER(p.nombre) LIKE '%{filtro_nombre}%'
+            GROUP BY p.id_producto, p.nombre
+            ORDER BY total_ventas DESC
+            LIMIT 7
+        """
+        tipo_grafico = "BAR"
+
+    # FILTRO 7: Top rotación / Más vendidos
+    elif any(k in prompt_lower for k in ["rotacion", "rotación", "top", "mas vendido", "más vendido", "demanda"]):
+        interpretacion = "Top 7 prendas con mayor rotación e inventario disponible"
+        sql_query = """
+            SELECT p.nombre as etiqueta,
+                   COALESCE(SUM(i.stock_fisico), 0) as cantidad_prendas,
+                   COALESCE(SUM(od.cantidad), 0) as total_ventas
+            FROM productos p
+            LEFT JOIN inventario i ON i.id_producto = p.id_producto
+            LEFT JOIN ordenes_detalle od ON od.id_producto = p.id_producto
+            WHERE (p.id_empresa = :tenant_id OR p.id_empresa IS NULL)
+            GROUP BY p.id_producto, p.nombre
+            ORDER BY total_ventas DESC
+            LIMIT 7
+        """
+        tipo_grafico = "BAR"
+
+    # FILTRO 8: Categorías textiles
+    elif any(k in prompt_lower for k in ["categoria", "categoría", "linea", "línea", "rubro"]):
         interpretacion = "Distribución de ventas por categoría textil de prendas"
         sql_query = """
             SELECT c.nombre_categoria as etiqueta, 
@@ -78,43 +203,19 @@ def consultar_reportes_ia(
             ORDER BY total_ventas DESC
         """
         tipo_grafico = "BAR"
-    elif "rotacion" in prompt_lower or "rotación" in prompt_lower or "top" in prompt_lower or "mas vendido" in prompt_lower:
-        interpretacion = "Top prendas con mayor rotación e inventario disponible"
-        sql_query = """
-            SELECT p.nombre as etiqueta,
-                   COALESCE(SUM(i.stock_fisico), 0) as stock_actual,
-                   COALESCE(SUM(od.cantidad), 0) as total_vendido
-            FROM productos p
-            LEFT JOIN inventario i ON i.id_producto = p.id_producto
-            LEFT JOIN ordenes_detalle od ON od.id_producto = p.id_producto
-            WHERE (p.id_empresa = :tenant_id OR p.id_empresa IS NULL)
-            GROUP BY p.id_producto, p.nombre
-            ORDER BY total_vendido DESC
-            LIMIT 7
-        """
-        tipo_grafico = "BAR"
-    elif "sucursal" in prompt_lower or "tienda" in prompt_lower:
-        interpretacion = "Rendimiento y volumen de ventas consolidado por sucursal física"
-        sql_query = """
-            SELECT s.nombre_sucursal as etiqueta,
-                   COUNT(ov.id_orden) as total_transacciones,
-                   COALESCE(SUM(ov.total), 0) as total_ventas
-            FROM sucursales s
-            LEFT JOIN ordenes_venta ov ON ov.id_sucursal = s.id_sucursal
-            WHERE (s.id_empresa = :tenant_id OR s.id_empresa IS NULL)
-            GROUP BY s.id_sucursal, s.nombre_sucursal
-            ORDER BY total_ventas DESC
-        """
-        tipo_grafico = "PIE"
+
+    # DEFAULT / Tendencia temporal
     else:
-        interpretacion = "Tendencia mensual de ingresos y facturación del ejercicio"
-        sql_query = """
-            SELECT TO_CHAR(ov.creado_en, 'YYYY-MM') as etiqueta,
-                   COUNT(ov.id_orden) as total_transacciones,
+        date_expr = "strftime('%Y-%m', ov.creado_en)" if is_sqlite else "TO_CHAR(ov.creado_en, 'YYYY-MM')"
+        interpretacion = "Tendencia mensual consolidada de facturación e ingresos"
+        sql_query = f"""
+            SELECT {date_expr} as etiqueta,
+                   COUNT(ov.id_orden) as cantidad_prendas,
                    COALESCE(SUM(ov.total), 0) as total_ventas
             FROM ordenes_venta ov
-            WHERE ov.estado_pago = 'PAGADO'
-            GROUP BY TO_CHAR(ov.creado_en, 'YYYY-MM')
+            WHERE (ov.id_empresa = :tenant_id OR ov.id_empresa IS NULL)
+              AND ov.estado_pago = 'PAGADO'
+            GROUP BY {date_expr}
             ORDER BY etiqueta ASC
             LIMIT 6
         """

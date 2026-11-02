@@ -103,6 +103,14 @@ import {
             <div class="credential-chips">
               <button
                 type="button"
+                class="chip-btn superadmin"
+                (click)="fillLogin('superadmin@fashionstore.bo', 'SuperAdmin123*')"
+                title="Super Administrador SaaS - Gestión Global de Plataforma y Tenants"
+              >
+                ⚡ Super Admin SaaS
+              </button>
+              <button
+                type="button"
                 class="chip-btn admin"
                 (click)="fillLogin('alberto.delgado@store.bo', 'Admin123*')"
                 title="Admin General - Acceso completo"
@@ -705,6 +713,7 @@ import {
       background: #1e293b;
     }
 
+    .chip-btn.superadmin { border-color: rgba(168, 85, 247, 0.6); color: #e9d5ff; background: rgba(126, 34, 206, 0.25); }
     .chip-btn.admin { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
     .chip-btn.manager { border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
     .chip-btn.locked, .chip-btn.cashier { border-color: rgba(245, 158, 11, 0.4); color: #fde68a; }
