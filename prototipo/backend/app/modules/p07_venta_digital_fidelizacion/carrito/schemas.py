@@ -27,6 +27,9 @@ class CarritoItemResponse(BaseModel):
     precio_unitario: float
     subtotal: float
     stock_maximo_disponible: int
+    descuento_aplicado: float = 0.0
+    motivo_descuento: Optional[str] = None
+    precio_regular: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,5 +40,7 @@ class CarritoResponse(BaseModel):
     total_items: int
     total_general: float
     items: List[CarritoItemResponse]
+    descuento_total: float = 0.0
+    subtotal_sin_descuento: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)

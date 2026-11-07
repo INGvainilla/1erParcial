@@ -126,6 +126,28 @@ class _CarritoScreenState extends State<CarritoScreen> {
                 )
               : Column(
                   children: [
+                    // Banner CU19: Tarifa Mayorista
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.loyalty_outlined, size: 16, color: Colors.amber),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Tarifa Mayorista (CU19): Lleva 3 o más unidades de una prenda y obtén 20% de descuento automático.',
+                              style: TextStyle(color: Colors.amber.shade200, fontSize: 11),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     // Lista de ítems
                     Expanded(
                       child: ListView.separated(
@@ -257,6 +279,20 @@ class _CarritoScreenState extends State<CarritoScreen> {
                   'Talla: ${item.talla}  •  Color: ${item.color}',
                   style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                 ),
+                if (item.cantidad >= 3)
+                  Container(
+                    margin: const EdgeInsets.only(top: 4, bottom: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    ),
+                    child: const Text(
+                      'Tarifa Mayorista (20% OFF aplicado)',
+                      style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

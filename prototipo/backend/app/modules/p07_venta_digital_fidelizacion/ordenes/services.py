@@ -4,7 +4,7 @@ Capa de Servicio y Transaccionalidad ACID para Órdenes y Checkout (CU14)
 """
 from datetime import datetime
 import uuid
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 
@@ -147,6 +147,9 @@ def crear_orden_desde_carrito(db: Session, id_usuario: int, orden_in: OrdenCreat
 
         for it in carrito.items:
             precio_u = Decimal(str(it.precio_unitario))
+            # CU19: Tarifa Mayorista automática (20% descuento) si se adquieren >= 3 unidades
+            if it.cantidad >= 3:
+                precio_u = (precio_u * Decimal("0.80")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             sub_linea = precio_u * Decimal(it.cantidad)
             subtotal_acum += sub_linea
 

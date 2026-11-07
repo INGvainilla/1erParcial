@@ -56,19 +56,44 @@ def obtener_o_crear_carrito_activo(db: Session, id_usuario: int) -> Carrito:
 def construir_carrito_response(db: Session, carrito: Carrito) -> CarritoResponse:
     """
     Calcula subtotales, totales generales y existencias máximas para cada ítem.
+    Aplica regla CU19: Tarifa Mayorista (20% de descuento) si cantidad >= 3 prendas,
+    o descuento de Liquidación Estacional si es superior.
     """
     items_response = []
     total_items = 0
     total_general = 0.0
+    descuento_total_acumulado = 0.0
+    subtotal_bruto_acumulado = 0.0
 
     for it in (carrito.items or []):
         stock_max = consultar_stock_disponible_global(db, it.id_producto, it.talla, it.color)
-        p_unit = float(it.precio_unitario)
+        prod = it.producto
+        p_regular = float(it.precio_unitario)
+
+        # Regla CU19: Tarifas mayoristas y liquidación
+        pct_desc = 0.0
+        motivo = None
+
+        if it.cantidad >= 3:
+            pct_desc = 0.20
+            motivo = "Tarifa Mayorista (≥ 3 unidades)"
+
+        if prod and prod.temporada and prod.temporada.estado == "LIQUIDACION" and prod.temporada.descuento_liquidacion:
+            pct_liq = float(prod.temporada.descuento_liquidacion) / 100.0
+            if pct_liq > pct_desc:
+                pct_desc = pct_liq
+                motivo = f"Liquidación Estacional ({int(pct_liq * 100)}%)"
+
+        p_unit = round(p_regular * (1.0 - pct_desc), 2) if pct_desc > 0 else p_regular
         subtotal = round(p_unit * it.cantidad, 2)
+        sub_bruto = round(p_regular * it.cantidad, 2)
+        desc_item = round(sub_bruto - subtotal, 2)
+
         total_items += it.cantidad
         total_general += subtotal
+        descuento_total_acumulado += desc_item
+        subtotal_bruto_acumulado += sub_bruto
 
-        prod = it.producto
         items_response.append(
             CarritoItemResponse(
                 id_item=it.id_item,
@@ -81,7 +106,10 @@ def construir_carrito_response(db: Session, carrito: Carrito) -> CarritoResponse
                 cantidad=it.cantidad,
                 precio_unitario=p_unit,
                 subtotal=subtotal,
-                stock_maximo_disponible=stock_max
+                stock_maximo_disponible=stock_max,
+                descuento_aplicado=desc_item,
+                motivo_descuento=motivo,
+                precio_regular=p_regular
             )
         )
 
@@ -92,7 +120,9 @@ def construir_carrito_response(db: Session, carrito: Carrito) -> CarritoResponse
         estado=carrito.estado,
         total_items=total_items,
         total_general=round(total_general, 2),
-        items=items_response
+        items=items_response,
+        descuento_total=round(descuento_total_acumulado, 2),
+        subtotal_sin_descuento=round(subtotal_bruto_acumulado, 2)
     )
 
 

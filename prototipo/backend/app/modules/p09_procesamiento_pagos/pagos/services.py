@@ -28,10 +28,13 @@ def crear_intencion_pago(
     db: Session,
     id_orden: int,
     id_usuario: int,
-    rol_usuario: str
+    rol_usuario: str,
+    monto_diferencial: Optional[float] = None,
+    motivo: Optional[str] = None
 ) -> IntencionPagoResponse:
     """
-    CU16: Genera un PaymentIntent en Stripe para cobrar una orden en estado PENDIENTE.
+    CU18 / CU16: Genera un PaymentIntent en Stripe para cobrar una orden en estado PENDIENTE,
+    o procesar un cobro diferencial por cambio de prenda (CU13 -> CU18).
     - Convierte el total a centavos (requerido por Stripe).
     - Asocia metadata con id_orden y numero_factura.
     - Devuelve el client_secret para que el frontend tokenice sin almacenar datos de tarjeta.
@@ -50,7 +53,7 @@ def crear_intencion_pago(
             detail="No tiene autorización para procesar el pago de esta orden."
         )
 
-    if orden.estado_pago == "PAGADO":
+    if orden.estado_pago == "PAGADO" and monto_diferencial is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"La orden #{id_orden} ({orden.numero_factura}) ya figura como PAGADA."
@@ -66,8 +69,14 @@ def crear_intencion_pago(
             detail="La pasarela de pagos en línea (Stripe) se encuentra temporalmente deshabilitada por administración. Por favor consulte a soporte o intente más tarde."
         )
 
-    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.4: obtenerTotalOrden(id_orden)
-    monto_float = float(orden.total)
+    # CU18: Si se especifica un importe diferencial (cambio de prenda), usar ese valor
+    if monto_diferencial is not None and monto_diferencial > 0:
+        monto_float = round(float(monto_diferencial), 2)
+        desc_transaccion = f"FashionStore - Cobro Diferencial Cambio Prenda (Factura {orden.numero_factura})"
+    else:
+        monto_float = float(orden.total)
+        desc_transaccion = f"FashionStore - Factura {orden.numero_factura}"
+
     if monto_float <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -84,11 +93,12 @@ def crear_intencion_pago(
         payment_intent = stripe.PaymentIntent.create(
             amount=monto_centavos,
             currency=moneda,
-            description=f"FashionStore - Factura {orden.numero_factura}",
+            description=desc_transaccion,
             metadata={
                 "id_orden": str(orden.id_orden),
                 "numero_factura": orden.numero_factura or f"ORD-{orden.id_orden}",
-                "id_usuario": str(orden.id_usuario or id_usuario)
+                "id_usuario": str(orden.id_usuario or id_usuario),
+                "tipo_cobro": "DIFERENCIAL_CAMBIO" if monto_diferencial else "ORDEN_COMPLETA"
             },
             automatic_payment_methods={
                 "enabled": True,
@@ -106,6 +116,12 @@ def crear_intencion_pago(
             payment_intent_id=payment_intent.id
         )
 
+    except stripe.error.CardError as e:
+        err = e.error
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Tarjeta declinada por la entidad emisora ({err.code}): {err.message or 'Fondos insuficientes o tarjeta inválida'}"
+        )
     except stripe.error.StripeError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

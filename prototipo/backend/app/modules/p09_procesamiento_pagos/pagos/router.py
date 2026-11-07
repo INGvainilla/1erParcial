@@ -53,7 +53,9 @@ def api_crear_intencion_pago(
         db=db,
         id_orden=payload.id_orden,
         id_usuario=current_user.id_usuario,
-        rol_usuario=current_user.rol
+        rol_usuario=current_user.rol,
+        monto_diferencial=payload.monto_diferencial,
+        motivo=payload.motivo
     )
 
 

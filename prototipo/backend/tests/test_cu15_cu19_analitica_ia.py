@@ -121,3 +121,54 @@ def test_cu19_calculo_descuentos_mayoristas_liquidacion():
     assert data["descuento_total"] == 160.0
     assert data["total_neto"] == 490.0
 
+
+def test_cu19_consultar_reglas_promocion(admin_token):
+    """CU19: Consultar políticas activas de tarifas mayoristas y liquidación"""
+    resp = client.get("/api/v1/promociones/reglas", headers=admin_token)
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["regla_mayorista"]["cantidad_minima"] == 3
+    assert data["regla_mayorista"]["porcentaje_descuento"] == 20.0
+    assert data["regla_liquidacion"]["activo"] is True
+
+
+def test_cu18_intencion_cobro_diferencial(admin_token):
+    """CU18: Generar intención de pago con importe diferencial por cambio de prenda"""
+    # 1. Crear una orden de prueba si no existe
+    from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta
+    db = SessionLocal()
+    orden = db.query(OrdenVenta).filter(OrdenVenta.total > 0).first()
+    if not orden:
+        orden = OrdenVenta(
+            id_usuario=1,
+            id_sucursal=1,
+            numero_factura="FAC-TEST-DIFF-01",
+            canal_venta="WEB",
+            modalidad_entrega="DELIVERY",
+            nit_factura="1234567",
+            razon_social_factura="Test Diff",
+            subtotal=100.0,
+            costo_envio=15.0,
+            total=115.0,
+            estado_pago="PENDIENTE"
+        )
+        db.add(orden)
+        db.commit()
+        db.refresh(orden)
+    id_orden = orden.id_orden
+    db.close()
+
+    # 2. Solicitar intención con monto diferencial de Bs. 45.00
+    payload = {
+        "id_orden": id_orden,
+        "monto_diferencial": 45.0,
+        "motivo": "Cambio de prenda por talla superior (Talla L a XL)"
+    }
+    resp = client.post("/api/v1/pagos/intencion", json=payload, headers=admin_token)
+    assert resp.status_code == 201, resp.text
+    data = resp.json()
+    assert data["total"] == 45.0
+    assert data["client_secret"] is not None
+    assert data["payment_intent_id"].startswith("pi_")
+
+
