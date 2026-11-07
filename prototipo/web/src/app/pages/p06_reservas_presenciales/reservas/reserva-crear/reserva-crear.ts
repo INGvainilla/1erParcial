@@ -23,6 +23,8 @@ export class ReservaCrear implements OnInit {
   selectedSucursal: number | null = null;
   fechaVisita: string = '';
   horaVisita: string = '';
+  minFechaVisita: string = '';
+  maxFechaVisita: string = '';
   outfitNombre: string = '';
   
   // Lista dinámica de prendas a reservar (CU11)
@@ -53,7 +55,14 @@ export class ReservaCrear implements OnInit {
       return;
     }
 
-    // 2. Establecer fecha por defecto (mañana) y hora habitual
+    // 2. Establecer fecha por defecto (mañana) y límites de permanencia (hasta 5 días)
+    const hoy = new Date();
+    this.minFechaVisita = hoy.toISOString().split('T')[0];
+
+    const maxF = new Date();
+    maxF.setDate(hoy.getDate() + 5);
+    this.maxFechaVisita = maxF.toISOString().split('T')[0];
+
     const fecha = new Date();
     fecha.setDate(fecha.getDate() + 1);
     this.fechaVisita = fecha.toISOString().split('T')[0];
@@ -230,6 +239,12 @@ export class ReservaCrear implements OnInit {
     if (this.cartItems.length === 0) {
       this.errorMessage = 'Debes incluir al menos una prenda para reservar tu probador.';
       this.toast.warning('Sin prendas', this.errorMessage);
+      return;
+    }
+
+    if (this.fechaVisita > this.maxFechaVisita) {
+      this.errorMessage = 'La reserva tiene un tiempo límite de permanencia de máximo 5 días. Por favor seleccione una fecha dentro del rango permitido.';
+      this.toast.error('Límite de Permanencia', this.errorMessage);
       return;
     }
 

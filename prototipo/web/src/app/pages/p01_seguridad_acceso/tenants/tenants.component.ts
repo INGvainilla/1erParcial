@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TenantService } from '../../../core/services/tenant.service';
@@ -69,17 +69,28 @@ import { Empresa, PlanSuscripcion, SuscripcionEmpresa } from '../../../core/mode
 
       <!-- TABS DE NAVEGACIÓN -->
       <div class="tabs-nav">
-        <button class="tab-btn" [class.active]="tabActiva === 'empresas'" (click)="tabActiva = 'empresas'">
+        <button class="tab-btn" [class.active]="tabActiva === 'empresas'" (click)="cambiarTab('empresas')">
           <i class="fas fa-building"></i> Empresas Arrendatarias ({{ empresas.length }})
         </button>
-        <button class="tab-btn" [class.active]="tabActiva === 'planes'" (click)="tabActiva = 'planes'">
+        <button class="tab-btn" [class.active]="tabActiva === 'planes'" (click)="cambiarTab('planes')">
           <i class="fas fa-tags"></i> Planes de Suscripción ({{ planes.length }})
         </button>
       </div>
 
+      <!-- ESTADO DE CARGA -->
+      <div *ngIf="isLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; color: #94a3b8;">
+        <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #6366f1; margin-bottom: 1rem;"></i>
+        <p style="font-size: 0.95rem; font-weight: 500;">Cargando ecosistema multitenant y planes de suscripción...</p>
+      </div>
+
       <!-- TAB 1: EMPRESAS (TENANTS - CU01) -->
-      <div *ngIf="tabActiva === 'empresas'" class="tab-content">
-        <div class="grid-cards">
+      <div *ngIf="!isLoading && tabActiva === 'empresas'" class="tab-content">
+        <div *ngIf="empresas.length === 0" style="text-align: center; padding: 3rem; color: #94a3b8; background: rgba(30, 41, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.1);">
+          <i class="fas fa-building fa-3x" style="opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No se encontraron empresas arrendatarias registradas.</p>
+        </div>
+
+        <div class="grid-cards" *ngIf="empresas.length > 0">
           <div *ngFor="let emp of empresas" class="tenant-card">
             <div class="card-top">
               <div class="tenant-avatar">
@@ -130,8 +141,13 @@ import { Empresa, PlanSuscripcion, SuscripcionEmpresa } from '../../../core/mode
       </div>
 
       <!-- TAB 2: PLANES DE SUSCRIPCIÓN (CU02) -->
-      <div *ngIf="tabActiva === 'planes'" class="tab-content">
-        <div class="plans-grid">
+      <div *ngIf="!isLoading && tabActiva === 'planes'" class="tab-content">
+        <div *ngIf="planes.length === 0" style="text-align: center; padding: 3rem; color: #94a3b8; background: rgba(30, 41, 59, 0.3); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.1);">
+          <i class="fas fa-tags fa-3x" style="opacity: 0.3; margin-bottom: 1rem;"></i>
+          <p>No se encontraron planes de suscripción configurados.</p>
+        </div>
+
+        <div class="plans-grid" *ngIf="planes.length > 0">
           <div *ngFor="let plan of planes" class="plan-card" [class.pro]="plan.codigo === 'PLAN_PRO'">
             <div class="plan-header">
               <span class="plan-code">{{ plan.codigo }}</span>
@@ -793,8 +809,10 @@ export class TenantsComponent implements OnInit {
   auth = inject(AuthService);
   private tenantService = inject(TenantService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
 
   tabActiva: 'empresas' | 'planes' = 'empresas';
+  isLoading: boolean = false;
 
   empresas: Empresa[] = [];
   planes: PlanSuscripcion[] = [];
@@ -815,22 +833,42 @@ export class TenantsComponent implements OnInit {
     this.cargarDatos();
   }
 
+  cambiarTab(tab: 'empresas' | 'planes'): void {
+    this.tabActiva = tab;
+    this.cdr.detectChanges();
+  }
+
   cargarDatos(): void {
+    this.isLoading = true;
+    this.cdr.detectChanges();
+
     // Cargar empresas
     this.tenantService.listarEmpresas().subscribe({
       next: (data) => {
-        this.empresas = data;
+        this.empresas = data || [];
+        this.isLoading = false;
+        this.cdr.detectChanges();
         if (this.empresas.length > 0 && !this.auth.isSuperAdmin()) {
           this.consultarSuscripcion(this.empresas[0].id_empresa);
         }
       },
-      error: (err) => console.error('Error cargando empresas:', err)
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error cargando empresas:', err);
+        this.cdr.detectChanges();
+      }
     });
 
     // Cargar planes
     this.tenantService.listarPlanes().subscribe({
-      next: (data) => this.planes = data,
-      error: (err) => console.error('Error cargando planes:', err)
+      next: (data) => {
+        this.planes = data || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error cargando planes:', err);
+        this.cdr.detectChanges();
+      }
     });
 
     // Consultar suscripción activa del tenant actual si existe
@@ -842,8 +880,14 @@ export class TenantsComponent implements OnInit {
 
   consultarSuscripcion(idEmpresa: number): void {
     this.tenantService.obtenerSuscripcionActiva(idEmpresa).subscribe({
-      next: (sub) => this.suscripcionActiva = sub,
-      error: () => this.suscripcionActiva = null
+      next: (sub) => {
+        this.suscripcionActiva = sub;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.suscripcionActiva = null;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -853,16 +897,19 @@ export class TenantsComponent implements OnInit {
       presupuesto_disponible: 50000.00
     };
     this.mostrarModalEmpresa = true;
+    this.cdr.detectChanges();
   }
 
   editarEmpresa(emp: Empresa): void {
     this.modoEdicionEmpresa = true;
     this.formEmpresa = { ...emp };
     this.mostrarModalEmpresa = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModalEmpresa(): void {
     this.mostrarModalEmpresa = false;
+    this.cdr.detectChanges();
   }
 
   guardarEmpresa(): void {
@@ -902,10 +949,12 @@ export class TenantsComponent implements OnInit {
       this.formSuscripcion.id_empresa = this.empresas[0].id_empresa;
     }
     this.mostrarModalSuscripcion = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModalSuscripcion(): void {
     this.mostrarModalSuscripcion = false;
+    this.cdr.detectChanges();
   }
 
   guardarSuscripcion(): void {

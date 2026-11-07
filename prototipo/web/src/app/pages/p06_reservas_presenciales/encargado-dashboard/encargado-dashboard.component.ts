@@ -86,6 +86,13 @@ import { API_BASE_URL } from '../../../core/constants/api.constants';
             <span class="stat-label">Atendidas / Finalizadas</span>
           </div>
         </div>
+        <div class="stat-card stat-cancelada" style="border-left: 3px solid #ef4444;">
+          <div class="stat-icon" style="color: #ef4444;"><i class="fas fa-calendar-times"></i></div>
+          <div class="stat-info">
+            <span class="stat-number">{{ canceladas.length }}</span>
+            <span class="stat-label">Vencidas (>5 días)</span>
+          </div>
+        </div>
         <div class="stat-card stat-total">
           <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
           <div class="stat-info">
@@ -225,6 +232,39 @@ import { API_BASE_URL } from '../../../core/constants/api.constants';
             <div class="column-empty" *ngIf="atendidas.length === 0">
               <i class="fas fa-check-double"></i>
               <span>Aún no se han atendido reservas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna CANCELADAS / VENCIDAS -->
+        <div class="kanban-column col-cancelada" *ngIf="canceladas.length > 0">
+          <div class="column-header">
+            <div class="column-title" style="color: #f87171;">
+              <span class="column-dot dot-cancelada" style="background: #ef4444;"></span>
+              Caducadas (>5 días) / Canceladas
+            </div>
+            <span class="column-count" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">{{ canceladas.length }}</span>
+          </div>
+          <div class="column-body">
+            <div class="reserva-card card-cancelled" *ngFor="let r of canceladas" style="opacity: 0.8; border-color: rgba(239, 68, 68, 0.35);">
+              <div class="card-header-row">
+                <span class="reserva-id">#{{ r.id_reserva }}</span>
+                <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444;">
+                  {{ r.estado === 'CANCELADA_VENCIMIENTO' ? 'VENCIDA (5 DÍAS)' : 'CANCELADA' }}
+                </span>
+              </div>
+              <div class="card-client">
+                <i class="fas fa-user-times"></i>
+                <strong>{{ r.nombre_cliente || 'Cliente #' + r.id_usuario }}</strong>
+              </div>
+              <div class="card-time">
+                <i class="fas fa-calendar-times"></i>
+                <span>{{ formatFecha(r.fecha_visita) }} &bull; {{ formatHora(r.fecha_visita) }}</span>
+              </div>
+              <div class="card-waiting" style="background: rgba(239, 68, 68, 0.08); color: #fca5a5;">
+                <i class="fas fa-undo"></i>
+                <span>Prendas liberadas al inventario por exceder permanencia.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -684,6 +724,7 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
   pendientes: ReservaEncargado[] = [];
   preparadas: ReservaEncargado[] = [];
   atendidas: ReservaEncargado[] = [];
+  canceladas: ReservaEncargado[] = [];
   isLoading = false;
   processingId: number | null = null;
 
@@ -756,6 +797,7 @@ export class EncargadoDashboardComponent implements OnInit, OnDestroy {
     this.pendientes = this.todasReservas.filter(r => r.estado === 'PENDIENTE');
     this.preparadas = this.todasReservas.filter(r => r.estado === 'PREPARADA');
     this.atendidas = this.todasReservas.filter(r => r.estado === 'ATENDIDA' || r.estado === 'CERRADA_POR_VENTA');
+    this.canceladas = this.todasReservas.filter(r => r.estado === 'CANCELADA' || r.estado === 'CANCELADA_VENCIMIENTO');
   }
 
   // CU12: Preparar y Atender Reserva Presencial, Paso 2: Clic en 'Apartar en Probador'

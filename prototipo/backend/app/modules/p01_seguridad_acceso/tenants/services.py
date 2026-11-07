@@ -97,11 +97,36 @@ def crear_empresa(db: Session, datos: EmpresaCreate) -> Empresa:
         )
         db.add(suscripcion)
 
+    # 2.5 Crear Sucursal Central inicial para la nueva empresa
+    id_suc_creada = None
+    try:
+        from app.modules.p02_estructura_operativa.sucursales.models import Sucursal, Ciudad
+        ciudad_def = db.query(Ciudad).first()
+        id_ciudad = ciudad_def.id_ciudad if ciudad_def else 1
+
+        sucursal_central = Sucursal(
+            id_empresa=empresa.id_empresa,
+            id_ciudad=id_ciudad,
+            nombre_sucursal=f"Sede Central - {empresa.nombre_comercial}",
+            direccion=datos.direccion or "Av. Principal #100",
+            telefono=datos.telefono or "70000000",
+            es_casa_matriz=True,
+            latitud=-17.7833,
+            longitud=-63.1821,
+            estado="ACTIVA"
+        )
+        db.add(sucursal_central)
+        db.flush()
+        id_suc_creada = sucursal_central.id_sucursal
+    except Exception as e_suc:
+        print(f"[ONBOARDING TENANT] Advertencia al crear sucursal central: {e_suc}")
+
     # 3. Crear usuario administrador inicial para la empresa si se enviaron credenciales
     if datos.admin_email and datos.admin_password:
         if not db.query(Usuario).filter(Usuario.email == datos.admin_email).first():
             admin_user = Usuario(
                 id_empresa=empresa.id_empresa,
+                id_sucursal=id_suc_creada,
                 nombres=datos.admin_nombres or "Admin",
                 apellidos=datos.admin_apellidos or datos.nombre_comercial,
                 email=datos.admin_email,
@@ -111,6 +136,7 @@ def crear_empresa(db: Session, datos: EmpresaCreate) -> Empresa:
                 estado_cuenta="ACTIVO"
             )
             db.add(admin_user)
+            db.flush()
 
     db.commit()
     db.refresh(empresa)

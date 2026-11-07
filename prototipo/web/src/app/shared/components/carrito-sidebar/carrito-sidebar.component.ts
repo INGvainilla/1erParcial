@@ -182,6 +182,12 @@ import { Router } from '@angular/router';
 
         <!-- Botones de Acción -->
         <div class="cart-actions">
+          <a class="btn-view-full-page" routerLink="/carrito" (click)="carritoService.closeCart()">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Ver Bolsa Completa (CU13)</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+
           <button class="btn-checkout" (click)="procederCheckout()">
             <i class="fas fa-lock"></i>
             <span>Proceder al Pago (Checkout)</span>
@@ -206,6 +212,35 @@ import { Router } from '@angular/router';
     </aside>
   `,
   styles: [`
+    :host {
+      display: block;
+      position: relative;
+      z-index: 99999;
+    }
+
+    .btn-view-full-page {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      border-radius: 10px;
+      color: #c7d2fe;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+    .btn-view-full-page:hover {
+      background: rgba(99, 102, 241, 0.3);
+      color: #ffffff;
+      border-color: #818cf8;
+      transform: translateY(-1px);
+    }
+
     /* Backdrop desenfocado */
     .cart-backdrop {
       position: fixed;
@@ -215,7 +250,7 @@ import { Router } from '@angular/router';
       height: 100vh;
       background: rgba(10, 15, 29, 0.65);
       backdrop-filter: blur(6px);
-      z-index: 9998;
+      z-index: 99998;
       animation: fadeIn 0.25s ease-out;
     }
 
@@ -230,7 +265,7 @@ import { Router } from '@angular/router';
       background: #0f172a;
       border-left: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
-      z-index: 9999;
+      z-index: 99999;
       display: flex;
       flex-direction: column;
       transform: translateX(100%);

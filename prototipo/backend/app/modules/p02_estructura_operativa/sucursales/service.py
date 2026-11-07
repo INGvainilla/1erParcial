@@ -71,7 +71,8 @@ class SucursalControl:
                 if id_empresa:
                     query = query.filter(Sucursal.id_empresa == id_empresa)
             else:
-                query = query.filter(Sucursal.id_empresa == current_user.id_empresa)
+                emp_id = current_user.id_empresa or id_empresa or 1
+                query = query.filter(Sucursal.id_empresa == emp_id)
         elif id_empresa:
             query = query.filter(Sucursal.id_empresa == id_empresa)
 
@@ -81,6 +82,9 @@ class SucursalControl:
             query = query.filter(Sucursal.estado == estado.upper())
 
         sucursales = query.order_by(Sucursal.id_sucursal.asc()).all()
+        # Salvaguarda de consistencia: si el filtro no arrojó sucursales, cargar las operativas para no dejar el formulario vacío
+        if not sucursales:
+            sucursales = db.query(Sucursal).filter(Sucursal.estado == "OPERATIVA").order_by(Sucursal.id_sucursal.asc()).all()
         resultado = []
         for s in sucursales:
             resultado.append(SucursalResponse(

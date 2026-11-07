@@ -69,6 +69,10 @@ export interface LoginResponse {
   email: string;
   rol: string;
   id_sucursal?: number | null;
+  numero_factura_saas?: string | null;
+  monto_suscripcion_pagado?: number | null;
+  plan_nombre?: string | null;
+  mensaje_pago?: string | null;
 }
 
 export interface Ciudad {

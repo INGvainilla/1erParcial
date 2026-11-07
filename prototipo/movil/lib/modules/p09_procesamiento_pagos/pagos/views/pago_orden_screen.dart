@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fashionstore_mobile/core/models/orden.dart';
 import 'package:fashionstore_mobile/core/models/pago.dart';
 import 'package:fashionstore_mobile/core/services/api_service.dart';
+import 'package:fashionstore_mobile/core/services/network_service.dart';
 import 'package:fashionstore_mobile/core/services/pagos_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 import 'package:fashionstore_mobile/modules/p10_logistica_delivery/tracking/views/tracking_screen.dart';
@@ -94,6 +95,66 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
   Future<void> _confirmarPago() async {
     if (_intencion == null) return;
     if (_formKey.currentState?.validate() == false) return;
+
+    // Validación estricta de conectividad a Internet real (CU10 / CU11 / CU12)
+    final tieneInternet = await NetworkService.tieneInternetReal();
+    if (!tieneInternet) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.bgSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.orangeAccent, width: 1.5),
+          ),
+          title: Row(
+            children: const [
+              Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent, size: 24),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Sin Conexión a Internet (Modo Offline)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Tu dispositivo no cuenta con conexión a Internet activa (Wi-Fi o Datos Móviles apagados).',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'El procesamiento del pago con tarjeta requiere conexión a la nube de Stripe. Por seguridad contable, tu compra permanecerá registrada en estado PENDIENTE.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'En cuanto recuperes la conexión a Internet, la orden se transmitirá y podrás completar el pago en ese mismo instante.',
+                style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context); // Regresa a mis pedidos
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orangeAccent,
+                foregroundColor: AppTheme.bgMain,
+              ),
+              child: const Text('ENTENDIDO / VER EN MIS PEDIDOS'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isConfirming = true;

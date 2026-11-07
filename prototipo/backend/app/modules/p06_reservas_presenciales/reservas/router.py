@@ -27,7 +27,7 @@ router = APIRouter(prefix="/reservas", tags=["Reservas (CU11 y CU12)"])
 @router.post("/", response_model=ReservaResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def solicitar_reserva_endpoint(
     reserva_in: ReservaCreate,
-    current_user: Usuario = Depends(require_roles(["CLIENTE", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["CLIENTE", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -40,7 +40,7 @@ def solicitar_reserva_endpoint(
 
 @router.get("/mis-reservas", response_model=List[ReservaResponse])
 def listar_mis_reservas_endpoint(
-    current_user: Usuario = Depends(require_roles(["CLIENTE", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["CLIENTE", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -53,13 +53,13 @@ def listar_mis_reservas_endpoint(
 @router.get("/{id_reserva}", response_model=ReservaResponse)
 def obtener_reserva_detalle_endpoint(
     id_reserva: int,
-    current_user: Usuario = Depends(require_roles(["CLIENTE", "ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["CLIENTE", "ENCARGADO_SUCURSAL", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
     CU11: Permite consultar el ticket QR y detalle de una reserva específica por su ID.
     """
-    es_admin = current_user.rol in ["ADMINISTRADOR", "ENCARGADO_SUCURSAL"]
+    es_admin = current_user.rol in ["ADMINISTRADOR", "SUPER_ADMIN", "ENCARGADO_SUCURSAL"]
     return obtener_reserva_por_id(db=db, id_reserva=id_reserva, id_usuario=current_user.id_usuario, es_admin=es_admin)
 
 
@@ -72,16 +72,16 @@ def obtener_reserva_detalle_endpoint(
 def obtener_reservas_hoy_endpoint(
     id_sucursal: Optional[int] = Query(None, description="Filtrar por sucursal específica (solo Admin)"),
     fecha: Optional[str] = Query("hoy", description="Filtro de fecha: 'hoy', 'todas', 'proximas', o 'YYYY-MM-DD'"),
-    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
     CU12: Lista las reservas del día (o fecha/rango seleccionado) para la sucursal del encargado autenticado.
-    Si es Administrador, puede filtrar por sucursal específica o ver todas.
+    Si es Administrador o SuperAdmin, puede filtrar por sucursal específica o ver todas.
     """
     # CU12: Preparar y Atender Reserva Presencial, Paso 1: Consultar reservas activas del día
     # CU12: Preparar y Atender Reserva Presencial, Paso 1.1: listar_reservas_sucursal(sucursal_id, fecha)
-    es_admin = (current_user.rol == "ADMINISTRADOR")
+    es_admin = current_user.rol in ["ADMINISTRADOR", "SUPER_ADMIN"]
     target_sucursal = current_user.id_sucursal or id_sucursal
 
     # Si es encargado y no tiene sucursal asociada: error
@@ -108,7 +108,7 @@ def obtener_reservas_hoy_endpoint(
 def cambiar_estado_reserva_endpoint(
     id_reserva: int,
     estado_in: ReservaEstadoUpdate,
-    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -118,7 +118,7 @@ def cambiar_estado_reserva_endpoint(
     # CU12: Preparar y Atender Reserva Presencial, Paso 2: Clic en 'Apartar en Probador'
     # CU12: Preparar y Atender Reserva Presencial, Paso 2.1: cambiar_estado_reserva(id_reserva, 'PREPARADA')
     id_sucursal = current_user.id_sucursal
-    es_admin = (current_user.rol == "ADMINISTRADOR")
+    es_admin = current_user.rol in ["ADMINISTRADOR", "SUPER_ADMIN"]
     if not id_sucursal and not es_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,7 +136,7 @@ def cambiar_estado_reserva_endpoint(
 @router.post("/escanear-qr", response_model=ReservaEncargadoResponse)
 def escanear_qr_endpoint(
     qr_in: ReservaQrScanRequest,
-    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR"])),
+    current_user: Usuario = Depends(require_roles(["ENCARGADO_SUCURSAL", "ADMINISTRADOR", "SUPER_ADMIN"])),
     db: Session = Depends(get_db)
 ):
     """
@@ -145,7 +145,7 @@ def escanear_qr_endpoint(
     # CU12: Preparar y Atender Reserva Presencial, Paso 3.1: Escanear o digitar qr_texto
     # CU12: Preparar y Atender Reserva Presencial, Paso 3.2: atender_reserva_qr(qr_texto, sucursal_id)
     id_sucursal = current_user.id_sucursal
-    es_admin = (current_user.rol == "ADMINISTRADOR")
+    es_admin = current_user.rol in ["ADMINISTRADOR", "SUPER_ADMIN"]
     if not id_sucursal and not es_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

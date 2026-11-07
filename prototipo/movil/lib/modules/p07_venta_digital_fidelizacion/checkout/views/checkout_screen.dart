@@ -5,10 +5,13 @@ import 'package:fashionstore_mobile/core/providers/auth_provider.dart';
 import 'package:fashionstore_mobile/core/providers/carrito_provider.dart';
 import 'package:fashionstore_mobile/core/providers/gamificacion_provider.dart';
 import 'package:fashionstore_mobile/core/services/api_service.dart';
+import 'package:fashionstore_mobile/core/services/network_service.dart';
+import 'package:fashionstore_mobile/core/services/offline_devoluciones_service.dart';
 import 'package:fashionstore_mobile/core/services/catalogo_service.dart';
 import 'package:fashionstore_mobile/core/services/ordenes_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 import 'package:fashionstore_mobile/modules/p09_procesamiento_pagos/pagos/views/pago_orden_screen.dart';
+import 'package:fashionstore_mobile/modules/p07_venta_digital_fidelizacion/ordenes/views/mis_pedidos_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final Function(int)? onSwitchTab;
@@ -352,6 +355,79 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await cart.cargarCarrito();
 
       if (!mounted) return;
+
+      // Validación de conectividad a Internet real (CU10 / CU11 / CU12)
+      final tieneNet = await NetworkService.tieneInternetReal();
+      if (!tieneNet) {
+        // Encolar orden en SQLite local para pago automático apenas vuelva internet
+        try {
+          await OfflineDevolucionesService().encolarPagoOrdenOffline(
+            idOrden: orden.idOrden,
+            nroTicket: orden.numeroFactura ?? 'ORDEN #${orden.idOrden}',
+            total: orden.total,
+          );
+        } catch (_) {}
+
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppTheme.bgSurface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Colors.orangeAccent, width: 1.5),
+            ),
+            title: Row(
+              children: const [
+                Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent, size: 24),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Compra Registrada en Modo Offline', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comprobante: ${orden.numeroFactura ?? "ORDEN #${orden.idOrden}"}',
+                  style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Tu pedido ha sido registrado con éxito y permanece en estado PENDIENTE DE PAGO debido a que tu dispositivo no tiene conexión a Internet.',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '⚡ En cuanto tu teléfono vuelva a conectarse a Wi-Fi o Datos Móviles, el pago se liquidará de forma automática al instante.',
+                  style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MisPedidosScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  foregroundColor: AppTheme.bgMain,
+                ),
+                child: const Text('VER EN MIS PEDIDOS'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       // CU14: Procesar Compra Digital y Checkout, Paso 1.15: redirige a pantalla de Pago Seguro (/pagos/orden/:id)
       Navigator.pushReplacement(
         context,

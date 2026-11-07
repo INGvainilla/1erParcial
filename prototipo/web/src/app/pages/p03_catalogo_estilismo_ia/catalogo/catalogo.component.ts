@@ -330,8 +330,8 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
                     [disabled]="(item._stock !== undefined ? item._stock : getStockVariante(item)) <= 0"
                     title="Añadir a la Bolsa de Compras (CU13)"
                   >
-                    <i class="fas fa-cart-plus"></i>
-                    <span>Añadir a Bolsa</span>
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Añadir a la Bolsa (CU13)</span>
                   </button>
 
                   <!-- Botón Reservar en Tienda (CU11) -->
@@ -343,7 +343,7 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
                     title="Reservar prenda y probador en sucursal con ticket QR (CU11)"
                   >
                     <i class="fas fa-calendar-check"></i>
-                    <span>Reservar en Tienda</span>
+                    <span>Reservar para Probar en Tienda (CU11)</span>
                   </button>
                 </div>
               </div>
@@ -353,7 +353,7 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
       </div>
 
       <!-- Botón Flotante Carrito (CU13) -->
-      <button class="btn-floating-bag" (click)="carritoService.openCart()" title="Ver Bolsa de Compras" aria-label="Abrir Bolsa de Compras">
+      <button class="btn-floating-bag" (click)="irABolsa()" title="Ver Bolsa de Compras" aria-label="Abrir Bolsa de Compras">
         <i class="fas fa-shopping-bag"></i>
         <span class="floating-bag-badge" *ngIf="carritoService.totalItems() > 0">
           {{ carritoService.totalItems() }}
@@ -709,6 +709,7 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
       contain-intrinsic-size: 0 540px;
       transform: translateZ(0);
       backface-visibility: hidden;
+      overflow: hidden;
     }
 
     .product-card:hover {
@@ -760,15 +761,16 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
     /* Contenedor de Imagen con Proporción Fija */
     .product-image-container {
       width: 100%;
-      aspect-ratio: 4 / 3;
-      min-height: 180px;
+      aspect-ratio: 16 / 10;
+      min-height: 145px;
+      max-height: 175px;
       background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(15, 23, 42, 0.8) 80%);
       border-radius: var(--radius-md, 8px);
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       overflow: hidden;
     }
 
@@ -936,11 +938,11 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
     }
 
     .product-desc {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-secondary, #94a3b8);
-      line-height: 1.45;
-      margin: 0 0 0.85rem 0;
-      min-height: 2.4rem;
+      line-height: 1.4;
+      margin: 0 0 0.5rem 0;
+      min-height: 2.2rem;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -953,9 +955,9 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
     .color-section {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      margin-bottom: 0.8rem;
-      min-height: 52px;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      min-height: 44px;
     }
 
     .swatch-header {
@@ -1014,9 +1016,9 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
     .size-section {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      margin-bottom: 0.85rem;
-      min-height: 58px;
+      gap: 0.25rem;
+      margin-bottom: 0.55rem;
+      min-height: 48px;
     }
 
     .chips-row {
@@ -1277,37 +1279,41 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
     .card-buttons-row {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.45rem;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .btn-catalog-action {
       width: 100%;
-      height: 42px;
-      padding: 0 1rem;
+      height: 38px;
+      padding: 0 0.85rem;
       border-radius: var(--radius-md, 8px);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       white-space: nowrap;
       transition: all 0.2s ease;
       box-sizing: border-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .btn-add-cart-action {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(129, 140, 248, 0.3));
-      border: 1px solid rgba(129, 140, 248, 0.45);
-      color: #c7d2fe;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border: 1px solid rgba(165, 180, 252, 0.35);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
     }
 
     .btn-add-cart-action:hover:not([disabled]) {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      background: linear-gradient(135deg, #4338ca, #6d28d9);
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.5);
       transform: translateY(-1px);
     }
 
@@ -1315,18 +1321,21 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
       opacity: 0.4;
       cursor: not-allowed;
       border-color: rgba(255, 255, 255, 0.05);
+      box-shadow: none;
     }
 
     .btn-reserve-action {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.28));
-      border: 1px solid rgba(52, 211, 153, 0.45);
+      height: 36px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.4);
       color: #6ee7b7;
     }
 
     .btn-reserve-action:hover:not([disabled]) {
       background: linear-gradient(135deg, #059669, #10b981);
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      border-color: #34d399;
+      box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
       transform: translateY(-1px);
     }
 
@@ -1850,6 +1859,10 @@ export class CatalogoComponent implements OnInit {
         }]
       }
     });
+  }
+
+  irABolsa(): void {
+    this.router.navigate(['/carrito']);
   }
 
   getCategoryIcon(cat: string): string {

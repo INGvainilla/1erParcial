@@ -25,6 +25,10 @@ class TokenResponse(BaseModel):
     email: str
     rol: str
     id_sucursal: Optional[int] = None
+    numero_factura_saas: Optional[str] = None
+    monto_suscripcion_pagado: Optional[float] = None
+    plan_nombre: Optional[str] = None
+    mensaje_pago: Optional[str] = None
 
 # --- CU02: Auto-registro de Clientes ---
 class RegistroRequest(BaseModel):

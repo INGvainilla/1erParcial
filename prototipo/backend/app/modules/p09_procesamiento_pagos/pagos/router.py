@@ -100,6 +100,76 @@ def api_obtener_transaccion_orden(
     return TransaccionResponse.model_validate(tx)
 
 
+@router.get(
+    "/orden/{id_orden}/factura",
+    summary="Obtener factura digital y comprobante fiscal de una orden pagada"
+)
+def api_obtener_factura_orden(
+    id_orden: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Retorna la factura electrónica oficial generada y enviada al cliente por correo.
+    Permite validar y verificar el comprobante legal de compra.
+    """
+    from app.modules.p07_venta_digital_fidelizacion.ordenes.models import OrdenVenta
+    from app.modules.p09_procesamiento_pagos.pagos.models import TransaccionPago
+    from fastapi import HTTPException
+
+    orden = db.query(OrdenVenta).filter(OrdenVenta.id_orden == id_orden).first()
+    if not orden:
+        raise HTTPException(status_code=404, detail="Orden no encontrada")
+
+    if current_user.rol == "CLIENTE" and orden.id_usuario != current_user.id_usuario:
+        raise HTTPException(status_code=403, detail="No autorizado para consultar esta factura")
+
+    tx = db.query(TransaccionPago).filter(TransaccionPago.id_orden == id_orden).order_by(TransaccionPago.id_transaccion.desc()).first()
+
+    email_cliente = (orden.usuario.email if orden.usuario else current_user.email) or ""
+    cuf = f"CUF-{orden.id_orden:04d}-BO-FASHIONSTORE-{(orden.numero_factura or 'FAC')[-6:]}"
+
+    detalles_dto = []
+    for d in (orden.detalles or []):
+        detalles_dto.append({
+            "nombre_producto": d.producto.nombre if d.producto else f"Prenda #{d.id_producto}",
+            "codigo_sku_base": d.producto.codigo_sku_base if d.producto else f"SKU-{d.id_producto}",
+            "talla": d.talla,
+            "color": d.color,
+            "cantidad": d.cantidad,
+            "precio_unitario": float(d.precio_unitario),
+            "subtotal": float(d.subtotal)
+        })
+
+    return {
+        "id_orden": orden.id_orden,
+        "numero_factura": orden.numero_factura,
+        "cuf": cuf,
+        "nit_emisor": "1028475029",
+        "razon_social_emisor": "FashionStore Bolivia S.R.L.",
+        "casa_matriz": "Av. San Martín #155, Equipetrol, Santa Cruz",
+        "nit_factura": orden.nit_factura,
+        "razon_social_factura": orden.razon_social_factura,
+        "email_cliente": email_cliente,
+        "fecha_emision": orden.creado_en.isoformat() if orden.creado_en else None,
+        "modalidad_entrega": orden.modalidad_entrega,
+        "direccion_envio": orden.direccion_envio,
+        "subtotal": float(orden.subtotal),
+        "costo_envio": float(orden.costo_envio),
+        "total": float(orden.total),
+        "estado_pago": orden.estado_pago,
+        "detalles": detalles_dto,
+        "transaccion": {
+            "payment_intent_id": tx.payment_intent_id if tx else "STRIPE-SUCCEEDED",
+            "marca_tarjeta": tx.marca_tarjeta if tx else "Visa",
+            "ultimos4": tx.ultimos4 if tx else "4242",
+            "monto": float(tx.monto) if tx else float(orden.total),
+            "fecha": tx.fecha_creacion.isoformat() if tx else None
+        } if tx else None,
+        "leyenda_fiscal": "ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY - LEY N° 453"
+    }
+
+
 @router.post(
     "/webhook/stripe",
     response_model=WebhookResponse,
