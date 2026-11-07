@@ -78,7 +78,11 @@ def crear_empresa(db: Session, datos: EmpresaCreate) -> Empresa:
     if db.query(Empresa).filter(Empresa.dominio_slug == datos.dominio_slug).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"El identificador de dominio '{datos.dominio_slug}' ya está en uso")
 
-    empresa_data = datos.model_dump(exclude={"id_plan_inicial", "admin_nombres", "admin_apellidos", "admin_email", "admin_password"})
+    campos_excluir = {
+        "id_plan_inicial", "admin_nombres", "admin_apellidos", "admin_email", "admin_password",
+        "metodo_pago", "tarjeta_numero", "tarjeta_exp", "tarjeta_cvc", "tarjeta_titular"
+    }
+    empresa_data = datos.model_dump(exclude=campos_excluir)
     empresa = Empresa(**empresa_data)
     empresa.schema_name = f"tenant_{datos.dominio_slug.replace('-', '_')}"
     db.add(empresa)

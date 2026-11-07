@@ -522,19 +522,15 @@ def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketCons
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     fecha_emision = orden.creado_en or now
-    diferencia = now - fecha_emision
-    total_segundos = max(0, int(diferencia.total_seconds()))
-    horas_transcurridas = total_segundos // 3600
-    minutos_transcurridos = (total_segundos % 3600) // 60
-    
-    # Política Comercial: Límite estricto de máximo 24 horas para devoluciones o cambios
-    es_valido = total_segundos <= 24 * 3600
     dias_transcurridos = max(0, (now - fecha_emision).days)
+    
+    # Política Comercial: Límite de 7 días hábiles / calendario para devoluciones o cambios
+    es_valido = dias_transcurridos <= 7
 
     if es_valido:
-        mensaje_plazo = f"Dentro de plazo: {horas_transcurridas}h {minutos_transcurridos}m transcurridas (Plazo máximo: 24 horas permitidas para devoluciones o cambios de prendas)."
+        mensaje_plazo = f"Dentro de plazo: {dias_transcurridos} días transcurridos (Máximo 7 días permitidos por política de la tienda)."
     else:
-        mensaje_plazo = f"Plazo vencido: {horas_transcurridas}h {minutos_transcurridos}m transcurridas. El límite estricto para devolución o cambio de prendas es de máximo 24 horas posteriores a la compra."
+        mensaje_plazo = f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 7 días permitidos por política de la tienda)."
 
     items_result = []
     for d in (orden.detalles or []):
@@ -596,14 +592,11 @@ def procesar_devolucion_pos(
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     fecha_emision = orden.creado_en or now
-    diferencia = now - fecha_emision
-    total_segundos = max(0, int(diferencia.total_seconds()))
-    if total_segundos > 24 * 3600:
-        horas_transcurridas = total_segundos // 3600
-        minutos_transcurridos = (total_segundos % 3600) // 60
+    dias_transcurridos = max(0, (now - fecha_emision).days)
+    if dias_transcurridos > 7:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Plazo de devolución o cambio vencido ({horas_transcurridas}h {minutos_transcurridos}m transcurridas). Conforme a la política comercial, las solicitudes de devolución o intercambio de prendas tienen un plazo máximo estricto de 24 horas posteriores a la compra."
+            detail=f"Plazo de devolución vencido ({dias_transcurridos} días transcurridos. Máximo 7 días permitidos por política de la tienda)."
         )
 
     sucursal = db.query(Sucursal).filter(Sucursal.id_sucursal == id_sucursal).first()
