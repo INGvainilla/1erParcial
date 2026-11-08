@@ -8,6 +8,8 @@ from datetime import datetime
 
 class IntencionPagoRequest(BaseModel):
     id_orden: int = Field(..., description="ID de la orden de venta en estado PENDIENTE a cobrar")
+    monto_diferencial: Optional[float] = Field(None, description="Importe personalizado para cobro de diferencia en cambio de prenda (CU18)")
+    motivo: Optional[str] = Field(None, description="Motivo del pago o concepto específico")
 
 class IntencionPagoResponse(BaseModel):
     client_secret: str

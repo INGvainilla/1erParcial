@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:fashionstore_mobile/core/models/orden.dart';
 import 'package:fashionstore_mobile/core/services/devoluciones_service.dart';
+import 'package:fashionstore_mobile/core/services/offline_devoluciones_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 
 class SolicitudDevolucionScreen extends StatefulWidget {
@@ -16,17 +17,40 @@ class SolicitudDevolucionScreen extends StatefulWidget {
 
 class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
   final DevolucionesService _devolucionesService = DevolucionesService();
+  final OfflineDevolucionesService _offlineService = OfflineDevolucionesService();
 
   final Map<int, bool> _prendasSeleccionadas = {};
   final Map<int, int> _cantidadesDevolver = {};
   final Map<int, String> _estadoFisico = {};
 
   String _motivoSeleccionado = 'Cambio de talla / no me quedó';
-  String _tipoResolucion = 'VALE_CREDITO'; // 'VALE_CREDITO', 'CAMBIO_VARIANTE', 'REEMBOLSO_EFECTIVO'
+  String _tipoResolucion = 'CAMBIO_VARIANTE'; // Por defecto para facilitar la experiencia
   final _observacionesController = TextEditingController();
+
+  String _nuevaTallaCambio = 'M';
+  String _nuevoColorCambio = '';
+  int? _productoCambioId;
 
   bool _isSubmitting = false;
   String? _errorMessage;
+
+  // Matriz de factores de talla oficial de FashionStore (proporcional al precio base M / 40)
+  static const Map<String, double> _factoresTalla = {
+    'XS': 0.90,
+    'S': 0.95,
+    'M': 1.00,
+    'L': 1.05,
+    'XL': 1.10,
+    'XXL': 1.15,
+    '3XL': 1.20,
+    '38': 0.95,
+    '39': 0.98,
+    '40': 1.00,
+    '41': 1.02,
+    '42': 1.05,
+    '43': 1.08,
+    '44': 1.10,
+  };
 
   final List<String> _motivos = [
     'Cambio de talla / no me quedó',
@@ -43,6 +67,95 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
       _cantidadesDevolver[d.idProducto] = 1;
       _estadoFisico[d.idProducto] = 'APTO_VENTA';
     }
+
+    if (widget.orden.detalles.isNotEmpty) {
+      final primerDetalle = widget.orden.detalles.first;
+      // Pre-seleccionar la primera prenda del pedido
+      _prendasSeleccionadas[primerDetalle.idProducto] = true;
+      _productoCambioId = primerDetalle.idProducto;
+      _nuevoColorCambio = primerDetalle.color;
+      _nuevaTallaCambio = primerDetalle.talla.toUpperCase().trim();
+    }
+  }
+
+  OrdenDetalle? get _prendaReferencia {
+    for (var d in widget.orden.detalles) {
+      if (_prendasSeleccionadas[d.idProducto] == true) {
+        return d;
+      }
+    }
+    return widget.orden.detalles.isNotEmpty ? widget.orden.detalles.first : null;
+  }
+
+  List<String> get _tallasSugeridas {
+    final ref = _prendaReferencia;
+    if (ref == null) return ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+    final tallaOrig = ref.talla.trim().toUpperCase();
+    if (RegExp(r'^\d+$').hasMatch(tallaOrig)) {
+      final num = int.tryParse(tallaOrig) ?? 40;
+      if (num >= 35 && num <= 48) {
+        return ['38', '39', '40', '41', '42', '43', '44'];
+      }
+      return ['28', '30', '32', '34', '36', '38', '40'];
+    }
+    return ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+  }
+
+  List<String> get _coloresSugeridos {
+    final ref = _prendaReferencia;
+    final colOrig = ref?.color.trim() ?? '';
+    final setColores = <String>{
+      if (colOrig.isNotEmpty) colOrig,
+      'Azul Marino',
+      'Negro Clásico',
+      'Blanco Puro',
+      'Gris Oxford',
+      'Verde Salvia',
+      'Celeste Pastel',
+      'Vino Tinto',
+      'Beige Claro',
+    };
+    return setColores.toList();
+  }
+
+  /// Calcula el precio unitario exacto de cualquier talla con respecto a la prenda del pedido
+  double _calcularPrecioParaTalla(String talla) {
+    final ref = _prendaReferencia;
+    if (ref == null) return 100.0;
+    final tallaOrig = ref.talla.trim().toUpperCase();
+    final tallaDest = talla.trim().toUpperCase();
+
+    // Si es la misma talla (ej. cambio directo de color), precio idéntico
+    if (tallaDest == tallaOrig) {
+      return ref.precioUnitario;
+    }
+
+    final factorOrig = _factoresTalla[tallaOrig] ?? 1.00;
+    final factorDest = _factoresTalla[tallaDest] ?? 1.00;
+
+    final precioBase = ref.precioUnitario / factorOrig;
+    final precioCalculado = precioBase * factorDest;
+    return (precioCalculado * 100).round() / 100.0;
+  }
+
+  /// Precio de la nueva prenda seleccionada para el cambio
+  double get _precioNuevaPrenda {
+    return _calcularPrecioParaTalla(_nuevaTallaCambio);
+  }
+
+  /// Precio original pagado en la orden por la prenda a cambiar
+  double get _precioPrendaOriginal {
+    return _prendaReferencia?.precioUnitario ?? 0.0;
+  }
+
+  /// Diferencia de precio al realizar el cambio:
+  /// > 0: El cliente abona la diferencia (talla más grande)
+  /// < 0: La tienda devuelve saldo al cliente mediante Vale (talla más pequeña)
+  /// == 0: Cambio directo mano a mano (mismo precio o cambio de color)
+  double get _diferenciaIntercambio {
+    if (_tipoResolucion != 'CAMBIO_VARIANTE') return 0.0;
+    final diff = _precioNuevaPrenda - _precioPrendaOriginal;
+    return (diff * 100).round() / 100.0;
   }
 
   @override
@@ -75,7 +188,7 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
         .toList();
 
     if (seleccionados.isEmpty) {
-      setState(() => _errorMessage = 'Selecciona al menos una prenda para devolver.');
+      setState(() => _errorMessage = 'Selecciona al menos una prenda para devolver o cambiar.');
       return;
     }
 
@@ -89,86 +202,290 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
       _errorMessage = null;
     });
 
-    try {
-      final itemsPayload = seleccionados.map((d) {
-        return {
-          'id_producto': d.idProducto,
-          'talla': d.talla,
-          'color': d.color,
-          'cantidad': _cantidadesDevolver[d.idProducto] ?? 1,
-          'estado_fisico': _estadoFisico[d.idProducto] ?? 'APTO_VENTA',
-        };
-      }).toList();
+    final ticketOriginal = widget.orden.numeroFactura ?? 'ORDEN-${widget.orden.idOrden}';
 
-      final ticketOriginal = widget.orden.numeroFactura ?? 'ORDEN-${widget.orden.idOrden}';
-
-      final body = {
-        'nro_ticket_original': ticketOriginal,
-        'motivo': _motivoSeleccionado,
-        'tipo_resolucion': _tipoResolucion,
-        'items': itemsPayload,
+    final itemsPayload = seleccionados.map((d) {
+      return {
+        'id_producto': d.idProducto,
+        'talla': d.talla,
+        'color': d.color,
+        'cantidad': _cantidadesDevolver[d.idProducto] ?? 1,
+        'estado_fisico': _estadoFisico[d.idProducto] ?? 'APTO_VENTA',
       };
+    }).toList();
 
+    Map<String, dynamic>? cambioInfo;
+    if (_tipoResolucion == 'CAMBIO_VARIANTE') {
+      final primerItem = seleccionados.first;
+      cambioInfo = {
+        'nuevo_producto_id': _productoCambioId ?? primerItem.idProducto,
+        'nueva_talla': _nuevaTallaCambio.isNotEmpty ? _nuevaTallaCambio : primerItem.talla,
+        'nuevo_color': _nuevoColorCambio.isNotEmpty ? _nuevoColorCambio : primerItem.color,
+        'nueva_cantidad': 1,
+      };
+    }
+
+    final body = {
+      'nro_ticket_original': ticketOriginal,
+      'motivo': _motivoSeleccionado,
+      'tipo_resolucion': _tipoResolucion,
+      'items': itemsPayload,
+      if (cambioInfo != null) 'cambio_info': cambioInfo,
+    };
+
+    try {
       final res = await _devolucionesService.procesarDevolucion(body);
+      if (!mounted) return;
+      _mostrarDialogoResultado(res, isOffline: false);
+    } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      final esErrorRed = errStr.contains('socketexception') ||
+          errStr.contains('clientexception') ||
+          errStr.contains('connection refused') ||
+          errStr.contains('failed host lookup') ||
+          errStr.contains('network is unreachable') ||
+          errStr.contains('timeout') ||
+          errStr.contains('os error: connection refused') ||
+          errStr.contains('handshake');
+
+      if (esErrorRed) {
+        // Modo Offline: Guardar en SQLite local conforme a CU11/CU12
+        try {
+          final resOffline = await _offlineService.guardarDevolucionOffline(
+            nroTicketOriginal: ticketOriginal,
+            motivo: _motivoSeleccionado,
+            tipoResolucion: _tipoResolucion,
+            payload: body,
+            totalEstimado: _totalEstimadoDevolucion,
+            diferenciaEstimada: _diferenciaIntercambio,
+            nuevaTalla: _tipoResolucion == 'CAMBIO_VARIANTE' ? _nuevaTallaCambio : null,
+            nuevoColor: _tipoResolucion == 'CAMBIO_VARIANTE' ? _nuevoColorCambio : null,
+          );
+          if (!mounted) return;
+          _mostrarDialogoResultado(resOffline, isOffline: true);
+          return;
+        } catch (localErr) {
+          if (!mounted) return;
+          setState(() => _errorMessage = 'Error guardando en almacenamiento offline: $localErr');
+          return;
+        }
+      }
 
       if (!mounted) return;
+      setState(() => _errorMessage = 'Error procesando la devolución: $e');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
 
-      final nroDev = res['nro_devolucion'] ?? 'DEV-PROCESADA';
-      final codigoVale = res['codigo_vale'];
-      final totalDev = (res['total_devuelto'] != null)
-          ? double.tryParse(res['total_devuelto'].toString()) ?? _totalEstimadoDevolucion
-          : _totalEstimadoDevolucion;
-      final msgKardex = res['mensaje_kardex'] ?? 'Reingreso inmutable al Kardex valorado al CPP histórico.';
+  void _mostrarDialogoResultado(Map<String, dynamic> res, {required bool isOffline}) {
+    final nroDev = res['nro_devolucion'] ?? (isOffline ? 'DEV-OFFLINE' : 'DEV-PROCESADA');
+    final codigoVale = res['codigo_vale'];
+    final totalDev = (res['total_devuelto'] != null)
+        ? double.tryParse(res['total_devuelto'].toString()) ?? _totalEstimadoDevolucion
+        : _totalEstimadoDevolucion;
+    final msgKardex = res['mensaje_kardex'] ?? 'Reingreso inmutable al Kardex valorado al CPP histórico.';
+    final ref = _prendaReferencia;
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.bgSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppTheme.accentGold),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isOffline ? Colors.orangeAccent : AppTheme.accentGold,
+            width: 1.5,
           ),
-          title: Row(
-            children: const [
-              Icon(Icons.check_circle, color: AppTheme.success),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '¡Devolución Procesada (CU25)!',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              isOffline ? Icons.wifi_off_rounded : Icons.check_circle_rounded,
+              color: isOffline ? Colors.orangeAccent : AppTheme.success,
+              size: 26,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                isOffline ? '📡 Registro Offline (CU11/CU12)' : '¡Devolución Procesada (CU25)!',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            ],
-          ),
-          content: Column(
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isOffline) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.cloud_queue, color: Colors.orangeAccent, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Sin conexión a Internet (Wi-Fi o Datos Móviles). Tu solicitud ha sido asegurada localmente en SQLite y se sincronizará automáticamente al reconectarte.',
+                          style: TextStyle(color: Colors.orangeAccent, fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Text(
-                'Comprobante Oficial: $nroDev',
-                style: const TextStyle(color: AppTheme.accentGold, fontWeight: FontWeight.bold, fontSize: 14),
+                isOffline ? 'Comprobante Local: $nroDev' : 'Comprobante Oficial: $nroDev',
+                style: TextStyle(
+                  color: isOffline ? Colors.orangeAccent : AppTheme.accentGold,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                'Total liquidado: Bs. ${totalDev.toStringAsFixed(2)}',
+                'Valor de la prenda devuelta: Bs. ${totalDev.toStringAsFixed(2)}',
                 style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
+
+              // Detalle de la resolución de intercambio
+              if (_tipoResolucion == 'CAMBIO_VARIANTE') ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.bgMain,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _diferenciaIntercambio > 0
+                          ? AppTheme.accentGold
+                          : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            _diferenciaIntercambio > 0
+                                ? Icons.trending_up
+                                : (_diferenciaIntercambio < 0 ? Icons.savings_outlined : Icons.swap_horiz),
+                            color: _diferenciaIntercambio > 0
+                                ? AppTheme.accentGold
+                                : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _diferenciaIntercambio > 0
+                                  ? 'TALLA MAYOR: ABONO DE DIFERENCIA'
+                                  : (_diferenciaIntercambio < 0
+                                      ? 'TALLA MENOR: REEMBOLSO A TU FAVOR'
+                                      : 'INTERCAMBIO DIRECTO DE COLOR'),
+                              style: TextStyle(
+                                color: _diferenciaIntercambio > 0
+                                    ? AppTheme.accentGold
+                                    : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Nueva Prenda: Talla $_nuevaTallaCambio • Color $_nuevoColorCambio',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Precio nueva talla: Bs. ${_precioNuevaPrenda.toStringAsFixed(2)}',
+                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                      ),
+                      const SizedBox(height: 6),
+                      if (_diferenciaIntercambio > 0) ...[
+                        Text(
+                          'Monto adicional a abonar: +Bs. ${_diferenciaIntercambio.toStringAsFixed(2)}',
+                          style: const TextStyle(color: AppTheme.accentGold, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Pasa por la Sucursal Equipetrol para retirar tu prenda abonando la diferencia.',
+                          style: TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                      ] else if (_diferenciaIntercambio < 0) ...[
+                        Text(
+                          'Saldo reembolsado a tu favor: Bs. ${(-_diferenciaIntercambio).toStringAsFixed(2)}',
+                          style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isOffline
+                              ? 'Tu reembolso se encuentra en estado pendiente. Al reconectarte a Internet (Wi-Fi o datos) se emitirá tu Vale de Crédito Oficial.'
+                              : 'Se te ha reembolsado la diferencia restante mediante un Vale de Crédito Digital.',
+                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                      ] else ...[
+                        const Text(
+                          'Diferencia: Bs. 0.00 (Mismo precio)',
+                          style: TextStyle(color: Colors.lightBlueAccent, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Cambio directo mano a mano de ${ref?.color ?? ''} a $_nuevoColorCambio en sucursal.',
+                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+
+              // Código de Vale si aplica
               if (codigoVale != null && codigoVale.toString().isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.bgMain,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.accentGold),
+                    border: Border.all(color: Colors.greenAccent),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'CÓDIGO DE VALE / NOTA DE CRÉDITO:',
-                        style: TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isOffline ? 'VALE PROVISIONAL OFFLINE:' : 'CÓDIGO DE VALE GENERADO:',
+                            style: const TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                          if (isOffline)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('PENDIENTE SINCRONIZAR', style: TextStyle(color: Colors.orangeAccent, fontSize: 9)),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -177,14 +494,14 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
                           Text(
                             '$codigoVale',
                             style: const TextStyle(
-                              color: AppTheme.accentGold,
-                              fontSize: 16,
+                              color: Colors.greenAccent,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 1.5,
+                              letterSpacing: 1.2,
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.copy, color: AppTheme.accentGold, size: 18),
+                            icon: const Icon(Icons.copy, color: Colors.greenAccent, size: 18),
                             onPressed: () {
                               Clipboard.setData(ClipboardData(text: '$codigoVale'));
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -194,15 +511,19 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
                           ),
                         ],
                       ),
-                      const Text(
-                        'Puedes usarlo inmediatamente como cupón en el checkout.',
-                        style: TextStyle(color: AppTheme.textMuted, fontSize: 10),
+                      Text(
+                        isOffline
+                            ? 'Este código se validará en el servidor apenas recuperes acceso a Wi-Fi o datos móviles.'
+                            : 'Puedes usarlo inmediatamente como cupón de descuento en tu próxima compra.',
+                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 10),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 10),
               ],
+
+              // Estado Kardex
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -211,7 +532,11 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.inventory_2_outlined, size: 18, color: Colors.greenAccent),
+                    Icon(
+                      isOffline ? Icons.save_as_outlined : Icons.inventory_2_outlined,
+                      size: 18,
+                      color: isOffline ? Colors.orangeAccent : Colors.greenAccent,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -224,33 +549,29 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
               ),
             ],
           ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx); // Cierra diálogo
-                Navigator.pop(context, true); // Regresa a mis pedidos
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentGold,
-                foregroundColor: AppTheme.bgMain,
-              ),
-              child: const Text('ENTENDIDO / FINALIZAR'),
-            ),
-          ],
         ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _errorMessage = 'Error procesando la devolución: $e');
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pop(context, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isOffline ? Colors.orangeAccent : AppTheme.accentGold,
+              foregroundColor: AppTheme.bgMain,
+            ),
+            child: Text(isOffline ? 'ENTENDIDO (GUARDADO OFFLINE)' : 'ENTENDIDO / FINALIZAR'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final nroTicket = widget.orden.numeroFactura ?? 'ORDEN #${widget.orden.idOrden}';
     final fechaStr = DateFormat('dd/MM/yyyy').format(widget.orden.creadoEn);
+    final ref = _prendaReferencia;
 
     return Scaffold(
       appBar: AppBar(
@@ -353,7 +674,7 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
 
             // 1. Selección de Prendas
             const Text(
-              '1. SELECCIONA LAS PRENDAS A DEVOLVER O CAMBIAR',
+              '1. SELECCIONA LA PRENDA A DEVOLVER O CAMBIAR',
               style: TextStyle(
                 color: AppTheme.textMuted,
                 fontSize: 11,
@@ -387,6 +708,11 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
                           onChanged: (val) {
                             setState(() {
                               _prendasSeleccionadas[d.idProducto] = val ?? false;
+                              if (val == true) {
+                                _productoCambioId = d.idProducto;
+                                _nuevoColorCambio = d.color;
+                                _nuevaTallaCambio = d.talla.toUpperCase().trim();
+                              }
                             });
                           },
                         ),
@@ -499,18 +825,18 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
             const SizedBox(height: 8),
 
             _buildResolucionOption(
-              title: 'Vale de Crédito Digital (Recomendado)',
-              subtitle: 'Genera un cupón de crédito utilizable en futuras compras.',
-              tipo: 'VALE_CREDITO',
-              icon: Icons.confirmation_number_outlined,
+              title: 'Cambio de Variante / Talla (Recomendado)',
+              subtitle: 'Intercambia por otra talla o color con liquidación automática de precio.',
+              tipo: 'CAMBIO_VARIANTE',
+              icon: Icons.swap_horiz_rounded,
             ),
             const SizedBox(height: 8),
 
             _buildResolucionOption(
-              title: 'Cambio de Variante / Talla',
-              subtitle: 'Acércate a la sucursal Equipetrol para retirar otra prenda.',
-              tipo: 'CAMBIO_VARIANTE',
-              icon: Icons.swap_horiz_outlined,
+              title: 'Vale de Crédito Digital',
+              subtitle: 'Genera un cupón de crédito utilizable en futuras compras.',
+              tipo: 'VALE_CREDITO',
+              icon: Icons.confirmation_number_outlined,
             ),
             const SizedBox(height: 8),
 
@@ -521,9 +847,245 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
               icon: Icons.payments_outlined,
             ),
 
-            const SizedBox(height: 24),
+            // SECCIÓN ESPECÍFICA PARA CAMBIO DE VARIANTE / TALLA
+            if (_tipoResolucion == 'CAMBIO_VARIANTE') ...[
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.bgSurface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.accentGold, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.tune_rounded, color: AppTheme.accentGold, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'CONFIGURAR PRENDA DE INTERCAMBIO (CU25)',
+                            style: TextStyle(
+                              color: AppTheme.accentGold,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-            // Resumen de liquidación
+                    // Prenda de referencia
+                    if (ref != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        margin: const EdgeInsets.only(bottom: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.04),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline, size: 16, color: AppTheme.accentGold),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Prenda a sustituir: ${ref.nombreProducto} (Talla: ${ref.talla} • Bs. ${ref.precioUnitario.toStringAsFixed(2)})',
+                                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const Text(
+                      'Selecciona la nueva talla deseada y su precio:',
+                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Chips de tallas con precios proporcionales
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _tallasSugeridas.map((t) {
+                        final isSel = _nuevaTallaCambio.toUpperCase().trim() == t.toUpperCase().trim();
+                        final precioTalla = _calcularPrecioParaTalla(t);
+
+                        return ChoiceChip(
+                          label: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                t,
+                                style: TextStyle(
+                                  color: isSel ? AppTheme.bgMain : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                'Bs. ${precioTalla.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  color: isSel ? AppTheme.bgMain : AppTheme.accentGold,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          selected: isSel,
+                          selectedColor: AppTheme.accentGold,
+                          backgroundColor: AppTheme.bgMain,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          side: BorderSide(
+                            color: isSel ? AppTheme.accentGold : AppTheme.border,
+                            width: isSel ? 1.5 : 1,
+                          ),
+                          onSelected: (val) {
+                            if (val) setState(() => _nuevaTallaCambio = t);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text(
+                      'Color deseado para la nueva prenda:',
+                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _coloresSugeridos.contains(_nuevoColorCambio)
+                          ? _nuevoColorCambio
+                          : _coloresSugeridos.first,
+                      dropdownColor: AppTheme.bgSurface,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.palette_outlined, color: AppTheme.accentGold, size: 18),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      ),
+                      items: _coloresSugeridos.map((c) {
+                        return DropdownMenuItem(
+                          value: c,
+                          child: Text(c, style: const TextStyle(fontSize: 13)),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _nuevoColorCambio = val);
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // TARJETA DE LIQUIDACIÓN DINÁMICA (Caso A, B o C)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _diferenciaIntercambio > 0
+                            ? AppTheme.accentGold.withOpacity(0.12)
+                            : (_diferenciaIntercambio < 0
+                                ? Colors.green.withOpacity(0.12)
+                                : Colors.blue.withOpacity(0.12)),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _diferenciaIntercambio > 0
+                              ? AppTheme.accentGold
+                              : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _diferenciaIntercambio > 0
+                                    ? Icons.trending_up
+                                    : (_diferenciaIntercambio < 0 ? Icons.savings_outlined : Icons.swap_horiz_rounded),
+                                color: _diferenciaIntercambio > 0
+                                    ? AppTheme.accentGold
+                                    : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _diferenciaIntercambio > 0
+                                      ? 'TALLA MAYOR: ABONO DE DIFERENCIA'
+                                      : (_diferenciaIntercambio < 0
+                                          ? 'TALLA MENOR: REEMBOLSO A TU FAVOR'
+                                          : 'CAMBIO DE COLOR / MISMO PRECIO'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: _diferenciaIntercambio > 0
+                                        ? AppTheme.accentGold
+                                        : (_diferenciaIntercambio < 0 ? Colors.greenAccent : Colors.lightBlueAccent),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (_diferenciaIntercambio > 0) ...[
+                            Text(
+                              'Aumento a pagar por talla mayor: +Bs. ${_diferenciaIntercambio.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: AppTheme.accentGold,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'La nueva talla $_nuevaTallaCambio (Bs. ${_precioNuevaPrenda.toStringAsFixed(2)}) supera a tu talla original ${ref?.talla ?? ''} (Bs. ${_precioPrendaOriginal.toStringAsFixed(2)}). Abonarás la diferencia al retirar.',
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ] else if (_diferenciaIntercambio < 0) ...[
+                            Text(
+                              'Saldo a tu favor a reembolsar: Bs. ${(-_diferenciaIntercambio).toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'La talla $_nuevaTallaCambio (Bs. ${_precioNuevaPrenda.toStringAsFixed(2)}) es más económica que la original ${ref?.talla ?? ''} (Bs. ${_precioPrendaOriginal.toStringAsFixed(2)}). Se te reembolsará la diferencia mediante Vale de Crédito.',
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ] else ...[
+                            const Text(
+                              'Diferencia a liquidar: Bs. 0.00',
+                              style: TextStyle(
+                                color: Colors.lightBlueAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Ambas prendas tienen el mismo precio fiscal (Bs. ${_precioPrendaOriginal.toStringAsFixed(2)}). Se efectúa un intercambio directo mano a mano sin cobro ni devolución adicional.',
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 20),
+
+            // Resumen de liquidación final
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -534,13 +1096,32 @@ class _SolicitudDevolucionScreenState extends State<SolicitudDevolucionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total a Devolver / Compensar:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Expanded(
+                    child: Text(
+                      _tipoResolucion == 'CAMBIO_VARIANTE'
+                          ? (_diferenciaIntercambio > 0
+                              ? 'Abono requerido en caja:'
+                              : (_diferenciaIntercambio < 0
+                                  ? 'Reembolso restante (Vale):'
+                                  : 'Liquidación cambio directo:'))
+                          : 'Total a Devolver / Compensar:',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
                   Text(
-                    'Bs. ${_totalEstimadoDevolucion.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 18,
+                    _tipoResolucion == 'CAMBIO_VARIANTE'
+                        ? (_diferenciaIntercambio > 0
+                            ? '+Bs. ${_diferenciaIntercambio.toStringAsFixed(2)}'
+                            : (_diferenciaIntercambio < 0
+                                ? 'Bs. ${(-_diferenciaIntercambio).toStringAsFixed(2)}'
+                                : 'Bs. 0.00'))
+                        : 'Bs. ${_totalEstimadoDevolucion.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.accentGold,
+                      color: _tipoResolucion == 'CAMBIO_VARIANTE' && _diferenciaIntercambio < 0
+                          ? Colors.greenAccent
+                          : AppTheme.accentGold,
                     ),
                   ),
                 ],

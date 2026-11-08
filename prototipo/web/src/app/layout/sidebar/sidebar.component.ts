@@ -136,7 +136,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
           <span>Mis Tickets QR (CU11)</span>
         </a>
 
-        <a (click)="onOpenCart()" class="nav-item nav-cart-item" style="cursor: pointer;">
+        <a routerLink="/carrito" routerLinkActive="active" class="nav-item nav-cart-item" (click)="onNavClick()">
           <i class="fas fa-shopping-bag"></i>
           <span>Bolsa de Compras (CU13)</span>
           <span class="nav-cart-badge" *ngIf="carritoService.totalItems() > 0">
@@ -371,7 +371,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
         <span>Reservar</span>
       </a>
 
-      <button class="bottom-nav-item btn-bottom-cart" (click)="onOpenCart()" aria-label="Bolsa">
+      <a routerLink="/carrito" routerLinkActive="active" class="bottom-nav-item btn-bottom-cart" (click)="closeSidebar()" aria-label="Bolsa">
         <div class="bottom-cart-bubble">
           <i class="fas fa-shopping-bag"></i>
           <span class="bottom-badge" *ngIf="carritoService.totalItems() > 0">
@@ -379,7 +379,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
           </span>
         </div>
         <span>Bolsa</span>
-      </button>
+      </a>
 
       <a *ngIf="auth.isAuthenticated()" routerLink="/reservas/ticket" routerLinkActive="active" class="bottom-nav-item" (click)="closeSidebar()">
         <i class="fas fa-qrcode"></i>

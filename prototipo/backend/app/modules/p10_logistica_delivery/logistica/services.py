@@ -378,7 +378,7 @@ def listar_repartidores_disponibles(db: Session):
     """
     Retorna los usuarios con rol de repartidor o logística que pueden ser asignados a entregas.
     """
-    usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
+    usuarios = db.query(Usuario).filter(Usuario.estado_cuenta == "ACTIVO").all()
     # Retornar usuarios con rol LOGISTICA o REPARTIDOR o personal interno
     repartidores = [
         {

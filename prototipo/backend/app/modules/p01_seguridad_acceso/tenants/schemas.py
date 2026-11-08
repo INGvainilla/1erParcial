@@ -70,6 +70,12 @@ class EmpresaCreate(EmpresaBase):
     admin_apellidos: Optional[str] = Field(None, example="Mendoza")
     admin_email: Optional[EmailStr] = Field(None, example="admin@fashionstore.bo")
     admin_password: Optional[str] = Field(None, min_length=6, example="Admin123*")
+    # Datos de Pago y Facturación de Suscripción Inicial (CU03 / CU17)
+    metodo_pago: Optional[str] = Field("TARJETA", description="Método de pago: TARJETA o QR")
+    tarjeta_numero: Optional[str] = Field(None, description="Número de tarjeta para cobro con pasarela")
+    tarjeta_exp: Optional[str] = Field(None, description="Expiración MM/AA")
+    tarjeta_cvc: Optional[str] = Field(None, description="Código de seguridad CVC")
+    tarjeta_titular: Optional[str] = Field(None, description="Titular de la tarjeta")
 
 
 class EmpresaUpdate(BaseModel):

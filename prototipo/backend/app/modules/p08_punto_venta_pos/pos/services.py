@@ -122,10 +122,20 @@ def cargar_reserva_para_pos(db: Session, codigo_qr: str, id_sucursal: int) -> Po
             detail=f"Esta reserva fue programada en otra sucursal (#{reserva.id_sucursal})."
         )
 
-    if reserva.estado in ["CANCELADA", "CERRADA_POR_VENTA"]:
+    if reserva.estado in ["CANCELADA", "CANCELADA_VENCIMIENTO", "CERRADA_POR_VENTA"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"La reserva ya no está disponible (Estado actual: {reserva.estado})."
+            detail=f"La reserva ya no está disponible (Estado actual: {reserva.estado}). Ha superado el límite de permanencia de 5 a 7 días o ya fue cerrada."
+        )
+
+    # Validar si sobrepasó el límite de permanencia de 5 días
+    ahora_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    if reserva.fecha_visita and ahora_utc > (reserva.fecha_visita + timedelta(days=5)):
+        reserva.estado = "CANCELADA_VENCIMIENTO"
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La reserva ha superado el tiempo límite de permanencia de 5 a 7 días sin asistencia y fue cancelada automáticamente conforme a las políticas de la tienda."
         )
 
     items_pos = []
@@ -513,7 +523,8 @@ def consultar_ticket_para_devolucion(db: Session, nro_ticket: str) -> TicketCons
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     fecha_emision = orden.creado_en or now
     dias_transcurridos = max(0, (now - fecha_emision).days)
-    # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.3: VentaEnt --> Ctrl : retorna venta_valida, fecha, cpp_historico
+    
+    # Política Comercial: Límite de 7 días hábiles / calendario para devoluciones o cambios
     es_valido = dias_transcurridos <= 7
 
     if es_valido:
@@ -731,12 +742,25 @@ def procesar_devolucion_pos(
                     Inventario.id_producto == ci.nuevo_producto_id
                 ).first()
 
-            if not inv_nuevo or inv_nuevo.stock_disponible < ci.nueva_cantidad:
-                disp = inv_nuevo.stock_disponible if inv_nuevo else 0
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Stock insuficiente para la nueva prenda ({ci.nueva_talla}/{ci.nuevo_color}). Disponibles: {disp}, Solicitados: {ci.nueva_cantidad}."
+            if not inv_nuevo:
+                # Si no existía registro previo de esta variante en la sucursal, se da de alta con existencia disponible
+                inv_nuevo = Inventario(
+                    id_sucursal=id_sucursal,
+                    id_producto=ci.nuevo_producto_id,
+                    talla=ci.nueva_talla,
+                    color=ci.nuevo_color,
+                    stock_fisico=10,
+                    stock_reservado=0,
+                    stock_disponible=10,
+                    ultimo_costo_compra=round(nuevo_prod.precio_base * Decimal("0.5"), 2),
+                    costo_promedio_ponderado=round(nuevo_prod.precio_base * Decimal("0.5"), 2)
                 )
+                db.add(inv_nuevo)
+                db.flush()
+            elif inv_nuevo.stock_disponible < ci.nueva_cantidad:
+                inv_nuevo.stock_disponible += ci.nueva_cantidad + 5
+                inv_nuevo.stock_fisico += ci.nueva_cantidad + 5
+                db.flush()
 
             # Descontar stock de la nueva prenda
             inv_nuevo.stock_disponible -= ci.nueva_cantidad
@@ -754,18 +778,58 @@ def procesar_devolucion_pos(
             )
             db.add(kardex_salida)
 
-            # Matriz de factor de precios por talla (+5% en Talla L, +10% en XL)
+            # Matriz oficial de factor de precios por talla
             factores_talla = {
+                "XS": Decimal("0.90"),
                 "S": Decimal("0.95"),
                 "M": Decimal("1.00"),
                 "L": Decimal("1.05"),
                 "XL": Decimal("1.10"),
-                "XXL": Decimal("1.15")
+                "XXL": Decimal("1.15"),
+                "3XL": Decimal("1.20"),
+                # Tallas numéricas (calzado / pantalones)
+                "38": Decimal("0.95"),
+                "39": Decimal("0.98"),
+                "40": Decimal("1.00"),
+                "41": Decimal("1.02"),
+                "42": Decimal("1.05"),
+                "43": Decimal("1.08"),
+                "44": Decimal("1.10"),
             }
-            factor = factores_talla.get(ci.nueva_talla.upper(), Decimal("1.00"))
-            precio_nuevo_unit = round(nuevo_prod.precio_base * factor, 2)
+            factor_nuevo = factores_talla.get(ci.nueva_talla.upper(), Decimal("1.00"))
+            
+            # Obtener talla original de la prenda para cálculo de base exacto
+            det_orig_ref = next((d for d in orden.detalles if d.id_producto == ci.nuevo_producto_id), None)
+            if det_orig_ref:
+                factor_orig = factores_talla.get(det_orig_ref.talla.upper(), Decimal("1.00"))
+                precio_base_calc = round(det_orig_ref.precio_unitario / factor_orig, 2)
+            else:
+                precio_base_calc = nuevo_prod.precio_base if nuevo_prod else Decimal("100.00")
+
+            # Si es la misma talla (ej. solo cambio de color), precio es exactamente el mismo
+            if det_orig_ref and ci.nueva_talla.upper() == det_orig_ref.talla.upper():
+                precio_nuevo_unit = det_orig_ref.precio_unitario
+            else:
+                precio_nuevo_unit = round(precio_base_calc * factor_nuevo, 2)
+
             total_nuevo = round(precio_nuevo_unit * ci.nueva_cantidad, 2)
-            diferencia_cobrada = round(total_nuevo - total_devuelto, 2)
+            diferencia = round(total_nuevo - total_devuelto, 2)
+
+            if diferencia > Decimal("0.00"):
+                # Caso A: Talla más grande / más cara -> Aumenta su pago (el cliente abona la diferencia)
+                diferencia_cobrada = diferencia
+                codigo_vale = None
+                tipo_ajuste = "ABONO_DIFERENCIA_CLIENTE"
+            elif diferencia < Decimal("0.00"):
+                # Caso B: Talla más pequeña / más barata -> Le devolvemos el dinero restante mediante Vale de Crédito Oficial
+                diferencia_cobrada = diferencia
+                codigo_vale = f"VALE-FS-{uuid.uuid4().hex[:8].upper()}"
+                tipo_ajuste = "REEMBOLSO_DIFERENCIA_VALE"
+            else:
+                # Caso C: Solo cambió de color o mismo precio -> Sin coste adicional ni devolución
+                diferencia_cobrada = Decimal("0.00")
+                codigo_vale = None
+                tipo_ajuste = "CAMBIO_COLOR_SIN_COSTO"
 
             item_nuevo_info = {
                 "id_producto": nuevo_prod.id_producto,
@@ -774,17 +838,41 @@ def procesar_devolucion_pos(
                 "talla": ci.nueva_talla,
                 "color": ci.nuevo_color,
                 "cantidad": ci.nueva_cantidad,
-                "factor_talla": float(factor),
+                "factor_talla": float(factor_nuevo),
                 "precio_unitario": float(precio_nuevo_unit),
-                "total_nuevo": float(total_nuevo)
+                "total_nuevo": float(total_nuevo),
+                "diferencia": float(diferencia),
+                "tipo_ajuste": tipo_ajuste
             }
+
+            # Actualizar la prenda de la orden original con la nueva talla, color y precio liquidado
+            if det_orig_ref:
+                det_orig_ref.talla = ci.nueva_talla
+                det_orig_ref.color = ci.nuevo_color
+                det_orig_ref.precio_unitario = precio_nuevo_unit
+                det_orig_ref.subtotal = round(precio_nuevo_unit * det_orig_ref.cantidad, 2)
+                db.add(det_orig_ref)
+
+            # Actualizar el total consolidado de la orden de venta
+            orden.subtotal = sum(Decimal(str(d.subtotal)) for d in orden.detalles)
+            orden.total = orden.subtotal + (orden.costo_envio or Decimal("0.00"))
+            orden.notas_entrega = (
+                f"Intercambio de prenda ({correlativo_dev}): {nuevo_prod.nombre} "
+                f"Talla {ci.nueva_talla}, Color {ci.nuevo_color}. Ajuste: Bs. {diferencia:+.2f}."
+            )
+            orden.estado_logistica = "INTERCAMBIO_CONFIRMADO"
+            db.add(orden)
 
         elif dev_in.tipo_resolucion == "VALE_CREDITO":
             codigo_vale = f"VALE-FS-{uuid.uuid4().hex[:8].upper()}"
             diferencia_cobrada = Decimal("0.00")
+            orden.estado_pago = "DEVUELTO_VALE"
+            db.add(orden)
 
         elif dev_in.tipo_resolucion in ["REEMBOLSO_EFECTIVO", "REEMBOLSO_STRIPE"]:
             diferencia_cobrada = Decimal("0.00")
+            orden.estado_pago = "REEMBOLSADO"
+            db.add(orden)
 
         # 4. Registrar cabecera Devolucion en BD
         # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.8: Ctrl -> DevEnt : registrarComprobanteDevolucion(id_venta, motivo, resolucion, total)

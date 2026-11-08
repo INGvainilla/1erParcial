@@ -7,7 +7,7 @@ import qrcode
 import base64
 from io import BytesIO
 import uuid
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from app.modules.p06_reservas_presenciales.reservas.models import Reserva, ReservaDetalle
 from app.modules.p06_reservas_presenciales.reservas.schemas import ReservaCreate
@@ -33,6 +33,28 @@ def enriquecer_reserva(reserva: Reserva) -> Reserva:
 
 # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
 def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Reserva:
+    # Depurar reservas que hayan caducado previamente para liberar stock
+    depurar_reservas_vencidas(db)
+
+    # Regla de Permanencia: Límite de 5 a 7 días máximo
+    hoy = date.today()
+    if isinstance(reserva_in.fecha_visita, datetime):
+        fecha_visita_date = reserva_in.fecha_visita.date()
+    else:
+        fecha_visita_date = datetime.fromisoformat(str(reserva_in.fecha_visita).replace("Z", "")).date()
+
+    dias_adelanto = (fecha_visita_date - hoy).days
+    if dias_adelanto < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La fecha programada de visita no puede ser anterior a la fecha de hoy."
+        )
+    if dias_adelanto > 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El tiempo límite de permanencia para reservas en tienda es de máximo 5 días ({dias_adelanto} días solicitados). Por favor seleccione una fecha dentro del rango permitido (hasta 5 días)."
+        )
+
     # CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.2: SELECT FOR UPDATE / validarStock(sucursal_id, items)
     for det in reserva_in.detalles:
         inv = db.query(Inventario).filter(
@@ -121,12 +143,41 @@ def crear_reserva(db: Session, reserva_in: ReservaCreate, id_usuario: int) -> Re
 # CU12: PREPARAR Y ATENDER RESERVA PRESENCIAL
 # ==========================================
 
+def depurar_reservas_vencidas(db: Session) -> int:
+    """
+    Caducidad automática de reservas presenciales:
+    Las reservas con estado PENDIENTE o PREPARADA que superen el tiempo límite de permanencia
+    (5 a 7 días calendario posteriores a la fecha programada de visita sin asistencia del cliente),
+    se cancelan automáticamente liberando el stock apartado y el probador.
+    """
+    ahora = datetime.utcnow()
+    limite_caducidad = ahora - timedelta(days=5)
+
+    reservas_expiradas = db.query(Reserva).filter(
+        Reserva.estado.in_(["PENDIENTE", "PREPARADA"]),
+        Reserva.fecha_visita < limite_caducidad
+    ).all()
+
+    count = len(reservas_expiradas)
+    for r in reservas_expiradas:
+        r.estado = "CANCELADA_VENCIMIENTO"
+        liberar_stock_reserva(db, r, motivo="Cancelada automáticamente por superar límite de permanencia (5 días sin asistencia)")
+
+    if count > 0:
+        db.commit()
+        print(f"[RESERVAS CADUCIDAD] Se cancelaron automáticamente {count} reservas por exceder el límite de permanencia de 5 días.")
+    return count
+
+
 # CU12: Preparar y Atender Reserva Presencial, Paso 1.2: filtrarReservasPorSucursal(sucursal_id, fecha)
 def listar_reservas_sucursal_hoy(db: Session, id_sucursal: Optional[int] = None, fecha_filtro: Optional[str] = "hoy"):
     """
     CU12: Lista las reservas de una sucursal (o todas si id_sucursal es None),
     filtrando opcionalmente por fecha ('hoy', 'todas', 'proximas', o 'YYYY-MM-DD').
+    Ejecuta depuración previa de reservas vencidas (>5 días).
     """
+    depurar_reservas_vencidas(db)
+
     from datetime import datetime as dt
     hoy = date.today()
     hoy_str = str(hoy)
@@ -302,10 +353,22 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
             detail="Esta reserva ya fue atendida previamente."
         )
     
-    if reserva.estado == "CANCELADA":
+    if reserva.estado in ["CANCELADA", "CANCELADA_VENCIMIENTO"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Esta reserva fue cancelada."
+            detail="Esta reserva fue cancelada automáticamente por superar el tiempo límite de permanencia (5 a 7 días sin asistencia) o por anulación."
+        )
+
+    # Validar si venció el tiempo de permanencia en el instante del escaneo
+    ahora_utc = datetime.utcnow()
+    limite_visita = reserva.fecha_visita + timedelta(days=5)
+    if ahora_utc > limite_visita:
+        reserva.estado = "CANCELADA_VENCIMIENTO"
+        liberar_stock_reserva(db, reserva, "Cancelada por vencimiento límite de permanencia (5 días)")
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La reserva ha sobrepasado el límite de permanencia permitido (máximo 5 a 7 días sin asistencia). Ha sido cancelada automáticamente y las prendas se liberaron al inventario."
         )
     
     # CU12: Preparar y Atender Reserva Presencial, Paso 3.6: marcarEstadoAtendida(id_reserva, 'ATENDIDA')
@@ -321,7 +384,10 @@ def validar_y_atender_qr(db: Session, codigo_qr: str, id_sucursal: Optional[int]
 def listar_mis_reservas(db: Session, id_usuario: int):
     """
     CU11: Lista todas las reservas del cliente autenticado con detalles completos.
+    Depura reservas vencidas para mantener el historial actualizado.
     """
+    depurar_reservas_vencidas(db)
+
     reservas = db.query(Reserva).options(
         joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
         joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),
@@ -337,6 +403,7 @@ def obtener_reserva_por_id(db: Session, id_reserva: int, id_usuario: Optional[in
     """
     CU11: Obtiene los datos detallados de una reserva por su identificador único.
     """
+    depurar_reservas_vencidas(db)
     reserva = db.query(Reserva).options(
         joinedload(Reserva.detalles).joinedload(ReservaDetalle.producto),
         joinedload(Reserva.sucursal).joinedload(Sucursal.ciudad),

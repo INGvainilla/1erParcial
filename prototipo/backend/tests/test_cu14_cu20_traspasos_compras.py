@@ -180,3 +180,88 @@ def test_cu20_emision_exitosa_desktop(admin_headers):
     resp_list = client.get("/api/v1/compras", headers=headers_desktop)
     assert resp_list.status_code == 200
     assert len(resp_list.json()) > 0
+
+
+def test_cu20_rechazo_rol_no_autorizado():
+    """CU20: Bloquear usuario con rol no autorizado (ej. CLIENTE) con HTTP 403"""
+    db = SessionLocal()
+    cliente = db.query(Usuario).filter(Usuario.rol == "CLIENTE").first()
+    if not cliente:
+        cliente = Usuario(
+            id_empresa=1,
+            nombres="Cliente",
+            apellidos="Prueba",
+            email="cliente_test_cu20@fashionstore.test",
+            password_hash="fakehash",
+            rol="CLIENTE",
+            estado_cuenta="ACTIVO"
+        )
+        db.add(cliente)
+        db.commit()
+        db.refresh(cliente)
+    user_id = cliente.id_usuario
+    tenant_id = cliente.id_empresa or 1
+    db.close()
+
+    token_cliente = create_access_token({"sub": str(user_id), "tenant_id": tenant_id, "rol": "CLIENTE"})
+    headers = {
+        "Authorization": f"Bearer {token_cliente}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "X-Viewport-Width": "1280"
+    }
+    resp = client.get("/api/v1/compras", headers=headers)
+    assert resp.status_code == 403
+    assert "Acceso Restringido (CU20)" in resp.json()["detail"]
+
+
+def test_cu20_ciclo_completo_autorizar_y_recepcionar(admin_headers):
+    """CU20: Flujo end-to-end de Compra: Emitir -> Autorizar (deduciendo presupuesto) -> Recepcionar (ingreso a Kardex y recálculo CPP)"""
+    headers_desktop = {
+        **admin_headers,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "X-Viewport-Width": "1440"
+    }
+
+    # 1. Emitir Orden
+    payload = {
+        "id_proveedor": 1,
+        "id_sucursal_destino": 1,
+        "items": [
+            {
+                "id_producto": 1,
+                "talla": "XL",
+                "color": "Blanco",
+                "cantidad": 10,
+                "costo_unitario": 50.0
+            }
+        ]
+    }
+    resp_emision = client.post("/api/v1/compras", json=payload, headers=headers_desktop)
+    assert resp_emision.status_code == 200, resp_emision.text
+    id_orden = resp_emision.json()["id_orden_compra"]
+    assert resp_emision.json()["estado"] == "EMITIDA"
+
+    # 2. Autorizar Orden
+    resp_aut = client.post(f"/api/v1/compras/{id_orden}/autorizar", headers=headers_desktop)
+    assert resp_aut.status_code == 200, resp_aut.text
+    assert resp_aut.json()["estado"] == "AUTORIZADA"
+
+    # 3. Recepcionar Orden
+    payload_recepcion = {
+        "nro_factura": "FAC-TEST-77890"
+    }
+    resp_rx = client.post(f"/api/v1/compras/{id_orden}/recepcionar", json=payload_recepcion, headers=headers_desktop)
+    assert resp_rx.status_code == 200, resp_rx.text
+    data_rx = resp_rx.json()
+    assert data_rx["estado"] == "RECEPCIONADA_CONFORME"
+    assert len(data_rx["items_ingresados_kardex"]) == 1
+    assert data_rx["items_ingresados_kardex"][0]["cantidad_ingresada"] == 10
+
+    # 4. Verificar estado final en listado
+    resp_list = client.get("/api/v1/compras", headers=headers_desktop)
+    assert resp_list.status_code == 200
+    orden_encontrada = next((o for o in resp_list.json() if o["id_orden_compra"] == id_orden), None)
+    assert orden_encontrada is not None
+    assert orden_encontrada["estado"] == "RECEPCIONADA_CONFORME"
+    assert orden_encontrada["nro_factura"] == "FAC-TEST-77890"
+

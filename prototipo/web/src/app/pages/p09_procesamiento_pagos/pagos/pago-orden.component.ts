@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, inject, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { PagosService, IntencionPagoResponse, TransaccionResponse } from '../../../core/services/pagos.service';
 import { CheckoutService, OrdenData } from '../../../core/services/checkout.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { API_BASE_URL } from '../../../core/constants/api.constants';
 
 @Component({
   selector: 'app-pago-orden',
@@ -138,7 +140,23 @@ import { ToastService } from '../../../core/services/toast.service';
               </div>
             </div>
 
+            <!-- Notificación de Factura Enviada al Correo -->
+            <div class="email-invoice-banner" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 12px; padding: 14px 18px; margin: 18px 0; display: flex; align-items: center; gap: 14px; text-align: left;">
+              <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(99, 102, 241, 0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-envelope-open-text" style="font-size: 20px; color: #818cf8;"></i>
+              </div>
+              <div style="font-size: 13px; line-height: 1.45;">
+                <div style="font-weight: 700; color: #e0e7ff; font-size: 14px;">Factura Digital Enviada a su Correo Electrónico</div>
+                <div style="color: #cbd5e1; margin-top: 2px;">
+                  Hemos emitido y despachado automáticamente su comprobante oficial y factura fiscal para respaldo y validación tributaria.
+                </div>
+              </div>
+            </div>
+
             <div class="success-actions" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <button class="btn-primary" (click)="abrirFacturaModal()" style="background: linear-gradient(135deg, #059669, #10b981);">
+                <i class="fas fa-file-invoice-dollar"></i> Ver Factura Digital Oficial
+              </button>
               <button class="btn-primary" routerLink="/catalogo">
                 <i class="fas fa-shopping-bag"></i> Seguir Comprando
               </button>
@@ -239,6 +257,124 @@ import { ToastService } from '../../../core/services/toast.service';
           </div>
         </div>
 
+      </div>
+
+      <!-- Modal Factura Digital Oficial y Comprobante de Correo -->
+      <div *ngIf="mostrarModalFactura" class="factura-modal-overlay">
+        <div class="factura-modal-card">
+          <div class="factura-modal-header">
+            <div>
+              <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #fff;">
+                <i class="fas fa-file-invoice-dollar" style="color: #10b981;"></i> Factura Digital Oficial
+              </h2>
+              <p style="margin: 4px 0 0; font-size: 0.8rem; color: #94a3b8;">
+                Comprobante fiscal con validez tributaria despachado a su correo electrónico
+              </p>
+            </div>
+            <button class="modal-close-btn" (click)="cerrarFacturaModal()"><i class="fas fa-times"></i></button>
+          </div>
+
+          <div class="factura-paper" id="factura-print-area">
+            <div class="factura-paper-header">
+              <div class="company-brand">
+                <h3>👔 FashionStore Bolivia S.R.L.</h3>
+                <p>Casa Matriz: Av. San Martín #155, Equipetrol</p>
+                <p>Santa Cruz de la Sierra - Bolivia &bull; Tel: (+591) 3-3456789</p>
+              </div>
+              <div class="fiscal-badge-box">
+                <div class="nit-line">NIT: <strong>1028475029</strong></div>
+                <div class="factura-num">FACTURA N°: <strong>{{ facturaData?.numero_factura || orden?.numero_factura }}</strong></div>
+                <div class="cuf-line">CUF: <span class="cuf-code">{{ facturaData?.cuf || ('CUF-BO-2026-' + (orden?.id_orden || '1')) }}</span></div>
+              </div>
+            </div>
+
+            <div class="factura-divider"></div>
+
+            <div class="factura-client-grid">
+              <div>
+                <span class="f-label">FECHA DE EMISIÓN:</span>
+                <span class="f-val">{{ (facturaData?.fecha_emision || orden?.creado_en) | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div>
+                <span class="f-label">MODALIDAD DE ENTREGA:</span>
+                <span class="f-val">{{ facturaData?.modalidad_entrega || orden?.modalidad_entrega }}</span>
+              </div>
+              <div>
+                <span class="f-label">SEÑOR(ES):</span>
+                <span class="f-val font-bold">{{ facturaData?.razon_social_factura || orden?.razon_social_factura }}</span>
+              </div>
+              <div>
+                <span class="f-label">NIT / C.I.:</span>
+                <span class="f-val font-bold">{{ facturaData?.nit_factura || orden?.nit_factura }}</span>
+              </div>
+              <div style="grid-column: span 2;">
+                <span class="f-label">CORREO DESTINATARIO:</span>
+                <span class="f-val" style="color: #60a5fa;">{{ facturaData?.email_cliente || 'Correo del Cliente' }} (Factura enviada automáticamente ✓)</span>
+              </div>
+            </div>
+
+            <table class="factura-table">
+              <thead>
+                <tr>
+                  <th>DESCRIPCIÓN</th>
+                  <th style="text-align: center;">TALLA / COLOR</th>
+                  <th style="text-align: center;">CANT</th>
+                  <th style="text-align: right;">P. UNIT</th>
+                  <th style="text-align: right;">SUBTOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let it of (facturaData?.detalles || orden?.detalles)">
+                  <td>
+                    <strong>{{ it.nombre_producto }}</strong>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">SKU: {{ it.codigo_sku_base }}</div>
+                  </td>
+                  <td style="text-align: center;">{{ it.talla }} / {{ it.color }}</td>
+                  <td style="text-align: center;">{{ it.cantidad }}</td>
+                  <td style="text-align: right;">Bs. {{ it.precio_unitario | number:'1.2-2' }}</td>
+                  <td style="text-align: right; font-weight: 700; color: #10b981;">Bs. {{ it.subtotal | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="factura-footer-grid">
+              <div class="fiscal-legend">
+                <div class="legend-text">
+                  &ldquo;ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAÍS, EL USO ILÍCITO SERÁ SANCIONADO PENALMENTE DE ACUERDO A LEY&rdquo;
+                </div>
+                <div class="sub-legend">
+                  Ley N° 453 &bull; Documento Electrónico con Validez Fiscal
+                </div>
+                <div class="payment-method-stamp">
+                  ✓ PAGADO ELECTRÓNICAMENTE VÍA STRIPE (**** {{ transaccionExitosa?.ultimos4 || '4242' }})
+                </div>
+              </div>
+              <div class="factura-totals-col">
+                <div class="tot-row">
+                  <span>Subtotal:</span>
+                  <span>Bs. {{ (facturaData?.subtotal || orden?.subtotal) | number:'1.2-2' }}</span>
+                </div>
+                <div class="tot-row">
+                  <span>Costo Envío:</span>
+                  <span>Bs. {{ (facturaData?.costo_envio || orden?.costo_envio) | number:'1.2-2' }}</span>
+                </div>
+                <div class="tot-grand">
+                  <span>TOTAL BS:</span>
+                  <span>Bs. {{ (facturaData?.total || orden?.total) | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="factura-modal-actions">
+            <button class="btn-print" (click)="imprimirFactura()">
+              <i class="fas fa-print"></i> Imprimir Comprobante
+            </button>
+            <button class="btn-close-modal" (click)="cerrarFacturaModal()">
+              Cerrar
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -719,6 +855,174 @@ import { ToastService } from '../../../core/services/toast.service';
       text-decoration: none;
       box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
     }
+
+    /* Modal Factura Digital */
+    .factura-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 1rem;
+    }
+    .factura-modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+    }
+    .factura-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(30, 41, 59, 0.5);
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover { color: #fff; }
+    .factura-paper {
+      padding: 1.75rem;
+      background: #111827;
+      color: #f1f5f9;
+      font-size: 0.82rem;
+    }
+    .factura-paper-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    .company-brand h3 { margin: 0 0 4px; font-size: 1.15rem; color: #fff; }
+    .company-brand p { margin: 2px 0; color: #94a3b8; font-size: 0.75rem; }
+    .fiscal-badge-box {
+      border: 1px solid #10b981;
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-align: right;
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .factura-num strong { color: #34d399; font-size: 0.95rem; }
+    .cuf-code { font-family: monospace; font-size: 0.68rem; color: #94a3b8; }
+    .factura-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 1rem 0;
+    }
+    .factura-client-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem 1.25rem;
+      margin-bottom: 1.25rem;
+      background: rgba(30, 41, 59, 0.4);
+      padding: 10px 14px;
+      border-radius: 8px;
+    }
+    .f-label { color: #94a3b8; font-size: 0.72rem; display: block; }
+    .f-val { color: #f8fafc; font-size: 0.82rem; }
+    .factura-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.25rem;
+    }
+    .factura-table th {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 8px;
+      text-align: left;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .factura-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem;
+    }
+    .factura-footer-grid {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1rem;
+    }
+    .fiscal-legend {
+      flex: 1;
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+    .payment-method-stamp {
+      color: #10b981;
+      font-weight: 700;
+      margin-top: 6px;
+      font-size: 0.75rem;
+    }
+    .factura-totals-col {
+      min-width: 180px;
+      text-align: right;
+    }
+    .tot-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: #cbd5e1;
+    }
+    .tot-grand {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #10b981;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+    .factura-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.75rem;
+      background: rgba(30, 41, 59, 0.5);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-print {
+      background: #10b981;
+      border: none;
+      color: white;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-close-modal {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #e2e8f0;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   `]
 })
 export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -727,6 +1031,7 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
   pagosService = inject(PagosService);
   checkoutService = inject(CheckoutService);
   toast = inject(ToastService);
+  http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('cardElementContainer') cardElementContainer!: ElementRef;
@@ -734,6 +1039,9 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
   idOrden!: number;
   orden?: OrdenData;
   intencionPago?: IntencionPagoResponse;
+
+  mostrarModalFactura: boolean = false;
+  facturaData: any = null;
 
   isLoadingOrder: boolean = true;
   isProcessing: boolean = false;
@@ -954,5 +1262,27 @@ export class PagoOrdenComponent implements OnInit, AfterViewInit, OnDestroy {
       this.stripeErrorMessage = 'Ocurrió un error inesperado al comunicar con Stripe.';
       this.toast.error('Error Crítico', this.stripeErrorMessage);
     }
+  }
+
+  abrirFacturaModal() {
+    this.mostrarModalFactura = true;
+    this.http.get<any>(`${API_BASE_URL}/pagos/orden/${this.idOrden}/factura`).subscribe({
+      next: (data) => {
+        this.facturaData = data;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarFacturaModal() {
+    this.mostrarModalFactura = false;
+    this.cdr.detectChanges();
+  }
+
+  imprimirFactura() {
+    window.print();
   }
 }

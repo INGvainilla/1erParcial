@@ -85,6 +85,36 @@ def ensure_columns(engine: Engine) -> List[str]:
             aplicados.append("create_table.traspasos_inter_sucursal")
             print(" [MIGRACION] Tabla creada: traspasos_inter_sucursal")
 
+        if not inspector.has_table("ordenes_compra_desktop"):
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS ordenes_compra_desktop (
+                    id_orden_compra {id_col_type},
+                    codigo_orden VARCHAR(64) UNIQUE NOT NULL,
+                    id_empresa INTEGER NOT NULL,
+                    id_proveedor INTEGER NOT NULL,
+                    id_sucursal_destino INTEGER NOT NULL,
+                    id_usuario INTEGER,
+                    monto_total NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+                    subtotal NUMERIC(12, 2) DEFAULT 0.00,
+                    iva NUMERIC(12, 2) DEFAULT 0.00,
+                    total_con_iva NUMERIC(12, 2) DEFAULT 0.00,
+                    estado VARCHAR(30) DEFAULT 'EMITIDA',
+                    user_agent VARCHAR(255),
+                    ip_origen VARCHAR(64),
+                    detalles_json TEXT NOT NULL,
+                    observaciones TEXT,
+                    fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    fecha_aprobacion TIMESTAMP,
+                    id_usuario_aprueba INTEGER,
+                    fecha_recepcion TIMESTAMP,
+                    id_usuario_recepcion INTEGER,
+                    nro_factura VARCHAR(64),
+                    discrepancias_json TEXT
+                )
+            """))
+            aplicados.append("create_table.ordenes_compra_desktop")
+            print(" [MIGRACION] Tabla creada: ordenes_compra_desktop")
+
     # Refrescar inspector
     inspector = inspect(engine)
 

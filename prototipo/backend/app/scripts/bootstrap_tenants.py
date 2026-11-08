@@ -134,6 +134,23 @@ def _sembrar_empresas(db: Session, resumen: Dict) -> tuple:
     db.commit()
     db.refresh(emp1)
     db.refresh(emp2)
+
+    # Asegurar sucursales para Empresa 2 (Elegance Men)
+    if not db.query(Sucursal).filter(Sucursal.id_empresa == emp2.id_empresa).first():
+        db.add(Sucursal(
+            id_empresa=emp2.id_empresa, id_ciudad=2, nombre_sucursal="Sucursal San Miguel (Elegance)",
+            direccion="Av. Montenegro #890, San Miguel", latitud=Decimal("-16.541200"),
+            longitud=Decimal("-68.082300"), telefono="+591 2 2789012", capacidad_probadores=4,
+            horario_apertura="09:00", horario_cierre="20:00", estado="OPERATIVA"
+        ))
+        db.add(Sucursal(
+            id_empresa=emp2.id_empresa, id_ciudad=1, nombre_sucursal="Sucursal Mall Las Brisas (Elegance)",
+            direccion="Centro Comercial Las Brisas, Nivel 2", latitud=Decimal("-17.761200"),
+            longitud=Decimal("-63.182300"), telefono="+591 3 3456789", capacidad_probadores=5,
+            horario_apertura="10:00", horario_cierre="21:00", estado="OPERATIVA"
+        ))
+        db.commit()
+
     return emp1, emp2, emp1_nueva
 
 

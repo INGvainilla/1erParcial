@@ -628,7 +628,7 @@ interface TicketItem extends PosItemInput {
               </div>
               <div>
                 <h3>Devolución y Cambio de Prendas (CU13)</h3>
-                <span class="modal-subtitle">Inspección física en mostrador, plazo máximo de 7 días hábiles y reingreso a Kardex al CPP histórico (CU13)</span>
+                <span class="modal-subtitle">Inspección física en mostrador, plazo máximo estricto de 24 horas y reingreso a Kardex al CPP histórico (CU13)</span>
               </div>
             </div>
             <button class="modal-close" (click)="cerrarDevolucionModal()" title="Cerrar ventana"><i class="fas fa-times"></i></button>
@@ -3295,7 +3295,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
           this.selectItemDevolucion(resp.items[0]);
         }
         if (resp.es_valido_14_dias) {
-          this.toast.success('Ticket Encontrado', `Venta válida: ${resp.dias_transcurridos} días transcurridos.`);
+          this.toast.success('Ticket Encontrado', 'Venta dentro del plazo límite de 24 horas.');
         } else {
           this.toast.error('Plazo Vencido', resp.mensaje_plazo);
         }
@@ -3336,7 +3336,7 @@ export class PosTerminalComponent implements OnInit, OnDestroy {
     }
 
     if (!this.ticketDevData.es_valido_14_dias) {
-      this.toast.error('Operación Bloqueada', 'El plazo de 14 días para devolución ha vencido.');
+      this.toast.error('Operación Bloqueada', 'El plazo estricto de 24 horas para devolución o cambio de prendas ha vencido.');
       return;
     }
 

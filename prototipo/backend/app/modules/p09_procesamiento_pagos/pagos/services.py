@@ -28,10 +28,13 @@ def crear_intencion_pago(
     db: Session,
     id_orden: int,
     id_usuario: int,
-    rol_usuario: str
+    rol_usuario: str,
+    monto_diferencial: Optional[float] = None,
+    motivo: Optional[str] = None
 ) -> IntencionPagoResponse:
     """
-    CU16: Genera un PaymentIntent en Stripe para cobrar una orden en estado PENDIENTE.
+    CU18 / CU16: Genera un PaymentIntent en Stripe para cobrar una orden en estado PENDIENTE,
+    o procesar un cobro diferencial por cambio de prenda (CU13 -> CU18).
     - Convierte el total a centavos (requerido por Stripe).
     - Asocia metadata con id_orden y numero_factura.
     - Devuelve el client_secret para que el frontend tokenice sin almacenar datos de tarjeta.
@@ -50,7 +53,7 @@ def crear_intencion_pago(
             detail="No tiene autorización para procesar el pago de esta orden."
         )
 
-    if orden.estado_pago == "PAGADO":
+    if orden.estado_pago == "PAGADO" and monto_diferencial is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"La orden #{id_orden} ({orden.numero_factura}) ya figura como PAGADA."
@@ -66,8 +69,14 @@ def crear_intencion_pago(
             detail="La pasarela de pagos en línea (Stripe) se encuentra temporalmente deshabilitada por administración. Por favor consulte a soporte o intente más tarde."
         )
 
-    # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.4: obtenerTotalOrden(id_orden)
-    monto_float = float(orden.total)
+    # CU18: Si se especifica un importe diferencial (cambio de prenda), usar ese valor
+    if monto_diferencial is not None and monto_diferencial > 0:
+        monto_float = round(float(monto_diferencial), 2)
+        desc_transaccion = f"FashionStore - Cobro Diferencial Cambio Prenda (Factura {orden.numero_factura})"
+    else:
+        monto_float = float(orden.total)
+        desc_transaccion = f"FashionStore - Factura {orden.numero_factura}"
+
     if monto_float <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -84,11 +93,12 @@ def crear_intencion_pago(
         payment_intent = stripe.PaymentIntent.create(
             amount=monto_centavos,
             currency=moneda,
-            description=f"FashionStore - Factura {orden.numero_factura}",
+            description=desc_transaccion,
             metadata={
                 "id_orden": str(orden.id_orden),
                 "numero_factura": orden.numero_factura or f"ORD-{orden.id_orden}",
-                "id_usuario": str(orden.id_usuario or id_usuario)
+                "id_usuario": str(orden.id_usuario or id_usuario),
+                "tipo_cobro": "DIFERENCIAL_CAMBIO" if monto_diferencial else "ORDEN_COMPLETA"
             },
             automatic_payment_methods={
                 "enabled": True,
@@ -106,6 +116,12 @@ def crear_intencion_pago(
             payment_intent_id=payment_intent.id
         )
 
+    except stripe.error.CardError as e:
+        err = e.error
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Tarjeta declinada por la entidad emisora ({err.code}): {err.message or 'Fondos insuficientes o tarjeta inválida'}"
+        )
     except stripe.error.StripeError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -267,6 +283,71 @@ def confirmar_transaccion_pago(
     db.commit()
     db.refresh(tx)
 
+    # CU14 / CU16: Envío automático de Factura Digital y Comprobante Fiscal al Correo del Cliente
+    try:
+        from app.core.email import enviar_correo_factura_compra
+        from app.modules.p01_seguridad_acceso.auth.models import Usuario
+
+        email_destinatario = None
+        nombre_cliente = orden.razon_social_factura or "Cliente FashionStore"
+
+        if orden.usuario and orden.usuario.email:
+            email_destinatario = orden.usuario.email
+            nombre_cliente = f"{orden.usuario.nombres} {orden.usuario.apellidos}".strip() or nombre_cliente
+        elif orden.id_usuario:
+            usr = db.query(Usuario).filter(Usuario.id_usuario == orden.id_usuario).first()
+            if usr and usr.email:
+                email_destinatario = usr.email
+                nombre_cliente = f"{usr.nombres} {usr.apellidos}".strip() or nombre_cliente
+
+        if not email_destinatario:
+            email_destinatario = settings.EMAIL_HOST_USER
+
+        detalles_factura = []
+        for d in (orden.detalles or []):
+            prod_nom = d.producto.nombre if d.producto else f"Prenda #{d.id_producto}"
+            sku_cod = d.producto.codigo_sku_base if d.producto else f"SKU-{d.id_producto}"
+            detalles_factura.append({
+                "nombre_producto": prod_nom,
+                "codigo_sku_base": sku_cod,
+                "talla": d.talla,
+                "color": d.color,
+                "cantidad": d.cantidad,
+                "precio_unitario": float(d.precio_unitario),
+                "subtotal": float(d.subtotal)
+            })
+
+        orden_dict = {
+            "id_orden": orden.id_orden,
+            "numero_factura": orden.numero_factura or f"FAC-{orden.id_orden}",
+            "fecha_emision": orden.creado_en.strftime("%d/%m/%Y %H:%M") if orden.creado_en else datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "razon_social_factura": orden.razon_social_factura,
+            "nit_factura": orden.nit_factura,
+            "modalidad_entrega": orden.modalidad_entrega,
+            "subtotal": float(orden.subtotal),
+            "costo_envio": float(orden.costo_envio),
+            "total": float(orden.total)
+        }
+
+        transaccion_dict = {
+            "payment_intent_id": tx.payment_intent_id,
+            "monto": float(tx.monto),
+            "marca_tarjeta": tx.marca_tarjeta or "Visa",
+            "ultimos4": tx.ultimos4 or "4242"
+        }
+
+        if email_destinatario:
+            enviar_correo_factura_compra(
+                destinatario=email_destinatario,
+                nombre_cliente=nombre_cliente,
+                orden_dict=orden_dict,
+                detalles=detalles_factura,
+                transaccion_dict=transaccion_dict,
+                async_send=True
+            )
+            print(f"[FACTURA DIGITAL] Despacho de factura {orden.numero_factura} programado para {email_destinatario}")
+    except Exception as e_fac:
+        print(f"[FACTURA EMAIL] Advertencia al despachar correo de factura: {e_fac}")
 
     # CU21: Acreditar puntos de fidelización (1 pt por cada 10 Bs consumidos)
     if orden.id_usuario:

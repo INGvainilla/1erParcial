@@ -175,6 +175,16 @@ export class AuthService {
     );
   }
 
+  // Onboarding B2B: Registrar y Afiliar Empresa / Sucursales al SaaS
+  registerEmpresa(data: any): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/registro-empresa`, data).pipe(
+      tap(res => {
+        this.currentUser.set(res);
+        sessionStorage.setItem('fs_user', JSON.stringify(res));
+      })
+    );
+  }
+
   // CU03: Recuperar Contraseña (Token OTP), Paso 1.1: IRecuperarPasswordBoundary invoca requestOtp() hacia RecuperacionControl
   requestOtp(email: string): Observable<{ mensaje: string; tiempo_expiracion_minutos: number; codigo_otp_simulado?: string }> {
     // CU03: Recuperar Contraseña (Token OTP), Paso 1.1.1: Despachar petición HTTP POST a /auth/recuperar-password/solicitar

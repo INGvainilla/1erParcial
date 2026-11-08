@@ -26,6 +26,7 @@ import { ReportesIaComponent } from './pages/p03_catalogo_estilismo_ia/reportes-
 import { TenantsComponent } from './pages/p01_seguridad_acceso/tenants/tenants.component';
 import { TraspasosComponent } from './pages/p05_inventario_costos_analitica/traspasos/traspasos.component';
 import { ComprasDesktopComponent } from './pages/p04_aprovisionamiento_proveedores/compras/compras-desktop.component';
+import { CarritoPageComponent } from './pages/p07_venta_digital_fidelizacion/carrito/carrito.component';
 import { DesktopOnlyGuard } from './core/guards/desktop-only.guard';
 
 import { adminGuard, dashboardGuard, staffGuard, inventarioGuard, proveedoresGuard, encargadoGuard, posGuard, logisticaGuard } from './core/guards/auth.guard';
@@ -36,6 +37,7 @@ export const routes: Routes = [
   
   // Canales Públicos / Clientes (Ciclo 1, 2 y 3)
   { path: 'catalogo', component: CatalogoComponent },
+  { path: 'carrito', component: CarritoPageComponent },
   { path: 'login', component: LoginComponent },
   { path: 'reservas/crear', component: ReservaCrear },
   { path: 'reservas/ticket', component: ReservaTicket },

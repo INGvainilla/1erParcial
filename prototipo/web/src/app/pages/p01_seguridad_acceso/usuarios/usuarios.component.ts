@@ -296,6 +296,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
                 <label><i class="fas fa-store"></i> Sucursal Física Asignada:</label>
                 <select [(ngModel)]="newUser.id_sucursal" name="id_sucursal" class="form-control">
                   <option [ngValue]="null">— Ninguna / Sede Central —</option>
+                  <option *ngIf="loadingSucursales" disabled>Cargando sucursales disponibles...</option>
                   <option *ngFor="let s of sucursales" [ngValue]="s.id_sucursal">
                     📍 {{ s.nombre_sucursal }} ({{ s.nombre_ciudad || s.ciudad?.nombre_ciudad || 'Bolivia' }})
                   </option>
@@ -375,6 +376,7 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
                 <label><i class="fas fa-store"></i> Sucursal Física Asignada:</label>
                 <select [(ngModel)]="editFormData.id_sucursal" name="edit_sucursal" class="form-control">
                   <option [ngValue]="null">— Ninguna / Sede Central —</option>
+                  <option *ngIf="loadingSucursales" disabled>Cargando sucursales disponibles...</option>
                   <option *ngFor="let s of sucursales" [ngValue]="s.id_sucursal">
                     📍 {{ s.nombre_sucursal }} ({{ s.nombre_ciudad || s.ciudad?.nombre_ciudad || 'Bolivia' }})
                   </option>
@@ -735,6 +737,7 @@ export class UsuariosComponent implements OnInit {
   filterRole = 'TODOS';
   searchTerm = '';
   loading = false;
+  loadingSucursales = false;
 
   // Modal Alta Colaborador (CU04)
   showCreateModal = false;
@@ -766,9 +769,9 @@ export class UsuariosComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadSucursales();
     if (this.auth.isAdmin()) {
       this.loadUsuarios();
-      this.loadSucursales();
     }
   }
 
@@ -792,12 +795,43 @@ export class UsuariosComponent implements OnInit {
   }
 
   loadSucursales(): void {
-    this.api.getSucursales().subscribe({
+    this.loadingSucursales = true;
+    const idEmpresa = this.auth.getActiveEmpresaId() || undefined;
+    this.api.getSucursales(idEmpresa).subscribe({
       next: (data) => {
-        this.sucursales = data;
-        this.cdr.detectChanges();
+        if (data && data.length > 0) {
+          this.sucursales = data;
+          this.loadingSucursales = false;
+          this.cdr.detectChanges();
+        } else {
+          // Fallback resiliente: si el filtro no trajo sucursales, cargar todas las operativas generales
+          this.api.getSucursales().subscribe({
+            next: (all) => {
+              this.sucursales = all || [];
+              this.loadingSucursales = false;
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.loadingSucursales = false;
+              this.cdr.detectChanges();
+            }
+          });
+        }
       },
-      error: (err) => console.error('Error cargando sucursales', err)
+      error: (err) => {
+        console.error('Error cargando sucursales', err);
+        this.api.getSucursales().subscribe({
+          next: (all) => {
+            this.sucursales = all || [];
+            this.loadingSucursales = false;
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.loadingSucursales = false;
+            this.cdr.detectChanges();
+          }
+        });
+      }
     });
   }
 
@@ -864,9 +898,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   openCreateModal(): void {
-    if (!this.sucursales || this.sucursales.length === 0) {
-      this.loadSucursales();
-    }
+    this.loadSucursales();
     this.newUser = {
       nombre_completo: '',
       email: '',
@@ -928,9 +960,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   openEditModal(u: Usuario): void {
-    if (!this.sucursales || this.sucursales.length === 0) {
-      this.loadSucursales();
-    }
+    this.loadSucursales();
     this.editingUser = { ...u };
     this.editFormData = {
       nombre_completo: u.nombre_completo || '',
