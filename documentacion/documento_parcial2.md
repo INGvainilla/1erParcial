@@ -3754,8 +3754,6 @@ Ctrl_RepIA --> UI_IA : 15. Desplegar narrativa, tablas y gráficos
 
 ### Diagrama de Robustez — CU16: Exportar Reportes Analíticos a Excel/PDF
 
-
-
 ![Diagrama de Robustez — CU16: Exportar Reportes Analíticos a Excel/PDF](../diagramas/imagenes_robustez/Robustez_CU16.png)
 
 ```plantuml
@@ -3763,7 +3761,7 @@ Ctrl_RepIA --> UI_IA : 15. Desplegar narrativa, tablas y gráficos
 left to right direction
 skinparam stereotypeCPosition top
 
-actor "Admin Empresa" as Actor
+actor "Admin Empresa /\nEncargado" as Actor
 
 boundary "UI: Visor de Reporte\ny Analítica" as UI_Visor
 boundary "UI: Descargador de\nArchivos" as UI_Down
@@ -3773,29 +3771,31 @@ control "CRT: Constructor Excel\n(OpenPyXL)" as Ctrl_Excel
 control "CRT: Generador PDF\n(ReportLab)" as Ctrl_PDF
 
 entity "CE: VistasAnaliticas" as Ent_Vistas
+entity "CE: BitacoraExportacion" as Ent_Bit
 
-Actor --> UI_Visor : 1. Seleccionar formato de exportación (Excel / PDF)
+Actor --> UI_Visor : 1. Seleccionar rango de fechas, filtros y formato (Excel / PDF)
 UI_Visor --> Ctrl_Exp : 2. solicitarExportacion(reporte_tipo, filtros, formato)
-Ctrl_Exp --> Ent_Vistas : 3. SELECT * FROM vista_reporte WHERE tenant_id = :id
 
-alt Formato Excel (.xlsx)
+alt Formato Seleccionado: Libro Excel (.xlsx con fórmulas)
+  Ctrl_Exp --> Ent_Vistas : 3a. SELECT * FROM vista_reporte WHERE tenant_id = :id AND fecha BETWEEN :ini AND :fin
   Ctrl_Exp --> Ctrl_Excel : 4a. generarLibroExcel(dataset)
   Ctrl_Excel --> Ctrl_Exp : 5a. stream_bytes_xlsx
-else Formato PDF (.pdf)
+  Ctrl_Exp --> Ent_Bit : 6a. INSERT INTO auditoria_exportaciones (tipo='EXCEL', tenant_id)
+else Formato Seleccionado: Documento PDF (.pdf maquetado con gráficos)
+  Ctrl_Exp --> Ent_Vistas : 3b. SELECT * FROM vista_reporte WHERE tenant_id = :id AND fecha BETWEEN :ini AND :fin
   Ctrl_Exp --> Ctrl_PDF : 4b. generarDocumentoPDF(dataset, logoTenant)
   Ctrl_PDF --> Ctrl_Exp : 5b. stream_bytes_pdf
+  Ctrl_Exp --> Ent_Bit : 6b. INSERT INTO auditoria_exportaciones (tipo='PDF', tenant_id)
 end
 
-Ctrl_Exp --> UI_Down : 6. Enviar stream con cabecera Content-Disposition
-UI_Down --> Actor : 7. Descargar archivo al equipo
+Ctrl_Exp --> UI_Down : 7. Enviar stream binario con cabecera Content-Disposition
+UI_Down --> Actor : 8. Descargar archivo al equipo con firma de tenant
 @enduml
 ```
 
 ---
 
 ### Diagrama de Robustez — CU17: Gestionar Dashboard Analítico con Machine Learning
-
-
 
 ![Diagrama de Robustez — CU17: Gestionar Dashboard Analítico con Machine Learning](../diagramas/imagenes_robustez/Robustez_CU17.png)
 
@@ -3813,23 +3813,29 @@ control "CRT: Motor Predictivo ML\n(Series Temporales)" as Ctrl_ML
 
 entity "CE: VistasMaterializadas" as Ent_Vistas
 entity "CE: ModeloEntrenadoML" as Ent_Modelo
+entity "CE: SugerenciaReorden" as Ent_Reorder
 
 Actor --> UI_Dash : 1. Acceder a tablero de inteligencia analítica
-UI_Dash --> Ctrl_Dash : 2. cargarKPIs(tenant_id)
-Ctrl_Dash --> Ent_Vistas : 3. SELECT kpis, rotacion, ventas FROM vistas_materializadas
+UI_Dash --> Ctrl_Dash : 2. cargarKPIsYMatrizRotacion(tenant_id)
+Ctrl_Dash --> Ent_Vistas : 3. SELECT kpis, rotacion_talla_color, ventas FROM vistas_materializadas
 
 UI_Dash --> Ctrl_ML : 4. solicitarProyeccionDemanda(horizonte=6_meses)
 Ctrl_ML --> Ent_Modelo : 5. cargarPesosYParametros(tenant_id)
 Ctrl_ML --> Ctrl_ML : 6. ejecutarInferenciaProyectiva()
-Ctrl_ML --> UI_Dash : 7. Devolver curvas de demanda y sugerencias de reorden
+
+alt Proyección Anticipa Quiebre de Stock (Demanda > Stock Mínimo)
+  Ctrl_ML --> Ent_Reorder : 7a. INSERT INTO sugerencias_reorden (prenda_id, talla, cant_sugerida, proveedor_id)
+  Ctrl_ML --> UI_Dash : 8a. Desplegar curvas de demanda y sugerencias de compra urgentes
+else Demanda Estable (Sin Quiebre Previsto a 6 Meses)
+  Ctrl_ML --> Ent_Modelo : 7b. UPDATE modelo_ml SET ultima_inferencia=NOW(), estatus='ESTABLE'
+  Ctrl_ML --> UI_Dash : 8b. Desplegar curvas de proyección de ventas normal
+end
 @enduml
 ```
 
 ---
 
 ### Diagrama de Robustez — CU18: Gestionar Pasarela de Pagos Stripe Sandbox
-
-
 
 ![Diagrama de Robustez — CU18: Gestionar Pasarela de Pagos Stripe Sandbox](../diagramas/imagenes_robustez/Robustez_CU18.png)
 
@@ -3848,6 +3854,7 @@ control "CRT: Gestor de Pagos\nStripe" as Ctrl_Stripe
 control "CRT: Manejador Webhooks\nAsíncronos" as Ctrl_Hook
 
 entity "CE: OrdenPago" as Ent_Orden
+entity "CE: NotaCambioReposicion" as Ent_NotaRep
 entity "CE: BitacoraTransaccion" as Ent_Bit
 
 Actor --> UI_Stripe : 1. Confirmar pago e ingresar tarjeta tokenizada
@@ -3856,18 +3863,29 @@ Ctrl_Stripe --> Stripe : 3. POST /v1/payment_intents
 Stripe --> Ctrl_Stripe : 4. client_secret
 
 UI_Stripe --> Stripe : 5. Confirmar pago directo (sin tocar backend con PAN/CVV)
-Stripe --> Ctrl_Hook : 6. Webhook POST payment_intent.succeeded
-Ctrl_Hook --> Ent_Orden : 7. UPDATE ordenes SET estado='PAGADA', stripe_id=:id
-Ctrl_Hook --> Ent_Bit : 8. registrarLogTransaccion(stripe_id, monto)
-Ctrl_Stripe --> UI_Recibo : 9. Desplegar comprobante formal
+
+alt Webhook payment_intent.succeeded (Cargo Aprobado)
+  Stripe --> Ctrl_Hook : 6a. Webhook POST payment_intent.succeeded
+  Ctrl_Hook --> Ent_Orden : 7a. UPDATE ordenes SET estado='PAGADA', stripe_id=:id
+  opt Pago Corresponde a Saldo Diferencial de Cambio de Prenda (CU13)
+    Ctrl_Hook --> Ent_NotaRep : 7b. UPDATE notas_cambio_reposicion SET estado='PAGADA_STRIPE'
+  end
+  Ctrl_Hook --> Ent_Bit : 8a. registrarLogTransaccion(stripe_id, monto, status='SUCCESS')
+  Ctrl_Stripe --> UI_Recibo : 9a. Desplegar comprobante formal
+  UI_Recibo --> Actor : 10a. Emitir ticket / recibo digital
+else Webhook payment_intent.payment_failed (Tarjeta Declinada / Fondos Insuficientes)
+  Stripe --> Ctrl_Hook : 6b. Webhook POST payment_intent.payment_failed
+  Ctrl_Hook --> Ent_Orden : 7c. UPDATE ordenes SET estado='PAGO_RECHAZADO'
+  Ctrl_Hook --> Ent_Bit : 8b. registrarLogTransaccion(stripe_id, monto, status='FAILED')
+  Ctrl_Stripe --> UI_Stripe : 9b. Desplegar alerta de rechazo de pago
+  UI_Stripe --> Actor : 10b. Notificar fallo e invitar a usar otro medio
+end
 @enduml
 ```
 
 ---
 
 ### Diagrama de Robustez — CU19: Gestionar Ofertas de Liquidación y Precios por Mayor
-
-
 
 ![Diagrama de Robustez — CU19: Gestionar Ofertas de Liquidación y Precios por Mayor](../diagramas/imagenes_robustez/Robustez_CU19.png)
 
@@ -3876,35 +3894,51 @@ Ctrl_Stripe --> UI_Recibo : 9. Desplegar comprobante formal
 left to right direction
 skinparam stereotypeCPosition top
 
-actor "Admin Empresa" as Actor
+actor "Admin Empresa" as Admin
+actor "Cliente / Cajero" as Comprador
 
 boundary "UI: Panel Promociones\ny Tarifas" as UI_Promo
+boundary "UI: Catálogo Digital\ny Carrito POS" as UI_Carrito
 
 control "CRT: Gestor de Ofertas\ny Precios" as Ctrl_Promo
 control "CRT: Motor de Reglas\nComerciales" as Ctrl_Reglas
 
+entity "CE: Temporada" as Ent_Temp
 entity "CE: OfertaLiquidacion" as Ent_Liq
 entity "CE: ReglaPrecioMayor" as Ent_Mayor
 entity "CE: Producto" as Ent_Prod
 
-Actor --> UI_Promo : 1. Seleccionar ropa de temporada pasada para liquidar (30%, 40%, 60%)
-UI_Promo --> Ctrl_Promo : 2. registrarCampanaLiquidacion(prendas_ids, descuento, vigencia)
-Ctrl_Promo --> Ent_Prod : 2b. verificarPrendasTemporada(prendas_ids)
-Ctrl_Promo --> Ent_Liq : 3. INSERT INTO ofertas_liquidacion (descuento, fecha_fin)
-Actor --> UI_Promo : 4. Activar tarifa mayorista (>= 3 unidades)
-UI_Promo --> Ctrl_Promo : 5. configurarReglaMayorista(min_unidades=3, descuento_porcentaje)
-Ctrl_Promo --> Ent_Mayor : 6. INSERT INTO reglas_precio_mayor (min_prendas=3, descuento)
-Ctrl_Reglas --> Ent_Liq : 7. verificarDescuentoLiquidacionActivo(prenda_id)
-Ctrl_Reglas --> Ent_Mayor : 8. verificarAplicacionTarifaMayorista(cantidad_carrito)
-Ctrl_Reglas --> Ent_Prod : 9. actualizarPrecioFinalConDescuento(prenda_id)
+' --- FASE 1: PARAMETRIZACIÓN (ADMIN EMPRESA) ---
+Admin --> UI_Promo : 1. Seleccionar temporada saliente y prendas (30%, 40%, 60%)
+UI_Promo --> Ctrl_Promo : 2. registrarCampanaLiquidacion(prendas_ids, temporada_id, descuento, vigencia)
+Ctrl_Promo --> Ent_Temp : 3. validarTemporadaSaliente(temporada_id)
+Ctrl_Promo --> Ent_Liq : 4. INSERT INTO ofertas_liquidacion (temporada_id, descuento, fecha_fin)
+
+Admin --> UI_Promo : 5. Activar tarifa mayorista (>= 3 unidades)
+UI_Promo --> Ctrl_Promo : 6. configurarReglaMayorista(min_unidades=3, descuento_porcentaje)
+Ctrl_Promo --> Ent_Mayor : 7. INSERT INTO reglas_precio_mayor (min_prendas=3, descuento)
+
+' --- FASE 2: EVALUACIÓN EN TIEMPO DE VENTA (CLIENTE / CAJERO) ---
+Comprador --> UI_Carrito : 8. Agregar prendas al carrito de compras
+UI_Carrito --> Ctrl_Reglas : 9. calcularDescuentoOrden(items_carrito, cant_total)
+
+alt Prenda en Liquidación de Temporada Activa
+  Ctrl_Reglas --> Ent_Liq : 10a. SELECT * FROM ofertas_liquidacion WHERE prenda_id = :id AND vigencia >= NOW()
+  Ctrl_Reglas --> Ent_Prod : 11a. aplicarPorcentajeLiquidacion(30%, 40% o 60%)
+else Compra Mayorista (Cantidad Carrito >= 3 Unidades)
+  Ctrl_Reglas --> Ent_Mayor : 10b. SELECT * FROM reglas_precio_mayor WHERE min_unidades <= :cant_total
+  Ctrl_Reglas --> Ent_Prod : 11b. aplicarTarifaPrecioMayorista()
+else Venta Minorista Regular (Sin Promoción Aplicable)
+  Ctrl_Reglas --> Ent_Prod : 10c. mantenerPrecioVentaMinorista()
+end
+
+Ctrl_Reglas --> UI_Carrito : 12. Renderizar subtotal, ahorro promocional y total liquidado
 @enduml
 ```
 
 ---
 
 ### Diagrama de Robustez — CU20: Gestionar Compras y Aprovisionamiento desde Web Desktop
-
-
 
 ![Diagrama de Robustez — CU20: Gestionar Compras y Aprovisionamiento desde Web Desktop](../diagramas/imagenes_robustez/Robustez_CU20.png)
 
@@ -3913,7 +3947,7 @@ Ctrl_Reglas --> Ent_Prod : 9. actualizarPrecioFinalConDescuento(prenda_id)
 left to right direction
 skinparam stereotypeCPosition top
 
-actor "Admin Empresa / Encargado Sucursal" as Actor
+actor "Admin Empresa /\nEncargado Sucursal" as Actor
 actor "Proveedor Textil" as Prov
 
 boundary "UI: Panel Compras\n(Web Desktop Exclusivo)" as UI_Desktop
@@ -3935,11 +3969,18 @@ Ctrl_Compras --> Prov : 5. Notificar orden formal
 
 Actor --> UI_Factura : 6. Registrar llegada física e ingresar número de factura fiscal
 UI_Factura --> Ctrl_Compras : 7. confirmarRecepcionFacturada(oc_id, num_factura, costo_final)
-Ctrl_Compras --> Ent_OC : 8. UPDATE ordenes_compra SET estado='RECEPCIONADA'
 
-Ctrl_Compras --> Ctrl_Inv : 9. transferirLoteAInventario(sucursal_id, items, costo_final)
-Ctrl_Inv --> Ent_InvSuc : 10. UPDATE inventario_sucursal SET stock_fisico += cant, cpp = nuevoCPP
-Ctrl_Inv --> Ent_Kardex : 11. INSERT INTO movimientos_kardex (tipo='COMPRA_PROVEEDOR', factura)
+alt Recepción Conforme (Lote Completo con Factura Fiscal)
+  Ctrl_Compras --> Ent_OC : 8a. UPDATE ordenes_compra SET estado='RECEPCIONADA_CONFORME', factura=:num
+  Ctrl_Compras --> Ctrl_Inv : 9a. transferirLoteAInventario(sucursal_id, items, costo_final)
+  Ctrl_Inv --> Ent_InvSuc : 10a. UPDATE inventario_sucursal SET stock_fisico += cant, cpp = nuevoCPP
+  Ctrl_Inv --> Ent_Kardex : 11a. INSERT INTO movimientos_kardex (tipo='COMPRA_PROVEEDOR', factura=:num)
+else Recepción con Discrepancia / Piezas Defectuosas (Flujo Alternativo 5a)
+  Ctrl_Compras --> Ent_OC : 8b. UPDATE ordenes_compra SET estado='RECEPCIONADA_CON_DISCREPANCIA'
+  Ctrl_Compras --> Ctrl_Inv : 9b. ingresarSoloUnidadesAprobadas(sucursal_id, items_ok, costo_ajustado)
+  Ctrl_Inv --> Ent_InvSuc : 10b. UPDATE inventario_sucursal SET stock_fisico += cant_aprobada
+  Ctrl_Inv --> Ent_Kardex : 11b. INSERT INTO movimientos_kardex (tipo='COMPRA_PROVEEDOR_AJUSTE', factura=:num)
+end
 @enduml
 ```
 
@@ -4716,6 +4757,7 @@ participant "CTR_GestorExportacion" as Ctrl_Exp
 participant "CTR_GeneradorExcel" as Ctrl_Excel
 participant "CTR_GeneradorPDF" as Ctrl_PDF
 participant "CE_VistasMaterializadas" as Ent_Vistas
+participant "CE_BitacoraExportacion" as Ent_Bit
 
 Actor -> UI_Visor : 1. seleccionarFormatoExportacion(reporte_id, filtros, formato)
 UI_Visor -> Ctrl_Exp : 2. solicitarExportacion(reporte_id, filtros, formato)
@@ -4725,13 +4767,17 @@ Ent_Vistas --> Ctrl_Exp : datasetReporte
 alt [Formato Seleccionado: Excel (.xlsx)]
   Ctrl_Exp -> Ctrl_Excel : 4a. generarLibroExcel(datasetReporte)
   Ctrl_Excel --> Ctrl_Exp : stream_bytes_xlsx
+  Ctrl_Exp -> Ent_Bit : 5a. registrarAuditoriaExportacion(tipo='EXCEL', filtros, tenant_id)
+  Ent_Bit --> Ctrl_Exp : auditoriaRegistradaOk()
 else [Formato Seleccionado: PDF (.pdf)]
   Ctrl_Exp -> Ctrl_PDF : 4b. generarDocumentoPDF(datasetReporte, logoTenant)
   Ctrl_PDF --> Ctrl_Exp : stream_bytes_pdf
+  Ctrl_Exp -> Ent_Bit : 5b. registrarAuditoriaExportacion(tipo='PDF', filtros, tenant_id)
+  Ent_Bit --> Ctrl_Exp : auditoriaRegistradaOk()
 end
 
-Ctrl_Exp --> UI_Down : 5. enviarStreamConCabeceras(stream_bytes, mime_type, filename)
-UI_Down --> Actor : 6. descargarArchivoLocal()
+Ctrl_Exp --> UI_Down : 6. enviarStreamConCabeceras(stream_bytes, mime_type, filename)
+UI_Down --> Actor : 7. descargarArchivoLocal()
 @enduml
 ```
 
@@ -4739,7 +4785,7 @@ UI_Down --> Actor : 6. descargarArchivoLocal()
 
 ### Diagrama de Secuencia — CU17: Gestionar Dashboard Analítico con Machine Learning
 
-Carga KPIs en tiempo real desde vistas materializadas y ejecuta modelos predictivos de series temporales para proyectar la demanda de inventario de las próximas semanas, alertando sobre potenciales quiebres de stock.
+Carga KPIs en tiempo real desde vistas materializadas, calcula la matriz de calor de rotación por talla y color, y ejecuta modelos predictivos de series temporales para proyectar la demanda de inventario a 6 meses vista, alertando sobre potenciales quiebres de stock y sugiriendo órdenes de compra para reorden.
 
 ![Diagrama de Secuencia — CU17: Gestionar Dashboard Analítico con Machine Learning](../diagramas/imagenes_secuencia/Secuencia_CU17.png)
 
@@ -4752,18 +4798,30 @@ participant "CTR_GestorDashboardMetricas" as Ctrl_Dash
 participant "CTR_MotorPredictivoML" as Ctrl_ML
 participant "CE_VistasMaterializadas" as Ent_Vistas
 participant "CE_ModeloEntrenadoML" as Ent_Modelo
+participant "CE_SugerenciaReorden" as Ent_Reorder
 
 Actor -> UI_Dash : 1. accederATableroInteligencia(tenant_id)
-UI_Dash -> Ctrl_Dash : 2. cargarKPIs(tenant_id)
+UI_Dash -> Ctrl_Dash : 2. cargarKPIsYMatrizRotacion(tenant_id)
 Ctrl_Dash -> Ent_Vistas : 3. consultarKPIsRotacionVentas(tenant_id)
 Ent_Vistas --> Ctrl_Dash : metricasHistoricas
-Ctrl_Dash --> UI_Dash : renderizarGraficosHistoricos(metricasHistoricas)
+Ctrl_Dash --> UI_Dash : renderizarGraficosYHeatmap(metricasHistoricas)
+
 UI_Dash -> Ctrl_ML : 4. solicitarProyeccionDemanda(horizonte=6_meses)
 Ctrl_ML -> Ent_Modelo : 5. cargarPesosYParametros(tenant_id)
 Ent_Modelo --> Ctrl_ML : pesosModelo
 Ctrl_ML -> Ctrl_ML : 6. ejecutarInferenciaProyectiva()
-Ctrl_ML --> UI_Dash : 7. devolverCurvasDemandaYSugerenciasReorden()
-UI_Dash --> Actor : desplegarTableroPredictivo()
+
+alt [6a. Proyección Anticipa Quiebre de Stock (Demanda > Stock Mínimo)]
+  Ctrl_ML -> Ent_Reorder : 7a. registrarOrdenSugerida(prenda_id, talla, cant_sugerida, proveedor_id)
+  Ent_Reorder --> Ctrl_ML : sugerenciaAsentadaOk(sugerencia_id)
+  Ctrl_ML --> UI_Dash : 8a. devolverCurvasDemandaYAlertasQuiebre(sugerencias)
+  UI_Dash --> Actor : desplegarTableroConAlertasReabastecimiento()
+else [6b. Demanda Estable (Sin Quiebre Previsto a 6 Meses)]
+  Ctrl_ML -> Ent_Modelo : 7b. registrarEjecucionInferencia(tenant_id, estado='ESTABLE')
+  Ent_Modelo --> Ctrl_ML : auditoriaModeloOk()
+  Ctrl_ML --> UI_Dash : 8b. devolverCurvasDemandaNormal()
+  UI_Dash --> Actor : desplegarTableroPredictivoRegular()
+end
 @enduml
 ```
 
@@ -4785,6 +4843,7 @@ participant "UI_ComprobantePagoDigital" as UI_Recibo
 participant "CTR_GestorPagosStripe" as Ctrl_Stripe
 participant "CTR_ManejadorWebhooks" as Ctrl_Hook
 participant "CE_OrdenPago" as Ent_Orden
+participant "CE_NotaCambioReposicion" as Ent_NotaRep
 participant "CE_BitacoraTransaccion" as Ent_Bit
 
 Actor -> UI_Stripe : 1. confirmarPagoEIngresarTarjeta(datos_tarjeta)
@@ -4798,6 +4857,10 @@ alt [5a. Pago Procesado Exitosamente por Stripe]
   Stripe -> Ctrl_Hook : 6. webhookPaymentIntentSucceeded(event_payload)
   Ctrl_Hook -> Ent_Orden : 7. actualizarEstadoOrden(orden_id, estado='PAGADA', stripe_id)
   Ent_Orden --> Ctrl_Hook : ordenActualizadaOk()
+  opt [Transacción de Saldo Diferencial Postventa (CU13)]
+    Ctrl_Hook -> Ent_NotaRep : vincularPagoANotaReposicion(nota_id, stripe_id)
+    Ent_NotaRep --> Ctrl_Hook : notaReposicionActualizadaOk()
+  end
   Ctrl_Hook -> Ent_Bit : 8. registrarLogTransaccion(stripe_id, monto, status='SUCCESS')
   Ent_Bit --> Ctrl_Hook : transaccionAsentadaOk()
   Ctrl_Stripe --> UI_Recibo : 9. desplegarComprobantePago(stripe_id, monto)
@@ -4805,6 +4868,9 @@ alt [5a. Pago Procesado Exitosamente por Stripe]
 else [5b. Pago Rechazado por Fondos Insuficientes o Tarjeta Inválida]
   Stripe -> Ctrl_Hook : webhookPaymentFailed(event_payload)
   Ctrl_Hook -> Ent_Orden : marcarOrdenFallida(orden_id, estado='PAGO_RECHAZADO')
+  Ent_Orden --> Ctrl_Hook : ordenActualizadaFallida()
+  Ctrl_Hook -> Ent_Bit : registrarLogTransaccion(stripe_id, monto, status='FAILED')
+  Ent_Bit --> Ctrl_Hook : transaccionAsentadaOk()
   Ctrl_Stripe --> UI_Stripe : desplegarAlertaPagoFallido()
   UI_Stripe --> Actor : notificarRechazoTarjeta()
 end
@@ -4815,42 +4881,60 @@ end
 
 ### Diagrama de Secuencia — CU19: Aplicar Descuento de Liquidación por Temporada y Precios por Mayor
 
-Aplica dinámicamente el motor de reglas de precios: evalúa de forma interna las ofertas de liquidación de temporada prenda por prenda (en bucle estricto entre Control y Entidad), y si el total del carrito es $\ge 3$ unidades, aplica el descuento mayorista unificado.
+Aplica dinámicamente el motor de reglas de precios: evalúa de forma interna las ofertas de liquidación de temporada saliente prenda por prenda, bonifica la tarifa mayorista unificada si el total del carrito es $\ge 3$ unidades, y refleja el ahorro total garantizado.
 
 ![Diagrama de Secuencia — CU19: Aplicar Descuento de Liquidación por Temporada y Precios por Mayor](../diagramas/imagenes_secuencia/Secuencia_CU19.png)
 
 ```plantuml
 @startuml Secuencia_CU19
 autonumber
-actor "Encargado Sucursal" as Actor
+actor "Admin Empresa" as Admin
+actor "Cliente / Cajero" as Comprador
 participant "UI_ReglasPrecios" as UI_Promo
-participant "CTR_GestorTarifasMayoristas" as Ctrl_Promo
-participant "CTR_ValidadorReglas" as Ctrl_Reglas
-participant "CE_ReglaPrecioMayor" as Ent_Mayor
+participant "UI_CarritoPOS" as UI_Carrito
+participant "CTR_GestorTarifasPromociones" as Ctrl_Promo
+participant "CTR_MotorReglasPrecios" as Ctrl_Reglas
+participant "CE_Temporada" as Ent_Temp
 participant "CE_OfertaLiquidacion" as Ent_Liq
+participant "CE_ReglaPrecioMayor" as Ent_Mayor
 participant "CE_Producto" as Ent_Prod
 
-Actor -> UI_Promo : 1. seleccionarPrendasLiquidacion(prendas_ids, descuento_pct, vigencia)
-UI_Promo -> Ctrl_Promo : 2. registrarCampanaLiquidacion(prendas_ids, descuento, vigencia)
-Ctrl_Promo -> Ent_Prod : 2b. verificarPrendasTemporada(prendas_ids)
-Ent_Prod --> Ctrl_Promo : prendasValidasOk()
-Ctrl_Promo -> Ent_Liq : 3. insertarOfertaLiquidacion(descuento, vigencia, prendas_ids)
+== Fase 1: Parametrización de Campañas y Tarifas ==
+Admin -> UI_Promo : 1. seleccionarPrendasLiquidacion(prendas_ids, temporada_id, descuento, vigencia)
+UI_Promo -> Ctrl_Promo : 2. registrarCampanaLiquidacion(prendas_ids, temporada_id, descuento, vigencia)
+Ctrl_Promo -> Ent_Temp : 3. validarTemporadaSaliente(temporada_id)
+Ent_Temp --> Ctrl_Promo : temporadaSalienteOk()
+Ctrl_Promo -> Ent_Liq : 4. insertarOfertaLiquidacion(temporada_id, descuento, vigencia, prendas_ids)
 Ent_Liq --> Ctrl_Promo : ofertaCreadaOk()
-Actor -> UI_Promo : 4. activarTarifaMayorista(min_unidades=3, descuento_pct)
-UI_Promo -> Ctrl_Promo : 5. configurarReglaMayorista(min_unidades, descuento_pct)
-Ctrl_Promo -> Ent_Mayor : 6. insertarReglaPrecioMayor(min_unidades, descuento)
-Ent_Mayor --> Ctrl_Promo : reglaMayoristaCreadaOk()
 
-alt [Evaluación en Venta: Descuento Liquidación vs Tarifa Mayorista]
-  Ctrl_Reglas -> Ent_Liq : 7. verificarDescuentoLiquidacionActivo(prenda_id)
-  Ent_Liq --> Ctrl_Reglas : descuentoLiquidacion
-  Ctrl_Reglas -> Ent_Mayor : 8. verificarAplicacionTarifaMayorista(cantidad_carrito)
-  Ent_Mayor --> Ctrl_Reglas : descuentoMayorista
-  Ctrl_Reglas -> Ent_Prod : 9. actualizarPrecioFinalConDescuento(prenda_id, mejor_descuento)
-  Ent_Prod --> Ctrl_Reglas : precioActualizadoOk()
-  Ctrl_Promo --> UI_Promo : confirmacionReglasPromocionalesActivas()
-  UI_Promo --> Actor : desplegarCatalogoConPreciosRebajados()
+Admin -> UI_Promo : 5. activarTarifaMayorista(min_unidades=3, descuento_pct)
+UI_Promo -> Ctrl_Promo : 6. configurarReglaMayorista(min_unidades, descuento_pct)
+Ctrl_Promo -> Ent_Mayor : 7. insertarReglaPrecioMayor(min_unidades, descuento_pct)
+Ent_Mayor --> Ctrl_Promo : reglaMayoristaCreadaOk()
+Ctrl_Promo --> UI_Promo : confirmacionReglasGuardadasOk()
+UI_Promo --> Admin : notificarParametrizacionExitosa()
+
+== Fase 2: Evaluación Dinámica de Precios en Venta / POS ==
+Comprador -> UI_Carrito : 8. agregarPrendasACarrito(items_lista, cant_total)
+UI_Carrito -> Ctrl_Reglas : 9. calcularDescuentoOrden(items_lista, cant_total)
+
+alt [9a. Prenda con Oferta de Liquidación Vigente (Fin de Temporada: 30%, 40% o 60%)]
+  Ctrl_Reglas -> Ent_Liq : 10a. consultarDescuentoLiquidacion(prenda_id)
+  Ent_Liq --> Ctrl_Reglas : porcentajeLiquidacion
+  Ctrl_Reglas -> Ent_Prod : 11a. calcularPrecioLiquidado(prenda_id, porcentajeLiquidacion)
+  Ent_Prod --> Ctrl_Reglas : precioConLiquidacionOk()
+else [9b. Cantidad en Carrito >= 3 Unidades (Tarifa Mayorista Aplicable)]
+  Ctrl_Reglas -> Ent_Mayor : 10b. consultarTarifaMayorista(cant_total)
+  Ent_Mayor --> Ctrl_Reglas : porcentajeMayorista
+  Ctrl_Reglas -> Ent_Prod : 11b. calcularPrecioMayorista(items_lista, porcentajeMayorista)
+  Ent_Prod --> Ctrl_Reglas : precioConTarifaMayoristaOk()
+else [9c. Venta Minorista Regular (Sin Oferta ni Volumen Mayorista)]
+  Ctrl_Reglas -> Ent_Prod : 10c. obtenerPrecioVentaMinorista(prenda_id)
+  Ent_Prod --> Ctrl_Reglas : precioRegularOk()
 end
+
+Ctrl_Reglas --> UI_Carrito : 12. desglosePreciosYAhorroCalculado(subtotal, descuento, total)
+UI_Carrito --> Comprador : desplegarTotalConDescuento()
 @enduml
 ```
 
@@ -4888,21 +4972,26 @@ Actor -> UI_Fact : 6. registrarLlegadaFisicaFactura(oc_id, num_factura, costo_fi
 UI_Fact -> Ctrl_Comp : 7. confirmarRecepcionFacturada(oc_id, num_factura, costo_final)
 Ctrl_Comp -> Ent_OC : verificarEstadoOrdenCompra(oc_id)
 
-alt [7a. Orden Válida en Estado EMITIDA]
-  Ent_OC --> Ctrl_Comp : ordenValidaOk()
-  Ctrl_Comp -> Ent_OC : 8. actualizarOrdenCompra(oc_id, estado='RECEPCIONADA', num_factura)
+alt [8a. Recepción Conforme (Lote Completo con Factura Fiscal)]
+  Ctrl_Comp -> Ent_OC : 8a. actualizarOrdenCompra(oc_id, estado='RECEPCIONADA_CONFORME', num_factura)
   Ent_OC --> Ctrl_Comp : ordenActualizadaOk()
-  Ctrl_Comp -> Ctrl_Inv : 9. transferirLoteAInventario(sucursal_id, items, costo_final)
-  Ctrl_Inv -> Ent_InvSuc : 10. actualizarStockYCPP(sucursal_id, items, costo_final)
+  Ctrl_Comp -> Ctrl_Inv : 9a. transferirLoteAInventario(sucursal_id, items, costo_final)
+  Ctrl_Inv -> Ent_InvSuc : 10a. actualizarStockYCPP(sucursal_id, items, costo_final)
   Ent_InvSuc --> Ctrl_Inv : stockYCPPActualizadoOk()
-  Ctrl_Inv -> Ent_Kardex : 11. insertarKardexCompra(sucursal_id, tipo='COMPRA_PROVEEDOR', factura, costo_final)
+  Ctrl_Inv -> Ent_Kardex : 11a. insertarKardexCompra(sucursal_id, tipo='COMPRA_PROVEEDOR', num_factura, costo_final)
   Ent_Kardex --> Ctrl_Inv : kardexCompraAsentadoOk()
-  Ctrl_Comp --> UI_Fact : confirmacionAbastecimientoExitoso()
-  UI_Fact --> Actor : notificarIngresoMercaderia()
-else [7b. Orden Previamente Recepcionada o Inexistente]
-  Ent_OC --> Ctrl_Comp : errorOrdenInvalida("La orden no existe o ya fue recepcionada")
-  Ctrl_Comp --> UI_Fact : desplegarAlertaOrdenInvalida()
-  UI_Fact --> Actor : alertarErrorRecepcion()
+  Ctrl_Comp --> UI_Fact : 12a. confirmacionAbastecimientoExitoso()
+  UI_Fact --> Actor : 13a. notificarIngresoMercaderia()
+else [8b. Recepción con Discrepancia / Piezas Defectuosas (Flujo Alternativo 5a)]
+  Ctrl_Comp -> Ent_OC : 8b. actualizarOrdenCompra(oc_id, estado='RECEPCIONADA_CON_DISCREPANCIA', num_factura)
+  Ent_OC --> Ctrl_Comp : ordenDiscrepanciaOk()
+  Ctrl_Comp -> Ctrl_Inv : 9b. ingresarSoloUnidadesAprobadas(sucursal_id, items_ok, costo_ajustado)
+  Ctrl_Inv -> Ent_InvSuc : 10b. actualizarStockYCPP(sucursal_id, items_ok, costo_ajustado)
+  Ent_InvSuc --> Ctrl_Inv : stockAjustadoOk()
+  Ctrl_Inv -> Ent_Kardex : 11b. insertarKardexCompra(sucursal_id, tipo='COMPRA_PROVEEDOR_AJUSTE', num_factura, costo_ajustado)
+  Ent_Kardex --> Ctrl_Inv : kardexAjustadoOk()
+  Ctrl_Comp --> UI_Fact : 12b. alertaDiscrepanciaRegistrada()
+  UI_Fact --> Actor : 13b. notificarIngresoParcialConDiscrepancia()
 end
 @enduml
 ```

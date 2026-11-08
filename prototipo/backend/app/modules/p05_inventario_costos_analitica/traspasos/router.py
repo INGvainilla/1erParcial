@@ -176,8 +176,8 @@ def recibir_traspaso(
             costo = inv_dest["costo_promedio_ponderado"] or 0.0
         else:
             insert_dest = text("""
-                INSERT INTO inventario (id_sucursal, id_producto, talla, color, stock_fisico, stock_reservado, stock_disponible, stock_minimo, costo_promedio_ponderado, id_empresa)
-                VALUES (:id_s, :id_p, :talla, :color, :cant, 0, :cant, 2, 50.0, :id_emp)
+                INSERT INTO inventario (id_sucursal, id_producto, talla, color, stock_fisico, stock_reservado, stock_disponible, stock_minimo, ultimo_costo_compra, costo_promedio_ponderado, id_empresa)
+                VALUES (:id_s, :id_p, :talla, :color, :cant, 0, :cant, 2, 50.0, 50.0, :id_emp)
             """)
             db.execute(insert_dest, {
                 "id_s": traspaso["id_sucursal_destino"],

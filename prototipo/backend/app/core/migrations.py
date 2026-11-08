@@ -22,6 +22,7 @@ COLUMNAS_PARCIAL2: List[Tuple[str, str, str]] = [
     ("productos", "composicion_textil", "VARCHAR(150)"),
     ("producto_colores", "codigo_hex_secundario", "VARCHAR(10)"),
     ("inventario", "id_empresa", "INTEGER"),
+    ("traspasos_inter_sucursal", "observaciones", "TEXT"),
 ]
 
 # (nombre del índice, tabla, columna). `CREATE INDEX IF NOT EXISTS` es válido en ambos motores.
