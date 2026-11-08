@@ -23,6 +23,16 @@ COLUMNAS_PARCIAL2: List[Tuple[str, str, str]] = [
     ("producto_colores", "codigo_hex_secundario", "VARCHAR(10)"),
     ("inventario", "id_empresa", "INTEGER"),
     ("traspasos_inter_sucursal", "observaciones", "TEXT"),
+    ("ordenes_compra_desktop", "id_usuario", "INTEGER"),
+    ("ordenes_compra_desktop", "subtotal", "NUMERIC(12, 2) DEFAULT 0.00"),
+    ("ordenes_compra_desktop", "iva", "NUMERIC(12, 2) DEFAULT 0.00"),
+    ("ordenes_compra_desktop", "total_con_iva", "NUMERIC(12, 2) DEFAULT 0.00"),
+    ("ordenes_compra_desktop", "observaciones", "TEXT"),
+    ("ordenes_compra_desktop", "fecha_aprobacion", "TIMESTAMP"),
+    ("ordenes_compra_desktop", "id_usuario_aprueba", "INTEGER"),
+    ("ordenes_compra_desktop", "id_usuario_recepcion", "INTEGER"),
+    ("ordenes_compra_desktop", "nro_factura", "VARCHAR(64)"),
+    ("ordenes_compra_desktop", "discrepancias_json", "TEXT"),
 ]
 
 # (nombre del índice, tabla, columna). `CREATE INDEX IF NOT EXISTS` es válido en ambos motores.
@@ -136,6 +146,20 @@ def ensure_columns(engine: Engine) -> List[str]:
 
     # Refrescar la caché del inspector para que los índices vean las columnas nuevas
     inspector = inspect(engine)
+
+    # Ampliar columnas existentes que requieran mayor longitud en PostgreSQL de forma idempotente
+    if not is_sqlite and inspector.has_table("ordenes_compra_desktop"):
+        for col in inspector.get_columns("ordenes_compra_desktop"):
+            if col["name"] == "estado":
+                col_len = getattr(col.get("type"), "length", None)
+                if col_len is not None and col_len < 50:
+                    try:
+                        with engine.begin() as conn:
+                            conn.execute(text("ALTER TABLE ordenes_compra_desktop ALTER COLUMN estado TYPE VARCHAR(50)"))
+                            aplicados.append("ordenes_compra_desktop.estado_varchar50")
+                    except Exception as exc:
+                        logger.warning("[MIGRACION] No se pudo alterar columna estado en ordenes_compra_desktop: %s", exc)
+                break
     for nombre, tabla, columna in INDICES_PARCIAL2:
         if not inspector.has_table(tabla):
             continue

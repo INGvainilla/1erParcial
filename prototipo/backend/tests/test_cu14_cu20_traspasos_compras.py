@@ -18,11 +18,13 @@ client = TestClient(app)
 @pytest.fixture(scope="module")
 def admin_headers():
     db = SessionLocal()
-    admin = db.query(Usuario).filter(Usuario.rol == "ADMIN_EMPRESA").first()
+    admin = db.query(Usuario).filter(Usuario.id_empresa == 1, Usuario.rol.in_(["ADMIN_EMPRESA", "ADMINISTRADOR"]), Usuario.estado_cuenta == "ACTIVO").first()
     if not admin:
-        admin = db.query(Usuario).first()
+        admin = db.query(Usuario).filter(Usuario.rol.in_(["ADMIN_EMPRESA", "ADMINISTRADOR"]), Usuario.estado_cuenta == "ACTIVO").first()
+    if not admin:
+        admin = db.query(Usuario).filter(Usuario.estado_cuenta == "ACTIVO").first()
     assert admin is not None
-    token = create_access_token({"sub": str(admin.id_usuario), "tenant_id": admin.id_empresa or 1, "rol": admin.rol})
+    token = create_access_token({"sub": str(admin.id_usuario), "tenant_id": admin.id_empresa or 1, "rol": "ADMINISTRADOR"})
     db.close()
     return {"Authorization": f"Bearer {token}"}
 
@@ -185,7 +187,7 @@ def test_cu20_emision_exitosa_desktop(admin_headers):
 def test_cu20_rechazo_rol_no_autorizado():
     """CU20: Bloquear usuario con rol no autorizado (ej. CLIENTE) con HTTP 403"""
     db = SessionLocal()
-    cliente = db.query(Usuario).filter(Usuario.rol == "CLIENTE").first()
+    cliente = db.query(Usuario).filter(Usuario.rol == "CLIENTE", Usuario.estado_cuenta == "ACTIVO").first()
     if not cliente:
         cliente = Usuario(
             id_empresa=1,
@@ -216,6 +218,15 @@ def test_cu20_rechazo_rol_no_autorizado():
 
 def test_cu20_ciclo_completo_autorizar_y_recepcionar(admin_headers):
     """CU20: Flujo end-to-end de Compra: Emitir -> Autorizar (deduciendo presupuesto) -> Recepcionar (ingreso a Kardex y recálculo CPP)"""
+    db = SessionLocal()
+    admin = db.query(Usuario).filter(Usuario.id_empresa == 1, Usuario.rol.in_(["ADMIN_EMPRESA", "ADMINISTRADOR"]), Usuario.estado_cuenta == "ACTIVO").first()
+    empresa_id = admin.id_empresa if admin else 1
+    sucursal = db.query(Sucursal).filter(Sucursal.id_empresa == empresa_id, Sucursal.estado == "OPERATIVA").first() or db.query(Sucursal).filter(Sucursal.id_empresa == empresa_id).first()
+    id_sucursal = sucursal.id_sucursal if sucursal else 55
+    prod = db.query(Producto).filter(Producto.id_empresa == empresa_id).first() or db.query(Producto).first()
+    id_prod = prod.id_producto if prod else 64
+    db.close()
+
     headers_desktop = {
         **admin_headers,
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -225,10 +236,10 @@ def test_cu20_ciclo_completo_autorizar_y_recepcionar(admin_headers):
     # 1. Emitir Orden
     payload = {
         "id_proveedor": 1,
-        "id_sucursal_destino": 1,
+        "id_sucursal_destino": id_sucursal,
         "items": [
             {
-                "id_producto": 1,
+                "id_producto": id_prod,
                 "talla": "XL",
                 "color": "Blanco",
                 "cantidad": 10,

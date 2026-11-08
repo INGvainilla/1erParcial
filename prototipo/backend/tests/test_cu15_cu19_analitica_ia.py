@@ -19,13 +19,15 @@ client = TestClient(app)
 @pytest.fixture(scope="module")
 def admin_token():
     db = SessionLocal()
-    admin = db.query(Usuario).filter(Usuario.rol == "ADMIN_EMPRESA").first()
+    admin = db.query(Usuario).filter(Usuario.id_empresa == 1, Usuario.rol.in_(["ADMIN_EMPRESA", "ADMINISTRADOR"]), Usuario.estado_cuenta == "ACTIVO").first()
     if not admin:
-        admin = db.query(Usuario).first()
+        admin = db.query(Usuario).filter(Usuario.rol.in_(["ADMIN_EMPRESA", "ADMINISTRADOR"]), Usuario.estado_cuenta == "ACTIVO").first()
+    if not admin:
+        admin = db.query(Usuario).filter(Usuario.estado_cuenta == "ACTIVO").first()
     token = create_access_token({
         "sub": str(admin.id_usuario),
         "tenant_id": admin.id_empresa or 1,
-        "rol": admin.rol
+        "rol": "ADMINISTRADOR"
     })
     db.close()
     return {"Authorization": f"Bearer {token}"}
