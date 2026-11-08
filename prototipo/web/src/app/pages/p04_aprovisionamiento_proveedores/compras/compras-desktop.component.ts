@@ -26,144 +26,144 @@ export interface CompraRow {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="compras-desktop-container p-6">
+    <div class="compras-desktop-container">
       <!-- Banner CU20: Exclusivo Web Desktop -->
-      <div class="desktop-badge-banner mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-900/60 to-indigo-900/40 border border-blue-500/30 flex justify-between items-center shadow-lg">
-        <div class="flex items-center gap-3">
-          <div class="p-3 bg-blue-500/20 text-blue-400 rounded-lg text-xl">
+      <div class="desktop-badge-banner">
+        <div class="banner-left">
+          <div class="banner-icon-box">
             <i class="fas fa-desktop"></i>
           </div>
           <div>
-            <h2 class="text-lg font-bold text-white">Módulo de Aprovisionamiento Textil (CU20)</h2>
-            <p class="text-xs text-blue-200">Terminal de compras corporativas restringido exclusivamente a clientes de escritorio (Resolución &ge; 768px)</p>
+            <h2 class="banner-title">Módulo de Aprovisionamiento Textil (CU20)</h2>
+            <p class="banner-sub">Terminal de compras corporativas restringido exclusivamente a clientes de escritorio (Resolución &ge; 768px)</p>
           </div>
         </div>
-        <div class="text-right">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Desktop Validado
+        <div class="banner-right">
+          <span class="badge-desktop-valid">
+            <span class="pulse-dot"></span> Desktop Validado
           </span>
         </div>
       </div>
 
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-xl font-bold text-white flex items-center gap-2">
-          <i class="fas fa-file-invoice-dollar text-indigo-400"></i> Órdenes de Compra y Suministro
+      <div class="compras-header">
+        <h1 class="compras-title">
+          <i class="fas fa-file-invoice-dollar text-indigo"></i> Órdenes de Compra y Suministro
         </h1>
-        <button (click)="showModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2">
+        <button (click)="showModal = true" class="btn-nueva-compra">
           <i class="fas fa-plus"></i> Emitir Orden de Compra
         </button>
       </div>
 
       <!-- Tabla de Órdenes de Compra -->
-      <div class="bg-slate-800/80 rounded-xl border border-slate-700 overflow-hidden shadow">
-        <table class="w-full text-left text-sm text-gray-200">
-          <thead class="bg-slate-900/60 text-xs uppercase text-gray-400 border-b border-slate-700">
+      <div class="table-card">
+        <table class="compras-table">
+          <thead>
             <tr>
-              <th class="p-3">Código</th>
-              <th class="p-3">Proveedor</th>
-              <th class="p-3">Sucursal Destino</th>
-              <th class="p-3">Total (Bs.)</th>
-              <th class="p-3">Prendas</th>
-              <th class="p-3">Fecha Emisión</th>
-              <th class="p-3">Estado</th>
-              <th class="p-3 text-right">Acciones</th>
+              <th>Código</th>
+              <th>Proveedor</th>
+              <th>Sucursal Destino</th>
+              <th>Total (Bs.)</th>
+              <th>Prendas</th>
+              <th>Fecha Emisión</th>
+              <th>Estado</th>
+              <th style="text-align: right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let c of compras" class="border-b border-slate-700/50 hover:bg-slate-750">
-              <td class="p-3 font-mono font-semibold text-indigo-400">{{ c.codigo_orden }}</td>
-              <td class="p-3">{{ c.proveedor }}</td>
-              <td class="p-3">{{ c.sucursal }}</td>
-              <td class="p-3 font-semibold text-emerald-400">Bs. {{ c.monto_total | number:'1.2-2' }}</td>
-              <td class="p-3">
-                <span *ngFor="let it of c.items" class="inline-block bg-slate-700 px-2 py-0.5 rounded text-xs mr-1 mb-1">
+            <tr *ngFor="let c of compras">
+              <td class="font-mono font-bold text-indigo">{{ c.codigo_orden }}</td>
+              <td>{{ c.proveedor }}</td>
+              <td>{{ c.sucursal }}</td>
+              <td class="font-bold text-emerald">Bs. {{ c.monto_total | number:'1.2-2' }}</td>
+              <td>
+                <span *ngFor="let it of c.items" class="prenda-chip">
                   Prod #{{ it.id_producto }} ({{ it.talla }}) x{{ it.cantidad }} - Bs. {{ it.costo_unitario }}
                 </span>
               </td>
-              <td class="p-3 text-gray-400">{{ c.fecha_emision | date:'short' }}</td>
-              <td class="p-3">
-                <span *ngIf="c.estado === 'EMITIDA'" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                  <i class="fas fa-paper-plane mr-1"></i> EMITIDA
+              <td class="text-muted">{{ c.fecha_emision | date:'short' }}</td>
+              <td>
+                <span *ngIf="c.estado === 'EMITIDA'" class="status-badge emitida">
+                  <i class="fas fa-paper-plane"></i> EMITIDA
                 </span>
-                <span *ngIf="c.estado === 'AUTORIZADA'" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                  <i class="fas fa-check-circle mr-1"></i> AUTORIZADA
+                <span *ngIf="c.estado === 'AUTORIZADA'" class="status-badge autorizada">
+                  <i class="fas fa-check-circle"></i> AUTORIZADA
                 </span>
-                <span *ngIf="c.estado === 'RECEPCIONADA_CONFORME'" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" [title]="'Factura: ' + (c.nro_factura || 'S/N')">
-                  <i class="fas fa-boxes mr-1"></i> CONFORME
+                <span *ngIf="c.estado === 'RECEPCIONADA_CONFORME'" class="status-badge conforme" [title]="'Factura: ' + (c.nro_factura || 'S/N')">
+                  <i class="fas fa-boxes-stacked"></i> CONFORME
                 </span>
-                <span *ngIf="c.estado === 'RECEPCIONADA_CON_DISCREPANCIA'" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30" [title]="'Discrepancia detectada. Factura: ' + (c.nro_factura || 'S/N')">
-                  <i class="fas fa-exclamation-triangle mr-1"></i> DISCREPANCIA
+                <span *ngIf="c.estado === 'RECEPCIONADA_CON_DISCREPANCIA'" class="status-badge discrepancia" [title]="'Discrepancia detectada. Factura: ' + (c.nro_factura || 'S/N')">
+                  <i class="fas fa-triangle-exclamation"></i> DISCREPANCIA
                 </span>
               </td>
-              <td class="p-3 text-right">
-                <div class="flex justify-end gap-2">
+              <td style="text-align: right;">
+                <div class="actions-group">
                   <button *ngIf="c.estado === 'EMITIDA'"
                           (click)="autorizarCompra(c)"
                           [disabled]="isProcessing"
-                          class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium flex items-center gap-1 shadow">
+                          class="btn-action autorizar">
                     <i class="fas fa-stamp"></i> Autorizar
                   </button>
                   <button *ngIf="c.estado === 'AUTORIZADA'"
                           (click)="abrirModalRecepcion(c)"
                           [disabled]="isProcessing"
-                          class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium flex items-center gap-1 shadow">
+                          class="btn-action recepcionar">
                     <i class="fas fa-dolly"></i> Recepcionar
                   </button>
-                  <span *ngIf="c.estado.startsWith('RECEPCIONADA')" class="text-xs text-gray-400">
-                    Fact: <span class="font-mono text-gray-200">{{ c.nro_factura || 'S/N' }}</span>
+                  <span *ngIf="c.estado.startsWith('RECEPCIONADA')" class="factura-tag">
+                    Fact: <strong class="font-mono text-white">{{ c.nro_factura || 'S/N' }}</strong>
                   </span>
                 </div>
               </td>
             </tr>
             <tr *ngIf="compras.length === 0">
-              <td colspan="8" class="text-center p-6 text-gray-400">No hay órdenes de compra registradas.</td>
+              <td colspan="8" class="empty-state-row">No hay órdenes de compra registradas.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Modal Emitir Compra -->
-      <div *ngIf="showModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-lg w-full shadow-2xl">
-          <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fas fa-cart-arrow-down text-indigo-400"></i> Nueva Orden de Compra Desktop
+      <div *ngIf="showModal" class="modal-backdrop">
+        <div class="modal-card">
+          <h3 class="modal-title">
+            <i class="fas fa-cart-arrow-down text-indigo"></i> Nueva Orden de Compra Desktop
           </h3>
-          <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-medium text-gray-400 mb-1">ID Proveedor:</label>
-                <input type="number" [(ngModel)]="nuevoProveedorId" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" />
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">ID Proveedor:</label>
+                <input type="number" [(ngModel)]="nuevoProveedorId" class="form-input" />
               </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-400 mb-1">ID Sucursal Destino:</label>
-                <input type="number" [(ngModel)]="nuevaSucursalDestino" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" />
+              <div class="form-group">
+                <label class="form-label">ID Sucursal Destino:</label>
+                <input type="number" [(ngModel)]="nuevaSucursalDestino" class="form-input" />
               </div>
             </div>
-            <div class="p-3 bg-slate-900/60 rounded border border-slate-700/60 space-y-3">
-              <span class="text-xs font-semibold text-gray-300">Ítem a Comprar:</span>
-              <div class="grid grid-cols-4 gap-2">
-                <div>
-                  <label class="block text-[11px] text-gray-400 mb-0.5">ID Prod:</label>
-                  <input type="number" [(ngModel)]="nuevoProdId" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-xs" />
+            <div class="inner-box">
+              <span class="inner-box-title">Ítem a Comprar:</span>
+              <div class="form-grid-4">
+                <div class="form-group">
+                  <label class="form-label small">ID Prod:</label>
+                  <input type="number" [(ngModel)]="nuevoProdId" class="form-input small" />
                 </div>
-                <div>
-                  <label class="block text-[11px] text-gray-400 mb-0.5">Talla:</label>
-                  <input type="text" [(ngModel)]="nuevaTalla" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-xs" />
+                <div class="form-group">
+                  <label class="form-label small">Talla:</label>
+                  <input type="text" [(ngModel)]="nuevaTalla" class="form-input small" />
                 </div>
-                <div>
-                  <label class="block text-[11px] text-gray-400 mb-0.5">Cant:</label>
-                  <input type="number" [(ngModel)]="nuevaCantidad" min="1" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-xs" />
+                <div class="form-group">
+                  <label class="form-label small">Cant:</label>
+                  <input type="number" [(ngModel)]="nuevaCantidad" min="1" class="form-input small" />
                 </div>
-                <div>
-                  <label class="block text-[11px] text-gray-400 mb-0.5">Costo Unit:</label>
-                  <input type="number" [(ngModel)]="nuevoCostoUnitario" min="0.1" class="w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-white text-xs" />
+                <div class="form-group">
+                  <label class="form-label small">Costo Unit:</label>
+                  <input type="number" [(ngModel)]="nuevoCostoUnitario" min="0.1" class="form-input small" />
                 </div>
               </div>
             </div>
           </div>
-          <div class="flex justify-end gap-2 mt-6">
-            <button (click)="showModal = false" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm">Cancelar</button>
-            <button (click)="emitirCompra()" [disabled]="isProcessing" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
+          <div class="modal-actions">
+            <button (click)="showModal = false" class="btn-cancel">Cancelar</button>
+            <button (click)="emitirCompra()" [disabled]="isProcessing" class="btn-confirm">
               Emitir Orden de Compra
             </button>
           </div>
@@ -171,33 +171,33 @@ export interface CompraRow {
       </div>
 
       <!-- Modal Recepcionar Mercadería (CU20) -->
-      <div *ngIf="showModalRecepcion && ordenSeleccionada" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-lg w-full shadow-2xl">
-          <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <i class="fas fa-boxes text-emerald-400"></i> Recepción Física de Mercadería
+      <div *ngIf="showModalRecepcion && ordenSeleccionada" class="modal-backdrop">
+        <div class="modal-card">
+          <h3 class="modal-title">
+            <i class="fas fa-boxes-stacked text-emerald"></i> Recepción Física de Mercadería
           </h3>
-          <p class="text-xs text-gray-400 mb-4">
-            Orden: <span class="text-indigo-400 font-mono font-bold">{{ ordenSeleccionada.codigo_orden }}</span> | Al confirmar se actualizará el stock en inventario y se recalculará el CPP mediante redondeo Half-Up.
+          <p class="modal-desc">
+            Orden: <strong class="text-indigo font-mono">{{ ordenSeleccionada.codigo_orden }}</strong> · Al confirmar se actualizará el stock en inventario y se recalculará el CPP mediante redondeo Half-Up.
           </p>
 
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-medium text-gray-300 mb-1">N° de Factura / Remisión Fiscal:</label>
-              <input type="text" [(ngModel)]="nroFacturaRecepcion" placeholder="Ej. FAC-2026-90412" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm" />
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">N° de Factura / Remisión Fiscal:</label>
+              <input type="text" [(ngModel)]="nroFacturaRecepcion" placeholder="Ej. FAC-2026-90412" class="form-input" />
             </div>
 
-            <div class="p-3 bg-slate-900/60 rounded border border-slate-700/60">
-              <span class="text-xs font-semibold text-gray-300 block mb-2">Prendas a Ingresar a Kardex:</span>
-              <div *ngFor="let it of ordenSeleccionada.items" class="flex justify-between items-center text-xs py-1 border-b border-slate-800 last:border-0">
+            <div class="inner-box">
+              <span class="inner-box-title">Prendas a Ingresar a Kardex:</span>
+              <div *ngFor="let it of ordenSeleccionada.items" class="reception-item-row">
                 <span class="text-gray-300">Producto #{{ it.id_producto }} (Talla {{ it.talla }})</span>
-                <span class="font-mono text-emerald-400 font-bold">{{ it.cantidad }} unidades @ Bs. {{ it.costo_unitario }}</span>
+                <span class="font-mono text-emerald font-bold">{{ it.cantidad }} unidades @ Bs. {{ it.costo_unitario }}</span>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 mt-6">
-            <button (click)="showModalRecepcion = false" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm">Cancelar</button>
-            <button (click)="recepcionarCompra()" [disabled]="isProcessing || !nroFacturaRecepcion.trim()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium">
+          <div class="modal-actions">
+            <button (click)="showModalRecepcion = false" class="btn-cancel">Cancelar</button>
+            <button (click)="recepcionarCompra()" [disabled]="isProcessing || !nroFacturaRecepcion.trim()" class="btn-confirm success">
               Confirmar Recepción y Asentar Kardex
             </button>
           </div>
@@ -206,7 +206,425 @@ export interface CompraRow {
     </div>
   `,
   styles: [`
-    .compras-desktop-container { min-height: 100vh; background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+    .compras-desktop-container {
+      padding: 1.5rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .desktop-badge-banner {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.45), rgba(49, 46, 129, 0.35));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .banner-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .banner-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 2px 0;
+    }
+
+    .banner-sub {
+      font-size: 0.78rem;
+      color: #bfdbfe;
+      margin: 0;
+    }
+
+    .badge-desktop-valid {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .compras-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .compras-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .btn-nueva-compra {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-nueva-compra:hover {
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+      transform: translateY(-1px);
+    }
+
+    .table-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow-x: auto;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .compras-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .compras-table th {
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      padding: 0.75rem 1rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .compras-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .compras-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .prenda-chip {
+      display: inline-block;
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      margin: 2px 4px 2px 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .status-badge.emitida {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+    }
+
+    .status-badge.autorizada {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #a5b4fc;
+    }
+
+    .status-badge.conforme {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+
+    .status-badge.discrepancia {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+    }
+
+    .actions-group {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action {
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-action.autorizar {
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .btn-action.autorizar:hover {
+      background: #4338ca;
+    }
+
+    .btn-action.recepcionar {
+      background: #059669;
+      color: #fff;
+    }
+
+    .btn-action.recepcionar:hover {
+      background: #047857;
+    }
+
+    .factura-tag {
+      font-size: 0.74rem;
+      color: #94a3b8;
+    }
+
+    .empty-state-row {
+      text-align: center;
+      padding: 2.5rem !important;
+      color: #64748b;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 1rem;
+    }
+
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .modal-desc {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .form-label.small {
+      font-size: 0.68rem;
+    }
+
+    .form-input {
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .form-input.small {
+      padding: 5px 8px;
+      font-size: 0.8rem;
+    }
+
+    .inner-box {
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .inner-box-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .reception-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+
+    .btn-cancel {
+      background: #334155;
+      color: #e2e8f0;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+      background: #475569;
+    }
+
+    .btn-confirm {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm.success {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .btn-confirm:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* UTILITARIOS */
+    .text-indigo { color: #818cf8; }
+    .text-emerald { color: #34d399; }
+    .text-muted { color: #94a3b8; }
+    .font-mono { font-family: ui-monospace, monospace; }
+    .font-bold { font-weight: 700; }
   `]
 })
 export class ComprasDesktopComponent implements OnInit {

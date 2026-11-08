@@ -67,14 +67,15 @@ interface PromptCategory {
       </header>
 
       <!-- BARRA DE SELECCIÓN DE MÓDULOS PRESENTACIÓN 3 (CU15, CU16, CU17, CU19) -->
-      <nav class="module-nav-bar flex gap-2 mb-6 p-2 rounded-xl bg-slate-900/80 border border-slate-700/60 shadow">
+      <nav class="module-nav-bar">
         <button
           type="button"
           class="nav-tab-btn"
           [class.active]="moduloModo === 'REPORTES_IA'"
           (click)="moduloModo = 'REPORTES_IA'"
         >
-          <i class="fas fa-brain text-indigo-400"></i> Consultas Ejecutivas IA (CU15)
+          <i class="fas fa-brain tab-icon indigo"></i>
+          <span>Consultas Ejecutivas IA (CU15)</span>
         </button>
         <button
           type="button"
@@ -82,7 +83,8 @@ interface PromptCategory {
           [class.active]="moduloModo === 'ML_PREVISION'"
           (click)="cargarMLPrevision()"
         >
-          <i class="fas fa-chart-line text-cyan-400"></i> Previsión Demanda con Machine Learning (CU17)
+          <i class="fas fa-chart-line tab-icon cyan"></i>
+          <span>Previsión Demanda con Machine Learning (CU17)</span>
         </button>
         <button
           type="button"
@@ -90,7 +92,8 @@ interface PromptCategory {
           [class.active]="moduloModo === 'PROMOCIONES_MAYORISTA'"
           (click)="cargarPromocionesReglas()"
         >
-          <i class="fas fa-tags text-emerald-400"></i> Tarifas Mayoristas & Ofertas (CU19)
+          <i class="fas fa-tags tab-icon amber"></i>
+          <span>Tarifas Mayoristas & Ofertas (CU19)</span>
         </button>
       </nav>
 
@@ -372,17 +375,18 @@ interface PromptCategory {
       </ng-container>
 
       <!-- SECCIÓN CU17: PREVISIÓN DE DEMANDA CON MACHINE LEARNING -->
-      <section *ngIf="moduloModo === 'ML_PREVISION'" class="ml-dashboard-card p-6 bg-slate-800/80 rounded-xl border border-slate-700 shadow-xl space-y-6">
-        <div class="flex justify-between items-center border-b border-slate-700/60 pb-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
+      <section *ngIf="moduloModo === 'ML_PREVISION'" class="custom-panel">
+        <div class="panel-header">
+          <div class="panel-header-info">
+            <div class="header-badges">
               <span class="badge badge-accent"><i class="fas fa-brain"></i> Machine Learning (CU17)</span>
               <span class="badge badge-primary"><i class="fas fa-chart-line"></i> Scikit-Learn Model</span>
+              <span class="badge badge-amber"><i class="fas fa-microchip"></i> Ridge & K-Means (k=3)</span>
             </div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-              <i class="fas fa-network-wired text-cyan-400"></i> Proyección Predictiva de Demanda y Segmentación de Catálogo
+            <h2 class="panel-title">
+              <i class="fas fa-network-wired text-cyan"></i> Proyección Predictiva de Demanda y Segmentación de Catálogo
             </h2>
-            <p class="text-xs text-gray-300">
+            <p class="panel-desc">
               Modelo predictivo multivariante de regresión regularizada Ridge con regularización L2 y segmentación de productos K-Means (n=3).
             </p>
           </div>
@@ -393,12 +397,12 @@ interface PromptCategory {
         </div>
 
         <!-- KPI METRICS ML -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" *ngIf="mlData">
+        <div class="kpi-grid" *ngIf="mlData">
           <div class="kpi-card">
             <div class="kpi-icon-wrap cyan"><i class="fas fa-microchip"></i></div>
             <div class="kpi-body">
               <span class="kpi-title">Algoritmo Predictivo</span>
-              <span class="kpi-number cyan font-mono text-sm">{{ mlData.algoritmo }}</span>
+              <span class="kpi-number cyan font-mono">{{ mlData.algoritmo }}</span>
               <span class="kpi-sub">Entrenado con Ridge Regression</span>
             </div>
           </div>
@@ -414,7 +418,7 @@ interface PromptCategory {
             <div class="kpi-icon-wrap amber"><i class="fas fa-scale-balanced"></i></div>
             <div class="kpi-body">
               <span class="kpi-title">Error Medio Absoluto (MAE)</span>
-              <span class="kpi-number amber">&plusmn;{{ mlData.error_medio_absoluto_mae || 8.4 }} <small>uds</small></span>
+              <span class="kpi-number amber">&plusmn;{{ mlData.error_medio_absoluto_mae || 18.45 }} <small>uds</small></span>
               <span class="kpi-sub">Margen de desviación media</span>
             </div>
           </div>
@@ -429,69 +433,97 @@ interface PromptCategory {
         </div>
 
         <!-- TABLA PROYECCIÓN 6 MESES -->
-        <div class="bg-slate-900/60 rounded-xl border border-slate-700/60 p-4" *ngIf="mlData">
-          <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
-            <i class="fas fa-arrow-trend-up text-cyan-400"></i> Proyección Semestral de Demanda por Mes
-          </h3>
-          <table class="w-full text-left text-sm text-gray-200">
-            <thead class="bg-slate-800 text-xs uppercase text-gray-400 border-b border-slate-700">
-              <tr>
-                <th class="p-3">Mes Proyectado</th>
-                <th class="p-3">Factor Estacional</th>
-                <th class="p-3 text-right">Demanda Estimada</th>
-                <th class="p-3 text-right">Variación Proyectada</th>
-                <th class="p-3" style="width: 30%;">Distribución Relativa</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let p of mlData.proyeccion_semestral" class="border-b border-slate-800 hover:bg-slate-800/40">
-                <td class="p-3 font-semibold text-white">{{ p.mes }}</td>
-                <td class="p-3">
-                  <span *ngIf="p.factor_estacional > 1.2" class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    <i class="fas fa-fire mr-1"></i> Temporada Alta ({{ p.factor_estacional }}x)
-                  </span>
-                  <span *ngIf="p.factor_estacional <= 1.2" class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                    <i class="fas fa-check mr-1"></i> Demanda Regular ({{ p.factor_estacional }}x)
-                  </span>
-                </td>
-                <td class="p-3 text-right font-mono font-bold text-cyan-400">{{ p.unidades_proyectadas }} unidades</td>
-                <td class="p-3 text-right font-mono" [class.text-emerald-400]="p.crecimiento_estimado_pct >= 0">
-                  {{ p.crecimiento_estimado_pct >= 0 ? '+' : '' }}{{ p.crecimiento_estimado_pct }}%
-                </td>
-                <td class="p-3">
-                  <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                    <div class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full rounded-full" [style.width.%]="(p.unidades_proyectadas / 800) * 100"></div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="card-box" *ngIf="mlData">
+          <div class="card-box-header">
+            <h3 class="card-box-title">
+              <i class="fas fa-arrow-trend-up text-cyan"></i> Proyección Semestral de Demanda por Mes
+            </h3>
+            <span class="card-box-subtitle">Cálculo multivariable ponderado con factor de estacionalidad estandarizado</span>
+          </div>
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th style="width: 20%;">Mes Proyectado</th>
+                  <th style="width: 25%;">Factor Estacional</th>
+                  <th style="width: 18%; text-align: right;">Demanda Estimada</th>
+                  <th style="width: 17%; text-align: right;">Variación Proyectada</th>
+                  <th style="width: 20%;">Distribución Relativa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of mlData.proyeccion_semestral">
+                  <td class="font-bold text-white">
+                    <i class="fas fa-calendar-day text-muted" style="margin-right: 6px;"></i>
+                    {{ p.mes }}
+                  </td>
+                  <td>
+                    <span *ngIf="p.factor_estacional > 1.2" class="status-pill alta">
+                      <i class="fas fa-fire"></i> Temporada Alta ({{ p.factor_estacional }}x)
+                    </span>
+                    <span *ngIf="p.factor_estacional <= 1.2" class="status-pill regular">
+                      <i class="fas fa-check"></i> Demanda Regular ({{ p.factor_estacional }}x)
+                    </span>
+                  </td>
+                  <td style="text-align: right;" class="font-mono font-bold text-cyan">
+                    {{ p.unidades_proyectadas }} unidades
+                  </td>
+                  <td style="text-align: right;" class="font-mono font-bold" [class.text-emerald]="p.crecimiento_estimado_pct >= 0" [class.text-rose]="p.crecimiento_estimado_pct < 0">
+                    {{ p.crecimiento_estimado_pct >= 0 ? '+' : '' }}{{ p.crecimiento_estimado_pct }}%
+                  </td>
+                  <td>
+                    <div class="progress-bar-wrap">
+                      <div class="progress-bar-track">
+                        <div class="progress-bar-fill" [style.width.%]="(p.unidades_proyectadas / 1100) * 100"></div>
+                      </div>
+                      <span class="progress-bar-val font-mono">{{ ((p.unidades_proyectadas / 1100) * 100) | number:'1.0-0' }}%</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- CLUSTERING K-MEANS -->
-        <div class="space-y-3" *ngIf="mlData">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2">
-            <i class="fas fa-shapes text-indigo-400"></i> Segmentación No Supervisada del Catálogo (K-Means Clusters)
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div *ngFor="let cl of mlData.segmentacion_catalogo" class="p-4 bg-slate-900/60 rounded-xl border border-slate-700/60">
-              <div class="flex justify-between items-center mb-2">
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
-                      [ngClass]="{
-                        'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30': cl.segmento.includes('ALTA'),
-                        'bg-blue-500/20 text-blue-400 border border-blue-500/30': cl.segmento.includes('MEDIA'),
-                        'bg-amber-500/20 text-amber-400 border border-amber-500/30': cl.segmento.includes('BAJA')
-                      }">
+        <div class="card-box" *ngIf="mlData">
+          <div class="card-box-header">
+            <h3 class="card-box-title">
+              <i class="fas fa-shapes text-indigo"></i> Segmentación No Supervisada del Catálogo (K-Means Clusters)
+            </h3>
+            <span class="card-box-subtitle">Agrupación matemática multivariante por volumen de rotación, estabilidad y nivel de stock</span>
+          </div>
+          <div class="clusters-grid">
+            <div *ngFor="let cl of mlData.segmentacion_catalogo" class="cluster-card" [ngClass]="{
+              'border-alta': cl.segmento.includes('ALTA'),
+              'border-media': cl.segmento.includes('MEDIA'),
+              'border-baja': cl.segmento.includes('BAJA')
+            }">
+              <div class="cluster-header">
+                <span class="cluster-badge" [ngClass]="{
+                  'cluster-badge-alta': cl.segmento.includes('ALTA'),
+                  'cluster-badge-media': cl.segmento.includes('MEDIA'),
+                  'cluster-badge-baja': cl.segmento.includes('BAJA')
+                }">
+                  <i class="fas" [ngClass]="{
+                    'fa-star': cl.segmento.includes('ALTA'),
+                    'fa-layer-group': cl.segmento.includes('MEDIA'),
+                    'fa-clock-rotate-left': cl.segmento.includes('BAJA')
+                  }"></i>
                   {{ cl.segmento }}
                 </span>
-                <span class="text-xs font-mono text-gray-400">Sugerencia: {{ cl.unidades_sugeridas_reorden }} uds</span>
+                <span class="cluster-reorder-tag font-mono">
+                  Sugerencia: <strong>{{ cl.unidades_sugeridas_reorden }}</strong> uds
+                </span>
               </div>
-              <p class="text-xs text-gray-300 mb-3">{{ cl.descripcion }}</p>
-              <div class="text-[11px] text-gray-400">
-                <strong class="text-gray-200">Artículos Asignados:</strong>
-                <ul class="list-disc list-inside mt-1 space-y-0.5">
-                  <li *ngFor="let pr of cl.prendas_ejemplo">{{ pr }}</li>
-                </ul>
+              <p class="cluster-desc">{{ cl.descripcion }}</p>
+              <div class="cluster-items-box">
+                <span class="cluster-items-label">Artículos Asignados al Cluster:</span>
+                <div class="cluster-tags-list">
+                  <span *ngFor="let pr of cl.prendas_ejemplo" class="cluster-item-pill">
+                    <i class="fas fa-shirt text-cyan"></i> {{ pr }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -499,105 +531,135 @@ interface PromptCategory {
       </section>
 
       <!-- SECCIÓN CU19: TARIFAS MAYORISTAS Y DESCUENTOS -->
-      <section *ngIf="moduloModo === 'PROMOCIONES_MAYORISTA'" class="promociones-card p-6 bg-slate-800/80 rounded-xl border border-slate-700 shadow-xl space-y-6">
-        <div class="flex justify-between items-center border-b border-slate-700/60 pb-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
+      <section *ngIf="moduloModo === 'PROMOCIONES_MAYORISTA'" class="custom-panel">
+        <div class="panel-header">
+          <div class="panel-header-info">
+            <div class="header-badges">
               <span class="badge badge-amber"><i class="fas fa-tags"></i> CU19 · Ofertas & Precios por Mayor</span>
-              <span class="badge badge-emerald"><i class="fas fa-percent"></i> Descuento Escalonado</span>
+              <span class="badge badge-accent"><i class="fas fa-percent"></i> Descuento Escalonado</span>
+              <span class="badge badge-primary"><i class="fas fa-cart-shopping"></i> Automatizado en Checkout</span>
             </div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-              <i class="fas fa-tags text-amber-400"></i> Políticas de Tarifa Mayorista y Liquidación Estacional
+            <h2 class="panel-title">
+              <i class="fas fa-tags text-amber"></i> Políticas de Tarifa Mayorista y Liquidación Estacional
             </h2>
-            <p class="text-xs text-gray-300">
-              Reglas automatizadas de descuento aplicables directamente en Carrito Digital, Checkout y Caja POS.
+            <p class="panel-desc">
+              Reglas automatizadas de descuento aplicables directamente en Carrito Digital, Checkout Web y Caja POS.
             </p>
           </div>
         </div>
 
         <!-- REGLAS ACTIVAS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-4 bg-slate-900/60 rounded-xl border border-amber-500/30 flex gap-4 items-center">
-            <div class="p-3 bg-amber-500/20 text-amber-400 rounded-lg text-2xl">
+        <div class="promo-rules-grid">
+          <div class="promo-rule-card rule-mayorista">
+            <div class="promo-rule-icon-box mayorista">
               <i class="fas fa-boxes-packing"></i>
             </div>
-            <div>
-              <h4 class="text-sm font-bold text-white">Tarifa Mayorista Automática</h4>
-              <p class="text-xs text-amber-200/80">Descuento del <strong>20% directo</strong> al adquirir <strong>3 o más unidades</strong> de cualquier prenda.</p>
-              <span class="inline-block mt-1 px-2 py-0.5 rounded text-[11px] bg-amber-500/20 text-amber-300">Activo en Catálogo, Carrito y POS</span>
+            <div class="promo-rule-content">
+              <div class="promo-rule-top">
+                <h4 class="promo-rule-title">Tarifa Mayorista Automática</h4>
+                <span class="promo-badge-status mayorista"><i class="fas fa-circle-check"></i> Activo Global</span>
+              </div>
+              <p class="promo-rule-desc">
+                Descuento del <strong>20% directo</strong> al adquirir <strong>3 o más unidades</strong> de cualquier prenda o línea.
+              </p>
+              <div class="promo-rule-meta">
+                <span class="promo-channel-tag"><i class="fas fa-store"></i> Activo en Catálogo, Carrito y POS</span>
+              </div>
             </div>
           </div>
 
-          <div class="p-4 bg-slate-900/60 rounded-xl border border-rose-500/30 flex gap-4 items-center">
-            <div class="p-3 bg-rose-500/20 text-rose-400 rounded-lg text-2xl">
+          <div class="promo-rule-card rule-liquidacion">
+            <div class="promo-rule-icon-box liquidacion">
               <i class="fas fa-fire"></i>
             </div>
-            <div>
-              <h4 class="text-sm font-bold text-white">Liquidación de Temporada</h4>
-              <p class="text-xs text-rose-200/80">Descuento de hasta el <strong>40% OFF</strong> en prendas pertenecientes a colecciones en estado LIQUIDACIÓN.</p>
-              <span class="inline-block mt-1 px-2 py-0.5 rounded text-[11px] bg-rose-500/20 text-rose-300">Prioridad sobre descuento regular</span>
+            <div class="promo-rule-content">
+              <div class="promo-rule-top">
+                <h4 class="promo-rule-title">Liquidación de Temporada</h4>
+                <span class="promo-badge-status liquidacion"><i class="fas fa-bolt"></i> Prioridad Alta</span>
+              </div>
+              <p class="promo-rule-desc">
+                Descuento de hasta el <strong>40% OFF</strong> en prendas pertenecientes a colecciones en estado LIQUIDACIÓN.
+              </p>
+              <div class="promo-rule-meta">
+                <span class="promo-channel-tag"><i class="fas fa-shield"></i> Prioridad sobre descuento regular</span>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- SIMULADOR INTERACTIVO CU19 -->
-        <div class="p-5 bg-slate-900/60 rounded-xl border border-slate-700/60 space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fas fa-calculator text-indigo-400"></i> Simulador en Vivo de Tarifas y Descuentos
-            </h3>
-            <button (click)="calcularSimulacionDescuento()" [disabled]="isCalculatingPromo" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold flex items-center gap-1.5 shadow">
-              <i class="fas fa-bolt"></i> Calcular Descuento (CU19)
+        <div class="card-box">
+          <div class="card-box-header flex-between">
+            <div>
+              <h3 class="card-box-title">
+                <i class="fas fa-calculator text-indigo"></i> Simulador en Vivo de Tarifas y Descuentos
+              </h3>
+              <span class="card-box-subtitle">Comprueba en tiempo real el motor de reglas de cálculo automático de precios</span>
+            </div>
+            <button (click)="calcularSimulacionDescuento()" [disabled]="isCalculatingPromo" class="btn-calculate">
+              <i class="fas fa-bolt"></i>
+              <span>Calcular Descuento (CU19)</span>
             </button>
           </div>
 
           <!-- Tabla de Prendas en Simulación -->
-          <table class="w-full text-left text-xs text-gray-200">
-            <thead class="bg-slate-800 text-gray-400 border-b border-slate-700">
-              <tr>
-                <th class="p-2.5">Prenda / Línea</th>
-                <th class="p-2.5" style="width: 120px;">Cantidad</th>
-                <th class="p-2.5" style="width: 130px;">Precio Unit. (Bs.)</th>
-                <th class="p-2.5 text-center" style="width: 140px;">Es Liquidación</th>
-                <th class="p-2.5 text-right">Subtotal Estimado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let it of itemsSimulacion" class="border-b border-slate-800">
-                <td class="p-2.5 font-medium text-white">{{ it.nombre }}</td>
-                <td class="p-2.5">
-                  <input type="number" [(ngModel)]="it.cantidad" (ngModelChange)="calcularSimulacionDescuento()" min="1" class="w-20 bg-slate-800 border border-slate-700 rounded p-1 text-center text-white" />
-                </td>
-                <td class="p-2.5">
-                  <input type="number" [(ngModel)]="it.precio_unitario" (ngModelChange)="calcularSimulacionDescuento()" min="1" class="w-24 bg-slate-800 border border-slate-700 rounded p-1 text-center text-white" />
-                </td>
-                <td class="p-2.5 text-center">
-                  <input type="checkbox" [(ngModel)]="it.es_liquidacion" (ngModelChange)="calcularSimulacionDescuento()" class="rounded bg-slate-800 border-slate-700 text-indigo-500" />
-                </td>
-                <td class="p-2.5 text-right font-mono font-bold text-emerald-400">
-                  Bs. {{ (it.cantidad * it.precio_unitario) | number:'1.2-2' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Prenda / Línea</th>
+                  <th style="width: 15%; text-align: center;">Cantidad</th>
+                  <th style="width: 15%; text-align: center;">Precio Unit. (Bs.)</th>
+                  <th style="width: 15%; text-align: center;">Es Liquidación</th>
+                  <th style="width: 15%; text-align: right;">Subtotal Estimado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let it of itemsSimulacion">
+                  <td class="font-bold text-white">
+                    <i class="fas fa-shirt text-muted" style="margin-right: 8px;"></i>
+                    {{ it.nombre }}
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" [(ngModel)]="it.cantidad" (ngModelChange)="calcularSimulacionDescuento()" min="1" class="sim-input number-input" />
+                  </td>
+                  <td style="text-align: center;">
+                    <input type="number" [(ngModel)]="it.precio_unitario" (ngModelChange)="calcularSimulacionDescuento()" min="1" class="sim-input number-input" />
+                  </td>
+                  <td style="text-align: center;">
+                    <label class="custom-checkbox-wrap">
+                      <input type="checkbox" [(ngModel)]="it.es_liquidacion" (ngModelChange)="calcularSimulacionDescuento()" class="custom-checkbox" />
+                    </label>
+                  </td>
+                  <td style="text-align: right;" class="font-mono font-bold text-emerald">
+                    Bs. {{ (it.cantidad * it.precio_unitario) | number:'1.2-2' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- RESULTADO DEL SIMULADOR CU19 -->
-          <div *ngIf="simulacionResultado" class="p-4 bg-slate-800 rounded-lg border border-slate-700 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <span class="text-xs text-gray-400 block">Subtotal Bruto:</span>
-              <span class="text-lg font-mono font-bold text-gray-200">Bs. {{ simulacionResultado.subtotal_bruto | number:'1.2-2' }}</span>
+          <div *ngIf="simulacionResultado" class="sim-results-grid">
+            <div class="sim-res-box">
+              <span class="sim-res-label">Subtotal Bruto</span>
+              <span class="sim-res-value font-mono">Bs. {{ simulacionResultado.subtotal_bruto | number:'1.2-2' }}</span>
+              <span class="sim-res-sub">Suma base sin descuentos</span>
             </div>
-            <div>
-              <span class="text-xs text-gray-400 block">Descuento Aplicado:</span>
-              <span class="text-lg font-mono font-bold text-rose-400">-Bs. {{ simulacionResultado.descuento_total | number:'1.2-2' }}</span>
+            <div class="sim-res-box border-rose">
+              <span class="sim-res-label">Descuento Aplicado</span>
+              <span class="sim-res-value font-mono text-rose">-Bs. {{ simulacionResultado.descuento_total | number:'1.2-2' }}</span>
+              <span class="sim-res-sub">Ahorro generado por reglas</span>
             </div>
-            <div>
-              <span class="text-xs text-gray-400 block">Total Neto a Cobrar:</span>
-              <span class="text-lg font-mono font-bold text-emerald-400">Bs. {{ simulacionResultado.total_neto | number:'1.2-2' }}</span>
+            <div class="sim-res-box border-emerald glow-emerald">
+              <span class="sim-res-label">Total Neto a Cobrar</span>
+              <span class="sim-res-value font-mono text-emerald">Bs. {{ simulacionResultado.total_neto | number:'1.2-2' }}</span>
+              <span class="sim-res-sub">Monto liquidado final</span>
             </div>
-            <div>
-              <span class="text-xs text-gray-400 block">Ahorro para el Cliente:</span>
-              <span class="text-lg font-mono font-bold text-amber-400">{{ simulacionResultado.porcentaje_ahorro_global }}% Ahorro</span>
+            <div class="sim-res-box border-amber">
+              <span class="sim-res-label">Ahorro para el Cliente</span>
+              <span class="sim-res-value font-mono text-amber">{{ simulacionResultado.porcentaje_ahorro_global }}% Ahorro</span>
+              <span class="sim-res-sub">Porcentaje de beneficio neto</span>
             </div>
           </div>
         </div>
@@ -1402,11 +1464,16 @@ interface PromptCategory {
     .module-nav-bar {
       display: flex;
       gap: 10px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 6px;
+      backdrop-filter: blur(10px);
     }
     .nav-tab-btn {
-      padding: 0.6rem 1.2rem;
+      padding: 0.65rem 1.25rem;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: #94a3b8;
       background: transparent;
@@ -1414,7 +1481,7 @@ interface PromptCategory {
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       transition: all 0.2s ease;
     }
     .nav-tab-btn:hover {
@@ -1422,10 +1489,13 @@ interface PromptCategory {
       background: rgba(255, 255, 255, 0.05);
     }
     .nav-tab-btn.active {
-      color: #fff;
-      background: #1e293b;
-      border-color: #3b82f6;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+      color: #ffffff;
+      background: rgba(30, 41, 59, 0.95);
+      border-color: rgba(99, 102, 241, 0.45);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    }
+    .tab-icon {
+      font-size: 1rem;
     }
     .btn-export {
       padding: 0.4rem 0.8rem;
@@ -1445,13 +1515,520 @@ interface PromptCategory {
       background: #334155;
       border-color: #38bdf8;
     }
-    .badge-primary { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+
+    /* PANELES PERSONALIZADOS CU17 Y CU19 */
+    .custom-panel {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 1rem;
+    }
+
+    .panel-header-info {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0.25rem 0 0.35rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+
+    .panel-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* CARD BOX CONTAINER */
+    .card-box {
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card-box-header {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .card-box-header.flex-between {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-box-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .card-box-subtitle {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* CUSTOM TABLE STYLING */
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .custom-table th {
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      padding: 0.75rem 1rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .custom-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .custom-table tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* STATUS PILLS */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .status-pill.alta {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+    }
+
+    .status-pill.regular {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+    }
+
+    /* PROGRESS BAR */
+    .progress-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-bar-track {
+      flex: 1;
+      height: 7px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #06b6d4, #6366f1);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-val {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* CLUSTERS GRID K-MEANS */
+    .clusters-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .clusters-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cluster-card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .cluster-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .cluster-card.border-alta { border-color: rgba(16, 185, 129, 0.35); }
+    .cluster-card.border-media { border-color: rgba(99, 102, 241, 0.35); }
+    .cluster-card.border-baja { border-color: rgba(245, 158, 11, 0.35); }
+
+    .cluster-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cluster-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .cluster-badge-alta {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .cluster-badge-media {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .cluster-badge-baja {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .cluster-reorder-tag {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+
+    .cluster-reorder-tag strong {
+      color: #f1f5f9;
+    }
+
+    .cluster-desc {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .cluster-items-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 0.65rem;
+    }
+
+    .cluster-items-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .cluster-tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .cluster-item-pill {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* REGLAS DE PROMOCIÓN CU19 */
+    .promo-rules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .promo-rules-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .promo-rule-card {
+      background: rgba(2, 6, 23, 0.6);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .promo-rule-card.rule-mayorista {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(2, 6, 23, 0.7));
+    }
+
+    .promo-rule-card.rule-liquidacion {
+      border-color: rgba(244, 63, 94, 0.35);
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.06), rgba(2, 6, 23, 0.7));
+    }
+
+    .promo-rule-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .promo-rule-icon-box.mayorista {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .promo-rule-icon-box.liquidacion {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .promo-rule-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .promo-rule-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .promo-rule-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .promo-badge-status {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .promo-badge-status.mayorista {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    .promo-badge-status.liquidacion {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+    }
+
+    .promo-rule-desc {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin: 2px 0 6px 0;
+      line-height: 1.4;
+    }
+
+    .promo-channel-tag {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* SIMULADOR DE DESCUENTO */
+    .btn-calculate {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-calculate:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+      transform: translateY(-1px);
+    }
+
+    .sim-input {
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #ffffff;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sim-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .sim-input.number-input {
+      width: 90px;
+      text-align: center;
+    }
+
+    .custom-checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+
+    .sim-results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    @media (max-width: 900px) {
+      .sim-results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .sim-res-box {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sim-res-box.border-rose { border-color: rgba(244, 63, 94, 0.35); }
+    .sim-res-box.border-emerald { border-color: rgba(16, 185, 129, 0.35); }
+    .sim-res-box.glow-emerald { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
+    .sim-res-box.border-amber { border-color: rgba(245, 158, 11, 0.35); }
+
+    .sim-res-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .sim-res-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .sim-res-sub {
+      font-size: 0.68rem;
+      color: #64748b;
+    }
 
     /* UTILITARIOS */
     .emerald { color: #10b981; }
     .cyan { color: #22d3ee; }
     .indigo { color: #818cf8; }
     .amber { color: #fbbf24; }
+    .text-rose { color: #fb7185; }
+    .text-cyan { color: #22d3ee; }
+    .text-emerald { color: #34d399; }
+    .text-amber { color: #fbbf24; }
+    .text-indigo { color: #818cf8; }
     .text-muted { color: #94a3b8; }
     .font-mono { font-family: ui-monospace, monospace; }
     .font-semibold { font-weight: 600; }
