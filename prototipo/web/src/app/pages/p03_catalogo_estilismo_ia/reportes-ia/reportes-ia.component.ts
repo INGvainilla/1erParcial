@@ -189,11 +189,12 @@ interface PromptCategory {
 
       <!-- RESULTADOS DEL REPORTE EJECUTIVO -->
       <section *ngIf="resultado" class="results-card">
-        <!-- Top bar del Reporte -->
+        <!-- Top bar del Reporte con Exportación CU16 Formal -->
         <div class="results-header">
           <div class="interpretation-info">
-            <div class="verified-tag">
-              <i class="fas fa-check-circle"></i> Interpretación Semántica Validada
+            <div class="interpretation-badge-row">
+              <span class="verified-tag"><i class="fas fa-check-circle"></i> Interpretación Semántica Validada</span>
+              <span class="ast-badge"><i class="fas fa-shield-halved"></i> Solo Lectura (AST Verified)</span>
             </div>
             <h2 class="interpretation-title">{{ resultado.interpretacion }}</h2>
             <div class="query-echo">
@@ -201,14 +202,34 @@ interface PromptCategory {
               <span class="echo-query">"{{ resultado.prompt }}"</span>
             </div>
           </div>
-          <div class="header-actions flex items-center gap-2">
-            <button class="btn-export excel" (click)="exportarReporte('excel')" title="Descargar XLSX con Fórmulas Excel (openpyxl)">
-              <i class="fas fa-file-excel text-emerald-400"></i> Exportar Excel (CU16)
-            </button>
-            <button class="btn-export pdf" (click)="exportarReporte('pdf')" title="Descargar Informe Ejecutivo PDF (reportlab)">
-              <i class="fas fa-file-pdf text-rose-400"></i> Exportar PDF (CU16)
-            </button>
-            <span class="ast-badge"><i class="fas fa-shield-halved"></i> Solo Lectura (AST Verified)</span>
+
+          <!-- PANEL DE EXPORTACIÓN OFICIAL CU16 -->
+          <div class="cu16-export-panel">
+            <div class="cu16-header-label">
+              <i class="fas fa-file-export text-indigo"></i>
+              <span>Exportación Oficial (CU16)</span>
+            </div>
+            <div class="cu16-actions-row">
+              <button class="btn-cu16 excel" (click)="exportarReporte('excel')" title="Descargar libro Excel XLSX con fórmulas computadas openpyxl">
+                <div class="btn-cu16-icon excel">
+                  <i class="fas fa-file-excel"></i>
+                </div>
+                <div class="btn-cu16-content">
+                  <span class="btn-cu16-main">Excel .XLSX</span>
+                  <span class="btn-cu16-caption">Fórmulas =SUM()</span>
+                </div>
+              </button>
+
+              <button class="btn-cu16 pdf" (click)="exportarReporte('pdf')" title="Descargar informe formal ejecutivo en PDF reportlab">
+                <div class="btn-cu16-icon pdf">
+                  <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="btn-cu16-content">
+                  <span class="btn-cu16-main">PDF Ejecutivo</span>
+                  <span class="btn-cu16-caption">ReportLab Oficial</span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1088,11 +1109,25 @@ interface PromptCategory {
     .results-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      padding-bottom: 0.85rem;
-      margin-bottom: 1rem;
-      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      gap: 1.25rem;
+    }
+
+    .interpretation-info {
+      flex: 1;
+      min-width: 320px;
+    }
+
+    .interpretation-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
     }
 
     .verified-tag {
@@ -1101,10 +1136,122 @@ interface PromptCategory {
       color: #10b981;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 2px;
       display: flex;
       align-items: center;
       gap: 5px;
+    }
+
+    /* CU16 EXPORT PANEL FORMAL */
+    .cu16-export-panel {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .cu16-header-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+    }
+
+    .cu16-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-cu16 {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .btn-cu16.excel {
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-cu16.excel:hover {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: #10b981;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-cu16.pdf {
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    .btn-cu16.pdf:hover {
+      background: rgba(244, 63, 94, 0.12);
+      border-color: #f43f5e;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-cu16-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+
+    .btn-cu16-icon.excel {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-cu16-icon.pdf {
+      background: rgba(244, 63, 94, 0.18);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .btn-cu16-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .btn-cu16-main {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .btn-cu16-caption {
+      font-size: 0.65rem;
+      color: #94a3b8;
+    }
+
+    .btn-cu16.excel .btn-cu16-caption {
+      color: #6ee7b7;
+    }
+
+    .btn-cu16.pdf .btn-cu16-caption {
+      color: #fca5a5;
     }
 
     .interpretation-title {
