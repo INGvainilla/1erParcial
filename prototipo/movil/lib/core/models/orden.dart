@@ -41,6 +41,21 @@ class OrdenDetalle {
           : 0.0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_detalle_orden': idDetalleOrden,
+      'id_producto': idProducto,
+      'nombre_producto': nombreProducto,
+      'codigo_sku_base': codigoSkuBase,
+      'imagen_principal': imagenPrincipal,
+      'talla': talla,
+      'color': color,
+      'cantidad': cantidad,
+      'precio_unitario': precioUnitario,
+      'subtotal': subtotal,
+    };
+  }
 }
 
 class Orden {
@@ -109,5 +124,29 @@ class Orden {
       creadoEn: DateTime.tryParse(json['creado_en'] ?? '') ?? DateTime.now(),
       detalles: rawDetalles.map((d) => OrdenDetalle.fromJson(d)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_orden': idOrden,
+      'id_usuario': idUsuario,
+      'id_sucursal': idSucursal,
+      'nombre_sucursal': nombreSucursal,
+      'numero_factura': numeroFactura,
+      'canal_venta': canalVenta,
+      'modalidad_entrega': modalidadEntrega,
+      'direccion_envio': direccionEnvio,
+      'telefono_contacto': telefonoContacto,
+      'nit_factura': nitFactura,
+      'razon_social_factura': razonSocialFactura,
+      'notas_entrega': notasEntrega,
+      'subtotal': subtotal,
+      'costo_envio': costoEnvio,
+      'total': total,
+      'estado_pago': estadoPago,
+      'estado_logistica': estadoLogistica,
+      'creado_en': creadoEn.toIso8601String(),
+      'detalles': detalles.map((d) => d.toJson()).toList(),
+    };
   }
 }

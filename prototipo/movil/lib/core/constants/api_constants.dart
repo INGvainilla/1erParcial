@@ -8,8 +8,8 @@ class ApiConstants {
       return 'http://$_envHost:8000/api/v1';
     }
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      // USB conectado: ejecutar 'adb reverse tcp:8000 tcp:8000' antes de correr
-      return 'http://127.0.0.1:8000/api/v1';
+      // Intentar primero con la IP de red local para mayor estabilidad
+      return 'http://192.168.0.119:8000/api/v1';
     }
     return 'http://localhost:8000/api/v1';
   }

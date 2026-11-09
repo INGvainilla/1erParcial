@@ -31,6 +31,19 @@ class ReservaDetalle {
       imagenPrincipal: json['imagen_principal'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_reserva_detalle': idReservaDetalle,
+      'id_producto': idProducto,
+      'talla': talla,
+      'color': color,
+      'cantidad': cantidad,
+      'nombre_producto': nombreProducto,
+      'codigo_sku_base': codigoSkuBase,
+      'imagen_principal': imagenPrincipal,
+    };
+  }
 }
 
 class Reserva {
@@ -78,5 +91,22 @@ class Reserva {
       nombreCliente: json['nombre_cliente'],
       detalles: rawDetalles.map((d) => ReservaDetalle.fromJson(d)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_reserva': idReserva,
+      'id_usuario': idUsuario,
+      'id_sucursal': idSucursal,
+      'codigo_qr': codigoQr,
+      'qr_texto': qrTexto,
+      'fecha_visita': fechaVisita.toIso8601String(),
+      'estado': estado,
+      'creado_en': creadoEn.toIso8601String(),
+      'nombre_sucursal': nombreSucursal,
+      'nombre_ciudad': nombreCiudad,
+      'nombre_cliente': nombreCliente,
+      'detalles': detalles.map((d) => d.toJson()).toList(),
+    };
   }
 }

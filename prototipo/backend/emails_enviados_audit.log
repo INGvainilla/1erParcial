@@ -1097,50 +1097,390 @@ FashionStore Bolivia S.R.L.
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:47:14
-TIPO: Bienvenida Cliente
-DESTINATARIOS: carlos.nuevo.1794152834@gmail.com
-ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+FECHA: 2026-11-08 16:30:11
+TIPO: Factura Compra FAC-2026-6F13EF
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-6F13EF — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE BOLIVIA S.R.L.
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-6F13EF
 ================================================================================
-Estimado(a) Carlos,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le damos la mas cordial bienvenida a FashionStore Bolivia.
-Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
-carlos.nuevo.1794152834@gmail.com.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-6F13EF
+AUTORIZACION CUF: CUF-0060-BO-FASHIONSTORE-6F13EF
+FECHA Y HORA DE EMISION: 08/11/2026 20:29
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
-sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
-facturas oficiales y puntos de fidelidad.
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Rodrigo Paz
+- NIT / CI / CEX: 12
+- Correo Destino: rodrigo.cliente@gmail.com
+- Modalidad de Entrega: RETIRO_TIENDA
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZcip1HD8WYieY50u8PTHKk
 
-Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.    0.00
+TOTAL A PAGAR:                                                     Bs.  294.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  294.50
+--------------------------------------------------------------------------------
+SON: DOSCIENTOS NOVENTA Y CUATRO 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Equipo de Experiencia al Cliente
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0060-BO-FASHIONSTORE-6F13EF
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:47:14
-TIPO: Recuperacion OTP (610457)
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 610457
+FECHA: 2026-11-08 16:55:57
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-TEST)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-TEST (Factura POS-2026-0042) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-TEST
+Factura Original  : POS-2026-0042
+Fecha y Hora      : 08/11/2026 16:55
+Sucursal          : Sucursal Central
+Atendido por      : Atención al Cliente
+Cliente           : Andy Mauricio Mujica Vallejos (NIT/CI: 0)
+Motivo Declarado  : Solicitud de cambio / devolución
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: M | Color: Blanco | Cant: 1 x Bs. 280.00 = Bs. 280.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Camisa Oxford Slim Fit (SKU: CAM-OXF-01)
+  * Nueva Talla: XL (Factor Escala: 1.10x) | Nuevo Color: Blanco
+  * Cantidad: 1 x Bs. 308.00 = Bs. 308.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 28.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 280.00
+Diferencia / Ajuste Aplicado    : Bs. +28.00
+Son: SON: DOSCIENTOS OCHENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 77EA8DA99407669D4C1A4F050A4E29D6
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:58:09
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-DE29BF)
+DESTINATARIOS: mujicamauricio412@gmail.com, alberto.delgado@store.bo
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-DE29BF (Factura POS-CAMBIO-1794185889) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-DE29BF
+Factura Original  : POS-CAMBIO-1794185889
+Fecha y Hora      : 08/11/2026 20:58
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 280.00 = Bs. 280.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Camisa Oxford Slim Fit (SKU: SHIRT-SLIM-001)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 294.00 = Bs. 294.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 14.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 280.00
+Diferencia / Ajuste Aplicado    : Bs. +14.00
+Son: SON: DOSCIENTOS OCHENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: FBEF0B5318C3372E60749D3863ED6D7F
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:58:09
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-8F8CB2)
+DESTINATARIOS: mujicamauricio412@gmail.com, alberto.delgado@store.bo
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-1B541AD5 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-8F8CB2
+Factura Original  : POS-VALE-1794185889
+Fecha y Hora      : 08/11/2026 20:58
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-1B541AD5
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+Son: SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 46D6ADF7DEC944170EBC1DE6CB6A27B3
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:58:09
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-E7C235)
+DESTINATARIOS: mujicamauricio412@gmail.com, alberto.delgado@store.bo
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-E7C235 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-E7C235
+Factura Original  : POS-REEMB-1794185889
+Fecha y Hora      : 08/11/2026 20:58
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+Son: SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 4F2611788472CB250B50ACB731A0FBE1
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:58:09
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-1C02C1)
+DESTINATARIOS: mujicamauricio412@gmail.com, alberto.delgado@store.bo
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-1C02C1 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-1C02C1
+Factura Original  : POS-MERMA-1794185889
+Fecha y Hora      : 08/11/2026 20:58
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+Son: SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 6BC80AC8AE72B5A5CC2EA8AE26603403
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:59:00
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-C3707B)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-C3707B (Factura POS-CAMBIO-1794185940) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-C3707B
+Factura Original  : POS-CAMBIO-1794185940
+Fecha y Hora      : 08/11/2026 20:59
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 280.00 = Bs. 280.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Camisa Oxford Slim Fit (SKU: SHIRT-SLIM-001)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 294.00 = Bs. 294.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 14.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 280.00
+Diferencia / Ajuste Aplicado    : Bs. +14.00
+SON: DOSCIENTOS OCHENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 552B1A8C13508FE4E9767477B0BBB0F9
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:59:00
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-86C3B6)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-6C71161D por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-86C3B6
+Factura Original  : POS-VALE-1794185940
+Fecha y Hora      : 08/11/2026 20:59
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-6C71161D
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: D98902EC78875E3D3281314458DC38E8
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:59:00
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-D36C09)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-D36C09 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-D36C09
+Factura Original  : POS-REEMB-1794185940
+Fecha y Hora      : 08/11/2026 20:59
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 527AAE54F6FDFAF3AA810389D4E652BB
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 16:59:00
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-FF5406)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-FF5406 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-FF5406
+Factura Original  : POS-MERMA-1794185940
+Fecha y Hora      : 08/11/2026 20:59
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Camisa Oxford Slim Fit | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 11E9F9B353B7F7FC9F9B2361310D2FBB
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 17:52:21
+TIPO: Recuperacion OTP (840368)
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 840368
 ---------------------------------------------------------------------------
 
 ================================================================================
                     FASHIONSTORE — SEGURIDAD DE ACCESO
 ================================================================================
-Estimado(a) Rodrigo Paz,
+Estimado(a) Andy Mauricio Mujica Vallejos,
 
 Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
 Tu codigo de verificacion oficial (OTP) es:
 
-                             [ 610457 ]
+                             [ 840368 ]
 
 - Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
 - Caracter: Unico e intransferible.
@@ -1156,18 +1496,18 @@ FashionStore Bolivia S.R.L.
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:47:15
+FECHA: 2026-11-08 17:53:07
 TIPO: Cambio de Contrasena
-DESTINATARIOS: rodrigo.cliente@gmail.com
+DESTINATARIOS: mujicamauricio412@gmail.com
 ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
 ---------------------------------------------------------------------------
 
 ================================================================================
                     FASHIONSTORE — AVISO DE SEGURIDAD
 ================================================================================
-Estimado(a) Rodrigo Paz,
+Estimado(a) Andy Mauricio Mujica Vallejos,
 
-Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+Le notificamos que la contrasena de su cuenta (mujicamauricio412@gmail.com) ha sido actualizada
 satisfactoriamente en nuestra plataforma.
 
 Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
@@ -1184,349 +1524,573 @@ FashionStore Bolivia S.R.L.
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:49:12
-TIPO: Bienvenida Cliente
-DESTINATARIOS: carlos.nuevo.1794152952@gmail.com
-ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+FECHA: 2026-11-08 17:57:21
+TIPO: Factura Compra FAC-2026-6B8756
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-6B8756 — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE BOLIVIA S.R.L.
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-6B8756
 ================================================================================
-Estimado(a) Carlos,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le damos la mas cordial bienvenida a FashionStore Bolivia.
-Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
-carlos.nuevo.1794152952@gmail.com.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-6B8756
+AUTORIZACION CUF: CUF-0061-BO-FASHIONSTORE-6B8756
+FECHA Y HORA DE EMISION: 08/11/2026 21:53
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
-sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
-facturas oficiales y puntos de fidelidad.
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZe5R1HD8WYieY51FCsGlcD
 
-Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Equipo de Experiencia al Cliente
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0061-BO-FASHIONSTORE-6B8756
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:49:13
-TIPO: Recuperacion OTP (136606)
+FECHA: 2026-11-08 17:57:47
+TIPO: Factura Compra FAC-2026-45B1A1
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-45B1A1 — FashionStore Bolivia
+---------------------------------------------------------------------------
+
+================================================================================
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-45B1A1
+================================================================================
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
+
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-45B1A1
+AUTORIZACION CUF: CUF-0062-BO-FASHIONSTORE-45B1A1
+FECHA Y HORA DE EMISION: 08/11/2026 21:57
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
+
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZe5l1HD8WYieY51OTRliPj
+
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
+
+CODIGO DE AUTORIZACION CUF:
+CUF-0062-BO-FASHIONSTORE-45B1A1
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 18:46:55
+TIPO: Factura Compra FAC-2026-828163
 DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 136606
+ASUNTO: Factura Oficial N° FAC-2026-828163 — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — SEGURIDAD DE ACCESO
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-828163
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
-Tu codigo de verificacion oficial (OTP) es:
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-828163
+AUTORIZACION CUF: CUF-0063-BO-FASHIONSTORE-828163
+FECHA Y HORA DE EMISION: 08/11/2026 22:44
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-                             [ 136606 ]
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Rodrigo Paz
+- NIT / CI / CEX: 4859201
+- Correo Destino: rodrigo.cliente@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZerP1HD8WYieY51hr0rfYs
 
-- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
-- Caracter: Unico e intransferible.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
-este mensaje sin ninguna accion adicional.
+CODIGO DE AUTORIZACION CUF:
+CUF-0063-BO-FASHIONSTORE-828163
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 11:49:14
-TIPO: Cambio de Contrasena
+FECHA: 2026-11-08 18:47:21
+TIPO: Factura Compra FAC-2026-586A77
 DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+ASUNTO: Factura Oficial N° FAC-2026-586A77 — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — AVISO DE SEGURIDAD
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-586A77
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
-satisfactoriamente en nuestra plataforma.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-586A77
+AUTORIZACION CUF: CUF-0064-BO-FASHIONSTORE-586A77
+FECHA Y HORA DE EMISION: 08/11/2026 22:47
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
-Puede iniciar sesion en: http://localhost:8000/app/#/login
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Rodrigo Paz
+- NIT / CI / CEX: 4859201
+- Correo Destino: rodrigo.cliente@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZerp1HD8WYieY50xDT8Cp7
 
-Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
-de soporte tecnico para el bloqueo preventivo de su cuenta.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Mocasín Náutico Confort de Cuero | Talla: 39   | Color: Azul Marino | 1   | Bs.  437.00 | Bs.  437.00
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  437.00
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  462.00
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  462.00
+--------------------------------------------------------------------------------
+SON: CUATROCIENTOS SESENTA Y DOS 00/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
-================================================================================
+CODIGO DE AUTORIZACION CUF:
+CUF-0064-BO-FASHIONSTORE-586A77
 
-===========================================================================
-
-===========================================================================
-FECHA: 2026-11-08 15:09:29
-TIPO: Bienvenida Cliente
-DESTINATARIOS: carlos.nuevo.1794164968@gmail.com
-ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
----------------------------------------------------------------------------
-
-================================================================================
-                    FASHIONSTORE BOLIVIA S.R.L.
-================================================================================
-Estimado(a) Carlos,
-
-Le damos la mas cordial bienvenida a FashionStore Bolivia.
-Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
-carlos.nuevo.1794164968@gmail.com.
-
-A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
-sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
-facturas oficiales y puntos de fidelidad.
-
-Acceso a la plataforma: http://localhost:8000/app/#/catalogo
-
-Atentamente,
-Equipo de Experiencia al Cliente
-FashionStore Bolivia S.R.L.
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 15:09:29
-TIPO: Recuperacion OTP (521162)
+FECHA: 2026-11-08 18:48:17
+TIPO: Factura Compra FAC-2026-FE2349
 DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 521162
+ASUNTO: Factura Oficial N° FAC-2026-FE2349 — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — SEGURIDAD DE ACCESO
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-FE2349
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
-Tu codigo de verificacion oficial (OTP) es:
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-FE2349
+AUTORIZACION CUF: CUF-0065-BO-FASHIONSTORE-FE2349
+FECHA Y HORA DE EMISION: 08/11/2026 22:48
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-                             [ 521162 ]
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Rodrigo Paz
+- NIT / CI / CEX: 4859201
+- Correo Destino: rodrigo.cliente@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZesi1HD8WYieY50VT5GfTx
 
-- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
-- Caracter: Unico e intransferible.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Mocasín Náutico Confort de Cuero | Talla: 39   | Color: Azul Marino | 1   | Bs.  437.00 | Bs.  437.00
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  437.00
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  462.00
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  462.00
+--------------------------------------------------------------------------------
+SON: CUATROCIENTOS SESENTA Y DOS 00/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
-este mensaje sin ninguna accion adicional.
+CODIGO DE AUTORIZACION CUF:
+CUF-0065-BO-FASHIONSTORE-FE2349
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 15:09:30
-TIPO: Cambio de Contrasena
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+FECHA: 2026-11-08 19:10:34
+TIPO: Factura Compra FAC-2026-CB3FAA
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-CB3FAA — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — AVISO DE SEGURIDAD
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-CB3FAA
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
-satisfactoriamente en nuestra plataforma.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-CB3FAA
+AUTORIZACION CUF: CUF-0066-BO-FASHIONSTORE-CB3FAA
+FECHA Y HORA DE EMISION: 08/11/2026 23:10
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
-Puede iniciar sesion en: http://localhost:8000/app/#/login
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZfEH1HD8WYieY51uz779a2
 
-Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
-de soporte tecnico para el bloqueo preventivo de su cuenta.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0066-BO-FASHIONSTORE-CB3FAA
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 15:40:04
-TIPO: Bienvenida Cliente
-DESTINATARIOS: carlos.nuevo.1794166803@gmail.com
-ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+FECHA: 2026-11-08 19:53:59
+TIPO: Factura Compra FAC-2026-F0ABBA
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-F0ABBA — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE BOLIVIA S.R.L.
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-F0ABBA
 ================================================================================
-Estimado(a) Carlos,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le damos la mas cordial bienvenida a FashionStore Bolivia.
-Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
-carlos.nuevo.1794166803@gmail.com.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-F0ABBA
+AUTORIZACION CUF: CUF-0067-BO-FASHIONSTORE-F0ABBA
+FECHA Y HORA DE EMISION: 08/11/2026 23:53
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
-sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
-facturas oficiales y puntos de fidelidad.
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Rodrigo Paz
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZfuK1HD8WYieY50ysiUg0T
 
-Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Equipo de Experiencia al Cliente
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0067-BO-FASHIONSTORE-F0ABBA
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 15:40:04
-TIPO: Recuperacion OTP (829241)
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 829241
+FECHA: 2026-11-08 19:54:01
+TIPO: Factura Compra FAC-2026-389A3A
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-389A3A — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — SEGURIDAD DE ACCESO
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-389A3A
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
-Tu codigo de verificacion oficial (OTP) es:
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-389A3A
+AUTORIZACION CUF: CUF-0068-BO-FASHIONSTORE-389A3A
+FECHA Y HORA DE EMISION: 08/11/2026 23:53
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-                             [ 829241 ]
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZfuM1HD8WYieY509VeHIJ5
 
-- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
-- Caracter: Unico e intransferible.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: L    | Color: Blanco Puro | 1   | Bs.  325.50 | Bs.  325.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  325.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  350.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  350.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS CINCUENTA 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
-este mensaje sin ninguna accion adicional.
+CODIGO DE AUTORIZACION CUF:
+CUF-0068-BO-FASHIONSTORE-389A3A
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 15:40:05
-TIPO: Cambio de Contrasena
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+FECHA: 2026-11-08 19:55:35
+TIPO: Factura Compra FAC-2026-7E0E9A
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-7E0E9A — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — AVISO DE SEGURIDAD
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-7E0E9A
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
-satisfactoriamente en nuestra plataforma.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-7E0E9A
+AUTORIZACION CUF: CUF-0069-BO-FASHIONSTORE-7E0E9A
+FECHA Y HORA DE EMISION: 08/11/2026 23:55
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
-Puede iniciar sesion en: http://localhost:8000/app/#/login
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZfvs1HD8WYieY50RIgFxKk
 
-Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
-de soporte tecnico para el bloqueo preventivo de su cuenta.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0069-BO-FASHIONSTORE-7E0E9A
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 16:05:36
-TIPO: Bienvenida Cliente
-DESTINATARIOS: carlos.nuevo.1794168335@gmail.com
-ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+FECHA: 2026-11-08 19:55:37
+TIPO: Factura Compra FAC-2026-7E0E9A
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-7E0E9A — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE BOLIVIA S.R.L.
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-7E0E9A
 ================================================================================
-Estimado(a) Carlos,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Le damos la mas cordial bienvenida a FashionStore Bolivia.
-Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
-carlos.nuevo.1794168335@gmail.com.
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-7E0E9A
+AUTORIZACION CUF: CUF-0069-BO-FASHIONSTORE-7E0E9A
+FECHA Y HORA DE EMISION: 08/11/2026 23:55
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
-sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
-facturas oficiales y puntos de fidelidad.
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZfvt1HD8WYieY507ifLQa5
 
-Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Atentamente,
-Equipo de Experiencia al Cliente
-FashionStore Bolivia S.R.L.
+CODIGO DE AUTORIZACION CUF:
+CUF-0069-BO-FASHIONSTORE-7E0E9A
+
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================
 
 ===========================================================================
-FECHA: 2026-11-08 16:05:36
-TIPO: Recuperacion OTP (191223)
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 191223
+FECHA: 2026-11-08 20:06:47
+TIPO: Factura Compra FAC-2026-ED86C7
+DESTINATARIOS: mujicamauricio412@gmail.com
+ASUNTO: Factura Oficial N° FAC-2026-ED86C7 — FashionStore Bolivia
 ---------------------------------------------------------------------------
 
 ================================================================================
-                    FASHIONSTORE — SEGURIDAD DE ACCESO
+           FASHIONSTORE BOLIVIA S.R.L. — FACTURA OFICIAL N° FAC-2026-ED86C7
 ================================================================================
-Estimado(a) Rodrigo Paz,
+CASA MATRIZ: Av. San Martin #450, Barrio Equipetrol, Santa Cruz
+NIT EMISOR: 1028475029 | TELEFONO: +591 3 3456789
+Santa Cruz de la Sierra — Bolivia
 
-Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
-Tu codigo de verificacion oficial (OTP) es:
+FACTURA ELECTRONICA EN LINEA (CON DERECHO A CREDITO FISCAL)
+NRO. FACTURA: FAC-2026-ED86C7
+AUTORIZACION CUF: CUF-0070-BO-FASHIONSTORE-ED86C7
+FECHA Y HORA DE EMISION: 09/11/2026 00:06
+ESTADO: FACTURA EMITIDA Y PAGO CONFIRMADO (CU14 / CU16 / CU17)
 
-                             [ 191223 ]
+DATOS FISCALES DEL CLIENTE / RECEPTOR:
+- Razon Social / Senor(es): Andy Mauricio Mujica Vallejos
+- NIT / CI / CEX: 4859201
+- Correo Destino: mujicamauricio412@gmail.com
+- Modalidad de Entrega: DELIVERY
+- Medio de Pago: Tarjeta VISA (**** 4242)
+- ID Transaccion Stripe: pi_3UZg6i1HD8WYieY51bGtiBv5
 
-- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
-- Caracter: Unico e intransferible.
+DETALLE DE PRENDAS COMPRADAS:
+--------------------------------------------------------------------------------
+N° | Prenda / Producto                | Talla/Color            | Cant | P. Unit.    | Subtotal
+--------------------------------------------------------------------------------
+1  | Camisa de Lino Cuello Mao Italiana | Talla: S    | Color: Blanco Puro | 1   | Bs.  294.50 | Bs.  294.50
+--------------------------------------------------------------------------------
+SUBTOTAL PRENDAS:                                                  Bs.  294.50
+COSTO DE ENVIO / LOGISTICA:                                        Bs.   25.00
+TOTAL A PAGAR:                                                     Bs.  319.50
+IMPORTE BASE CREDITO FISCAL:                                       Bs.  319.50
+--------------------------------------------------------------------------------
+SON: TRESCIENTOS DIECINUEVE 50/100 BOLIVIANOS
+--------------------------------------------------------------------------------
 
-Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
-este mensaje sin ninguna accion adicional.
+CODIGO DE AUTORIZACION CUF:
+CUF-0070-BO-FASHIONSTORE-ED86C7
 
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
-================================================================================
-
-===========================================================================
-
-===========================================================================
-FECHA: 2026-11-08 16:05:37
-TIPO: Cambio de Contrasena
-DESTINATARIOS: rodrigo.cliente@gmail.com
-ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
----------------------------------------------------------------------------
-
-================================================================================
-                    FASHIONSTORE — AVISO DE SEGURIDAD
-================================================================================
-Estimado(a) Rodrigo Paz,
-
-Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
-satisfactoriamente en nuestra plataforma.
-
-Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
-Puede iniciar sesion en: http://localhost:8000/app/#/login
-
-Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
-de soporte tecnico para el bloqueo preventivo de su cuenta.
-
-Atentamente,
-Departamento de Seguridad y Privacidad
-FashionStore Bolivia S.R.L.
+"ESTA FACTURA CONTRIBUYE AL DESARROLLO DEL PAIS, EL USO ILICITO SERA SANCIONADO PENALMENTE DE ACUERDO A LEY"
+Ley N° 453: El proveedor debe brindar atencion sin discriminacion, con trato digno y respetuoso.
+Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servicio de Impuestos Nacionales.
 ================================================================================
 
 ===========================================================================

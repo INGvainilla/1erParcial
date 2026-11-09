@@ -30,6 +30,7 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
   TransaccionPago? _transaccionExitosa;
   bool _isGeneratingIntent = true;
   bool _isConfirming = false;
+  bool _isOffline = false;
   String? _errorMessage;
 
   @override
@@ -67,6 +68,17 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
       _errorMessage = null;
     });
 
+    final tieneInternet = await NetworkService.tieneInternetReal();
+    if (!tieneInternet) {
+      if (!mounted) return;
+      setState(() {
+        _isOffline = true;
+        _isGeneratingIntent = false;
+        _errorMessage = null;
+      });
+      return;
+    }
+
     try {
       // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 1.1: crear_intencion_pago(id_orden)
       final intent = await _pagosService.crearIntencionPago(widget.orden.idOrden);
@@ -78,10 +90,18 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = e.message;
-        _isGeneratingIntent = false;
-      });
+      if (e.statusCode == 0 || e.message.contains('No se pudo conectar') || e.message.contains('SocketException')) {
+        setState(() {
+          _isOffline = true;
+          _isGeneratingIntent = false;
+          _errorMessage = null;
+        });
+      } else {
+        setState(() {
+          _errorMessage = e.message;
+          _isGeneratingIntent = false;
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -93,12 +113,8 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
 
   // CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2: Ingresar datos de tarjeta y clic 'Pagar'
   Future<void> _confirmarPago() async {
-    if (_intencion == null) return;
-    if (_formKey.currentState?.validate() == false) return;
-
-    // Validación estricta de conectividad a Internet real (CU10 / CU11 / CU12)
     final tieneInternet = await NetworkService.tieneInternetReal();
-    if (!tieneInternet) {
+    if (!tieneInternet || _isOffline || _intencion == null) {
       if (!mounted) return;
       showDialog(
         context: context,
@@ -155,6 +171,8 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
       );
       return;
     }
+
+    if (_formKey.currentState?.validate() == false) return;
 
     setState(() {
       _isConfirming = true;
@@ -266,6 +284,29 @@ class _PagoOrdenScreenState extends State<PagoOrdenScreen> {
         ),
 
         const SizedBox(height: 24),
+
+        if (_isOffline)
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.amber.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.wifi_off_rounded, color: Colors.amber, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Modo Offline Activo: El cobro electrónico con tarjeta (Stripe) requiere conexión bancaria en tiempo real (PCI-DSS). Tu pedido permanece seguro como PENDIENTE hasta restablecer la red.',
+                    style: TextStyle(color: Colors.amber, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
         if (_errorMessage != null)
           Container(

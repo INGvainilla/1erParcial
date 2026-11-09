@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fashionstore_mobile/core/providers/carrito_provider.dart';
+import 'package:fashionstore_mobile/core/services/global_sync_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 import 'package:fashionstore_mobile/modules/p03_catalogo_estilismo_ia/catalogo/views/catalogo_screen.dart';
 import 'package:fashionstore_mobile/modules/p06_reservas_presenciales/reservas/views/mis_tickets_screen.dart';
@@ -41,9 +42,49 @@ class _MainShellState extends State<MainShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
+      body: Column(
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: GlobalSyncService().isOfflineNotifier,
+            builder: (context, isOffline, _) {
+              if (!isOffline) return const SizedBox.shrink();
+              return Container(
+                width: double.infinity,
+                color: const Color(0xFFC5A059),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 4,
+                  bottom: 6,
+                  left: 12,
+                  right: 12,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off, size: 16, color: Colors.black87),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Modo Fuera de Línea: Su pedido y reservas quedarán como PENDIENTES (no han sido procesados). Le recomendamos conectarse a Wi-Fi o Datos; se procesarán a PAGADO automáticamente al reconectar.',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: screens,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

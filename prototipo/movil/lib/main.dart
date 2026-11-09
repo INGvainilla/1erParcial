@@ -5,6 +5,7 @@ import 'core/providers/carrito_provider.dart';
 import 'core/providers/comparador_provider.dart';
 import 'core/providers/gamificacion_provider.dart';
 import 'core/providers/recomendaciones_ia_provider.dart';
+import 'core/services/global_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'modules/p01_seguridad_acceso/auth/views/login_screen.dart';
 import 'modules/p01_seguridad_acceso/auth/views/registro_screen.dart';
@@ -17,8 +18,11 @@ import 'modules/p07_venta_digital_fidelizacion/gamificacion/views/recompensas_sc
 import 'modules/p03_catalogo_estilismo_ia/ia_recomendaciones/views/recomendaciones_ia_screen.dart';
 import 'modules/p03_catalogo_estilismo_ia/catalogo/views/comparador_outfits_screen.dart';
 
+final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  GlobalSyncService().iniciarMonitoreo(scaffoldMessengerKey: appScaffoldMessengerKey);
   runApp(const FashionStoreApp());
 }
 
@@ -39,6 +43,7 @@ class FashionStoreApp extends StatelessWidget {
         title: 'FashionStore Boutique',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
+        scaffoldMessengerKey: appScaffoldMessengerKey,
         home: const MainShell(),
         routes: {
           '/catalogo': (_) => const MainShell(initialTab: 0),

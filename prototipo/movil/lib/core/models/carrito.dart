@@ -44,6 +44,22 @@ class CarritoItem {
       stockMaximoDisponible: json['stock_maximo_disponible'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_item': idItem,
+      'id_producto': idProducto,
+      'nombre_producto': nombreProducto,
+      'codigo_sku_base': codigoSkuBase,
+      'imagen_principal': imagenPrincipal,
+      'talla': talla,
+      'color': color,
+      'cantidad': cantidad,
+      'precio_unitario': precioUnitario,
+      'subtotal': subtotal,
+      'stock_maximo_disponible': stockMaximoDisponible,
+    };
+  }
 }
 
 class Carrito {
@@ -75,5 +91,16 @@ class Carrito {
           : 0.0,
       items: rawItems.map((it) => CarritoItem.fromJson(it)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_carrito': idCarrito,
+      'id_usuario': idUsuario,
+      'estado': estado,
+      'total_items': totalItems,
+      'total_general': totalGeneral,
+      'items': items.map((it) => it.toJson()).toList(),
+    };
   }
 }

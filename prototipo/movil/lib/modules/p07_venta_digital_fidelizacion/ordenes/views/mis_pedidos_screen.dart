@@ -105,40 +105,42 @@ class _MisPedidosScreenState extends State<MisPedidosScreen> {
       _errorMessage = null;
     });
 
-    try {
-      // Sincronización automática de devoluciones offline pendientes (CU11 / CU12)
-      final sincs = await OfflineDevolucionesService().sincronizarPendientes(DevolucionesService());
-      if (sincs > 0 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✓ Sincronizadas $sincs solicitud(es) de devolución encoladas offline.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (_) {}
+    final tieneNet = await NetworkService.tieneInternetReal();
+
+    if (tieneNet) {
+      try {
+        await OfflineDevolucionesService().sincronizarPendientes(DevolucionesService());
+        await OfflineDevolucionesService().sincronizarOrdenesCheckoutPendientes(_ordenesService, _pagosService);
+        await OfflineDevolucionesService().sincronizarPagosPendientes(_pagosService);
+      } catch (_) {}
+    }
 
     try {
       final offlineOps = await OfflineDevolucionesService().obtenerOperacionesPendientes();
       if (mounted) _operacionesOffline = offlineOps;
     } catch (_) {}
 
-    try {
-      final list = await _ordenesService.getMisOrdenes();
-      if (!mounted) return;
-      setState(() {
-        _ordenes = list;
-        _isLoading = false;
-      });
+    List<Orden> ordenesList = [];
+    if (tieneNet) {
+      try {
+        ordenesList = await _ordenesService.getMisOrdenes();
+        OfflineDevolucionesService().guardarOrdenesCacheOffline(ordenesList).catchError((_) {});
+      } catch (_) {
+        ordenesList = await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
+      }
+    } else {
+      ordenesList = await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
+    }
 
-      // Si hay internet, verificar si alguna orden pendiente puede autoliquidarse
+    if (!mounted) return;
+    setState(() {
+      _ordenes = ordenesList;
+      _isLoading = false;
+      _errorMessage = null;
+    });
+
+    if (tieneNet) {
       _verificarYAutoliquidar();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'No se pudieron cargar tus pedidos: $e';
-        _isLoading = false;
-      });
     }
   }
 
@@ -156,7 +158,7 @@ class _MisPedidosScreenState extends State<MisPedidosScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.accentGold))
-          : _errorMessage != null
+          : (_errorMessage != null && _ordenes.isEmpty && _operacionesOffline.isEmpty)
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
@@ -228,7 +230,7 @@ class _MisPedidosScreenState extends State<MisPedidosScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   const Text(
-                                    'Las siguientes solicitudes fueron guardadas en SQLite local sin conexión a Internet. Se transmitirán y liquidarán automáticamente al conectarte a Wi-Fi o Datos Móviles:',
+                                    'Las siguientes solicitudes fueron guardadas de manera local porque usted se encuentra fuera de línea. Actualmente su pedido no fue procesado en el servidor. Le recomendamos conectarse a Wi-Fi o Datos Móviles; el proceso de registro y liquidación a estado PAGADO se realizará AUTOMÁTICAMENTE una vez que usted tenga conexión a Internet:',
                                     style: TextStyle(color: Colors.white70, fontSize: 11),
                                   ),
                                   const SizedBox(height: 10),
@@ -352,7 +354,7 @@ class _MisPedidosScreenState extends State<MisPedidosScreen> {
                   SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Pedido registrado pero aún PENDIENTE. Conéctate a Internet para completar el cobro digital.',
+                      '⚠️ Pedido registrado en Modo Fuera de Línea (PENDIENTE). Actualmente su pedido no fue procesado en el servidor. Le recomendamos conectarse a Wi-Fi o Datos Móviles; el proceso de registro y cobro (PAGADO) será automático una vez que usted tenga conexión a Internet.',
                       style: TextStyle(color: Colors.amber, fontSize: 10),
                     ),
                   ),
@@ -407,7 +409,26 @@ class _MisPedidosScreenState extends State<MisPedidosScreen> {
               if (!esPagado) ...[
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      final isOffline = orden.numeroFactura?.startsWith('FAC-OFFLINE') == true ||
+                          orden.estadoPago.toUpperCase().contains('OFFLINE');
+                      if (isOffline) {
+                        final tieneNet = await NetworkService.tieneInternetReal();
+                        if (!tieneNet) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                '⚠️ Su pedido actualmente no fue procesado porque se encuentra fuera de línea (PENDIENTE). Le recomendamos conectarse a Wi-Fi o Datos Móviles; el proceso a PAGADO será automático una vez que tenga conexión a Internet.',
+                              ),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
+                          return;
+                        }
+                        await _verificarYAutoliquidar();
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(

@@ -5,6 +5,7 @@ import 'package:fashionstore_mobile/core/models/carrito.dart';
 import 'package:fashionstore_mobile/core/providers/auth_provider.dart';
 import 'package:fashionstore_mobile/core/providers/carrito_provider.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
+import 'package:fashionstore_mobile/core/services/global_sync_service.dart';
 import 'package:fashionstore_mobile/modules/p01_seguridad_acceso/auth/views/login_screen.dart';
 import 'package:fashionstore_mobile/modules/p07_venta_digital_fidelizacion/checkout/views/checkout_screen.dart';
 
@@ -21,12 +22,28 @@ class _CarritoScreenState extends State<CarritoScreen> {
   @override
   void initState() {
     super.initState();
+    GlobalSyncService().totalSincronizadosNotifier.addListener(_onSyncChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       if (auth.isAuthenticated) {
         Provider.of<CarritoProvider>(context, listen: false).cargarCarrito();
       }
     });
+  }
+
+  void _onSyncChange() {
+    if (mounted) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      if (auth.isAuthenticated) {
+        Provider.of<CarritoProvider>(context, listen: false).cargarCarrito();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    GlobalSyncService().totalSincronizadosNotifier.removeListener(_onSyncChange);
+    super.dispose();
   }
 
   @override
@@ -126,6 +143,28 @@ class _CarritoScreenState extends State<CarritoScreen> {
                 )
               : Column(
                   children: [
+                    if (cart.esOffline)
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.warning.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.warning.withOpacity(0.4)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.cloud_off, size: 16, color: AppTheme.warning),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Modo Fuera de Línea: Tus prendas están guardadas localmente. La compra se procesará en estado PENDIENTE hasta reconectar.',
+                                style: TextStyle(color: AppTheme.warning, fontSize: 11, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     // Banner CU19: Tarifa Mayorista
                     Container(
                       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),

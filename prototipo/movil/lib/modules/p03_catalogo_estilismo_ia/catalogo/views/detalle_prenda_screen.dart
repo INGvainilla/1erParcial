@@ -117,19 +117,28 @@ class _DetallePrendaScreenState extends State<DetallePrendaScreen> {
       talla: _selectedTalla.talla,
       color: _selectedColor.nombre,
       cantidad: 1,
+      nombreProducto: widget.prenda.nombre,
+      codigoSkuBase: widget.prenda.codigoSkuBase,
+      imagenPrincipal: widget.prenda.imagenPrincipal,
+      precioUnitario: _precioActual,
     );
 
     setState(() => _agregandoAlCarrito = false);
 
     if (!mounted) return;
     if (ok) {
+      final esOffline = cart.esOffline;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.prenda.nombre} añadida a tu bolsa.'),
-          backgroundColor: AppTheme.bgElevated,
+          content: Text(
+            esOffline
+                ? '${widget.prenda.nombre} añadida a tu bolsa (Modo Offline - Pendiente de sincronización).'
+                : '${widget.prenda.nombre} añadida a tu bolsa.',
+          ),
+          backgroundColor: esOffline ? const Color(0xFFC5A059) : AppTheme.bgElevated,
           action: SnackBarAction(
             label: 'Ver bolsa',
-            textColor: AppTheme.accentGold,
+            textColor: esOffline ? Colors.black : AppTheme.accentGold,
             onPressed: () {
               Navigator.pop(context);
               if (widget.onSwitchTab != null) {

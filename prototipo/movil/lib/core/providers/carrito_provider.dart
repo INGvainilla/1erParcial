@@ -18,6 +18,7 @@ class CarritoProvider extends ChangeNotifier {
   double get totalGeneral => _carrito?.totalGeneral ?? 0.0;
   List<CarritoItem> get items => _carrito?.items ?? [];
   bool get estaVacio => items.isEmpty;
+  bool get esOffline => _carrito?.estado.toUpperCase().contains('OFFLINE') ?? false;
 
   void clearError() {
     _errorMessage = null;
@@ -52,6 +53,10 @@ class CarritoProvider extends ChangeNotifier {
     required String talla,
     required String color,
     int cantidad = 1,
+    String? nombreProducto,
+    String? codigoSkuBase,
+    String? imagenPrincipal,
+    double? precioUnitario,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -63,6 +68,10 @@ class CarritoProvider extends ChangeNotifier {
         talla: talla,
         color: color,
         cantidad: cantidad,
+        nombreProducto: nombreProducto,
+        codigoSkuBase: codigoSkuBase,
+        imagenPrincipal: imagenPrincipal,
+        precioUnitario: precioUnitario,
       );
       _isLoading = false;
       notifyListeners();
