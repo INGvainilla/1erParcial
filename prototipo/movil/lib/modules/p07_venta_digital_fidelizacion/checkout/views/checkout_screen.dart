@@ -332,10 +332,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    final double costoEnvio = _modalidadEntrega == 'DELIVERY'
+        ? ((_cuponAplicado != null && _cuponAplicado!.tipoBeneficio == 'ENVIO_GRATIS') ? 0.0 : 25.0)
+        : 0.0;
+    final double descuentoCupon = (_cuponAplicado != null && _cuponAplicado!.tipoBeneficio != 'ENVIO_GRATIS')
+        ? _cuponAplicado!.montoDescuento
+        : 0.0;
+    final double totalFinal = (cart.totalGeneral - descuentoCupon + costoEnvio).clamp(0.0, double.infinity);
+
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
     });
+
+    // Validación proactiva de conectividad a Internet real (CU10 / CU11 / CU12)
+    final tieneNet = await NetworkService.tieneInternetReal();
+    if (!tieneNet) {
+      try {
+        final offlineRes = await OfflineDevolucionesService().guardarOrdenCheckoutOffline(
+          modalidadEntrega: _modalidadEntrega,
+          idSucursal: _modalidadEntrega == 'RETIRO_TIENDA' ? _selectedSucursalId : null,
+          direccionEnvio: _modalidadEntrega == 'DELIVERY' ? _direccionController.text.trim() : null,
+          telefonoContacto: _telefonoController.text.trim().isNotEmpty ? _telefonoController.text.trim() : null,
+          nitFactura: _nitController.text.trim(),
+          razonSocialFactura: _razonSocialController.text.trim(),
+          notasEntrega: _notasController.text.trim().isNotEmpty ? _notasController.text.trim() : null,
+          codigoCupon: _cuponAplicado?.codigoCupon,
+          total: totalFinal,
+          items: cart.items.map((i) => i.toJson()).toList(),
+        );
+
+        cart.limpiar();
+        if (!mounted) return;
+        _mostrarDialogoOrdenOffline(context, offlineRes['numero_factura'] ?? 'FAC-OFFLINE');
+      } catch (e) {
+        if (mounted) setState(() => _errorMessage = 'Error local al registrar en SQLite: $e');
+      } finally {
+        if (mounted) setState(() => _isSubmitting = false);
+      }
+      return;
+    }
 
     try {
       // CU14: Procesar Compra Digital y Checkout, Paso 1: Completar Wizard (Entrega, NIT/Factura, Metodo Pago)
@@ -356,78 +392,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
       if (!mounted) return;
 
-      // Validación de conectividad a Internet real (CU10 / CU11 / CU12)
-      final tieneNet = await NetworkService.tieneInternetReal();
-      if (!tieneNet) {
-        // Encolar orden en SQLite local para pago automático apenas vuelva internet
-        try {
-          await OfflineDevolucionesService().encolarPagoOrdenOffline(
-            idOrden: orden.idOrden,
-            nroTicket: orden.numeroFactura ?? 'ORDEN #${orden.idOrden}',
-            total: orden.total,
-          );
-        } catch (_) {}
-
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppTheme.bgSurface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: Colors.orangeAccent, width: 1.5),
-            ),
-            title: Row(
-              children: const [
-                Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent, size: 24),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text('Compra Registrada en Modo Offline', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Comprobante: ${orden.numeroFactura ?? "ORDEN #${orden.idOrden}"}',
-                  style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Tu pedido ha sido registrado con éxito y permanece en estado PENDIENTE DE PAGO debido a que tu dispositivo no tiene conexión a Internet.',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '⚡ En cuanto tu teléfono vuelva a conectarse a Wi-Fi o Datos Móviles, el pago se liquidará de forma automática al instante.',
-                  style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MisPedidosScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  foregroundColor: AppTheme.bgMain,
-                ),
-                child: const Text('VER EN MIS PEDIDOS'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
-
       // CU14: Procesar Compra Digital y Checkout, Paso 1.15: redirige a pantalla de Pago Seguro (/pagos/orden/:id)
       Navigator.pushReplacement(
         context,
@@ -439,12 +403,96 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     } on ApiException catch (e) {
+      if (e.statusCode == 0 ||
+          e.message.contains('No se pudo conectar') ||
+          e.message.contains('SocketException') ||
+          e.message.contains('Network is unreachable')) {
+        // Red cayó a mitad de camino -> Proteger al usuario guardando offline!
+        try {
+          final offlineRes = await OfflineDevolucionesService().guardarOrdenCheckoutOffline(
+            modalidadEntrega: _modalidadEntrega,
+            idSucursal: _modalidadEntrega == 'RETIRO_TIENDA' ? _selectedSucursalId : null,
+            direccionEnvio: _modalidadEntrega == 'DELIVERY' ? _direccionController.text.trim() : null,
+            telefonoContacto: _telefonoController.text.trim().isNotEmpty ? _telefonoController.text.trim() : null,
+            nitFactura: _nitController.text.trim(),
+            razonSocialFactura: _razonSocialController.text.trim(),
+            notasEntrega: _notasController.text.trim().isNotEmpty ? _notasController.text.trim() : null,
+            codigoCupon: _cuponAplicado?.codigoCupon,
+            total: totalFinal,
+            items: cart.items.map((i) => i.toJson()).toList(),
+          );
+          cart.limpiar();
+          if (mounted) {
+            _mostrarDialogoOrdenOffline(context, offlineRes['numero_factura'] ?? 'FAC-OFFLINE');
+            return;
+          }
+        } catch (_) {}
+      }
       setState(() => _errorMessage = e.message);
     } catch (e) {
       setState(() => _errorMessage = 'Error inesperado al generar orden: $e');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  void _mostrarDialogoOrdenOffline(BuildContext context, String nroComprobante) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Colors.orangeAccent, width: 1.5),
+        ),
+        title: Row(
+          children: const [
+            Icon(Icons.wifi_off_rounded, color: Colors.orangeAccent, size: 24),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text('Compra Registrada en Modo Offline', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Comprobante: $nroComprobante',
+              style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Su pedido ha sido registrado en Modo Fuera de Línea en estado PENDIENTE. Actualmente no fue procesado por el servidor ya que no cuenta con conexión a Internet.',
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '💡 Le recomendamos conectarse a Wi-Fi o Datos Móviles; el proceso de registro y cobro digital (PAGADO) será AUTOMÁTICO en cuanto detectemos conexión.',
+              style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MisPedidosScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orangeAccent,
+              foregroundColor: AppTheme.bgMain,
+            ),
+            child: const Text('VER EN MIS PEDIDOS'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

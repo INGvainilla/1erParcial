@@ -1,6 +1,8 @@
 import '../constants/api_constants.dart';
 import '../models/orden.dart';
 import 'api_service.dart';
+import 'network_service.dart';
+import 'offline_devoluciones_service.dart';
 
 class OrdenesService {
   final ApiService _api = ApiService();
@@ -37,15 +39,32 @@ class OrdenesService {
   }
 
   Future<List<Orden>> getMisOrdenes() async {
-    final response = await _api.get(ApiConstants.ordenes, requiresAuth: true);
-    if (response is List) {
-      return response.map((o) => Orden.fromJson(o)).toList();
+    final tieneNet = await NetworkService.tieneInternetReal();
+    if (!tieneNet) {
+      return await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
     }
-    return [];
+
+    try {
+      final response = await _api.get(ApiConstants.ordenes, requiresAuth: true);
+      if (response is List) {
+        final list = response.map((o) => Orden.fromJson(o)).toList();
+        OfflineDevolucionesService().guardarOrdenesCacheOffline(list).catchError((_) {});
+        return list;
+      }
+      return await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
+    } catch (_) {
+      return await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
+    }
   }
 
   Future<Orden> getOrden(int id) async {
-    final response = await _api.get(ApiConstants.ordenDetalle(id), requiresAuth: true);
-    return Orden.fromJson(response);
+    try {
+      final response = await _api.get(ApiConstants.ordenDetalle(id), requiresAuth: true);
+      return Orden.fromJson(response);
+    } catch (e) {
+      final cached = await OfflineDevolucionesService().obtenerOrdenesCacheOffline();
+      final match = cached.firstWhere((o) => o.idOrden == id, orElse: () => throw e);
+      return match;
+    }
   }
 }

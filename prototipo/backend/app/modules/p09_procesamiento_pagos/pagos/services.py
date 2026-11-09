@@ -222,13 +222,22 @@ def confirmar_transaccion_pago(
     except Exception:
         pass
 
+    # Detectar si es un cobro diferencial por cambio de talla/prenda (CU25)
+    meta_raw = getattr(pi, "metadata", {}) or {}
+    metadata_pi = meta_raw.to_dict() if hasattr(meta_raw, "to_dict") else (dict(meta_raw) if isinstance(meta_raw, dict) else {})
+    es_diferencial_cambio = (
+        metadata_pi.get("tipo_cobro") == "DIFERENCIAL_CAMBIO"
+        or orden.estado_logistica == "INTERCAMBIO_CONFIRMADO"
+    )
+
     # Actualizar estado de la orden
     # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.7: actualizarEstado(id_orden, estado='PAGADO', logistica='PREPARACION')
     orden.estado_pago = "PAGADO"
-    if orden.modalidad_entrega == "RETIRO_TIENDA":
-        orden.estado_logistica = "LISTO_DESPACHO"
-    else:
-        orden.estado_logistica = "PREPARACION"
+    if not es_diferencial_cambio:
+        if orden.modalidad_entrega == "RETIRO_TIENDA":
+            orden.estado_logistica = "LISTO_DESPACHO"
+        else:
+            orden.estado_logistica = "PREPARACION"
 
     # Registrar en transacciones_pago
     # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.6: registrarTransaccionInmutable(id_orden, payload_json)
@@ -242,112 +251,114 @@ def confirmar_transaccion_pago(
         metodo_pago="card",
         marca_tarjeta=marca or "card",
         ultimos4=last4 or "4242",
-        detalles_raw=json.dumps({"id": pi.id, "status": pi.status, "currency": pi.currency})
+        detalles_raw=json.dumps({"id": pi.id, "status": pi.status, "currency": pi.currency, "tipo_cobro": metadata_pi.get("tipo_cobro", "ORDEN_COMPLETA")})
     )
     db.add(tx)
 
-    # CU09: Descontar existencias y asentar SALIDA_VENTA en Kardex inmutable
-    try:
-        from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
-        suc_id = orden.id_sucursal or 1
-        for d in (orden.detalles or []):
-            inv = db.query(Inventario).filter(
-                Inventario.id_sucursal == suc_id,
-                Inventario.id_producto == d.id_producto,
-                Inventario.talla == d.talla,
-                Inventario.color == d.color
-            ).first()
-            if not inv:
+    # CU09: Descontar existencias y asentar SALIDA_VENTA en Kardex inmutable (solo en compra inicial; en cambio de prenda lo gestiona CU25)
+    if not es_diferencial_cambio:
+        try:
+            from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario, KardexMovimiento
+            suc_id = orden.id_sucursal or 1
+            for d in (orden.detalles or []):
                 inv = db.query(Inventario).filter(
+                    Inventario.id_sucursal == suc_id,
                     Inventario.id_producto == d.id_producto,
                     Inventario.talla == d.talla,
                     Inventario.color == d.color
                 ).first()
-            if inv:
-                inv.stock_fisico = max(0, inv.stock_fisico - d.cantidad)
-                inv.stock_disponible = max(0, inv.stock_disponible - d.cantidad)
-                k_salida = KardexMovimiento(
-                    id_inventario=inv.id_inventario,
-                    tipo_movimiento="SALIDA_VENTA",
-                    cantidad=d.cantidad,
-                    costo_unitario_movimiento=inv.costo_promedio_ponderado,
-                    saldo_cantidad_resultante=inv.stock_fisico,
-                    saldo_cpp_resultante=inv.costo_promedio_ponderado,
-                    referencia_documento=f"Venta Online Factura {orden.numero_factura}"
-                )
-                db.add(k_salida)
-    except Exception as e:
-        print(f"[KARDEX ONLINE] Advertencia al asentar salida de venta: {e}")
+                if not inv:
+                    inv = db.query(Inventario).filter(
+                        Inventario.id_producto == d.id_producto,
+                        Inventario.talla == d.talla,
+                        Inventario.color == d.color
+                    ).first()
+                if inv:
+                    inv.stock_fisico = max(0, inv.stock_fisico - d.cantidad)
+                    inv.stock_disponible = max(0, inv.stock_disponible - d.cantidad)
+                    k_salida = KardexMovimiento(
+                        id_inventario=inv.id_inventario,
+                        tipo_movimiento="SALIDA_VENTA",
+                        cantidad=d.cantidad,
+                        costo_unitario_movimiento=inv.costo_promedio_ponderado,
+                        saldo_cantidad_resultante=inv.stock_fisico,
+                        saldo_cpp_resultante=inv.costo_promedio_ponderado,
+                        referencia_documento=f"Venta Online Factura {orden.numero_factura}"
+                    )
+                    db.add(k_salida)
+        except Exception as e:
+            print(f"[KARDEX ONLINE] Advertencia al asentar salida de venta: {e}")
 
     # CU16: Procesar Pago con Pasarela Electrónica (Stripe), Paso 2.8: confirma pago completado
     db.commit()
     db.refresh(tx)
 
-    # CU14 / CU16: Envío automático de Factura Digital y Comprobante Fiscal al Correo del Cliente
-    try:
-        from app.core.email import enviar_correo_factura_compra
-        from app.modules.p01_seguridad_acceso.auth.models import Usuario
+    # CU14 / CU16: Envío automático de Factura Digital y Comprobante Fiscal al Correo del Cliente (en compra inicial; en intercambio lo envía CU25)
+    if not es_diferencial_cambio:
+        try:
+            from app.core.email import enviar_correo_factura_compra
+            from app.modules.p01_seguridad_acceso.auth.models import Usuario
 
-        email_destinatario = None
-        nombre_cliente = orden.razon_social_factura or "Cliente FashionStore"
+            email_destinatario = None
+            nombre_cliente = orden.razon_social_factura or "Cliente FashionStore"
 
-        if orden.usuario and orden.usuario.email:
-            email_destinatario = orden.usuario.email
-            nombre_cliente = f"{orden.usuario.nombres} {orden.usuario.apellidos}".strip() or nombre_cliente
-        elif orden.id_usuario:
-            usr = db.query(Usuario).filter(Usuario.id_usuario == orden.id_usuario).first()
-            if usr and usr.email:
-                email_destinatario = usr.email
-                nombre_cliente = f"{usr.nombres} {usr.apellidos}".strip() or nombre_cliente
+            if orden.usuario and orden.usuario.email:
+                email_destinatario = orden.usuario.email
+                nombre_cliente = f"{orden.usuario.nombres} {orden.usuario.apellidos}".strip() or nombre_cliente
+            elif orden.id_usuario:
+                usr = db.query(Usuario).filter(Usuario.id_usuario == orden.id_usuario).first()
+                if usr and usr.email:
+                    email_destinatario = usr.email
+                    nombre_cliente = f"{usr.nombres} {usr.apellidos}".strip() or nombre_cliente
 
-        if not email_destinatario:
-            email_destinatario = settings.EMAIL_HOST_USER
+            if not email_destinatario:
+                email_destinatario = settings.EMAIL_HOST_USER
 
-        detalles_factura = []
-        for d in (orden.detalles or []):
-            prod_nom = d.producto.nombre if d.producto else f"Prenda #{d.id_producto}"
-            sku_cod = d.producto.codigo_sku_base if d.producto else f"SKU-{d.id_producto}"
-            detalles_factura.append({
-                "nombre_producto": prod_nom,
-                "codigo_sku_base": sku_cod,
-                "talla": d.talla,
-                "color": d.color,
-                "cantidad": d.cantidad,
-                "precio_unitario": float(d.precio_unitario),
-                "subtotal": float(d.subtotal)
-            })
+            detalles_factura = []
+            for d in (orden.detalles or []):
+                prod_nom = d.producto.nombre if d.producto else f"Prenda #{d.id_producto}"
+                sku_cod = d.producto.codigo_sku_base if d.producto else f"SKU-{d.id_producto}"
+                detalles_factura.append({
+                    "nombre_producto": prod_nom,
+                    "codigo_sku_base": sku_cod,
+                    "talla": d.talla,
+                    "color": d.color,
+                    "cantidad": d.cantidad,
+                    "precio_unitario": float(d.precio_unitario),
+                    "subtotal": float(d.subtotal)
+                })
 
-        orden_dict = {
-            "id_orden": orden.id_orden,
-            "numero_factura": orden.numero_factura or f"FAC-{orden.id_orden}",
-            "fecha_emision": orden.creado_en.strftime("%d/%m/%Y %H:%M") if orden.creado_en else datetime.now().strftime("%d/%m/%Y %H:%M"),
-            "razon_social_factura": orden.razon_social_factura,
-            "nit_factura": orden.nit_factura,
-            "modalidad_entrega": orden.modalidad_entrega,
-            "subtotal": float(orden.subtotal),
-            "costo_envio": float(orden.costo_envio),
-            "total": float(orden.total)
-        }
+            orden_dict = {
+                "id_orden": orden.id_orden,
+                "numero_factura": orden.numero_factura or f"FAC-{orden.id_orden}",
+                "fecha_emision": orden.creado_en.strftime("%d/%m/%Y %H:%M") if orden.creado_en else datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "razon_social_factura": orden.razon_social_factura,
+                "nit_factura": orden.nit_factura,
+                "modalidad_entrega": orden.modalidad_entrega,
+                "subtotal": float(orden.subtotal),
+                "costo_envio": float(orden.costo_envio),
+                "total": float(orden.total)
+            }
 
-        transaccion_dict = {
-            "payment_intent_id": tx.payment_intent_id,
-            "monto": float(tx.monto),
-            "marca_tarjeta": tx.marca_tarjeta or "Visa",
-            "ultimos4": tx.ultimos4 or "4242"
-        }
+            transaccion_dict = {
+                "payment_intent_id": tx.payment_intent_id,
+                "monto": float(tx.monto),
+                "marca_tarjeta": tx.marca_tarjeta or "Visa",
+                "ultimos4": tx.ultimos4 or "4242"
+            }
 
-        if email_destinatario:
-            enviar_correo_factura_compra(
-                destinatario=email_destinatario,
-                nombre_cliente=nombre_cliente,
-                orden_dict=orden_dict,
-                detalles=detalles_factura,
-                transaccion_dict=transaccion_dict,
-                async_send=True
-            )
-            print(f"[FACTURA DIGITAL] Despacho de factura {orden.numero_factura} programado para {email_destinatario}")
-    except Exception as e_fac:
-        print(f"[FACTURA EMAIL] Advertencia al despachar correo de factura: {e_fac}")
+            if email_destinatario:
+                enviar_correo_factura_compra(
+                    destinatario=email_destinatario,
+                    nombre_cliente=nombre_cliente,
+                    orden_dict=orden_dict,
+                    detalles=detalles_factura,
+                    transaccion_dict=transaccion_dict,
+                    async_send=True
+                )
+                print(f"[FACTURA DIGITAL] Despacho de factura {orden.numero_factura} programado para {email_destinatario}")
+        except Exception as e_fac:
+            print(f"[FACTURA EMAIL] Advertencia al despachar correo de factura: {e_fac}")
 
     # CU21: Acreditar puntos de fidelización (1 pt por cada 10 Bs consumidos)
     if orden.id_usuario:

@@ -901,6 +901,72 @@ def procesar_devolucion_pos(
 
         db.commit()
 
+        # CU25: Envío automático de Comprobante Oficial de Devolución / Intercambio / Vale / Reembolso al correo del cliente
+        try:
+            from app.core.email import enviar_correo_devolucion_intercambio
+            from app.core.config import settings
+
+            destinatarios_dev = []
+            nombre_cli_correo = orden.razon_social_factura or "Cliente Mostrador"
+
+            # 1. Correo explícito si fue enviado en el payload
+            if getattr(dev_in, "email_cliente", None) and "@" in str(dev_in.email_cliente):
+                destinatarios_dev.append(str(dev_in.email_cliente).strip().lower())
+
+            # 2. Correo del cliente titular de la orden
+            if orden.usuario and getattr(orden.usuario, "email", None):
+                destinatarios_dev.append(orden.usuario.email.strip().lower())
+                if nombre_cli_correo in ["Cliente Mostrador", "Sin Nombre", "S/N"]:
+                    nombre_cli_correo = f"{orden.usuario.nombres} {orden.usuario.apellidos}".strip() or nombre_cli_correo
+            elif orden.id_usuario:
+                usr_orden = db.query(Usuario).filter(Usuario.id_usuario == orden.id_usuario).first()
+                if usr_orden and usr_orden.email:
+                    destinatarios_dev.append(usr_orden.email.strip().lower())
+                    if nombre_cli_correo in ["Cliente Mostrador", "Sin Nombre", "S/N"]:
+                        nombre_cli_correo = f"{usr_orden.nombres} {usr_orden.apellidos}".strip() or nombre_cli_correo
+
+            # 3. Correo del usuario autenticado que ejecuta la operación (si es cliente en app móvil o cajero)
+            if id_cajero:
+                usr_cajero = db.query(Usuario).filter(Usuario.id_usuario == id_cajero).first()
+                if usr_cajero and getattr(usr_cajero, "email", None):
+                    destinatarios_dev.append(usr_cajero.email.strip().lower())
+
+            # 4. Incluir siempre la bandeja oficial configurada en SMTP para garantizar recepción en pruebas/auditoría
+            if settings.EMAIL_HOST_USER and "@" in settings.EMAIL_HOST_USER:
+                destinatarios_dev.append(settings.EMAIL_HOST_USER.strip().lower())
+
+            # Filtrar correos de dominios ficticios de seed para no causar rebotes innecesarios, salvo que sea el único
+            dominios_demo = ("@fashionstore.bo", "@store.bo", "@tienda.bo", "@correo.com", "@example.com", "@test.com")
+            dest_reales = [e for e in destinatarios_dev if not e.endswith(dominios_demo)]
+            dest_finales = dest_reales if dest_reales else destinatarios_dev
+
+            devolucion_email_payload = {
+                "id_devolucion": devolucion_db.id_devolucion,
+                "nro_devolucion": correlativo_dev,
+                "nro_ticket_original": orden.numero_factura or dev_in.nro_ticket_original,
+                "fecha_hora": now.strftime("%d/%m/%Y %H:%M"),
+                "sucursal_nombre": suc_nombre,
+                "cajero_nombre": cajero_nombre,
+                "cliente_nombre": nombre_cli_correo,
+                "nit_cliente": orden.nit_factura or "0",
+                "motivo": dev_in.motivo,
+                "tipo_resolucion": dev_in.tipo_resolucion,
+                "total_devuelto": float(total_devuelto),
+                "diferencia_cobrada": float(diferencia_cobrada),
+                "codigo_vale": codigo_vale,
+                "items_devueltos": items_devueltos_info,
+                "item_nuevo_entregado": item_nuevo_info
+            }
+
+            enviar_correo_devolucion_intercambio(
+                destinatarios=dest_finales,
+                devolucion_dict=devolucion_email_payload,
+                async_send=True
+            )
+            print(f"[CU25 EMAIL] Comprobante de {dev_in.tipo_resolucion} ({correlativo_dev}) programado para: {dest_finales}")
+        except Exception as e_mail:
+            print(f"[CU25 EMAIL WARN] Advertencia al despachar correo de devolución/intercambio: {e_mail}")
+
         # CU25: Gestionar Devolución y Cambio de Prendas, Paso 1.12: Ctrl --> UI : entrega resumen de devolucion y ticket fiscal
         return DevolucionTicketResponse(
             id_devolucion=devolucion_db.id_devolucion,

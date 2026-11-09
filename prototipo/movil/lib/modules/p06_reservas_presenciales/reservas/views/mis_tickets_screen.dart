@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:fashionstore_mobile/core/models/reserva.dart';
 import 'package:fashionstore_mobile/core/providers/auth_provider.dart';
+import 'package:fashionstore_mobile/core/services/offline_devoluciones_service.dart';
 import 'package:fashionstore_mobile/core/services/reserva_service.dart';
+import 'package:fashionstore_mobile/core/services/global_sync_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 import 'package:fashionstore_mobile/modules/p01_seguridad_acceso/auth/views/login_screen.dart';
 import 'crear_reserva_screen.dart';
@@ -32,6 +34,19 @@ class _MisTicketsScreenState extends State<MisTicketsScreen> {
   @override
   void initState() {
     super.initState();
+    GlobalSyncService().totalSincronizadosNotifier.addListener(_onSyncChange);
+  }
+
+  void _onSyncChange() {
+    if (mounted) {
+      _cargarMisReservas();
+    }
+  }
+
+  @override
+  void dispose() {
+    GlobalSyncService().totalSincronizadosNotifier.removeListener(_onSyncChange);
+    super.dispose();
   }
 
   @override
@@ -72,10 +87,12 @@ class _MisTicketsScreenState extends State<MisTicketsScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      final offlineList = await OfflineDevolucionesService().obtenerReservasCacheOffline();
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Error al cargar reservas: $e';
+        _reservas = offlineList;
         _isLoading = false;
+        _errorMessage = offlineList.isEmpty ? 'Modo sin conexión. No hay reservas locales.' : null;
       });
     }
   }
@@ -268,6 +285,33 @@ class _MisTicketsScreenState extends State<MisTicketsScreen> {
                   style: const TextStyle(color: AppTheme.textMuted, fontSize: 11, fontFamily: 'monospace'),
                 ),
                 const SizedBox(height: 16),
+                if (r.estado.toUpperCase().contains('OFFLINE') || r.codigoQr.startsWith('FS-RES-OFFLINE')) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(Icons.wifi_off_rounded, color: Colors.amber, size: 14),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '⚠️ Reserva registrada en Modo Fuera de Línea (PENDIENTE). Actualmente no fue procesada en el servidor. Le recomendamos conectarse a Wi-Fi o Datos Móviles; la reserva oficial se generará automáticamente en cuanto tenga conexión a Internet.',
+                            style: TextStyle(color: Colors.amber, fontSize: 10, height: 1.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 // Información de visita
                 Row(
@@ -348,21 +392,17 @@ class _MisTicketsScreenState extends State<MisTicketsScreen> {
 
   Widget _buildEstadoBadge(String estado) {
     Color color;
-    switch (estado.toUpperCase()) {
-      case 'PENDIENTE':
-        color = Colors.amber;
-        break;
-      case 'EN_PROBADOR':
-        color = Colors.blue;
-        break;
-      case 'COMPLETADA':
-        color = AppTheme.success;
-        break;
-      case 'CANCELADA':
-        color = AppTheme.danger;
-        break;
-      default:
-        color = AppTheme.textMuted;
+    final upper = estado.toUpperCase();
+    if (upper.contains('OFFLINE') || upper == 'PENDIENTE') {
+      color = Colors.amber;
+    } else if (upper == 'EN_PROBADOR') {
+      color = Colors.blue;
+    } else if (upper == 'COMPLETADA') {
+      color = AppTheme.success;
+    } else if (upper == 'CANCELADA') {
+      color = AppTheme.danger;
+    } else {
+      color = AppTheme.textMuted;
     }
 
     return Container(

@@ -129,6 +129,7 @@ class DevolucionCreate(BaseModel):
     tipo_resolucion: str = Field(..., description="'CAMBIO_VARIANTE', 'VALE_CREDITO', 'REEMBOLSO_EFECTIVO', 'REEMBOLSO_STRIPE'")
     items: List[DevolucionItemInput] = Field(..., min_length=1, description="Prendas objeto de devolución")
     cambio_info: Optional[CambioVarianteInput] = Field(None, description="Datos de la nueva prenda si es cambio de variante")
+    email_cliente: Optional[str] = Field(None, description="Correo electrónico opcional del cliente para notificación")
 
 
 class DevolucionTicketResponse(BaseModel):

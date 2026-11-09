@@ -8,6 +8,8 @@ import 'package:fashionstore_mobile/core/services/catalogo_service.dart';
 import 'package:fashionstore_mobile/core/theme/app_theme.dart';
 import 'package:fashionstore_mobile/core/providers/comparador_provider.dart';
 import 'package:fashionstore_mobile/core/providers/gamificacion_provider.dart';
+import 'package:fashionstore_mobile/core/services/network_service.dart';
+import 'package:fashionstore_mobile/core/services/offline_catalogo_seed.dart';
 import 'detalle_prenda_screen.dart';
 import 'comparador_outfits_screen.dart';
 import 'package:fashionstore_mobile/modules/p03_catalogo_estilismo_ia/ia_recomendaciones/views/recomendaciones_ia_screen.dart';
@@ -33,6 +35,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
 
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isOffline = false;
 
   int? _selectedCategoriaId;
   int? _selectedSucursalId;
@@ -58,6 +61,11 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     });
 
     try {
+      final tieneNet = await NetworkService.tieneInternetReal();
+      if (mounted) setState(() => _isOffline = !tieneNet);
+    } catch (_) {}
+
+    try {
       // CU10: Consultar Catálogo y Disponibilidad Omnicanal, Paso 1.1: consultarPrendas(criteriosFiltro)
       final results = await Future.wait([
         _catalogoService.getCategorias(),
@@ -75,12 +83,17 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
         _sucursales = results[1] as List<Map<String, dynamic>>;
         _prendas = results[2] as List<PrendaCatalogo>;
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Error al cargar catálogo: $e';
+        _isOffline = true;
+        _categorias = OfflineCatalogoSeed.categorias;
+        _sucursales = OfflineCatalogoSeed.sucursales;
+        _prendas = OfflineCatalogoSeed.prendas.map((p) => PrendaCatalogo.fromJson(p)).toList();
         _isLoading = false;
+        _errorMessage = null;
       });
     }
   }
@@ -97,12 +110,14 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       setState(() {
         _prendas = list;
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Error al filtrar: $e';
+        _prendas = OfflineCatalogoSeed.prendas.map((p) => PrendaCatalogo.fromJson(p)).toList();
         _isLoading = false;
+        _errorMessage = null;
       });
     }
   }
@@ -228,6 +243,30 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
               ),
             ),
           ),
+
+          // Banner de Modo Offline si no hay internet (CU08)
+          if (_isOffline)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withOpacity(0.4)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.wifi_off_rounded, color: Colors.amber, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Modo Offline Activo (CU08): Navegando catálogo local (SQLite)',
+                      style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Chips de categorías (Corregido: nombre_categoria y sin overflow)
           if (_categorias.isNotEmpty)

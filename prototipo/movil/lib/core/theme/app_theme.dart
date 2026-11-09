@@ -13,6 +13,7 @@ class AppTheme {
   static const Color textMuted = Color(0xFF6B6860);
   static const Color success = Color(0xFF2ECC71);
   static const Color danger = Color(0xFFE74C3C);
+  static const Color warning = Color(0xFFF39C12);
 
   // Alias de conveniencia
   static const Color goldColor = accentGold;

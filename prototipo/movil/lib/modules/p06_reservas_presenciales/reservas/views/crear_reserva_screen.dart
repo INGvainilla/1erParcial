@@ -166,17 +166,25 @@ class _CrearReservaScreenState extends State<CrearReservaScreen> {
 
     try {
       // CU11: Solicitar Reserva de Prendas en Sucursal, Paso 1.1: crear_reserva(datos_reserva, id_usuario)
-      await _reservaService.crearReserva(
+      final reserva = await _reservaService.crearReserva(
         idSucursal: _selectedSucursalId!,
         fechaVisita: fechaHoraVisita,
         detalles: detalles,
       );
 
       if (!mounted) return;
+      final esOffline = reserva.codigoQr.startsWith('FS-RES-OFFLINE') ||
+          reserva.estado.toUpperCase().contains('OFFLINE');
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Reserva creada exitosamente! Tu ticket QR está listo.'),
-          backgroundColor: AppTheme.success,
+        SnackBar(
+          content: Text(
+            esOffline
+                ? '📋 ¡Reserva registrada en modo OFFLINE! Quedó en estado PENDIENTE y se sincronizará automáticamente al conectarse a internet.'
+                : '¡Reserva creada exitosamente! Tu ticket QR está listo.',
+          ),
+          backgroundColor: esOffline ? AppTheme.warning : AppTheme.success,
+          duration: const Duration(seconds: 4),
         ),
       );
 
