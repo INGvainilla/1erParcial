@@ -14,12 +14,12 @@ import { Producto, Categoria, Marca } from '../../../core/models/fashion.models'
     <div class="page-container">
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-tshirt"></i> Catálogo y Atributos de Moda (CU06)</h2>
+          <h2><i class="fas fa-tshirt"></i> Catálogo Textil y Fichas Anatómicas (CU06 - P2)</h2>
           <p class="subtitle">SKU, Colores con Código HEX, Tallas Internacionales y Compatibilidad con Modelos 3D / RA</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin()">
           <button class="btn btn-primary" (click)="openModal()">
-            <i class="fas fa-plus"></i> Nuevo Producto (CU06)
+            <i class="fas fa-plus"></i> Nueva Prenda Textil (CU06 - P2)
           </button>
         </div>
       </div>

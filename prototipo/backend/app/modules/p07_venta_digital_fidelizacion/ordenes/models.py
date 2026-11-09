@@ -22,10 +22,12 @@ class OrdenVenta(Base):
     __tablename__ = "ordenes_venta"
 
     id_orden = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="SET NULL"), nullable=True, index=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="SET NULL"), nullable=True, index=True)
     id_sucursal = Column(Integer, ForeignKey("sucursales.id_sucursal", ondelete="SET NULL"), nullable=True)
     numero_factura = Column(String(50), unique=True, nullable=True)
     canal_venta = Column(String(20), nullable=False, default="WEB")  # WEB, APP, POS
+    metodo_pago = Column(String(50), nullable=True, default="EFECTIVO")  # EFECTIVO, TARJETA_STRIPE, QR
     modalidad_entrega = Column(String(20), nullable=False)  # DELIVERY, RETIRO_TIENDA, COMPRA_FISICA
     
     # Datos de Entrega y Facturación (CU14)

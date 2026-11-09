@@ -16,12 +16,12 @@ import { TenantService } from '../../../core/services/tenant.service';
       <!-- Header -->
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-boxes"></i> Inventario Multi-Sucursal y Costos Ponderados (CU09)</h2>
+          <h2><i class="fas fa-boxes"></i> Inventario Multi-Sucursal y Kardex CPP (CU07 - P2)</h2>
           <p class="subtitle">Valuación en Tiempo Real por Costo Promedio Ponderado (CPP) y Asientos Inmutables de Kardex</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin() || auth.isLogistics() || auth.isManager()">
           <button class="btn btn-primary" (click)="openEntradaModal()">
-            <i class="fas fa-cart-arrow-down"></i> Registrar Entrada de Compra (CU09)
+            <i class="fas fa-cart-arrow-down"></i> Registrar Entrada de Mercadería (CU07 - P2)
           </button>
         </div>
       </div>

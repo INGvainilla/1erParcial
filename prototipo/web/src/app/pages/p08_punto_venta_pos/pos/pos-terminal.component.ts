@@ -31,7 +31,7 @@ interface TicketItem extends PosItemInput {
           </div>
           <div>
             <h1 class="pos-title">Terminal Punto de Venta (POS)</h1>
-            <span class="pos-subtitle">CU10 - Facturación y Venta POS de Contado (Con soporte Offline-First)</span>
+            <span class="pos-subtitle">Facturación y Venta POS de Contado Offline-First (CU10 - P2)</span>
           </div>
         </div>
 
@@ -106,10 +106,10 @@ interface TicketItem extends PosItemInput {
               <span>Cargar Reserva (QR)</span>
             </button>
 
-            <!-- Botón para Devolución y Cambio de Prendas (CU25) -->
-            <button class="btn-load-dev" (click)="openDevolucionModal()" title="Devolución y Cambio de Prendas (CU13)">
+            <!-- Botón para Devolución y Cambio de Prendas (CU13 - P2) -->
+            <button class="btn-load-dev" (click)="openDevolucionModal()" title="Devolución y Cambio de Prendas (CU13 - P2)">
               <i class="fas fa-exchange-alt"></i>
-              <span>Devoluciones & Cambios (CU13)</span>
+              <span>Devoluciones & Cambios en 2 Tiempos (CU13 - P2)</span>
             </button>
           </div>
 
@@ -627,8 +627,8 @@ interface TicketItem extends PosItemInput {
                 <i class="fas fa-exchange-alt"></i>
               </div>
               <div>
-                <h3>Devolución y Cambio de Prendas (CU13)</h3>
-                <span class="modal-subtitle">Inspección física en mostrador, plazo máximo estricto de 24 horas y reingreso a Kardex al CPP histórico (CU13)</span>
+                <h3>Devolución y Cambio de Prendas en Dos Tiempos (CU13 - P2)</h3>
+                <span class="modal-subtitle">Inspección física en mostrador, plazo máximo estricto de 24 horas y reingreso a Kardex al CPP histórico (CU13 - P2)</span>
               </div>
             </div>
             <button class="modal-close" (click)="cerrarDevolucionModal()" title="Cerrar ventana"><i class="fas fa-times"></i></button>

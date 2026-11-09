@@ -55,7 +55,15 @@ def require_roles(allowed_roles: list):
         # SUPER_ADMIN tiene acceso global a todas las operaciones
         if current_user.rol == "SUPER_ADMIN":
             return current_user
-        if current_user.rol not in allowed_roles:
+        
+        # Homologación de roles de administración de tenant: ADMINISTRADOR y ADMIN_EMPRESA
+        expanded_allowed = set(allowed_roles)
+        if "ADMINISTRADOR" in expanded_allowed:
+            expanded_allowed.add("ADMIN_EMPRESA")
+        if "ADMIN_EMPRESA" in expanded_allowed:
+            expanded_allowed.add("ADMINISTRADOR")
+
+        if current_user.rol not in expanded_allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Acceso denegado. Se requiere uno de los roles: {allowed_roles}. Tu rol es: {current_user.rol}"

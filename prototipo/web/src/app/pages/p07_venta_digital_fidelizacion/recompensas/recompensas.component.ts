@@ -45,11 +45,11 @@ interface CuponActivo {
       <div class="header-hero glass-card">
         <div class="hero-left">
           <div class="badges-row">
-            <span class="badge-pu"><i class="fas fa-crown"></i> CU21 — M16</span>
+            <span class="badge-pu"><i class="fas fa-crown"></i> Fidelización (CU19 - P2 / CU21)</span>
             <span class="badge-tag"><i class="fas fa-gem"></i> Club de Fidelización Masculina</span>
             <span class="badge-tag highlight"><i class="fas fa-award"></i> Recompensas Omnicanal</span>
           </div>
-          <h1>Club Privado & Fidelización Gamificada</h1>
+          <h1>Club Privado & Fidelización Gamificada (CU19 - P2)</h1>
           <p class="hero-desc">
             Cada compra en boutique física o en línea acumula puntos automáticos (1 punto por cada 10 Bs).
             Asciende de categoría jerárquica para desbloquear descuentos permanentes, probadores VIP exclusivos y canje de cupones.

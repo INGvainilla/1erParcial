@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.modules.p01_seguridad_acceso.auth.models import Usuario
+from app.modules.p01_seguridad_acceso.auth.models import Usuario, BitacoraAcceso
 from app.modules.p01_seguridad_acceso.auth.schemas import (
     LoginRequest, TokenResponse, RegistroRequest, SolicitarOtpRequest, ResetPasswordOtpRequest
 )
@@ -175,7 +175,26 @@ def verificar_otp_y_reset(request: ResetPasswordOtpRequest, db: Session = Depend
     return RecuperacionService.validar_otp_y_restablecer(db, request)
 
 @router.get("/me", summary="Obtener perfil del usuario actualmente autenticado con contexto tenant")
-def get_perfil_actual(current_user: Usuario = Depends(get_current_user)):
+def get_perfil_actual(req: Request, current_user: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Registrar acceso del usuario al recuperar su sesión en la bitácora
+    try:
+        ip = req.client.host if req.client else "127.0.0.1"
+        ua = req.headers.get("User-Agent", "Unknown")
+        bitacora = BitacoraAcceso(
+            id_usuario=current_user.id_usuario,
+            id_empresa=current_user.id_empresa,
+            email_intento=current_user.email,
+            tipo_evento="ACCESO_SISTEMA",
+            ip_origen=ip,
+            user_agent=ua[:255] if ua else None,
+            exitoso=True,
+            motivo=f"Acceso a la plataforma web ({current_user.rol})"
+        )
+        db.add(bitacora)
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return {
         "id_usuario": current_user.id_usuario,
         "id_empresa": current_user.id_empresa,
@@ -188,4 +207,33 @@ def get_perfil_actual(current_user: Usuario = Depends(get_current_user)):
         "id_sucursal": current_user.id_sucursal,
         "estado_cuenta": current_user.estado_cuenta,
         "ultimo_acceso": current_user.ultimo_acceso
+    }
+
+
+@router.post("/verificar-sesion", summary="Verifica token y asienta evento de acceso en bitácora")
+def verificar_sesion_endpoint(req: Request, current_user: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        ip = req.client.host if req.client else "127.0.0.1"
+        ua = req.headers.get("User-Agent", "Unknown")
+        bitacora = BitacoraAcceso(
+            id_usuario=current_user.id_usuario,
+            id_empresa=current_user.id_empresa,
+            email_intento=current_user.email,
+            tipo_evento="ACCESO_SISTEMA",
+            ip_origen=ip,
+            user_agent=ua[:255] if ua else None,
+            exitoso=True,
+            motivo=f"Sesión validada / Ingreso a plataforma ({current_user.rol})"
+        )
+        db.add(bitacora)
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    return {
+        "ok": True,
+        "id_usuario": current_user.id_usuario,
+        "email": current_user.email,
+        "rol": current_user.rol,
+        "id_empresa": current_user.id_empresa
     }

@@ -17,8 +17,8 @@ import { CatalogoItem, Sucursal, Categoria, Marca, Temporada, StockSucursalItem,
       <!-- Header del Catálogo -->
       <header class="catalog-header glass-panel">
         <div class="header-left">
-          <h2><i class="fas fa-store"></i> Catálogo Digital Omnicanal</h2>
-          <p class="subtitle">Colección Masculina Premium con Vestidores Virtuales y Realidad Aumentada (CU10 / CU06)</p>
+          <h2><i class="fas fa-store"></i> Catálogo Digital Omnicanal (CU08 - P2)</h2>
+          <p class="subtitle">Colección Textil y Consulta Offline-Ready con Asistente y Fichas Técnicas (CU08 - P2 / CU06 - P2)</p>
         </div>
 
         <!-- Selector de Sucursal Omnicanal (CU10) y Carrito (CU13) -->

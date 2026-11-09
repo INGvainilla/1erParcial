@@ -59,11 +59,11 @@ interface OutfitRecomendado {
       <div class="header-hero glass-card">
         <div class="hero-left">
           <div class="badges-row">
-            <span class="badge-pu"><i class="fas fa-robot"></i> CU22 — M17</span>
+            <span class="badge-pu"><i class="fas fa-robot"></i> CU15 - P2 (CU22)</span>
             <span class="badge-tag"><i class="fas fa-cloud-sun"></i> Climatología Sastorial</span>
             <span class="badge-tag highlight"><i class="fas fa-palette"></i> Colorimetría Masculina</span>
           </div>
-          <h1>Asistente de Estilo & Recomendación IA</h1>
+          <h1>Asistente de Estilo & Recomendación IA (CU15 - P2)</h1>
           <p class="hero-desc">
             Algoritmo inteligente de estilismo que evalúa en tiempo real las condiciones meteorológicas
             de ciudades bolivianas, reglas de protocolo masculino y existencias físicas de inventario.

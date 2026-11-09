@@ -14,12 +14,12 @@ import { Sucursal, Ciudad } from '../../../core/models/fashion.models';
     <div class="page-container">
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-building"></i> Sucursales Físicas y Ciudades (CU05)</h2>
+          <h2><i class="fas fa-building"></i> Red de Sucursales Físicas y GPS (CU01 - P2)</h2>
           <p class="subtitle">Geolocalización GPS, Capacidad de Probadores, Estado Operativo y Cobertura Nacional</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin()">
           <button class="btn btn-primary" (click)="openModal()">
-            <i class="fas fa-plus"></i> Nueva Sucursal (CU05)
+            <i class="fas fa-plus"></i> Nueva Sucursal (CU01 - P2)
           </button>
         </div>
       </div>

@@ -86,7 +86,7 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
             <span class="tenant-name" [title]="cap.nombre_comercial">
               <i class="fas fa-store"></i> {{ auth.getNombreEmpresa() || cap.nombre_comercial }}
             </span>
-            <span class="plan-pill">{{ cap.plan.nombre }}</span>
+            <span class="plan-pill">{{ cap.plan?.nombre || 'Plan Activo' }}</span>
           </div>
           <div class="tenant-status-line">
             <span class="status-indicator" [class.status-expired]="!cap.vigente" [class.status-warning]="cap.vigente && cap.dias_restantes <= 5">
@@ -95,8 +95,8 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
             </span>
           </div>
           <div class="tenant-quota-micro">
-            <span>Sucursales: {{ cap.sucursales.usadas }}/{{ cap.sucursales.max }}</span>
-            <span>Staff: {{ cap.usuarios_staff.usadas }}/{{ cap.usuarios_staff.max }}</span>
+            <span>Sucursales: {{ cap.sucursales?.usadas || 0 }}/{{ cap.sucursales?.max || 0 }}</span>
+            <span>Staff: {{ cap.usuarios_staff?.usadas || 0 }}/{{ cap.usuarios_staff?.max || 0 }}</span>
           </div>
         </div>
       </div>
@@ -108,37 +108,37 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
         <a routerLink="/catalogo" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-store"></i>
-          <span>Catálogo Digital Offline (CU08)</span>
+          <span>Catálogo Offline (CU08 - P2)</span>
         </a>
 
         <a routerLink="/asistente-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-robot"></i>
-          <span>Asistente de Estilo & Outfits</span>
+          <span>Asistente de Estilo IA (CU15 - P2)</span>
         </a>
 
         <a routerLink="/comparador" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-columns"></i>
-          <span>Comparador de Outfits (CU20)</span>
+          <span>Comparador Outfits (CU20 - P1)</span>
         </a>
 
         <a routerLink="/recompensas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-gem"></i>
-          <span>Club VIP & Puntos (CU21)</span>
+          <span>Club VIP & Puntos (CU21 - P1)</span>
         </a>
 
         <a routerLink="/reservas/crear" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-calendar-check"></i>
-          <span>Reservar Prendas (CU09)</span>
+          <span>Reservar Probador VIP (CU09 - P2)</span>
         </a>
 
         <a *ngIf="auth.isAuthenticated()" routerLink="/reservas/ticket" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-qrcode"></i>
-          <span>Mis Tickets QR (CU11)</span>
+          <span>Mis Tickets QR (CU11 - P2)</span>
         </a>
 
         <a routerLink="/carrito" routerLinkActive="active" class="nav-item nav-cart-item" (click)="onNavClick()">
           <i class="fas fa-shopping-bag"></i>
-          <span>Bolsa de Compras (CU13)</span>
+          <span>Bolsa de Compras (CU13 - P1)</span>
           <span class="nav-cart-badge" *ngIf="carritoService.totalItems() > 0">
             {{ carritoService.totalItems() }}
           </span>
@@ -146,176 +146,196 @@ import { CapacidadesEmpresa } from '../../core/models/fashion.models';
 
         <a *ngIf="!auth.isAuthenticated()" routerLink="/login" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
           <i class="fas fa-user-circle"></i>
-          <span>Iniciar Sesión / Registro</span>
+          <span>Iniciar Sesión (CU04 - P2)</span>
         </a>
 
         <!-- MÓDULOS EXCLUSIVOS DE ADMINISTRADOR GENERAL -->
         <ng-container *ngIf="auth.isAdmin()">
-          <div class="nav-section-title">Administración Central</div>
-
-          <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-chart-line"></i>
-            <span>Cuadros de Mando & Dashboards (CU24)</span>
-          </a>
-
-          <a routerLink="/reportes-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-brain"></i>
-            <span>Reportes Generativos con IA (CU15)</span>
-          </a>
+          <div class="nav-section-title">Administración Central (Parcial 2)</div>
 
           <a routerLink="/tenants" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-sitemap"></i>
-            <span>SaaS Tenants & Planes (CU01-03)</span>
+            <span>SaaS Tenants y Suscripciones (CU01, CU02, CU03 - P2)</span>
+          </a>
+
+          <a routerLink="/auditoria" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-shield-alt"></i>
+            <span>Bitácora y Auditoría de Accesos (CU21 - P2)</span>
+          </a>
+
+          <a routerLink="/backups" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-database"></i>
+            <span>Respaldos y Snapshots BD (CU22 - P2)</span>
           </a>
 
           <a routerLink="/usuarios" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-users-cog"></i>
-            <span>Gestión de Usuarios (CU04)</span>
+            <span>Usuarios y Roles RBAC (CU05 - P2)</span>
           </a>
 
           <a routerLink="/sucursales" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-building"></i>
-            <span>Sucursales y GPS (CU05)</span>
+            <span>Red de Sucursales y GPS (CU01 - P2)</span>
           </a>
 
           <a routerLink="/productos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-tshirt"></i>
-            <span>Catálogo y Prendas (CU06)</span>
-          </a>
-
-          <a routerLink="/temporadas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Temporadas y Campañas (CU07)</span>
-          </a>
-
-          <a routerLink="/proveedores" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-truck-loading"></i>
-            <span>Proveedores Textiles (CU08)</span>
+            <span>Catálogo Textil y Fichas 3D (CU06 - P2)</span>
           </a>
 
           <a routerLink="/inventario" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-boxes"></i>
-            <span>Inventario Global y CPP (CU09)</span>
+            <span>Inventario Multi-Sucursal y CPP (CU07 - P2)</span>
+          </a>
+
+          <a routerLink="/compras" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Aprovisionamiento Desktop (CU20 - P2)</span>
           </a>
 
           <a routerLink="/traspasos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-exchange-alt"></i>
-            <span>Traspasos Inter-Sucursales (CU14)</span>
+            <span>Traspasos Inter-Sucursales (CU14 - P2)</span>
           </a>
 
-          <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-clipboard-list"></i>
-            <span>Reservas del Día (CU12)</span>
+          <a routerLink="/temporadas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Ofertas y Precios por Mayor (CU19 - P2)</span>
           </a>
 
-          <a routerLink="/encargado/escaner" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
-            <i class="fas fa-qrcode"></i>
-            <span>Escanear QR (CU12)</span>
+          <a routerLink="/reportes-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-brain"></i>
+            <span>Reportes IA y Exportación (CU15, CU16 - P2)</span>
+          </a>
+
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard Analítico y ML (CU17 - P2 / CU24)</span>
           </a>
 
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
-            <span>POS, Offline & Devoluciones (CU10, CU13)</span>
+            <span>POS y Devolución 2 Tiempos (CU10, CU13 - P2)</span>
+          </a>
+
+          <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Reservas del Día y Sync (CU12 - P2)</span>
+          </a>
+
+          <a routerLink="/encargado/escaner" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-qrcode"></i>
+            <span>Escanear QR Probador (CU12 - P2)</span>
           </a>
 
           <a routerLink="/admin/pagos-config" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-sliders-h"></i>
-            <span>Medios de Cobro (CU17)</span>
+            <span>Pasarela de Pagos Stripe (CU18 - P2)</span>
+          </a>
+
+          <a routerLink="/proveedores" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-truck-loading"></i>
+            <span>Proveedores Textiles (CU20 - P2)</span>
           </a>
 
           <a routerLink="/logistica/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-shipping-fast"></i>
-            <span>Despacho y Delivery (CU18)</span>
+            <span>Despacho y Postventa (CU13 - P2)</span>
           </a>
         </ng-container>
 
         <!-- MÓDULOS DE ENCARGADO DE SUCURSAL -->
         <ng-container *ngIf="auth.isManager()">
-          <div class="nav-section-title">Operaciones de Tienda</div>
+          <div class="nav-section-title">Operaciones de Tienda (Parcial 2)</div>
 
           <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-chart-line"></i>
-            <span>Dashboard Ejecutivo (CU24)</span>
+            <span>Dashboard Analítico (CU17 - P2)</span>
           </a>
 
           <a routerLink="/reportes-ia" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-brain"></i>
-            <span>Reportes Generativos con IA (CU15)</span>
+            <span>Reportes IA (CU15 - P2)</span>
           </a>
 
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
-            <span>POS, Offline & Devoluciones (CU10, CU13)</span>
+            <span>POS y Devolución 2 Tiempos (CU10, CU13 - P2)</span>
           </a>
 
           <a routerLink="/encargado/reservas" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-clipboard-list"></i>
-            <span>Reservas del Día (CU12)</span>
+            <span>Reservas y Sync (CU12 - P2)</span>
           </a>
 
           <a routerLink="/encargado/escaner" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-qrcode"></i>
-            <span>Escanear QR (CU12)</span>
+            <span>Escanear QR Probador (CU12 - P2)</span>
           </a>
 
           <a routerLink="/inventario" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-boxes"></i>
-            <span>Stock de Sucursal (CU09)</span>
+            <span>Stock Sucursal y CPP (CU07 - P2)</span>
           </a>
 
           <a routerLink="/traspasos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-exchange-alt"></i>
-            <span>Traspasos Inter-Sucursales (CU14)</span>
+            <span>Traspasos Inter-Sucursales (CU14 - P2)</span>
           </a>
 
           <a routerLink="/sucursales" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-building"></i>
-            <span>Sucursales de la Red (CU05)</span>
+            <span>Sucursales de la Red (CU01 - P2)</span>
           </a>
 
           <a routerLink="/productos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-tshirt"></i>
-            <span>Fichas de Prendas (CU06)</span>
+            <span>Fichas de Prendas Textiles (CU06 - P2)</span>
           </a>
         </ng-container>
 
         <!-- MÓDULOS DE LOGÍSTICA -->
         <ng-container *ngIf="auth.isLogistics()">
-          <div class="nav-section-title">Almacén y Abastecimiento</div>
+          <div class="nav-section-title">Almacén y Abastecimiento (Parcial 2)</div>
 
           <a routerLink="/inventario" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-boxes"></i>
-            <span>Entradas de Mercadería (CU09)</span>
+            <span>Entradas de Mercadería y CPP (CU07 - P2)</span>
+          </a>
+
+          <a routerLink="/compras" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Aprovisionamiento Desktop (CU20 - P2)</span>
           </a>
 
           <a routerLink="/proveedores" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-truck-loading"></i>
-            <span>Proveedores Textiles (CU08)</span>
+            <span>Proveedores Textiles (CU20 - P2)</span>
           </a>
 
           <a routerLink="/productos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-tshirt"></i>
-            <span>Consulta de Productos (CU06)</span>
+            <span>Catálogo y Fichas Textiles (CU06 - P2)</span>
           </a>
 
           <a routerLink="/logistica/dashboard" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-shipping-fast"></i>
-            <span>Despacho y Delivery (CU18)</span>
+            <span>Despacho y Postventa (CU13 - P2)</span>
           </a>
         </ng-container>
 
         <!-- MÓDULOS DE CAJERO -->
         <ng-container *ngIf="auth.isCashier()">
-          <div class="nav-section-title">Punto de Venta (POS)</div>
+          <div class="nav-section-title">Punto de Venta (Parcial 2)</div>
 
           <a routerLink="/pos" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-cash-register"></i>
-            <span>Terminal de Caja POS (CU15)</span>
+            <span>Terminal POS y Devoluciones (CU10, CU13 - P2)</span>
           </a>
 
           <a routerLink="/catalogo" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
             <i class="fas fa-search-dollar"></i>
-            <span>Consulta de Precios y Stock</span>
+            <span>Catálogo Offline (CU08 - P2)</span>
           </a>
         </ng-container>
 

@@ -14,12 +14,12 @@ import { Proveedor } from '../../../core/models/fashion.models';
     <div class="page-container">
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-truck-loading"></i> Proveedores Textiles (CU08)</h2>
-          <p class="subtitle">Directorio de Confeccionistas con Validación de Unicidad de NIT, Plazos de Crédito y Estado Operativo</p>
+          <h2><i class="fas fa-truck-loading"></i> Proveedores y Aprovisionamiento (CU20 - P2)</h2>
+          <p class="subtitle">Homologación B2B, Validación Módulo 11 de NIT y Líneas de Crédito (CU20 - P2 / CU08)</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin() || auth.isLogistics()">
           <button class="btn btn-primary" (click)="openCreateModal()">
-            <i class="fas fa-plus"></i> Nuevo Proveedor (CU08)
+            <i class="fas fa-plus"></i> Nuevo Proveedor (CU20 - P2)
           </button>
         </div>
       </div>

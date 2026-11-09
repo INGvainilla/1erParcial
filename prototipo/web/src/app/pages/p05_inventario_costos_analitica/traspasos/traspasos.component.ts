@@ -37,7 +37,7 @@ export interface TraspasoRow {
       <!-- Encabezado de la Vista -->
       <div class="view-header glass-panel">
         <div class="header-titles">
-          <h2><i class="fas fa-truck-moving text-indigo"></i> Traspasos Inter-Sucursales de Inventario (CU14)</h2>
+          <h2><i class="fas fa-truck-moving text-indigo"></i> Traspasos Inter-Sucursales de Inventario (CU14 - P2)</h2>
           <p class="subtitle">Control y trazabilidad de transferencias físicas de stock entre tiendas con doble asiento en Kardex</p>
         </div>
         <div class="header-actions">

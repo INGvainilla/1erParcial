@@ -21,6 +21,7 @@ class Devolucion(Base):
     __tablename__ = "devoluciones"
 
     id_devolucion = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="SET NULL"), nullable=True, index=True)
     tenant_id = Column(String(50), nullable=False, default="fashionstore_scz")
     id_orden = Column(Integer, ForeignKey("ordenes_venta.id_orden", ondelete="RESTRICT"), nullable=False)
     id_sucursal = Column(Integer, ForeignKey("sucursales.id_sucursal", ondelete="RESTRICT"), nullable=False)

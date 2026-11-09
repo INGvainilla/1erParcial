@@ -22,8 +22,8 @@ import { API_BASE_URL } from '../../../core/constants/api.constants';
             <i class="fas fa-shield-check"></i>
           </div>
           <div>
-            <h1 class="page-title">Pasarela de Pago Electrónico (CU16)</h1>
-            <p class="page-subtitle">Transacción segura 256-bit SSL | Estándar de Protección PCI-DSS Grado 1</p>
+            <h1 class="page-title">Pasarela de Pago Stripe Sandbox PCI-DSS (CU18 - P2)</h1>
+            <p class="page-subtitle">Transacción segura 256-bit SSL | Estándar de Protección PCI-DSS Grado 1 (CU18 - P2 / CU16)</p>
           </div>
         </div>
 

@@ -17,6 +17,7 @@ from app.core.database import Base, engine
 # Importar todos los modelos organizados en los 10 paquetes para registro en metadata
 import app.modules.p01_seguridad_acceso.tenants.models
 import app.modules.p01_seguridad_acceso.auth.models
+import app.modules.p01_seguridad_acceso.backups.models
 import app.modules.p02_estructura_operativa.sucursales.models
 import app.modules.p03_catalogo_estilismo_ia.productos.models
 import app.modules.p03_catalogo_estilismo_ia.temporadas.models
@@ -33,6 +34,8 @@ import app.modules.p09_procesamiento_pagos.pagos.models
 from app.modules.p01_seguridad_acceso.tenants.router import router as tenants_router
 from app.modules.p01_seguridad_acceso.auth.router import router as auth_router
 from app.modules.p01_seguridad_acceso.usuarios.router import router as usuarios_router
+from app.modules.p01_seguridad_acceso.auditoria.router import router as auditoria_router
+from app.modules.p01_seguridad_acceso.backups.router import router as backups_router
 from app.modules.p02_estructura_operativa.sucursales.router import router as sucursales_router, ciudades_router
 from app.modules.p03_catalogo_estilismo_ia.productos.router import router as productos_router
 from app.modules.p03_catalogo_estilismo_ia.temporadas.router import router as temporadas_router
@@ -103,6 +106,8 @@ API_PREFIX = "/api/v1"
 app.include_router(tenants_router, prefix=API_PREFIX)
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(usuarios_router, prefix=API_PREFIX)
+app.include_router(auditoria_router, prefix=API_PREFIX)
+app.include_router(backups_router, prefix=API_PREFIX)
 app.include_router(ciudades_router, prefix=API_PREFIX)
 app.include_router(sucursales_router, prefix=API_PREFIX)
 app.include_router(productos_router, prefix=API_PREFIX)

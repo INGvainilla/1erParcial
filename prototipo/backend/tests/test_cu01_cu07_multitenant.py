@@ -232,7 +232,8 @@ def test_cu05_gestionar_usuarios_roles_por_empresa():
         assert u["id_empresa"] == 1 or u["id_empresa"] is None
 
     # 2. Registrar usuario de staff para su empresa
-    rand_email = f"cajero.t1.{len(usuarios)}@store.bo"
+    import uuid
+    rand_email = f"cajero.t1.{uuid.uuid4().hex[:6]}@store.bo"
     payload_user = {
         "nombre_completo": "Mateo Vargas",
         "email": rand_email,

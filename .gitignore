@@ -32,6 +32,7 @@ wheels/
 htmlcov/
 .tox/
 .nox/
+fashionstore_tests_*/
 
 # Bases de datos locales y temporales
 *.db
@@ -39,6 +40,10 @@ htmlcov/
 # Permitir la base de datos SQLite semilla oficial para clonado en otros entornos
 !prototipo/backend/app/fashionstore_local.db
 !app/fashionstore_local.db
+
+# Almacenamiento local de respaldos en tiempo de ejecución
+prototipo/backend/storage/backups/*
+!prototipo/backend/storage/backups/.gitkeep
 
 # Flutter & Dart
 .dart_tool/

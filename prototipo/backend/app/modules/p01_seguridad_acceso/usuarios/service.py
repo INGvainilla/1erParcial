@@ -81,7 +81,7 @@ class UsuarioAdminControl:
         email = request.email.strip().lower()
         rol_solicitado = request.rol.upper()
 
-        roles_validos = {"SUPER_ADMIN", "ADMINISTRADOR", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
+        roles_validos = {"SUPER_ADMIN", "ADMINISTRADOR", "ADMIN_EMPRESA", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
         if rol_solicitado not in roles_validos:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -205,7 +205,7 @@ class UsuarioAdminControl:
         # CU04: Gestionar Usuarios y Roles (RBAC), Paso 3.3: Validar rol asignado en la matriz RBAC
         if request.rol:
             rol_upper = request.rol.upper()
-            roles_validos = {"ADMINISTRADOR", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
+            roles_validos = {"ADMINISTRADOR", "ADMIN_EMPRESA", "ENCARGADO_SUCURSAL", "CAJERO", "LOGISTICA", "CLIENTE"}
             if rol_upper not in roles_validos:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Rol inválido.")
             usuario.rol = rol_upper

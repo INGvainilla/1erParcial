@@ -29,10 +29,10 @@ interface CredFieldDef {
             <div class="header-breadcrumb">
               <a routerLink="/dashboard"><i class="fas fa-arrow-left"></i> Panel de Control</a>
               <span class="sep">/</span>
-              <span>Configuración Financiera (CU17)</span>
+              <span>Pasarela Stripe Sandbox PCI-DSS (CU18 - P2)</span>
             </div>
-            <h1 class="page-title">Gestión de Tipos y Medios de Cobro</h1>
-            <p class="page-subtitle">Activar, desactivar y parametrizar canales de recaudación física y digital en tiempo real.</p>
+            <h1 class="page-title">Gestión de Tipos y Medios de Cobro (CU18 - P2)</h1>
+            <p class="page-subtitle">Activar, desactivar y parametrizar canales Stripe Sandbox PCI-DSS y recaudación física/digital en tiempo real.</p>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -38,7 +38,7 @@ interface PromptCategory {
       <header class="header-card">
         <div class="header-main">
           <div class="header-badges">
-            <span class="badge badge-primary"><i class="fas fa-brain"></i> CU15 · Analítica Generativa IA</span>
+            <span class="badge badge-primary"><i class="fas fa-brain"></i> CU15 - P2 · Analítica Generativa IA</span>
             <span class="badge badge-accent"><i class="fas fa-shield-alt"></i> AST Sanitizado (Solo SELECT)</span>
             <span class="badge badge-amber"><i class="fas fa-crown"></i> Plan Profesional / Enterprise</span>
             <span class="badge badge-tenant"><i class="fas fa-store"></i> {{ auth.getNombreEmpresa() || ('Tenant #' + (auth.getActiveEmpresaId() || 1)) }}</span>
@@ -75,7 +75,7 @@ interface PromptCategory {
           (click)="moduloModo = 'REPORTES_IA'"
         >
           <i class="fas fa-brain tab-icon indigo"></i>
-          <span>Consultas Ejecutivas IA (CU15)</span>
+          <span>Consultas Ejecutivas IA (CU15 - P2)</span>
         </button>
         <button
           type="button"
@@ -84,7 +84,7 @@ interface PromptCategory {
           (click)="cargarMLPrevision()"
         >
           <i class="fas fa-chart-line tab-icon cyan"></i>
-          <span>Previsión Demanda con Machine Learning (CU17)</span>
+          <span>Previsión Demanda con Machine Learning (CU17 - P2)</span>
         </button>
         <button
           type="button"
@@ -93,7 +93,7 @@ interface PromptCategory {
           (click)="cargarPromocionesReglas()"
         >
           <i class="fas fa-tags tab-icon amber"></i>
-          <span>Tarifas Mayoristas & Ofertas (CU19)</span>
+          <span>Tarifas Mayoristas & Ofertas (CU19 - P2)</span>
         </button>
       </nav>
 
@@ -177,7 +177,7 @@ interface PromptCategory {
               type="button"
               class="chip-prompt"
               [class.is-active]="promptTexto.toLowerCase() === p.query.toLowerCase()"
-              (click)="ejecutarPrompt(p.query)"
+              (click)="ejecutarPrompt(p.query, true)"
               [title]="p.query"
             >
               <i class="fas" [ngClass]="p.icon || 'fa-bolt'" style="opacity: 0.7;"></i>
@@ -207,7 +207,7 @@ interface PromptCategory {
           <div class="cu16-export-panel">
             <div class="cu16-header-label">
               <i class="fas fa-file-export text-indigo"></i>
-              <span>Exportación Oficial (CU16)</span>
+              <span>Exportación Oficial (CU16 - P2)</span>
             </div>
             <div class="cu16-actions-row">
               <button class="btn-cu16 excel" (click)="exportarReporte('excel')" title="Descargar libro Excel XLSX con fórmulas computadas openpyxl">
@@ -2182,7 +2182,7 @@ interface PromptCategory {
     .font-bold { font-weight: 700; }
   `]
 })
-export class ReportesIaComponent implements OnInit {
+export class ReportesIaComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   public auth = inject(AuthService);
   private toast = inject(ToastService);
@@ -2279,6 +2279,10 @@ export class ReportesIaComponent implements OnInit {
     this.consultarIA();
   }
 
+  ngOnDestroy() {
+    this.detenerReconocimiento();
+  }
+
   getPromptsVisibles(): PromptItem[] {
     if (this.selectedCategoriaId === 'TODAS') {
       return this.categoriasFiltros.flatMap(c => c.prompts);
@@ -2290,66 +2294,126 @@ export class ReportesIaComponent implements OnInit {
   initSpeechRecognition() {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        this.isSpeechSupported = true;
-        this.recognition = new SpeechRecognition();
-        this.recognition.lang = 'es-BO';
-        this.recognition.continuous = false;
-        this.recognition.interimResults = false;
-
-        this.recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          this.promptTexto = transcript;
-          this.isListening = false;
-          this.toast.info('Voz Reconocida', `"${transcript}"`);
-          this.consultarIA();
-        };
-
-        this.recognition.onerror = () => {
-          this.isListening = false;
-          this.toast.warning('Dictado por Voz', 'No se detectó audio claro o el micrófono requiere permisos.');
-        };
-
-        this.recognition.onend = () => {
-          this.isListening = false;
-          this.cdr.detectChanges();
-        };
-      }
+      this.isSpeechSupported = !!SpeechRecognition;
     }
   }
 
   toggleVoiceInput() {
-    if (!this.recognition) {
-      this.toast.warning('No Compatible', 'Tu navegador no tiene activado el reconocimiento por voz.');
+    if (this.isListening) {
+      this.detenerReconocimiento();
+      return;
+    }
+    this.iniciarReconocimientoVoz();
+  }
+
+  private iniciarReconocimientoVoz(): void {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      this.toast.warning('Dictado por Voz', 'Tu navegador no cuenta con Web Speech API nativa. Puedes seleccionar una sugerencia o escribir directamente.');
       return;
     }
 
-    if (this.isListening) {
-      this.recognition.stop();
-      this.isListening = false;
-    } else {
-      try {
-        this.recognition.start();
+    this.detenerReconocimiento();
+
+    try {
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = 'es-BO';
+      this.recognition.continuous = false;
+      this.recognition.interimResults = true;
+      this.recognition.maxAlternatives = 1;
+
+      this.recognition.onstart = () => {
         this.isListening = true;
-      } catch (e) {
+        this.toast.info('Micrófono Activo', 'Escuchando en vivo... Dicta tu consulta');
+        this.cdr.detectChanges();
+      };
+
+      this.recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        const text = finalTranscript || interimTranscript;
+        if (text) {
+          this.promptTexto = text;
+          this.cdr.detectChanges();
+        }
+        if (finalTranscript) {
+          this.toast.success('Voz Reconocida', `"${finalTranscript}"`);
+          this.isListening = false;
+          this.consultarIA(true);
+        }
+      };
+
+      this.recognition.onspeechend = () => {
         this.isListening = false;
-      }
+        this.cdr.detectChanges();
+        if (this.promptTexto && this.promptTexto.trim().length > 2) {
+          this.consultarIA(true);
+        }
+      };
+
+      this.recognition.onend = () => {
+        this.isListening = false;
+        this.cdr.detectChanges();
+      };
+
+      this.recognition.onerror = (err: any) => {
+        this.isListening = false;
+        console.warn('SpeechRecognition error:', err);
+        if (err.error === 'not-allowed') {
+          this.toast.warning('Permiso de Micrófono', 'Habilita el permiso de micrófono en la barra del navegador.');
+        } else if (err.error === 'network') {
+          this.toast.warning('Conexión de Voz', 'Servicio de reconocimiento no disponible offline. Puedes usar una sugerencia rápida.');
+        } else if (err.error !== 'no-speech') {
+          this.toast.warning('Dictado por Voz', `Estado: ${err.error}. Puedes usar las consultas sugeridas.`);
+        }
+        this.cdr.detectChanges();
+      };
+
+      this.recognition.start();
+      this.isListening = true;
+    } catch (e: any) {
+      console.warn('Error starting SpeechRecognition:', e);
+      this.isListening = false;
+      this.toast.warning('Micrófono', 'No se pudo inicializar el micrófono. Usa las consultas rápidas.');
+      this.cdr.detectChanges();
     }
   }
 
-  ejecutarPrompt(prompt: string) {
-    this.promptTexto = prompt;
-    this.consultarIA();
+  detenerReconocimiento(): void {
+    if (this.recognition) {
+      try {
+        this.recognition.abort();
+      } catch {}
+      this.recognition = null;
+    }
+    this.isListening = false;
+    this.cdr.detectChanges();
   }
 
-  consultarIA() {
+  ejecutarPrompt(prompt: string, esVoz: boolean = false) {
+    this.promptTexto = prompt;
+    this.consultarIA(esVoz);
+  }
+
+  consultarIA(esVoz: boolean = false) {
     if (!this.promptTexto || !this.promptTexto.trim()) return;
 
     this.isLoading = true;
     this.errorMensaje = null;
 
     this.http.post<AIQueryResponse>(`${API_BASE_URL}/reportes-ia/query`, {
-      prompt: this.promptTexto.trim()
+      prompt: this.promptTexto.trim(),
+      es_voz: esVoz,
+      id_empresa: this.auth.getActiveEmpresaId() || null
     }, {
       headers: this.auth.getAuthHeaders()
     }).subscribe({

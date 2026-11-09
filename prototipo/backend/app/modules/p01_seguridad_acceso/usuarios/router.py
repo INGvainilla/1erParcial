@@ -42,10 +42,10 @@ def crear_usuario_endpoint(
     current_user: Usuario = Depends(exigir_suscripcion_vigente),
     db: Session = Depends(get_db)
 ):
-    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR"]:
+    if current_user.rol not in ["SUPER_ADMIN", "ADMINISTRADOR", "ADMIN_EMPRESA"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR o SUPER_ADMIN. Tu rol es: {current_user.rol}"
+            detail=f"Acceso denegado. Se requiere rol ADMINISTRADOR, ADMIN_EMPRESA o SUPER_ADMIN. Tu rol es: {current_user.rol}"
         )
     client_ip = request.client.host if request.client else "127.0.0.1"
     empresa_id_destino = request_data.id_empresa if current_user.rol == "SUPER_ADMIN" else current_user.id_empresa

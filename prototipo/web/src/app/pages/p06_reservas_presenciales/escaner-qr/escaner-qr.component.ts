@@ -20,9 +20,9 @@ import { ToastService } from '../../../core/services/toast.service';
           <div>
             <h1 class="page-title">
               <i class="fas fa-qrcode"></i>
-              Escáner de Reservas QR
+              Escáner de Reservas QR (CU09 - P2)
             </h1>
-            <p class="page-subtitle">CU12 — Escanee el QR del cliente para atender su reserva</p>
+            <p class="page-subtitle">Validar ticket QR del cliente para atender reserva de probador VIP (CU09 - P2 / CU12)</p>
           </div>
         </div>
       </div>

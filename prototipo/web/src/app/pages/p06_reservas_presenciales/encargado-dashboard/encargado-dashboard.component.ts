@@ -19,9 +19,9 @@ import { API_BASE_URL } from '../../../core/constants/api.constants';
         <div class="header-left">
           <h1 class="page-title">
             <i class="fas fa-clipboard-list"></i>
-            Tablero de Reservas y Probador
+            Tablero de Reservas y Probador (CU09 - P2)
           </h1>
-          <p class="page-subtitle">CU12 — Preparar prendas en probador y atender clientes presenciales</p>
+          <p class="page-subtitle">Preparar prendas en probador VIP y atender clientes presenciales (CU09 - P2 / CU12)</p>
         </div>
         <div class="header-actions">
           <button class="btn-refresh" (click)="cargarReservas()" [disabled]="isLoading">

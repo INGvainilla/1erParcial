@@ -29,8 +29,8 @@ import {
           <div class="brand-badge">
             <i class="fas fa-crown" aria-hidden="true"></i> FashionStore
           </div>
-          <h1 class="auth-title">Control de Acceso y Registro</h1>
-          <p class="subtitle">Casos de Uso CU01, CU02 y CU03 (Seguridad RBAC y OTP)</p>
+          <h1 class="auth-title">Control de Acceso Multitenant (CU04 - P2)</h1>
+          <p class="subtitle">Autenticación Segura Multitenant, RBAC y Afiliación SaaS (CU04 - P2 / CU01-CU03)</p>
 
           <!-- Segmented Control Tabs (Accessible Tablist) -->
           <div class="tabs-nav" role="tablist" aria-label="Opciones de acceso y registro">
@@ -48,7 +48,7 @@ import {
             >
               <i class="fas fa-sign-in-alt tab-icon" aria-hidden="true"></i>
               <span class="tab-text">Iniciar Sesión</span>
-              <span class="tab-badge">CU01</span>
+              <span class="tab-badge">CU04 - P2</span>
             </button>
 
             <button
@@ -99,7 +99,7 @@ import {
             >
               <i class="fas fa-store tab-icon" aria-hidden="true"></i>
               <span class="tab-text">Afiliación SaaS (B2B)</span>
-              <span class="tab-badge saas-badge">Empresas</span>
+              <span class="tab-badge saas-badge">CU01/02/03 - P2</span>
             </button>
           </div>
         </header>

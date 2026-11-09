@@ -42,6 +42,7 @@ class ApiService {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'User-Agent': 'FashionStore-Mobile-Flutter/2.0 (Android; Dart-http)',
     };
     if (requiresAuth) {
       final token = await getToken();

@@ -14,6 +14,7 @@ class Reserva(Base):
     __tablename__ = "reservas"
 
     id_reserva = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="SET NULL"), nullable=True, index=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
     id_sucursal = Column(Integer, ForeignKey("sucursales.id_sucursal", ondelete="CASCADE"), nullable=False)
     codigo_qr = Column(Text, unique=True, nullable=False)  # Base64 data URI de la imagen QR

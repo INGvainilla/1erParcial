@@ -103,7 +103,7 @@ def actualizar_empresa(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    if current_user.rol != "SUPER_ADMIN" and (current_user.id_empresa != id_empresa or current_user.rol not in ["ADMINISTRADOR", "GERENTE"]):
+    if current_user.rol != "SUPER_ADMIN" and (current_user.id_empresa != id_empresa or current_user.rol not in ["ADMINISTRADOR", "ADMIN_EMPRESA", "GERENTE"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No cuenta con privilegios para modificar esta empresa."

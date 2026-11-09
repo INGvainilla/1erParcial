@@ -67,16 +67,21 @@ class TokenRecuperacion(Base):
 class BitacoraAcceso(Base):
     """
     Entidad Bitácora (BitacoraEntity):
-    Registro inmutable de auditoría de seguridad y eventos de acceso (CU01).
+    Registro inmutable de auditoría de seguridad y eventos de acceso (CU01 / CU21).
+    Aislamiento hermético multitenant por id_empresa.
     """
     __tablename__ = "bitacora_accesos"
 
     id_bitacora = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="CASCADE"), nullable=True, index=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="SET NULL"), nullable=True)
+    email_intento = Column(String(120), nullable=True)
+    tipo_evento = Column(String(50), nullable=False, default="LOGIN_EXITOSO")
     ip_origen = Column(String(45), nullable=False, default="127.0.0.1")
     user_agent = Column(String(255), nullable=True)
     exitoso = Column(Boolean, nullable=False, default=True)
     motivo = Column(String(100), nullable=True)
+    detalles_json = Column(Text, nullable=True)
     fecha_hora = Column(DateTime, default=utc_now)
 
     usuario = relationship("Usuario", back_populates="bitacoras")

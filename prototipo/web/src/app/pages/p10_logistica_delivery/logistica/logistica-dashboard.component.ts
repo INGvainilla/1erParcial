@@ -17,8 +17,8 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="header-badge">
             <i class="fas fa-truck"></i> MÓDULO DE DISTRIBUCIÓN
           </div>
-          <h1 class="page-title">Tablero de Despacho & Logística</h1>
-          <p class="page-subtitle">CU18 — Orquestación de empaque, asignación de couriers y entregas</p>
+          <h1 class="page-title">Tablero de Despacho, Logística y Postventa (CU13 - P2)</h1>
+          <p class="page-subtitle">Orquestación de empaque, couriers Haversine, reposición T2 y entregas (CU13 - P2 / CU18)</p>
         </div>
         <div class="header-actions">
           <div class="filter-pills">

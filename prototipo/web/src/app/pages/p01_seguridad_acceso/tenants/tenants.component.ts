@@ -18,7 +18,7 @@ import { Empresa, PlanSuscripcion, SuscripcionEmpresa } from '../../../core/mode
           <div class="badge-saas">
             <i class="fas fa-cubes"></i> Arquitectura SaaS Multitenant
           </div>
-          <h1>Gobernanza Multitenant & Suscripciones (CU01 - CU03)</h1>
+          <h1>Gobernanza Multitenant & Suscripciones (CU01, CU02, CU03 - P2)</h1>
           <p class="subtitle">
             Administración centralizada de empresas arrendatarias (Tenants), asignación de esquemas lógicos, planes de suscripción y soporte Offline-First.
           </p>

@@ -43,9 +43,16 @@ class AuthService:
 
         # CU01: Autenticar Usuario (Login RBAC), Paso 1.3: UsuarioEntity retorna datos persistidos o None (si no existe, auditar intento fallido y lanzar HTTP 401)
         if not usuario:
-            # CU01: Autenticar Usuario (Login RBAC), Paso 1.3.1: Asentar intento fallido por correo no registrado en BitacoraEntity
+            # CU01 / CU21: Asentar intento fallido por correo no registrado en BitacoraEntity
             bitacora = BitacoraAcceso(
-                id_usuario=None, ip_origen=ip_origen, user_agent=user_agent, exitoso=False, motivo="Correo no registrado"
+                id_usuario=None,
+                id_empresa=None,
+                email_intento=email,
+                tipo_evento="LOGIN_FALLIDO",
+                ip_origen=ip_origen,
+                user_agent=user_agent,
+                exitoso=False,
+                motivo="Correo no registrado"
             )
             # CU01: Autenticar Usuario (Login RBAC), Paso 1.3.2: Persistir asiento inmutable en base de datos
             db.add(bitacora)
@@ -98,9 +105,17 @@ class AuthService:
             else:
                 motivo = f"Contraseña errónea (Intento {usuario.intentos_fallidos} de {settings.MAX_LOGIN_ATTEMPTS})"
 
-            # CU01: Autenticar Usuario (Login RBAC), Paso 1.5.4: Registrar fallo de autenticación en BitacoraEntity
+            # CU01 / CU21: Registrar fallo de autenticación o bloqueo en BitacoraEntity
+            tipo_evt = "BLOQUEO_INTENTOS" if usuario.estado_cuenta == "BLOQUEADO_POR_INTENTOS" else "LOGIN_FALLIDO"
             bitacora = BitacoraAcceso(
-                id_usuario=usuario.id_usuario, ip_origen=ip_origen, user_agent=user_agent, exitoso=False, motivo=motivo
+                id_usuario=usuario.id_usuario,
+                id_empresa=usuario.id_empresa,
+                email_intento=usuario.email,
+                tipo_evento=tipo_evt,
+                ip_origen=ip_origen,
+                user_agent=user_agent,
+                exitoso=False,
+                motivo=motivo
             )
             db.add(bitacora)
             db.commit()
@@ -135,9 +150,16 @@ class AuthService:
             expires_delta=delta_exp
         )
 
-        # CU01: Autenticar Usuario (Login RBAC), Paso 1.8: Asentar acceso exitoso inmutable en BitacoraEntity (bitacora_accesos)
+        # CU01 / CU21: Asentar acceso exitoso inmutable en BitacoraEntity (bitacora_accesos)
         bitacora = BitacoraAcceso(
-            id_usuario=usuario.id_usuario, ip_origen=ip_origen, user_agent=user_agent, exitoso=True, motivo="Login exitoso"
+            id_usuario=usuario.id_usuario,
+            id_empresa=usuario.id_empresa,
+            email_intento=usuario.email,
+            tipo_evento="LOGIN_EXITOSO",
+            ip_origen=ip_origen,
+            user_agent=user_agent,
+            exitoso=True,
+            motivo="Login exitoso"
         )
         db.add(bitacora)
         db.commit()

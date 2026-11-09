@@ -40,11 +40,11 @@ interface OutfitColumna {
       <div class="header-hero glass-card">
         <div class="hero-content">
           <div class="badges-row">
-            <span class="badge-pu"><i class="fas fa-layer-group"></i> CU20 — M09</span>
+            <span class="badge-pu"><i class="fas fa-layer-group"></i> Atributos Textiles (CU06 - P2 / CU20)</span>
             <span class="badge-tag"><i class="fas fa-columns"></i> Comparador Lado a Lado</span>
             <span class="badge-tag highlight"><i class="fas fa-brain"></i> Inteligencia de Estilo</span>
           </div>
-          <h1>Comparador Visual de Outfits Masculinos</h1>
+          <h1>Comparador Visual de Outfits Textiles (CU06 - P2)</h1>
           <p class="hero-desc">
             Contrasta simultáneamente hasta 3 combinaciones completas de alta sastrería masculina.
             Analiza el desglose de precios en Bolivianos (Bs.), evalúa la afinidad cromática y transfiere el conjunto ganador con un solo clic.

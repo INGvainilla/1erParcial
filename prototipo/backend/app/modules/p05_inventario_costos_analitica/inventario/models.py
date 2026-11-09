@@ -46,6 +46,7 @@ class KardexMovimiento(Base):
     __tablename__ = "kardex_movimientos"
 
     id_movimiento = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey("empresas.id_empresa", ondelete="SET NULL"), nullable=True, index=True)
     id_inventario = Column(Integer, ForeignKey("inventario.id_inventario", ondelete="CASCADE"), nullable=False)
     tipo_movimiento = Column(String(30), nullable=False)  # ENTRADA_COMPRA, SALIDA_VENTA, RESERVA_APARTADA
     cantidad = Column(Integer, nullable=False)

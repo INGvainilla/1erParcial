@@ -34,7 +34,7 @@ export interface CompraRow {
             <i class="fas fa-desktop"></i>
           </div>
           <div>
-            <h2 class="banner-title">Módulo de Aprovisionamiento Textil (CU20)</h2>
+            <h2 class="banner-title">Aprovisionamiento y Compras Corporativas Desktop (CU20 - P2)</h2>
             <p class="banner-sub">Terminal de compras corporativas restringido exclusivamente a clientes de escritorio (Resolución &ge; 768px)</p>
           </div>
         </div>

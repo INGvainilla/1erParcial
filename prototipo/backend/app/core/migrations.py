@@ -33,6 +33,15 @@ COLUMNAS_PARCIAL2: List[Tuple[str, str, str]] = [
     ("ordenes_compra_desktop", "id_usuario_recepcion", "INTEGER"),
     ("ordenes_compra_desktop", "nro_factura", "VARCHAR(64)"),
     ("ordenes_compra_desktop", "discrepancias_json", "TEXT"),
+    ("bitacora_accesos", "id_empresa", "INTEGER"),
+    ("bitacora_accesos", "tipo_evento", "VARCHAR(50)"),
+    ("bitacora_accesos", "email_intento", "VARCHAR(120)"),
+    ("bitacora_accesos", "detalles_json", "TEXT"),
+    ("ordenes_venta", "id_empresa", "INTEGER"),
+    ("ordenes_venta", "metodo_pago", "VARCHAR(50) DEFAULT 'EFECTIVO'"),
+    ("devoluciones", "id_empresa", "INTEGER"),
+    ("reservas", "id_empresa", "INTEGER"),
+    ("kardex_movimientos", "id_empresa", "INTEGER"),
 ]
 
 # (nombre del índice, tabla, columna). `CREATE INDEX IF NOT EXISTS` es válido en ambos motores.
@@ -41,6 +50,12 @@ INDICES_PARCIAL2: List[Tuple[str, str, str]] = [
     ("ix_sucursales_id_empresa", "sucursales", "id_empresa"),
     ("ix_productos_id_empresa", "productos", "id_empresa"),
     ("ix_inventario_id_empresa", "inventario", "id_empresa"),
+    ("ix_bitacora_accesos_id_empresa", "bitacora_accesos", "id_empresa"),
+    ("ix_respaldos_tenant_id_empresa", "respaldos_tenant", "id_empresa"),
+    ("ix_ordenes_venta_id_empresa", "ordenes_venta", "id_empresa"),
+    ("ix_devoluciones_id_empresa", "devoluciones", "id_empresa"),
+    ("ix_reservas_id_empresa", "reservas", "id_empresa"),
+    ("ix_kardex_movimientos_id_empresa", "kardex_movimientos", "id_empresa"),
 ]
 
 
@@ -124,6 +139,48 @@ def ensure_columns(engine: Engine) -> List[str]:
             """))
             aplicados.append("create_table.ordenes_compra_desktop")
             print(" [MIGRACION] Tabla creada: ordenes_compra_desktop")
+
+        if not inspector.has_table("respaldos_tenant"):
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS respaldos_tenant (
+                    id_respaldo {id_col_type},
+                    id_empresa INTEGER NOT NULL,
+                    id_usuario INTEGER,
+                    nombre_archivo VARCHAR(255) NOT NULL,
+                    tipo_respaldo VARCHAR(50) DEFAULT 'SNAPSHOT_TENANT',
+                    tamano_bytes BIGINT NOT NULL DEFAULT 0,
+                    checksum_sha256 VARCHAR(64) NOT NULL,
+                    estado VARCHAR(30) DEFAULT 'COMPLETADO',
+                    tablas_incluidas TEXT,
+                    total_registros INTEGER DEFAULT 0,
+                    ruta_almacenamiento VARCHAR(500),
+                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            aplicados.append("create_table.respaldos_tenant")
+            print(" [MIGRACION] Tabla creada: respaldos_tenant")
+
+        if not inspector.has_table("programaciones_respaldo"):
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS programaciones_respaldo (
+                    id_programacion {id_col_type},
+                    id_empresa INTEGER NOT NULL,
+                    id_usuario INTEGER,
+                    nombre VARCHAR(150) NOT NULL DEFAULT 'Respaldo Automático Programado',
+                    fecha_hora_programada TIMESTAMP NOT NULL,
+                    frecuencia VARCHAR(30) NOT NULL DEFAULT 'UNA_VEZ',
+                    hora_ejecucion VARCHAR(10) DEFAULT '02:00',
+                    activo BOOLEAN NOT NULL DEFAULT TRUE,
+                    estado VARCHAR(30) NOT NULL DEFAULT 'PROGRAMADO',
+                    tablas_alcance TEXT,
+                    ultimo_respaldo_id INTEGER,
+                    fecha_ultima_ejecucion TIMESTAMP,
+                    resultado TEXT,
+                    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            aplicados.append("create_table.programaciones_respaldo")
+            print(" [MIGRACION] Tabla creada: programaciones_respaldo")
 
     # Refrescar inspector
     inspector = inspect(engine)

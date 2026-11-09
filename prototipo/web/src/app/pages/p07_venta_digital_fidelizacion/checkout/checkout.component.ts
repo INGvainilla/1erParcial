@@ -20,11 +20,11 @@ import { Sucursal } from '../../../core/models/fashion.models';
         <div class="header-breadcrumb">
           <a routerLink="/catalogo"><i class="fas fa-arrow-left"></i> Seguir Comprando</a>
           <span class="sep">/</span>
-          <span>Checkout Digital (CU14)</span>
+          <span>Checkout Digital (CU18 - P2 / CU14)</span>
         </div>
         <h1 class="page-title">
           <i class="fas fa-cash-register"></i>
-          Finalizar Compra y Facturación
+          Finalizar Compra y Facturación (CU18 - P2)
         </h1>
         <p class="page-subtitle">Paso formal de selección de entrega y emisión de orden de venta en línea.</p>
       </div>

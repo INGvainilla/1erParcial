@@ -16,12 +16,12 @@ import { Usuario, Sucursal } from '../../../core/models/fashion.models';
       <!-- Header -->
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-users-cog"></i> Gestión de Usuarios y Roles (CU04)</h2>
+          <h2><i class="fas fa-users-cog"></i> Gestión de Usuarios y Roles RBAC (CU05 - P2)</h2>
           <p class="subtitle">Alta de Personal, Matriz RBAC, Asignación de Sucursal y Desbloqueo de Seguridad</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin()">
           <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-            <i class="fas fa-user-plus"></i> + Registrar Colaborador (CU04)
+            <i class="fas fa-user-plus"></i> + Registrar Colaborador (CU05 - P2)
           </button>
           <button type="button" class="btn btn-secondary" (click)="loadUsuarios()" [disabled]="loading">
             <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Actualizar

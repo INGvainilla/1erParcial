@@ -415,8 +415,8 @@ def test_tc10_recalculo_matematico_cpp():
     from app.modules.p03_catalogo_estilismo_ia.productos.models import Producto
     from app.modules.p05_inventario_costos_analitica.inventario.models import Inventario
     
-    suc = db.query(Sucursal).first()
-    prod = db.query(Producto).first()
+    suc = db.query(Sucursal).filter(Sucursal.id_empresa == 1).first()
+    prod = db.query(Producto).filter(Producto.id_empresa == 1).first()
     id_sucursal = suc.id_sucursal
     id_producto = prod.id_producto
     

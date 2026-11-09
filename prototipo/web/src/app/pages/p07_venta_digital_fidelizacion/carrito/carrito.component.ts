@@ -15,11 +15,11 @@ import { ToastService } from '../../../core/services/toast.service';
       <div class="view-header glass-panel">
         <div class="header-titles">
           <div class="badges-row">
-            <span class="badge-pu"><i class="fas fa-shopping-bag"></i> CU13 — Comercio Omnicanal</span>
+            <span class="badge-pu"><i class="fas fa-shopping-bag"></i> Venta Digital (CU08/CU19 - P2)</span>
             <span class="badge-tag"><i class="fas fa-shield-alt"></i> Stock Atómico Validado</span>
             <span class="badge-tag highlight"><i class="fas fa-store"></i> Multi-Sucursal</span>
           </div>
-          <h2><i class="fas fa-shopping-bag text-indigo"></i> Bolsa de Compras Omnicanal</h2>
+          <h2><i class="fas fa-shopping-bag text-indigo"></i> Bolsa de Compras Omnicanal (CU08/CU19 - P2)</h2>
           <p class="subtitle">
             Revisa las prendas seleccionadas, modifica cantidades o procede al pago digital y reserva en tienda.
           </p>

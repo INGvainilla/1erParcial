@@ -85,10 +85,10 @@ interface UseCaseItem {
         <div class="banner-text">
           <div class="banner-tags">
             <span class="course-pill"><i class="fas fa-university"></i> SI2 — 2-2026</span>
-            <span class="cycle-pill"><i class="fas fa-layer-group"></i> Ciclo 1, 2 & 3 (CU24)</span>
-            <span class="puds-pill"><i class="fas fa-cubes"></i> Metodología PUDS</span>
+            <span class="cycle-pill"><i class="fas fa-layer-group"></i> ICONIX Parcial 2 (CU17 - P2)</span>
+            <span class="puds-pill"><i class="fas fa-cubes"></i> Metodología ICONIX</span>
           </div>
-          <h2>FashionStore — Cuadros de Mando y Dashboards Ejecutivos (CU24)</h2>
+          <h2>FashionStore — Cuadros de Mando y Dashboards Ejecutivos (CU17 - P2 / CU24)</h2>
           <p class="desc">
             Plataforma inteligente de comercio omnicanal para moda masculina. Monitoreo en tiempo real de transaccionalidad, 
             valuación de inventarios CPP, reservas de probadores en sucursales físicas, pasarelas de cobro y logística de delivery.

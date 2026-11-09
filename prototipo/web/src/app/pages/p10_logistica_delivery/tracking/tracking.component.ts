@@ -19,10 +19,10 @@ import { AuthService } from '../../../core/services/auth.service';
             </a>
             <h1 class="page-title">
               <ng-container *ngIf="tracking.modalidad_entrega === 'RETIRO_TIENDA'; else deliveryTitle">
-                <i class="fas fa-store text-emerald"></i> Seguimiento — Retiro en Tienda
+                <i class="fas fa-store text-emerald"></i> Seguimiento — Retiro en Tienda (CU13 - P2)
               </ng-container>
               <ng-template #deliveryTitle>
-                <i class="fas fa-shipping-fast text-sky"></i> Seguimiento en Vivo — Delivery
+                <i class="fas fa-shipping-fast text-sky"></i> Seguimiento en Vivo — Delivery (CU13 - P2)
               </ng-template>
             </h1>
             <p class="order-subtitle">

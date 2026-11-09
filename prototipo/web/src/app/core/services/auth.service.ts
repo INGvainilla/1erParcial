@@ -26,7 +26,19 @@ export class AuthService {
         this.currentUser.set(user);
         if (user.rol === 'SUPER_ADMIN') {
           this.loadEmpresas();
+        } else if (user.id_empresa) {
+          this.selectedTenant.set({
+            id_empresa: user.id_empresa,
+            nombre_comercial: user.nombre_empresa || `Empresa #${user.id_empresa}`,
+            razon_social: user.nombre_empresa || `Empresa #${user.id_empresa}`,
+            nit: '',
+            estado: 'ACTIVA'
+          } as Empresa);
         }
+        // Asentar acceso de reanudación / ingreso en la bitácora inmutable (CU21)
+        this.http.post(`${this.apiUrl}/auth/verificar-sesion`, {}, { headers: this.getAuthHeaders() }).subscribe({
+          error: () => {}
+        });
       } catch (e) {
         this.clearSession();
       }
@@ -47,7 +59,12 @@ export class AuthService {
             return;
           }
         }
-        if (list && list.length > 0 && !this.selectedTenant()) {
+        if (this.isSuperAdmin()) {
+          // Para Super Admin, mantener por defecto Modo Global (todas las empresas) salvo selección explícita
+          if (!savedTenantId) {
+            this.selectedTenant.set(null);
+          }
+        } else if (list && list.length > 0 && !this.selectedTenant()) {
           this.selectedTenant.set(list[0]);
           localStorage.setItem('fs_active_tenant_id', list[0].id_empresa.toString());
         }
@@ -102,7 +119,12 @@ export class AuthService {
 
   isAdmin(): boolean {
     const user = this.currentUser();
-    return user?.rol === 'ADMINISTRADOR' || user?.rol === 'SUPER_ADMIN';
+    return user?.rol === 'ADMINISTRADOR' || user?.rol === 'ADMIN_EMPRESA' || user?.rol === 'SUPER_ADMIN';
+  }
+
+  isTenantAdmin(): boolean {
+    const user = this.currentUser();
+    return (user?.rol === 'ADMINISTRADOR' || user?.rol === 'ADMIN_EMPRESA') && !!user?.id_empresa;
   }
 
   isSuperAdmin(): boolean {
@@ -123,7 +145,7 @@ export class AuthService {
 
   isStaff(): boolean {
     const user = this.currentUser();
-    return ['SUPER_ADMIN', 'ADMINISTRADOR', 'ENCARGADO_SUCURSAL', 'CAJERO', 'LOGISTICA'].includes(user?.rol || '');
+    return ['SUPER_ADMIN', 'ADMINISTRADOR', 'ADMIN_EMPRESA', 'ENCARGADO_SUCURSAL', 'CAJERO', 'LOGISTICA'].includes(user?.rol || '');
   }
 
   isManager(): boolean {
@@ -158,6 +180,14 @@ export class AuthService {
         storage.setItem('fs_user', JSON.stringify(res));
         if (res.rol === 'SUPER_ADMIN') {
           this.loadEmpresas();
+        } else if (res.id_empresa) {
+          this.selectedTenant.set({
+            id_empresa: res.id_empresa,
+            nombre_comercial: res.nombre_empresa || `Empresa #${res.id_empresa}`,
+            razon_social: res.nombre_empresa || `Empresa #${res.id_empresa}`,
+            nit: '',
+            estado: 'ACTIVA'
+          } as Empresa);
         }
       })
     );

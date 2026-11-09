@@ -2094,3 +2094,2715 @@ Documento Fiscal Digital emitido conforme a la R.N.D. N° 102100000011 del Servi
 ================================================================================
 
 ===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:50:56
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794185455@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794185455@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:50:57
+TIPO: Recuperacion OTP (747988)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 747988
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 747988 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:51:00
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:51:42
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-1E0BD2)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-1E0BD2 (Factura POS-CAMBIO-1794199902) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-1E0BD2
+Factura Original  : POS-CAMBIO-1794199902
+Fecha y Hora      : 09/11/2026 00:51
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 0EDA802726F6327FD592E5247FC0F0C9
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:51:42
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-208E86)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-0D717000 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-208E86
+Factura Original  : POS-VALE-1794199902
+Fecha y Hora      : 09/11/2026 00:51
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-0D717000
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: F4E4A414E7AE91ECF1FFB807AC6B0AA3
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:51:42
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-E17244)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-E17244 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-E17244
+Factura Original  : POS-REEMB-1794199902
+Fecha y Hora      : 09/11/2026 00:51
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: CE238C6E95CBEFC120AACA1448B8562D
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 20:51:42
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-10F28C)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-10F28C - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-10F28C
+Factura Original  : POS-MERMA-1794199902
+Fecha y Hora      : 09/11/2026 00:51
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: C4C92E3FAAA8482A3C30EC4EA28C57C6
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:12
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794186972@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794186972@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:13
+TIPO: Recuperacion OTP (695115)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 695115
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 695115 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:13
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:32
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-5E59BB)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-5E59BB (Factura POS-CAMBIO-1794201392) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-5E59BB
+Factura Original  : POS-CAMBIO-1794201392
+Fecha y Hora      : 09/11/2026 01:16
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: AB03FFA29AA484113E6A8329F6EAFDF8
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:32
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-08DCFF)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-F0383B38 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-08DCFF
+Factura Original  : POS-VALE-1794201392
+Fecha y Hora      : 09/11/2026 01:16
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-F0383B38
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: D87651FC36E88F309E257884975F18A1
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:32
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-8BBE6D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-8BBE6D - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-8BBE6D
+Factura Original  : POS-REEMB-1794201392
+Fecha y Hora      : 09/11/2026 01:16
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 858383C3E54B3F9839B8C44629BBE20C
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:16:32
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-AD0701)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-AD0701 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-AD0701
+Factura Original  : POS-MERMA-1794201392
+Fecha y Hora      : 09/11/2026 01:16
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 3F29866436EE097BC096A1A34C8717F6
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:03
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794188522@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794188522@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:03
+TIPO: Recuperacion OTP (647128)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 647128
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 647128 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:05
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:30
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-B294E4)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-B294E4 (Factura POS-CAMBIO-1794202950) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-B294E4
+Factura Original  : POS-CAMBIO-1794202950
+Fecha y Hora      : 09/11/2026 01:42
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 15709DCDAF54A1B08D0E5C253CF19FB4
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:30
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-46D1D6)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-9E999CC7 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-46D1D6
+Factura Original  : POS-VALE-1794202950
+Fecha y Hora      : 09/11/2026 01:42
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-9E999CC7
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: C090C4D4872DCA3D29E7B917C3786F12
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:30
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-52180F)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-52180F - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-52180F
+Factura Original  : POS-REEMB-1794202950
+Fecha y Hora      : 09/11/2026 01:42
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 758431F790B5F8ED509CD3188F2F38C2
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 21:42:30
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-120E1C)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-120E1C - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-120E1C
+Factura Original  : POS-MERMA-1794202950
+Fecha y Hora      : 09/11/2026 01:42
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 6C5B3B708ACCCC417ACA67F8747269A8
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:33:29
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794191608@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794191608@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:33:29
+TIPO: Recuperacion OTP (877713)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 877713
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 877713 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:33:30
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:34:00
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-C9F3A9)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-C9F3A9 (Factura POS-CAMBIO-1794206040) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-C9F3A9
+Factura Original  : POS-CAMBIO-1794206040
+Fecha y Hora      : 09/11/2026 02:34
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 4036C8777F44DA6C63E56AFABBDA24AF
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:34:00
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-BDA41D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-785A5810 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-BDA41D
+Factura Original  : POS-VALE-1794206040
+Fecha y Hora      : 09/11/2026 02:34
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-785A5810
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: EEB2DF4EE95039881C3F114761E7D246
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:34:00
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-66B02D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-66B02D - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-66B02D
+Factura Original  : POS-REEMB-1794206040
+Fecha y Hora      : 09/11/2026 02:34
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: E53B01F1F4B23DED29015A6898C05CEF
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:34:00
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-3883C7)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-3883C7 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-3883C7
+Factura Original  : POS-MERMA-1794206040
+Fecha y Hora      : 09/11/2026 02:34
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 14791649FC40BD5CA89B41000EDD1E47
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:07
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794192487@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794192487@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:08
+TIPO: Recuperacion OTP (429988)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 429988
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 429988 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:09
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:26
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-BB3850)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-BB3850 (Factura POS-CAMBIO-1794206906) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-BB3850
+Factura Original  : POS-CAMBIO-1794206906
+Fecha y Hora      : 09/11/2026 02:48
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 587B173651CD0418674D528CF44606D8
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:26
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-89865E)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-67D6B21F por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-89865E
+Factura Original  : POS-VALE-1794206906
+Fecha y Hora      : 09/11/2026 02:48
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-67D6B21F
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 476CA51BE831B62CFB97CCD3B3C45B5F
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:26
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-1DC51D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-1DC51D - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-1DC51D
+Factura Original  : POS-REEMB-1794206906
+Fecha y Hora      : 09/11/2026 02:48
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 54D484324ABB4F2ADF324C6FB777CE0D
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 22:48:26
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-7FF2CA)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-7FF2CA - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-7FF2CA
+Factura Original  : POS-MERMA-1794206906
+Fecha y Hora      : 09/11/2026 02:48
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: F044483ACAE9AA8B486C7CB50F932881
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:14
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794193454@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794193454@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:14
+TIPO: Recuperacion OTP (967148)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 967148
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 967148 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:15
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:33
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-4F545D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-4F545D (Factura POS-CAMBIO-1794207873) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-4F545D
+Factura Original  : POS-CAMBIO-1794207873
+Fecha y Hora      : 09/11/2026 03:04
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 323E8B62A7F5537A04FD2BD5CD21E5B0
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:33
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-500B36)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-FD49EC02 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-500B36
+Factura Original  : POS-VALE-1794207873
+Fecha y Hora      : 09/11/2026 03:04
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-FD49EC02
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: E9A758DD7FF519084DB5BD1B50AD2ABA
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:33
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-F84C6C)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-F84C6C - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-F84C6C
+Factura Original  : POS-REEMB-1794207873
+Fecha y Hora      : 09/11/2026 03:04
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 7BB3361330CDA29FC0D2A308591AAF7B
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:04:34
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-7F1E39)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-7F1E39 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-7F1E39
+Factura Original  : POS-MERMA-1794207873
+Fecha y Hora      : 09/11/2026 03:04
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 157D6D4078EE8ADDF0412E88CB8ADC19
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:11
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794193511@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794193511@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:12
+TIPO: Recuperacion OTP (872691)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 872691
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 872691 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:12
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:30
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-6577F7)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-6577F7 (Factura POS-CAMBIO-1794207930) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-6577F7
+Factura Original  : POS-CAMBIO-1794207930
+Fecha y Hora      : 09/11/2026 03:05
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 0183E5B78BD6F8E350E2BE34A802BDE9
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:30
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-DA7A74)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-A63A845A por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-DA7A74
+Factura Original  : POS-VALE-1794207930
+Fecha y Hora      : 09/11/2026 03:05
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-A63A845A
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 5ECA7B597BBEFE41E5E9AB38E677FF5C
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:30
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-6EB809)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-6EB809 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-6EB809
+Factura Original  : POS-REEMB-1794207930
+Fecha y Hora      : 09/11/2026 03:05
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 3F73E3ED2C38325EBC6D1CFEE005FDED
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:05:30
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-B8E0B0)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-B8E0B0 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-B8E0B0
+Factura Original  : POS-MERMA-1794207930
+Fecha y Hora      : 09/11/2026 03:05
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 0C333B7E51864142BF2BB930329A9DB1
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:22
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794193582@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794193582@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:22
+TIPO: Recuperacion OTP (944313)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 944313
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 944313 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:23
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:41
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-4FF4B8)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-4FF4B8 (Factura POS-CAMBIO-1794208001) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-4FF4B8
+Factura Original  : POS-CAMBIO-1794208001
+Fecha y Hora      : 09/11/2026 03:06
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: E8ECD4CD60FC1012D6F0382D15A7BC3F
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:41
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-01E8FB)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-965F46D4 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-01E8FB
+Factura Original  : POS-VALE-1794208001
+Fecha y Hora      : 09/11/2026 03:06
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-965F46D4
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 849626C704B371135C7C8C3978E20C6F
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:41
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-A6E627)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-A6E627 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-A6E627
+Factura Original  : POS-REEMB-1794208001
+Fecha y Hora      : 09/11/2026 03:06
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 506D7069976783D491C477ABE0F0B160
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:06:41
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-CA4DEE)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-CA4DEE - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-CA4DEE
+Factura Original  : POS-MERMA-1794208001
+Fecha y Hora      : 09/11/2026 03:06
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: D51190ECB6955569FDD81FD833759743
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:13:47
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794194027@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794194027@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:13:47
+TIPO: Recuperacion OTP (433010)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 433010
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 433010 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:13:48
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:14:07
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-11BD85)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-11BD85 (Factura POS-CAMBIO-1794208447) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-11BD85
+Factura Original  : POS-CAMBIO-1794208447
+Fecha y Hora      : 09/11/2026 03:14
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: FD522DE51CB61A031485590FF9BB5463
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:14:07
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-A9EB70)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-D533DF36 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-A9EB70
+Factura Original  : POS-VALE-1794208447
+Fecha y Hora      : 09/11/2026 03:14
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-D533DF36
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: CDFD177B63959DB5C879777F43E12CF9
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:14:07
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-CEEE02)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-CEEE02 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-CEEE02
+Factura Original  : POS-REEMB-1794208447
+Fecha y Hora      : 09/11/2026 03:14
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: A76ABE196FDA784F2D11BB117AA3842D
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:14:07
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-BDA698)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-BDA698 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-BDA698
+Factura Original  : POS-MERMA-1794208447
+Fecha y Hora      : 09/11/2026 03:14
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: C2C066063C87DBEB2C10F99ACB2500C6
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:14
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794195134@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794195134@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:14
+TIPO: Recuperacion OTP (503587)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 503587
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 503587 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:15
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:46
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-670604)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-670604 (Factura POS-CAMBIO-1794209566) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-670604
+Factura Original  : POS-CAMBIO-1794209566
+Fecha y Hora      : 09/11/2026 03:32
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Azul Marino
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: EDA1CF9E6F6DDE2AD0B622BB3F1066FE
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:46
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-F0AFAF)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-A3DB31C4 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-F0AFAF
+Factura Original  : POS-VALE-1794209566
+Fecha y Hora      : 09/11/2026 03:32
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-A3DB31C4
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 9A126C705FB35C8BBBDA718FC161208C
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:46
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-31E5F6)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-31E5F6 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-31E5F6
+Factura Original  : POS-REEMB-1794209566
+Fecha y Hora      : 09/11/2026 03:32
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: B26EC2B0D4E3E39F577B1764C1DD180B
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:32:46
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-357D9D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-357D9D - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-357D9D
+Factura Original  : POS-MERMA-1794209566
+Fecha y Hora      : 09/11/2026 03:32
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: B46910BE906C4FBC1C7E5783F0874ABC
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:20
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794195260@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794195260@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:21
+TIPO: Recuperacion OTP (995521)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 995521
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 995521 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:22
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:39
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-D3590C)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-D3590C (Factura POS-CAMBIO-1794209679) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-D3590C
+Factura Original  : POS-CAMBIO-1794209679
+Fecha y Hora      : 09/11/2026 03:34
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: F52BA3814CD541B6392F71FD7056EFE4
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:39
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-555220)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-2E7DDB2A por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-555220
+Factura Original  : POS-VALE-1794209679
+Fecha y Hora      : 09/11/2026 03:34
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-2E7DDB2A
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 411A69AF3C471EB796F7D8657813618E
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:39
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-A89573)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-A89573 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-A89573
+Factura Original  : POS-REEMB-1794209679
+Fecha y Hora      : 09/11/2026 03:34
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: B52393B899425DCD2A2FC9E1A29090EE
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:34:39
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-2DB87C)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-2DB87C - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-2DB87C
+Factura Original  : POS-MERMA-1794209679
+Fecha y Hora      : 09/11/2026 03:34
+Sucursal          : Sucursal Piloto Elegance
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 62418ABED4072E94DBAEEEC1903AB593
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:35
+TIPO: Bienvenida Cliente
+DESTINATARIOS: carlos.nuevo.1794195694@gmail.com
+ASUNTO: Bienvenido(a) a FashionStore Bolivia — Confirmacion de Cuenta
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE BOLIVIA S.R.L.
+================================================================================
+Estimado(a) Carlos,
+
+Le damos la mas cordial bienvenida a FashionStore Bolivia.
+Su cuenta de cliente ha sido registrada y activada exitosamente con el correo:
+carlos.nuevo.1794195694@gmail.com.
+
+A traves de nuestra plataforma podra acceder a colecciones exclusivas, gestionar
+sus pedidos en tiempo real, solicitar entregas a domicilio y consultar sus
+facturas oficiales y puntos de fidelidad.
+
+Acceso a la plataforma: http://localhost:8000/app/#/catalogo
+
+Atentamente,
+Equipo de Experiencia al Cliente
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:35
+TIPO: Recuperacion OTP (436345)
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: FashionStore — Codigo de Verificacion de Seguridad: 436345
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — SEGURIDAD DE ACCESO
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Has solicitado restablecer tu contrasena de acceso en la plataforma FashionStore.
+Tu codigo de verificacion oficial (OTP) es:
+
+                             [ 436345 ]
+
+- Tiempo de validez: 15 minutos a partir de la recepcion de este correo.
+- Caracter: Unico e intransferible.
+
+Si tu no has solicitado este restablecimiento de seguridad, puedes desestimar
+este mensaje sin ninguna accion adicional.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:36
+TIPO: Cambio de Contrasena
+DESTINATARIOS: rodrigo.cliente@gmail.com
+ASUNTO: Aviso de Seguridad — Su contrasena ha sido actualizada
+---------------------------------------------------------------------------
+
+================================================================================
+                    FASHIONSTORE — AVISO DE SEGURIDAD
+================================================================================
+Estimado(a) Rodrigo Paz,
+
+Le notificamos que la contrasena de su cuenta (rodrigo.cliente@gmail.com) ha sido actualizada
+satisfactoriamente en nuestra plataforma.
+
+Si usted realizo esta actualizacion, no requiere realizar ninguna accion adicional.
+Puede iniciar sesion en: http://localhost:8000/app/#/login
+
+Si usted NO solicito este cambio, comuniquese de forma inmediata con nuestro equipo
+de soporte tecnico para el bloqueo preventivo de su cuenta.
+
+Atentamente,
+Departamento de Seguridad y Privacidad
+FashionStore Bolivia S.R.L.
+================================================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:54
+TIPO: Comprobante Post-Venta (CAMBIO_VARIANTE DEV-2026-EFF73F)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🔄 Comprobante de Intercambio #DEV-2026-EFF73F (Factura POS-CAMBIO-1794210114) - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE INTERCAMBIO Y CAMBIO DE PRENDA
+============================================================
+N° Comprobante    : DEV-2026-EFF73F
+Factura Original  : POS-CAMBIO-1794210114
+Fecha y Hora      : 09/11/2026 03:41
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Carlos Mendoza (NIT/CI: 123456)
+Motivo Declarado  : Cambio por talla L
+Tipo Resolución   : CAMBIO_VARIANTE
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Zapato Oxford Cap-Toe Cuero Genuino | Talla: M | Color: Azul Marino | Cant: 1 x Bs. 540.00 = Bs. 540.00 (APTO_VENTA)
+
+------------------------------------------------------------
+PRENDA NUEVA ENTREGADA EN INTERCAMBIO
+------------------------------------------------------------
+  * Zapato Oxford Cap-Toe Cuero Genuino (SKU: SHOE-OXFD-004)
+  * Nueva Talla: L (Factor Escala: 1.05x) | Nuevo Color: Blanco Óptico
+  * Cantidad: 1 x Bs. 567.00 = Bs. 567.00
+  * Ajuste Financiero (ABONO_DIFERENCIA_CLIENTE): Abono diferencial por cambio a talla mayor/superior: + Bs. 27.00
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 540.00
+Diferencia / Ajuste Aplicado    : Bs. +27.00
+SON: QUINIENTOS CUARENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 7A174C057D18268707B7C112331FE8A2
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:54
+TIPO: Comprobante Post-Venta (VALE_CREDITO DEV-2026-A4ED5D)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 🎟️ Vale de Crédito #VALE-FS-86894CA9 por Devolución - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - NOTA DE CRÉDITO Y VALE OFICIAL POR DEVOLUCIÓN
+============================================================
+N° Comprobante    : DEV-2026-A4ED5D
+Factura Original  : POS-VALE-1794210114
+Fecha y Hora      : 09/11/2026 03:41
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Vale (NIT/CI: 0)
+Motivo Declarado  : Preferencia del cliente
+Tipo Resolución   : VALE_CREDITO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Traje Slim Elegance | Talla: M | Color: Negro | Cant: 1 x Bs. 150.00 = Bs. 150.00 (APTO_VENTA)
+
+============================================================
+VALE DE CREDITO OFICIAL A FAVOR DEL CLIENTE
+  CODIGO DEL VALE : VALE-FS-86894CA9
+  IMPORTE A FAVOR : Bs. 150.00
+  VIGENCIA        : 90 dias calendario en cualquier sucursal o tienda online
+============================================================
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 150.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 7C6995357F8F3F2301D325F8F105EF82
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:54
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-1E3BB7)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-1E3BB7 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-1E3BB7
+Factura Original  : POS-REEMB-1794210114
+Fecha y Hora      : 09/11/2026 03:41
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Juan Reembolso (NIT/CI: 4499112)
+Motivo Declarado  : Cliente desistió de la compra, solicita dinero en efectivo
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Traje Slim Elegance | Talla: S | Color: Blanco Puro | Cant: 1 x Bs. 250.00 = Bs. 250.00 (APTO_VENTA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 250.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: DOSCIENTOS CINCUENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 84089F77E7030858FDCB74AE83EAF539
+============================================================
+
+===========================================================================
+
+===========================================================================
+FECHA: 2026-11-08 23:41:54
+TIPO: Comprobante Post-Venta (REEMBOLSO_EFECTIVO DEV-2026-A5D6C6)
+DESTINATARIOS: mrgrueso2005@gmail.com
+ASUNTO: 💵 Comprobante de Devolución y Reembolso #DEV-2026-A5D6C6 - FashionStore
+---------------------------------------------------------------------------
+============================================================
+FASHIONSTORE BOLIVIA S.R.L. - COMPROBANTE DE DEVOLUCIÓN Y REEMBOLSO EN EFECTIVO
+============================================================
+N° Comprobante    : DEV-2026-A5D6C6
+Factura Original  : POS-MERMA-1794210114
+Fecha y Hora      : 09/11/2026 03:41
+Sucursal          : Sucursal Equipetrol
+Atendido por      : Alberto Delgado
+Cliente           : Cliente Falla Confeccion (NIT/CI: 0)
+Motivo Declarado  : Costura descosida de fábrica (Merma)
+Tipo Resolución   : REEMBOLSO_EFECTIVO
+------------------------------------------------------------
+PRENDAS DEVUELTAS
+------------------------------------------------------------
+  1. [DEVUELTO] Traje Slim Elegance | Talla: L | Color: Azul Noche | Cant: 1 x Bs. 190.00 = Bs. 190.00 (DEFECTUOSO_MERMA)
+------------------------------------------------------------
+Total Reconocido por Devolución : Bs. 190.00
+Diferencia / Ajuste Aplicado    : Bs. +0.00
+SON: CIENTO NOVENTA 00/100 BOLIVIANOS
+------------------------------------------------------------
+Código Único de Verificación: 5A01D366FCF9FA1FC251A9332E713BFC
+============================================================
+
+===========================================================================

@@ -14,12 +14,12 @@ import { Temporada } from '../../../core/models/fashion.models';
     <div class="page-container">
       <div class="view-header glass-panel">
         <div>
-          <h2><i class="fas fa-calendar-alt"></i> Temporadas y Colecciones (CU07)</h2>
-          <p class="subtitle">Campañas Estacionales (Primavera/Verano SS - Otoño/Invierno FW), Estados y Políticas de Descuento</p>
+          <h2><i class="fas fa-calendar-alt"></i> Temporadas, Liquidación y Ofertas (CU19 - P2)</h2>
+          <p class="subtitle">Campañas Estacionales (SS / FW), Descuentos por Mayor y Políticas de Liquidación (CU19 - P2 / CU07)</p>
         </div>
         <div class="header-actions" *ngIf="auth.isAdmin()">
           <button class="btn btn-primary" (click)="openCreateModal()">
-            <i class="fas fa-plus"></i> Nueva Temporada (CU07)
+            <i class="fas fa-plus"></i> Nueva Temporada / Oferta (CU19 - P2)
           </button>
         </div>
       </div>

@@ -24,6 +24,8 @@ import { RecompensasComponent } from './pages/p07_venta_digital_fidelizacion/rec
 import { AsistenteIaComponent } from './pages/p03_catalogo_estilismo_ia/asistente-ia/asistente-ia.component';
 import { ReportesIaComponent } from './pages/p03_catalogo_estilismo_ia/reportes-ia/reportes-ia.component';
 import { TenantsComponent } from './pages/p01_seguridad_acceso/tenants/tenants.component';
+import { AuditoriaComponent } from './pages/p01_seguridad_acceso/auditoria/auditoria.component';
+import { BackupsComponent } from './pages/p01_seguridad_acceso/backups/backups.component';
 import { TraspasosComponent } from './pages/p05_inventario_costos_analitica/traspasos/traspasos.component';
 import { ComprasDesktopComponent } from './pages/p04_aprovisionamiento_proveedores/compras/compras-desktop.component';
 import { CarritoPageComponent } from './pages/p07_venta_digital_fidelizacion/carrito/carrito.component';
@@ -55,6 +57,8 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [dashboardGuard] },
   { path: 'reportes-ia', component: ReportesIaComponent, canActivate: [dashboardGuard] },
   { path: 'tenants', component: TenantsComponent, canActivate: [adminGuard] },
+  { path: 'auditoria', component: AuditoriaComponent, canActivate: [adminGuard] },
+  { path: 'backups', component: BackupsComponent, canActivate: [adminGuard] },
   { path: 'usuarios', component: UsuariosComponent, canActivate: [adminGuard] },
   { path: 'temporadas', component: TemporadasComponent, canActivate: [adminGuard] },
   { path: 'admin/pagos-config', component: AdminPagosConfigComponent, canActivate: [adminGuard] },

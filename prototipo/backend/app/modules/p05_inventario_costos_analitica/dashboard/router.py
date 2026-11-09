@@ -292,6 +292,9 @@ def get_dashboard_metrics(
         # CU24: Generar Reportes y Cuadros de Mando, Paso 1.8: Ctrl -> AuditEnt : registrarAccesoDashboard(id_admin, ip, fecha_local)
         bitacora = BitacoraAcceso(
             id_usuario=current_user.id_usuario,
+            id_empresa=current_user.id_empresa,
+            email_intento=current_user.email,
+            tipo_evento="ACCESO_SISTEMA",
             ip_origen="127.0.0.1",
             user_agent="FashionStore Dashboard BI Angular 19",
             exitoso=True,

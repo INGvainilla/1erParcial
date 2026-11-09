@@ -178,6 +178,7 @@ def obtener_capacidades(db: Session, id_empresa: int) -> Dict[str, Any]:
     """
     Retorna el estado operativo, días restantes y consumo de cuotas del tenant.
     """
+    empresa = db.query(Empresa).filter(Empresa.id_empresa == id_empresa).first()
     susc = obtener_suscripcion_vigente(db, id_empresa)
     dias_restantes = (susc.fecha_vencimiento - date.today()).days if susc else 0
     if dias_restantes < 0:
@@ -195,20 +196,40 @@ def obtener_capacidades(db: Session, id_empresa: int) -> Dict[str, Any]:
     ).count()
 
     plan = susc.plan if susc else None
+    max_suc = plan.max_sucursales if plan else 0
+    max_usr = plan.max_usuarios if plan else 0
+
+    plan_obj = {
+        "id_plan": plan.id_plan if plan else 0,
+        "nombre": plan.nombre if plan else "Sin Plan",
+        "codigo": plan.codigo if plan else "NONE",
+        "precio_mensual": float(plan.precio_mensual) if (plan and plan.precio_mensual) else 0.0
+    }
+
+    sucursales_info = {
+        "usadas": cant_sucursales,
+        "max": max_suc,
+        "disponibles": max(0, max_suc - cant_sucursales)
+    }
+
+    usuarios_info = {
+        "usadas": cant_staff,
+        "max": max_usr,
+        "disponibles": max(0, max_usr - cant_staff)
+    }
+
     return {
+        "id_empresa": id_empresa,
+        "nombre_comercial": empresa.nombre_comercial if empresa else f"Empresa #{id_empresa}",
         "vigente": susc is not None,
         "dias_restantes": dias_restantes,
         "fecha_vencimiento": susc.fecha_vencimiento if susc else None,
+        "plan": plan_obj,
         "plan_nombre": plan.nombre if plan else "Sin Plan",
         "plan_codigo": plan.codigo if plan else None,
-        "sucursales": {
-            "usadas": cant_sucursales,
-            "max": plan.max_sucursales if plan else 0
-        },
-        "usuarios": {
-            "usadas": cant_staff,
-            "max": plan.max_usuarios if plan else 0
-        },
+        "sucursales": sucursales_info,
+        "usuarios": usuarios_info,
+        "usuarios_staff": usuarios_info,
         "permite_reportes_ia": plan.permite_reportes_ia if plan else False,
         "permite_ml_dashboard": plan.permite_ml_dashboard if plan else False,
         "soporta_offline": plan.soporta_offline if plan else False
